@@ -1,0 +1,118 @@
+---
+// Translation component for Astro pages
+export interface Props {
+  key: string;
+  params?: Record<string, string>;
+  tag?: string;
+}
+
+const { key, params = {}, tag = 'span' } = Astro.props;
+
+import es from '../i18n/translations/es.json';
+import en from '../i18n/translations/en.json';
+
+const translations: Record<string, any> = { es, en };
+
+function getTranslation(lang: string, key: string, params?: Record<string, string>): string {
+  const keys = key.split('.');
+  let value: any = translations[lang];
+  
+  for (const k of keys) {
+    value = value?.[k];
+    if (value === undefined) {
+      // Fallback to Spanish if key not found
+      value = translations.es;
+      for (const k2 of keys) {
+        value = value?.[k2];
+        if (value === undefined) {
+          return key; // Return key if not found
+        }
+      }
+      break;
+    }
+  }
+  
+  if (typeof value !== 'string') {
+    return key;
+  }
+  
+  // Replace parameters if provided
+  let result = value;
+  if (params) {
+    Object.entries(params).forEach(([param, val]) => {
+      result = result.replace(`{${param}}`, val);
+    });
+  }
+  
+  return result;
+}
+
+// Default to Spanish for SSG, will be updated client-side
+const defaultText = getTranslation('es', key, params);
+
+const Tag = tag as any;
+---
+
+<Tag 
+  class="i18n-text" 
+  data-key={key} 
+  data-params={params ? JSON.stringify(params) : undefined}
+>
+  {defaultText}
+</Tag>
+
+<script>
+  // Update translations on client side based on saved language preference
+  document.addEventListener('DOMContentLoaded', () => {
+    const updateTranslations = async () => {
+      const lang = JSON.parse(localStorage.getItem('language') || '"es"');
+      
+      if (lang === 'es') return; // Already in Spanish by default
+      
+      try {
+        // Fetch the English translations
+        const response = await fetch('/src/i18n/translations/en.json');
+        const translations = await response.json();
+        
+        // Update all i18n elements
+        document.querySelectorAll('.i18n-text').forEach((element) => {
+          const key = element.getAttribute('data-key');
+          if (!key) return;
+          
+          const paramsStr = element.getAttribute('data-params');
+          const params = paramsStr ? JSON.parse(paramsStr) : {};
+          
+          // Get translation value
+          const keys = key.split('.');
+          let value: any = translations;
+          
+          for (const k of keys) {
+            value = value?.[k];
+            if (value === undefined) break;
+          }
+          
+          if (typeof value === 'string') {
+            // Replace parameters
+            let result = value;
+            Object.entries(params).forEach(([param, val]) => {
+              result = result.replace(`{${param}}`, val as string);
+            });
+            
+            element.textContent = result;
+          }
+        });
+      } catch (error) {
+        console.error('Failed to load translations:', error);
+      }
+    };
+    
+    updateTranslations();
+    
+    // Listen for language changes
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'language') {
+        window.location.reload();
+      }
+    });
+  });
+</script>

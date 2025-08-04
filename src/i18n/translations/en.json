@@ -1,0 +1,90 @@
+{
+  "nav": {
+    "home": "Home",
+    "chat": "Legal Chat",
+    "codes": "Legal Codes",
+    "setup": "Setup",
+    "about": "About",
+    "docs": "Documentation",
+    "privacy": "Privacy"
+  },
+  "hero": {
+    "title": "Your Smart Legal Assistant",
+    "subtitle": "Combines the complete Mexican legislation corpus with advanced AI to provide accurate, contextualized, and always up-to-date legal answers.",
+    "cta": {
+      "chat": "Open Legal Chat",
+      "setup": "Configure AI"
+    }
+  },
+  "features": {
+    "title": "Main Features",
+    "subtitle": "LexMX combines cutting-edge technology with the most comprehensive Mexican legal knowledge",
+    "multiLLM": {
+      "title": "Multiple AI Providers",
+      "description": "Integrates OpenAI, Claude, Gemini and local models. Automatic cost and quality optimization."
+    },
+    "corpus": {
+      "title": "Complete Legal Corpus",
+      "description": "+500MB of Mexican legislation processed and vectorized for precise searches."
+    },
+    "privacy": {
+      "title": "Maximum Privacy",
+      "description": "All processing happens in your browser. No servers, no tracking, no data sent."
+    },
+    "rag": {
+      "title": "Hybrid RAG Search",
+      "description": "Combines semantic and keyword search to find the most relevant legal information."
+    },
+    "performance": {
+      "title": "Speed Optimized",
+      "description": "Islands Architecture and global CDN for instant loads and fast responses."
+    },
+    "cost": {
+      "title": "Smart Cost Control",
+      "description": "Automatic token optimization and selection of the most efficient provider for each query."
+    }
+  },
+  "footer": {
+    "description": "AI-powered Mexican legal assistant. Accurate legal queries based on updated Mexican legislation.",
+    "legalNotice": "LexMX provides general legal information for educational purposes. It does not constitute professional legal advice. Always consult with a certified lawyer for specific cases.",
+    "quickLinks": "Quick Links",
+    "legalResources": "Legal Resources",
+    "copyright": "© 2024 LexMX. Open source under MIT license."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "export": "Export",
+    "import": "Import",
+    "download": "Download",
+    "upload": "Upload",
+    "next": "Next",
+    "previous": "Previous",
+    "finish": "Finish",
+    "yes": "Yes",
+    "no": "No",
+    "private": "Private",
+    "noServers": "No servers",
+    "alwaysUpdated": "Always Updated",
+    "currentLegislation": "Current legislation",
+    "multipleProviders": "Multiple providers"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "es": "Español",
+    "en": "English"
+  }
+}

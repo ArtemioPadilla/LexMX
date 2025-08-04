@@ -1,0 +1,90 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "chat": "Chat Legal",
+    "codes": "Códigos",
+    "setup": "Configuración",
+    "about": "Acerca de",
+    "docs": "Documentación",
+    "privacy": "Privacidad"
+  },
+  "hero": {
+    "title": "Tu Asistente Legal Inteligente",
+    "subtitle": "Combina el corpus completo de la legislación mexicana con IA avanzada para obtener respuestas legales precisas, contextualizadas y siempre actualizadas.",
+    "cta": {
+      "chat": "Abrir Chat Legal",
+      "setup": "Configurar IA"
+    }
+  },
+  "features": {
+    "title": "Características Principales",
+    "subtitle": "LexMX combina tecnología de vanguardia con el conocimiento legal mexicano más completo",
+    "multiLLM": {
+      "title": "Múltiples Proveedores de IA",
+      "description": "Integra OpenAI, Claude, Gemini y modelos locales. Optimización automática de costos y calidad."
+    },
+    "corpus": {
+      "title": "Corpus Legal Completo",
+      "description": "+500MB de legislación mexicana procesada y vectorizada para búsquedas precisas."
+    },
+    "privacy": {
+      "title": "Máxima Privacidad",
+      "description": "Todo el procesamiento ocurre en tu navegador. Sin servidores, sin tracking, sin datos enviados."
+    },
+    "rag": {
+      "title": "Búsqueda Híbrida RAG",
+      "description": "Combina búsqueda semántica y por palabras clave para encontrar la información legal más relevante."
+    },
+    "performance": {
+      "title": "Optimizado para Velocidad",
+      "description": "Islands Architecture y CDN global para cargas instantáneas y respuestas rápidas."
+    },
+    "cost": {
+      "title": "Control de Costos Inteligente",
+      "description": "Optimización automática de tokens y selección del proveedor más eficiente para cada consulta."
+    }
+  },
+  "footer": {
+    "description": "Asistente legal mexicano impulsado por IA. Consultas legales precisas basadas en legislación mexicana actualizada.",
+    "legalNotice": "LexMX proporciona información legal general con fines educativos. No constituye asesoría legal profesional. Siempre consulte con un abogado certificado para casos específicos.",
+    "quickLinks": "Enlaces Rápidos",
+    "legalResources": "Recursos Legales",
+    "copyright": "© 2024 LexMX. Código abierto bajo licencia MIT."
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "export": "Exportar",
+    "import": "Importar",
+    "download": "Descargar",
+    "upload": "Subir",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "finish": "Finalizar",
+    "yes": "Sí",
+    "no": "No",
+    "private": "Privado",
+    "noServers": "Sin servidores",
+    "alwaysUpdated": "Siempre Actualizado",
+    "currentLegislation": "Legislación vigente",
+    "multipleProviders": "Múltiples proveedores"
+  },
+  "theme": {
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema"
+  },
+  "language": {
+    "es": "Español",
+    "en": "English"
+  }
+}

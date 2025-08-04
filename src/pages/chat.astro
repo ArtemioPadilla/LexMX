@@ -1,0 +1,14 @@
+---
+// Chat page - main interface for legal queries
+import BaseLayout from '../components/layout/BaseLayout.astro';
+import ChatInterface from '../islands/ChatInterface.tsx';
+---
+
+<BaseLayout title="Chat - LexMX Asistente Legal">
+  <div class="min-h-[calc(100vh-8rem)] flex flex-col">
+    <!-- Main Chat Interface -->
+    <div class="flex-1">
+      <ChatInterface className="h-full" client:load />
+    </div>
+  </div>
+</BaseLayout>

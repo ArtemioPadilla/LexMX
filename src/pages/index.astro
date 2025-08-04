@@ -1,0 +1,253 @@
+---
+// Landing page for LexMX
+import BaseLayout from '../components/layout/BaseLayout.astro';
+---
+
+<BaseLayout title="LexMX - Asistente Legal Mexicano con IA">
+  <main class="min-h-screen bg-gradient-to-br from-legal-50 to-white dark:from-gray-900 dark:to-gray-800">
+    <!-- Hero Section -->
+    <section class="relative overflow-hidden">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div class="text-center">
+          <div class="mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-legal-500 rounded-full mb-6">
+              <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <h1 class="text-4xl sm:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+              <span class="text-legal-600 dark:text-legal-400">LexMX</span>
+              <br />
+              <span class="text-3xl sm:text-5xl dark:text-gray-100" data-i18n="hero.title">Tu Asistente Legal Inteligente</span>
+            </h1>
+            <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8" data-i18n="hero.subtitle">
+              Combina el corpus completo de la legislación mexicana con IA avanzada para obtener respuestas legales precisas, contextualizadas y siempre actualizadas.
+            </p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            <a 
+              href="/chat" 
+              class="bg-legal-500 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-legal-600 transition-colors inline-flex items-center"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <span data-i18n="hero.cta.chat">Abrir Chat Legal</span>
+            </a>
+            <a 
+              href="/setup" 
+              class="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors inline-flex items-center"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span data-i18n="hero.cta.setup">Configurar IA</span>
+            </a>
+          </div>
+
+          <!-- Trust indicators -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto">
+            <div class="text-center">
+              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <p class="text-sm font-medium text-gray-900 dark:text-gray-100">100% <span data-i18n="common.private">Privado</span></p>
+              <p class="text-xs text-gray-500 dark:text-gray-400" data-i18n="common.noServers">Sin servidores</p>
+            </div>
+            <div class="text-center">
+              <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p class="text-sm font-medium text-gray-900 dark:text-gray-100" data-i18n="common.alwaysUpdated">Siempre Actualizado</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400" data-i18n="common.currentLegislation">Legislación vigente</p>
+            </div>
+            <div class="text-center">
+              <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Multi-AI</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400" data-i18n="common.multipleProviders">Múltiples proveedores</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-white dark:bg-gray-900">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="features.title">
+            Características Principales
+          </h2>
+          <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto" data-i18n="features.subtitle">
+            LexMX combina tecnología de vanguardia con el conocimiento legal mexicano más completo
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <!-- Multi-LLM Support -->
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+            <div class="w-12 h-12 bg-legal-100 rounded-lg flex items-center justify-center mb-4">
+              <svg class="w-6 h-6 text-legal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2" data-i18n="features.multiLLM.title">
+              Múltiples Proveedores de IA
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="features.multiLLM.description">
+              Integra OpenAI, Claude, Gemini y modelos locales. Optimización automática de costos y calidad.
+            </p>
+            <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+              <li>• Routing inteligente por complejidad</li>
+              <li>• Fallback automático</li>
+              <li>• Control total de costos</li>
+            </ul>
+          </div>
+
+          <!-- Legal Corpus -->
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2" data-i18n="features.corpus.title">
+              Corpus Legal Completo
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="features.corpus.description">
+              +500MB de legislación mexicana procesada y vectorizada para búsquedas precisas.
+            </p>
+            <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+              <li>• Constitución y códigos federales</li>
+              <li>• Jurisprudencia SCJN actualizada</li>
+              <li>• Reglamentos y NOMs vigentes</li>
+            </ul>
+          </div>
+
+          <!-- Privacy -->
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2" data-i18n="features.privacy.title">
+              Máxima Privacidad
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="features.privacy.description">
+              Todo el procesamiento ocurre en tu navegador. Sin servidores, sin tracking, sin datos enviados.
+            </p>
+            <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+              <li>• Encriptación AES-256 local</li>
+              <li>• Cumplimiento GDPR/LFPDPPP</li>
+              <li>• Modelos locales soportados</li>
+            </ul>
+          </div>
+
+          <!-- RAG Technology -->
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Búsqueda Híbrida RAG
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+              Combina búsqueda semántica y por palabras clave para encontrar la información legal más relevante.
+            </p>
+            <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+              <li>• Vector search + BM25</li>
+              <li>• Cache inteligente semántico</li>
+              <li>• Ranking por relevancia legal</li>
+            </ul>
+          </div>
+
+          <!-- Performance -->
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+              <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Optimizado para Velocidad
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+              Islands Architecture y CDN global para cargas instantáneas y respuestas rápidas.
+            </p>
+            <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+              <li>• Carga inicial <1 segundo</li>
+              <li>• PWA con funcionamiento offline</li>
+              <li>• Compresión avanzada de assets</li>
+            </ul>
+          </div>
+
+          <!-- Cost Optimization -->
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
+              <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Control de Costos Inteligente
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+              Optimización automática de tokens y selección del proveedor más eficiente para cada consulta.
+            </p>
+            <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+              <li>• Predicción de costos en tiempo real</li>
+              <li>• Límites por proveedor</li>
+              <li>• Compresión contextual legal</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 bg-legal-500">
+      <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+        <h2 class="text-3xl font-bold text-white mb-4">
+          ¿Listo para transformar tu práctica legal?
+        </h2>
+        <p class="text-xl text-legal-100 mb-8">
+          Únete a miles de profesionales que ya usan LexMX para consultas legales más eficientes y precisas.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a 
+            href="/chat" 
+            class="bg-white text-legal-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-50 transition-colors inline-flex items-center justify-center"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            Iniciar Chat Legal - Gratis
+          </a>
+          <a 
+            href="/setup" 
+            class="border border-legal-300 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-legal-400 transition-colors inline-flex items-center justify-center"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Configurar Proveedores
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>

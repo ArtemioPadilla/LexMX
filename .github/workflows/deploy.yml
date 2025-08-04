@@ -1,0 +1,278 @@
+name: 🚀 Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: 'Force deployment even if no changes'
+        required: false
+        default: false
+        type: boolean
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '18'
+  CACHE_KEY_PREFIX: 'lexmx-deploy-v1'
+
+jobs:
+  # Build job
+  build:
+    name: 🏗️ Build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📚 Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ env.CACHE_KEY_PREFIX }}-deps-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ env.CACHE_KEY_PREFIX }}-deps-${{ runner.os }}-
+            
+      - name: 📚 Cache legal corpus
+        uses: actions/cache@v3
+        id: corpus-cache
+        with:
+          path: |
+            public/legal-corpus
+            data/raw-legal-docs
+          key: ${{ env.CACHE_KEY_PREFIX }}-corpus-${{ hashFiles('scripts/build-corpus.js') }}
+          restore-keys: |
+            ${{ env.CACHE_KEY_PREFIX }}-corpus-
+            
+      - name: 🧮 Cache embeddings
+        uses: actions/cache@v3
+        id: embeddings-cache
+        with:
+          path: public/embeddings
+          key: ${{ env.CACHE_KEY_PREFIX }}-embeddings-${{ hashFiles('scripts/generate-embeddings.js', 'public/legal-corpus/**') }}
+          restore-keys: |
+            ${{ env.CACHE_KEY_PREFIX }}-embeddings-
+            
+      - name: 🔧 Install dependencies
+        run: npm ci
+        
+      - name: 📚 Build legal corpus
+        if: steps.corpus-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "🔄 Building legal corpus (cache miss)..."
+          npm run build:corpus
+          
+      - name: 📚 Verify legal corpus
+        run: |
+          if [ ! -d "public/legal-corpus" ] || [ ! -f "public/legal-corpus/metadata.json" ]; then
+            echo "❌ Legal corpus not found, building..."
+            npm run build:corpus
+          else
+            echo "✅ Legal corpus found"
+            echo "📊 Documents: $(jq -r '.totalDocuments' public/legal-corpus/metadata.json)"
+          fi
+          
+      - name: 🧮 Generate embeddings
+        if: steps.embeddings-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "🔄 Generating embeddings (cache miss)..."
+          # Use simulated embeddings for deployment (no API key required)
+          npm run build:embeddings
+          
+      - name: 🧮 Verify embeddings
+        run: |
+          if [ ! -d "public/embeddings" ] || [ ! -f "public/embeddings/index.json" ]; then
+            echo "❌ Embeddings not found, generating..."
+            npm run build:embeddings
+          else
+            echo "✅ Embeddings found"
+            echo "📊 Embeddings: $(jq -r '.totalEmbeddings' public/embeddings/index.json)"
+          fi
+          
+      - name: 🏗️ Build application
+        run: npm run build
+        
+      - name: 📊 Build statistics
+        run: |
+          echo "## 🏗️ Build Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Build size | $(du -sh dist/ | cut -f1) |" >> $GITHUB_STEP_SUMMARY
+          echo "| File count | $(find dist/ -type f | wc -l) |" >> $GITHUB_STEP_SUMMARY
+          echo "| JS files | $(find dist/ -name "*.js" | wc -l) |" >> $GITHUB_STEP_SUMMARY
+          echo "| CSS files | $(find dist/ -name "*.css" | wc -l) |" >> $GITHUB_STEP_SUMMARY
+          echo "| HTML files | $(find dist/ -name "*.html" | wc -l) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📚 Corpus Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          if [ -f "public/legal-corpus/metadata.json" ]; then
+            echo "| Documents | $(jq -r '.totalDocuments' public/legal-corpus/metadata.json) |" >> $GITHUB_STEP_SUMMARY
+            echo "| Corpus size | $(jq -r '.totalSize' public/legal-corpus/metadata.json) bytes |" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -f "public/embeddings/embeddings-metadata.json" ]; then
+            echo "| Embeddings | $(jq -r '.corpus.processedChunks' public/embeddings/embeddings-metadata.json) |" >> $GITHUB_STEP_SUMMARY
+            echo "| Dimensions | $(jq -r '.provider.dimensions' public/embeddings/embeddings-metadata.json) |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+      - name: 🔍 Validate build
+        run: |
+          # Check critical files exist
+          critical_files=(
+            "dist/index.html"
+            "dist/chat/index.html"
+            "dist/setup/index.html"
+            "dist/legal-corpus/metadata.json"
+            "dist/embeddings/index.json"
+          )
+          
+          for file in "${critical_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "❌ Critical file missing: $file"
+              exit 1
+            else
+              echo "✅ Found: $file"
+            fi
+          done
+          
+          echo "✅ Build validation passed"
+          
+      - name: 📤 Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: github-pages-build
+          path: dist/
+          retention-days: 1
+          
+      - name: 📄 Setup Pages
+        uses: actions/configure-pages@v3
+        
+      - name: 📤 Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: dist/
+
+  # Deployment job
+  deploy:
+    name: 🚀 Deploy
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+      - name: 🚀 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+        
+      - name: 📊 Deployment summary
+        run: |
+          echo "## 🚀 Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🌐 **Live URL**: ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [🏠 Home Page](${{ steps.deployment.outputs.page_url }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [💬 Chat Interface](${{ steps.deployment.outputs.page_url }}chat)" >> $GITHUB_STEP_SUMMARY
+          echo "- [⚙️ Setup](${{ steps.deployment.outputs.page_url }}setup)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Post-Deployment Checklist" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Test chat functionality" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Verify provider configuration" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Check legal corpus loading" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Validate embeddings functionality" >> $GITHUB_STEP_SUMMARY
+
+  # Post-deployment verification
+  verify:
+    name: ✅ Verify Deployment
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always() && needs.deploy.result == 'success'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 🔍 Test deployment endpoints
+        run: |
+          base_url="${{ needs.deploy.outputs.page_url }}"
+          
+          # Test main endpoints
+          endpoints=(
+            ""
+            "chat"
+            "setup"
+            "legal-corpus/metadata.json"
+            "embeddings/index.json"
+          )
+          
+          echo "🔍 Testing deployment endpoints..."
+          
+          for endpoint in "${endpoints[@]}"; do
+            url="${base_url}${endpoint}"
+            echo "Testing: $url"
+            
+            if curl -f -s -o /dev/null "$url"; then
+              echo "✅ $endpoint - OK"
+            else
+              echo "❌ $endpoint - FAILED"
+              exit 1
+            fi
+          done
+          
+          echo "✅ All endpoints responding correctly"
+          
+      - name: 📊 Verification summary
+        run: |
+          echo "## ✅ Deployment Verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All critical endpoints are responding correctly:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Home page" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Chat interface" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Setup page" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Legal corpus metadata" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Embeddings index" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🎉 **Deployment is live and functional!**" >> $GITHUB_STEP_SUMMARY
+
+  # Notify on failure
+  notify-failure:
+    name: 📢 Notify Failure
+    runs-on: ubuntu-latest
+    needs: [build, deploy, verify]
+    if: always() && (needs.build.result == 'failure' || needs.deploy.result == 'failure' || needs.verify.result == 'failure')
+    
+    steps:
+      - name: 📢 Create failure summary
+        run: |
+          echo "## ❌ Deployment Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy | ${{ needs.deploy.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Verify | ${{ needs.verify.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Please check the failed job logs for details." >> $GITHUB_STEP_SUMMARY

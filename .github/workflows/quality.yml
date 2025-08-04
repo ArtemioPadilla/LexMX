@@ -1,0 +1,396 @@
+name: 🎯 Quality Assurance
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [ develop ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  code-quality:
+    name: 🔍 Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+          
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 🔧 Install dependencies
+        run: npm ci --legacy-peer-deps
+        
+      - name: 🔍 ESLint analysis
+        run: |
+          echo "## 🔍 ESLint Analysis" >> $GITHUB_STEP_SUMMARY
+          npm run lint -- --format json --output-file eslint-report.json || true
+          
+          # Parse and display results
+          if [ -f eslint-report.json ]; then
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            node -e "
+              const report = require('./eslint-report.json');
+              const errors = report.reduce((sum, file) => sum + file.errorCount, 0);
+              const warnings = report.reduce((sum, file) => sum + file.warningCount, 0);
+              console.log('Errors:', errors);
+              console.log('Warnings:', warnings);
+              console.log('Files analyzed:', report.length);
+            " >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Fail if errors found
+          npm run lint
+          
+      - name: 📝 TypeScript strict check
+        run: |
+          echo "## 📝 TypeScript Analysis" >> $GITHUB_STEP_SUMMARY
+          npm run type-check
+          echo "✅ TypeScript check passed" >> $GITHUB_STEP_SUMMARY
+          
+      - name: 💅 Prettier format check
+        run: |
+          echo "## 💅 Code Formatting" >> $GITHUB_STEP_SUMMARY
+          npx prettier --check "src/**/*.{ts,tsx,astro,js,jsx,json,md}" || {
+            echo "❌ Code formatting issues found" >> $GITHUB_STEP_SUMMARY
+            echo "Run \`npm run format\` to fix" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          }
+          echo "✅ Code formatting check passed" >> $GITHUB_STEP_SUMMARY
+          
+      - name: 📊 Code complexity analysis
+        run: |
+          echo "## 📊 Code Complexity" >> $GITHUB_STEP_SUMMARY
+          npx --yes code-complexity . --format json > complexity.json || true
+          
+          if [ -f complexity.json ]; then
+            echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+            jq '[.[] | select(.complexity > 10)] | length' complexity.json >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "Files with high complexity (>10)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  legal-content-validation:
+    name: ⚖️ Legal Content Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 🔧 Install dependencies
+        run: npm ci --legacy-peer-deps
+        
+      - name: 📚 Build corpus
+        run: npm run build:corpus
+        
+      - name: 🔍 Validate legal document structure
+        run: |
+          echo "## ⚖️ Legal Content Validation" >> $GITHUB_STEP_SUMMARY
+          
+          # Create validation script
+          cat > validate-legal.js << 'EOF'
+          const fs = require('fs');
+          const path = require('path');
+          
+          const validateLegalContent = () => {
+            const corpusDir = 'public/legal-corpus';
+            const errors = [];
+            const warnings = [];
+            
+            // Check metadata
+            const metadataPath = path.join(corpusDir, 'metadata.json');
+            if (!fs.existsSync(metadataPath)) {
+              errors.push('Metadata file missing');
+              return { errors, warnings };
+            }
+            
+            const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
+            
+            // Validate document count
+            if (metadata.totalDocuments === 0) {
+              errors.push('No documents in corpus');
+            }
+            
+            // Check each document
+            const files = fs.readdirSync(corpusDir)
+              .filter(f => f.endsWith('.json') && f !== 'metadata.json' && f !== 'index.json');
+            
+            files.forEach(file => {
+              const doc = JSON.parse(fs.readFileSync(path.join(corpusDir, file), 'utf-8'));
+              
+              // Validate required fields
+              if (!doc.id) errors.push(`${file}: Missing document ID`);
+              if (!doc.title) errors.push(`${file}: Missing title`);
+              if (!doc.content || doc.content.length === 0) {
+                errors.push(`${file}: Missing content`);
+              }
+              
+              // Check for legal structure
+              if (!doc.type) warnings.push(`${file}: Missing document type`);
+              if (!doc.primaryArea) warnings.push(`${file}: Missing legal area`);
+              
+              // Validate Mexican legal patterns
+              const content = JSON.stringify(doc.content);
+              const hasArticles = /[Aa]rtículo\s+\d+/.test(content);
+              const hasSections = /[Ss]ección|[Cc]apítulo|[Tt]ítulo/.test(content);
+              
+              if (!hasArticles && !hasSections) {
+                warnings.push(`${file}: No legal structure markers found`);
+              }
+            });
+            
+            // Output results
+            console.log(JSON.stringify({ 
+              errors, 
+              warnings, 
+              documentsValidated: files.length,
+              totalDocuments: metadata.totalDocuments
+            }, null, 2));
+            
+            return { errors, warnings };
+          };
+          
+          const result = validateLegalContent();
+          process.exit(result.errors.length > 0 ? 1 : 0);
+          EOF
+          
+          node validate-legal.js > validation-result.json
+          
+          # Display results
+          echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+          cat validation-result.json >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          
+      - name: 🔍 Check legal citations format
+        run: |
+          echo "### 📖 Legal Citations Check" >> $GITHUB_STEP_SUMMARY
+          
+          # Check for proper citation formats
+          grep -r "artículo\|Artículo" public/legal-corpus/*.json | wc -l | xargs echo "Legal citations found:" >> $GITHUB_STEP_SUMMARY
+
+  accessibility:
+    name: ♿ Accessibility Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 🔧 Install dependencies
+        run: npm ci --legacy-peer-deps
+        
+      - name: 📚 Build application
+        run: |
+          npm run build:corpus
+          npm run build:embeddings
+          npm run build
+          
+      - name: ♿ Run accessibility tests
+        run: |
+          echo "## ♿ Accessibility Testing" >> $GITHUB_STEP_SUMMARY
+          
+          # Install axe-core CLI
+          npm install -g @axe-core/cli
+          
+          # Start preview server in background
+          npm run preview &
+          SERVER_PID=$!
+          
+          # Wait for server to start
+          sleep 10
+          
+          # Run accessibility tests
+          axe http://localhost:4321 --save accessibility-report.json || true
+          
+          # Kill server
+          kill $SERVER_PID
+          
+          # Display results
+          if [ -f accessibility-report.json ]; then
+            echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+            jq '{violations: .violations | length, passes: .passes | length}' accessibility-report.json >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  security-scan:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 🔒 Dependency vulnerability scan
+        run: |
+          echo "## 🔒 Security Scan" >> $GITHUB_STEP_SUMMARY
+          echo "### Dependencies Audit" >> $GITHUB_STEP_SUMMARY
+          
+          npm audit --json > audit-report.json || true
+          
+          if [ -f audit-report.json ]; then
+            echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+            jq '{
+              critical: .metadata.vulnerabilities.critical,
+              high: .metadata.vulnerabilities.high,
+              moderate: .metadata.vulnerabilities.moderate,
+              low: .metadata.vulnerabilities.low
+            }' audit-report.json >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Fail on high or critical vulnerabilities
+          npm audit --audit-level=high
+          
+      - name: 🔍 Secret scanning
+        run: |
+          echo "### 🔑 Secret Scanning" >> $GITHUB_STEP_SUMMARY
+          
+          # Simple secret pattern check
+          if grep -r "sk-[a-zA-Z0-9]\{48\}\|AIza[a-zA-Z0-9]\{35\}" src/ --exclude-dir=node_modules; then
+            echo "❌ Potential secrets found in code!" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ No secrets detected" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+      - name: 🛡️ OWASP dependency check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'LexMX'
+          path: '.'
+          format: 'JSON'
+          
+  performance-budget:
+    name: ⚡ Performance Budget
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 🔧 Install dependencies
+        run: npm ci --legacy-peer-deps
+        
+      - name: 📚 Build application
+        run: |
+          npm run build:corpus
+          npm run build:embeddings
+          npm run build
+          
+      - name: 📊 Check bundle size
+        run: |
+          echo "## ⚡ Performance Budget" >> $GITHUB_STEP_SUMMARY
+          echo "### Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
+          
+          # Define size budgets (in KB)
+          MAX_JS_SIZE=500
+          MAX_CSS_SIZE=100
+          MAX_TOTAL_SIZE=2000
+          
+          # Calculate actual sizes
+          JS_SIZE=$(find dist -name "*.js" -exec du -k {} + | awk '{sum+=$1} END {print sum}')
+          CSS_SIZE=$(find dist -name "*.css" -exec du -k {} + | awk '{sum+=$1} END {print sum}')
+          TOTAL_SIZE=$(du -sk dist | cut -f1)
+          
+          echo "| Resource | Size (KB) | Budget (KB) | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-----------|-------------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          # Check JS budget
+          if [ "$JS_SIZE" -le "$MAX_JS_SIZE" ]; then
+            echo "| JavaScript | $JS_SIZE | $MAX_JS_SIZE | ✅ |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| JavaScript | $JS_SIZE | $MAX_JS_SIZE | ❌ |" >> $GITHUB_STEP_SUMMARY
+            echo "::warning::JavaScript bundle exceeds budget"
+          fi
+          
+          # Check CSS budget
+          if [ "$CSS_SIZE" -le "$MAX_CSS_SIZE" ]; then
+            echo "| CSS | $CSS_SIZE | $MAX_CSS_SIZE | ✅ |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| CSS | $CSS_SIZE | $MAX_CSS_SIZE | ❌ |" >> $GITHUB_STEP_SUMMARY
+            echo "::warning::CSS bundle exceeds budget"
+          fi
+          
+          # Check total budget
+          if [ "$TOTAL_SIZE" -le "$MAX_TOTAL_SIZE" ]; then
+            echo "| Total | $TOTAL_SIZE | $MAX_TOTAL_SIZE | ✅ |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Total | $TOTAL_SIZE | $MAX_TOTAL_SIZE | ❌ |" >> $GITHUB_STEP_SUMMARY
+            echo "::warning::Total bundle size exceeds budget"
+          fi
+          
+      - name: 📊 Upload bundle analysis
+        uses: actions/upload-artifact@v3
+        with:
+          name: bundle-analysis
+          path: |
+            dist/**/*.js
+            dist/**/*.css
+          retention-days: 7
+
+  quality-summary:
+    name: 📊 Quality Summary
+    needs: [code-quality, legal-content-validation, accessibility, security-scan, performance-budget]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🎯 Generate quality report
+        run: |
+          echo "# 🎯 Quality Assurance Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Quality | ${{ needs.code-quality.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Legal Content | ${{ needs.legal-content-validation.result == 'success' && '✅ Valid' || '❌ Invalid' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Accessibility | ${{ needs.accessibility.result == 'success' && '✅ Compliant' || '❌ Issues Found' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security | ${{ needs.security-scan.result == 'success' && '✅ Secure' || '❌ Vulnerabilities' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Performance | ${{ needs.performance-budget.result == 'success' && '✅ Within Budget' || '⚠️ Over Budget' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Overall status
+          if [[ "${{ needs.code-quality.result }}" == "success" && 
+                "${{ needs.legal-content-validation.result }}" == "success" && 
+                "${{ needs.security-scan.result }}" == "success" ]]; then
+            echo "## ✅ Quality Gate: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Quality Gate: FAILED" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi

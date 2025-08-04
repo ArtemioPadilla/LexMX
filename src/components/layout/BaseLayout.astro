@@ -1,0 +1,305 @@
+---
+// Base layout component for all pages
+import { ThemeToggle } from '../ThemeToggle';
+import { LanguageSelector } from '../LanguageSelector';
+import ClientTranslations from '../ClientTranslations.astro';
+
+export interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+}
+
+const { 
+  title, 
+  description = "Asistente legal mexicano con IA - Consultas legales precisas basadas en legislación mexicana actualizada",
+  image = "/og-image.png"
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="description" content={description} />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="generator" content={Astro.generator} />
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href={canonicalURL} />
+  
+  <!-- Primary Meta Tags -->
+  <title>{title}</title>
+  <meta name="title" content={title} />
+  <meta name="description" content={description} />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={Astro.url} />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:image" content={new URL(image, Astro.url)} />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content={Astro.url} />
+  <meta property="twitter:title" content={title} />
+  <meta property="twitter:description" content={description} />
+  <meta property="twitter:image" content={new URL(image, Astro.url)} />
+
+  <!-- Theme -->
+  <meta name="theme-color" content="#22c55e" />
+  
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="LexMX" />
+  
+  <!-- Legal and Privacy -->
+  <meta name="robots" content="index, follow" />
+  <meta name="googlebot" content="index, follow" />
+  
+  <!-- Preconnect to external resources -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  
+  <!-- Fonts -->
+  <link 
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" 
+    rel="stylesheet"
+  />
+  
+  <!-- Theme initialization (prevent flash) -->
+  <script is:inline>
+    (function() {
+      const stored = localStorage.getItem('theme');
+      const theme = stored ? JSON.parse(stored) : 'system';
+      let actualTheme;
+      if (theme === 'system') {
+        actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      } else {
+        actualTheme = theme;
+      }
+      if (actualTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+</head>
+
+<body class="h-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans antialiased">
+  <ClientTranslations />
+  <!-- Skip to main content for accessibility -->
+  <a 
+    href="#main-content" 
+    class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-legal-500 text-white px-4 py-2 rounded-md z-50"
+  >
+    Saltar al contenido principal
+  </a>
+
+  <!-- Header -->
+  <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <!-- Logo -->
+        <div class="flex items-center">
+          <a href="/" class="flex items-center space-x-2">
+            <div class="w-8 h-8 bg-legal-500 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <span class="text-xl font-bold text-gray-900 dark:text-white">LexMX</span>
+          </a>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="hidden lg:flex items-center space-x-8">
+          <a href="/chat" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.chat">
+            Chat Legal
+          </a>
+          <a href="/legal" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.codes">
+            Códigos
+          </a>
+          <a href="/setup" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.setup">
+            Configuración
+          </a>
+          <a href="/about" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.about">
+            Acerca de
+          </a>
+        </nav>
+        
+        <!-- Theme and Language Controls -->
+        <div class="flex items-center space-x-2">
+          <LanguageSelector client:visible />
+          <ThemeToggle client:visible />
+        </div>
+
+        <!-- Mobile menu button -->
+        <div class="lg:hidden">
+          <button 
+            type="button"
+            class="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900"
+            aria-label="Abrir menú principal"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content">
+    <slot />
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <!-- Company Info -->
+        <div class="col-span-1 md:col-span-2">
+          <div class="flex items-center space-x-2 mb-4">
+            <div class="w-8 h-8 bg-legal-500 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <span class="text-xl font-bold text-gray-900 dark:text-white">LexMX</span>
+          </div>
+          <p class="text-gray-600 mb-4 max-w-md">
+            Asistente legal mexicano impulsado por IA. Consultas legales precisas basadas en legislación mexicana actualizada.
+          </p>
+          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p class="text-sm text-yellow-800">
+              <strong>Aviso Legal:</strong> LexMX proporciona información legal general con fines educativos. 
+              No constituye asesoría legal profesional. Siempre consulte con un abogado certificado para casos específicos.
+            </p>
+          </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-900 tracking-wider uppercase mb-4">
+            Enlaces Rápidos
+          </h3>
+          <ul class="space-y-2">
+            <li><a href="/chat" class="text-gray-600 hover:text-legal-600 transition-colors">Chat Legal</a></li>
+            <li><a href="/legal" class="text-gray-600 hover:text-legal-600 transition-colors">Códigos Legales</a></li>
+            <li><a href="/setup" class="text-gray-600 hover:text-legal-600 transition-colors">Configuración</a></li>
+            <li><a href="/privacy" class="text-gray-600 hover:text-legal-600 transition-colors">Privacidad</a></li>
+          </ul>
+        </div>
+
+        <!-- Legal Resources -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-900 tracking-wider uppercase mb-4">
+            Recursos Legales
+          </h3>
+          <ul class="space-y-2">
+            <li>
+              <a 
+                href="https://www.diputados.gob.mx/LeyesBiblio/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="text-gray-600 hover:text-legal-600 transition-colors"
+              >
+                Cámara de Diputados
+              </a>
+            </li>
+            <li>
+              <a 
+                href="https://www.scjn.gob.mx/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="text-gray-600 hover:text-legal-600 transition-colors"
+              >
+                SCJN
+              </a>
+            </li>
+            <li>
+              <a 
+                href="https://dof.gob.mx/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="text-gray-600 hover:text-legal-600 transition-colors"
+              >
+                Diario Oficial
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="mt-8 pt-8 border-t border-gray-200">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <p class="text-gray-500 text-sm">
+            © 2024 LexMX. Código abierto bajo licencia MIT.
+          </p>
+          <div class="flex items-center space-x-4 mt-4 md:mt-0">
+            <a 
+              href="https://github.com/ArtemioPadilla/LexMX" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="GitHub"
+            >
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(console.error);
+    }
+  </script>
+</body>
+</html>
+
+<style>
+  /* Custom scrollbar for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+  
+  /* Focus styles for accessibility */
+  :focus {
+    outline: 2px solid #22c55e;
+    outline-offset: 2px;
+  }
+  
+  /* Print styles */
+  @media print {
+    header, footer {
+      display: none;
+    }
+  }
+</style>

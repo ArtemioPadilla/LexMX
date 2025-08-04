@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  # Development server with hot reload
+  dev:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+      - legal_corpus:/app/public/legal-corpus
+      - embeddings:/app/public/embeddings
+    ports:
+      - "4321:4321"
+    environment:
+      - NODE_ENV=development
+      - HOST=0.0.0.0
+    command: sh -c "npm install --legacy-peer-deps && npm run dev -- --host"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4321"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Production build
+  production:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # Corpus builder service
+  corpus-builder:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - legal_corpus:/app/public/legal-corpus
+      - embeddings:/app/public/embeddings
+    environment:
+      - NODE_ENV=production
+    command: sh -c "npm install --legacy-peer-deps && npm run build:corpus && npm run build:embeddings"
+    profiles:
+      - tools
+
+  # Test runner
+  test:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=test
+      - CI=true
+    command: sh -c "npm install --legacy-peer-deps && npm run test"
+    profiles:
+      - test
+
+  # E2E test runner with Playwright
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.40.0-focal
+    working_dir: /app
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=test
+      - CI=true
+    command: sh -c "npm install --legacy-peer-deps && npx playwright install && npm run test:e2e"
+    profiles:
+      - test
+
+  # Quality checks
+  quality:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: sh -c "npm install --legacy-peer-deps && npm run lint && npm run type-check"
+    profiles:
+      - quality
+
+volumes:
+  node_modules:
+  legal_corpus:
+  embeddings:

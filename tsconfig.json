@@ -1,0 +1,29 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "strict": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "allowImportingTsExtensions": false,
+    "allowJs": true,
+    "checkJs": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/components/*": ["src/components/*"],
+      "@/islands/*": ["src/islands/*"],
+      "@/lib/*": ["src/lib/*"],
+      "@/data/*": ["src/data/*"],
+      "@/types/*": ["src/types/*"]
+    },
+    "types": ["vite/client", "@astrojs/react"]
+  },
+  "include": [
+    "src/**/*",
+    ".astro/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

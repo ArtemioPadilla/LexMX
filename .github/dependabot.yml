@@ -1,0 +1,75 @@
+version: 2
+updates:
+  # NPM dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "artemiopadilla"
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "⬆️"
+      include: "scope"
+    ignore:
+      # Ignore major version updates for critical dependencies
+      - dependency-name: "astro"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+    groups:
+      # Group ESLint related updates
+      eslint:
+        patterns:
+          - "eslint*"
+          - "@typescript-eslint/*"
+      # Group Astro related updates
+      astro:
+        patterns:
+          - "@astrojs/*"
+          - "astro-*"
+      # Group testing related updates
+      testing:
+        patterns:
+          - "vitest*"
+          - "@playwright/*"
+          - "@testing-library/*"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    reviewers:
+      - "artemiopadilla"
+    labels:
+      - "ci/cd"
+      - "automated"
+    commit-message:
+      prefix: "🔧"
+      include: "scope"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    reviewers:
+      - "artemiopadilla"
+    labels:
+      - "docker"
+      - "automated"
+    commit-message:
+      prefix: "🐳"
+      include: "scope"

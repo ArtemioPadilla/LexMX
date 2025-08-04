@@ -1,0 +1,17 @@
+{
+  "id": "codigo-civil-federal",
+  "title": "CÓDIGO CIVIL FEDERAL",
+  "type": "codigo",
+  "primaryArea": "civil",
+  "hierarchy": 3,
+  "source": "codigo-civil-federal.txt",
+  "lastUpdated": "2025-08-04T06:34:17.370Z",
+  "content": [
+    {
+      "id": "codigo-civil-federal_content",
+      "type": "text",
+      "title": "CÓDIGO CIVIL FEDERAL",
+      "content": "CÓDIGO CIVIL FEDERAL\n\nLIBRO PRIMERO\nDE LAS PERSONAS\n\nTÍTULO PRIMERO\nDE LAS PERSONAS FÍSICAS\n\nCAPÍTULO I\nDE LA PERSONALIDAD Y CAPACIDAD\n\nArtículo 22. La capacidad jurídica de las personas físicas se adquiere por el nacimiento y se pierde por la muerte; pero desde el momento en que un individuo es concebido, entra bajo la protección de la ley y se le tiene por nacido para los efectos declarados en el presente Código.\n\nArtículo 23. La minoría de edad, el estado de interdicción y demás incapacidades establecidas por la ley, son restricciones a la personalidad jurídica que no deben menoscabar la dignidad de la persona ni atentar contra la integridad de la familia; pero los incapaces pueden ejercitar sus derechos o contraer obligaciones por medio de sus representantes.\n\nCAPÍTULO II\nDEL NOMBRE\n\nArtículo 58. El acta de nacimiento se levantará con asistencia de dos testigos. Contendrá el día, la hora y el lugar del nacimiento, el sexo del presentado, el nombre y apellidos que le correspondan.\n\nTÍTULO SEGUNDO\nDE LAS PERSONAS MORALES\n\nArtículo 25. Son personas morales:\nI. La Nación, los Estados, los Municipios, las Demarcaciones Territoriales de la Ciudad de México y los demás organismos que específicamente reconozcan otras leyes;\nII. Las asociaciones religiosas organizadas con arreglo a la ley de la materia;\nIII. Las instituciones de asistencia privada, con arreglo a la ley de la materia;\nIV. Las sociedades civiles o mercantiles;\nV. Los sindicatos, las asociaciones profesionales y las demás a que se refiere la fracción XVI del artículo 123 de la Constitución Federal;\nVI. Las sociedades cooperativas y mutualistas, y\nVII. Las asociaciones distintas de las enumeradas que se propongan fines políticos, científicos, artísticos, de recreo o cualquiera otro fin lícito, siempre que no fueren desconocidas por la ley."
+    }
+  ]
+}

@@ -1,0 +1,251 @@
+---
+import BaseLayout from '../components/layout/BaseLayout.astro';
+
+const docSections = [
+  {
+    title: 'Inicio Rápido',
+    icon: '🚀',
+    items: [
+      { title: 'Configuración inicial', description: 'Configura tu primer proveedor de IA', href: '/setup' },
+      { title: 'Primera consulta', description: 'Aprende a hacer tu primera consulta legal', href: '/chat' },
+      { title: 'Mejores prácticas', description: 'Tips para obtener mejores respuestas', href: '#best-practices' }
+    ]
+  },
+  {
+    title: 'Proveedores de IA',
+    icon: '🤖',
+    items: [
+      { title: 'OpenAI (GPT-4)', description: 'Configuración y uso de OpenAI', href: '#openai' },
+      { title: 'Claude (Anthropic)', description: 'Integración con Claude', href: '#claude' },
+      { title: 'Gemini (Google)', description: 'Usar Google Gemini', href: '#gemini' },
+      { title: 'Modelos locales', description: 'Configurar Ollama y otros', href: '#local' }
+    ]
+  },
+  {
+    title: 'Funcionalidades',
+    icon: '⚡',
+    items: [
+      { title: 'Búsqueda legal', description: 'Cómo funciona el sistema RAG', href: '#search' },
+      { title: 'Gestión de casos', description: 'Organiza tus consultas legales', href: '#cases' },
+      { title: 'Análisis de documentos', description: 'Sube y analiza contratos', href: '#documents' },
+      { title: 'Exportar resultados', description: 'Guarda tus consultas', href: '#export' }
+    ]
+  },
+  {
+    title: 'Avanzado',
+    icon: '🔬',
+    items: [
+      { title: 'Configuración RAG', description: 'Ajusta parámetros de búsqueda', href: '#rag-config' },
+      { title: 'API para desarrolladores', description: 'Integra LexMX en tu app', href: '#api' },
+      { title: 'Personalización', description: 'Modifica prompts y comportamiento', href: '#customize' },
+      { title: 'Auto-hospedaje', description: 'Despliega tu propia instancia', href: '#self-host' }
+    ]
+  }
+];
+
+const faqs = [
+  {
+    q: '¿Necesito pagar para usar LexMX?',
+    a: 'No, LexMX es gratuito. Solo necesitas proporcionar tu propio token de API del proveedor de IA que prefieras.'
+  },
+  {
+    q: '¿Mis consultas son privadas?',
+    a: 'Sí, completamente. LexMX funciona 100% en tu navegador. Tus consultas van directamente al proveedor de IA que elijas, sin pasar por nuestros servidores.'
+  },
+  {
+    q: '¿Qué tan actualizada está la información legal?',
+    a: 'El corpus legal se actualiza mensualmente con las últimas reformas y modificaciones publicadas en el Diario Oficial de la Federación.'
+  },
+  {
+    q: '¿Puedo usar LexMX sin conexión a internet?',
+    a: 'Parcialmente. Puedes navegar el corpus legal offline, pero necesitas internet para las consultas de IA.'
+  },
+  {
+    q: '¿LexMX reemplaza a un abogado?',
+    a: 'No. LexMX es una herramienta de consulta e información. Para casos legales específicos, siempre consulta con un abogado certificado.'
+  }
+];
+---
+
+<BaseLayout title="Documentación - LexMX">
+  <main class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <!-- Header -->
+      <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          Documentación
+        </h1>
+        <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+          Todo lo que necesitas saber para aprovechar al máximo LexMX
+        </p>
+      </div>
+
+      <!-- Quick Start Card -->
+      <div class="bg-gradient-to-r from-legal-500 to-legal-600 rounded-2xl p-8 mb-12 text-white">
+        <h2 class="text-2xl font-bold mb-4">Comienza en 3 pasos</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="flex items-start space-x-3">
+            <div class="flex-shrink-0 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+              <span class="text-sm font-bold">1</span>
+            </div>
+            <div>
+              <h3 class="font-semibold mb-1">Configura tu IA</h3>
+              <p class="text-legal-100 text-sm">Elige y configura tu proveedor de IA preferido</p>
+            </div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <div class="flex-shrink-0 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+              <span class="text-sm font-bold">2</span>
+            </div>
+            <div>
+              <h3 class="font-semibold mb-1">Haz tu consulta</h3>
+              <p class="text-legal-100 text-sm">Pregunta sobre cualquier tema legal mexicano</p>
+            </div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <div class="flex-shrink-0 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+              <span class="text-sm font-bold">3</span>
+            </div>
+            <div>
+              <h3 class="font-semibold mb-1">Obtén respuestas</h3>
+              <p class="text-legal-100 text-sm">Recibe información precisa con referencias legales</p>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6">
+          <a href="/setup" class="inline-flex items-center px-6 py-3 bg-white text-legal-600 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+            Comenzar ahora →
+          </a>
+        </div>
+      </div>
+
+      <!-- Documentation Sections -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        {docSections.map((section) => (
+          <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+              <span class="text-2xl mr-3">{section.icon}</span>
+              {section.title}
+            </h2>
+            <div class="space-y-3">
+              {section.items.map((item) => (
+                <a 
+                  href={item.href}
+                  class="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
+                >
+                  <h3 class="font-medium text-gray-900 dark:text-white group-hover:text-legal-600 dark:group-hover:text-legal-400">
+                    {item.title}
+                  </h3>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">
+                    {item.description}
+                  </p>
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Video Tutorials -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          Video Tutoriales
+        </h2>
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-8 text-center">
+          <div class="text-5xl mb-4">🎥</div>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            Próximamente
+          </h3>
+          <p class="text-gray-600 dark:text-gray-300">
+            Estamos preparando video tutoriales para ayudarte a aprovechar todas las funcionalidades de LexMX
+          </p>
+        </div>
+      </section>
+
+      <!-- FAQ Section -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          Preguntas Frecuentes
+        </h2>
+        <div class="space-y-4">
+          {faqs.map((faq) => (
+            <details class="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+              <summary class="px-6 py-4 cursor-pointer font-medium text-gray-900 dark:text-white hover:text-legal-600 dark:hover:text-legal-400">
+                {faq.q}
+              </summary>
+              <div class="px-6 pb-4 text-gray-600 dark:text-gray-300">
+                {faq.a}
+              </div>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <!-- Code Examples -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          Ejemplos de Consultas
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-gray-900 rounded-lg p-4">
+            <div class="text-xs text-gray-400 mb-2">EJEMPLO: Consulta Laboral</div>
+            <code class="text-sm text-green-400">
+              "¿Cuáles son las causales de despido justificado según la Ley Federal del Trabajo?"
+            </code>
+          </div>
+          <div class="bg-gray-900 rounded-lg p-4">
+            <div class="text-xs text-gray-400 mb-2">EJEMPLO: Consulta Fiscal</div>
+            <code class="text-sm text-green-400">
+              "¿Qué deducciones personales puedo aplicar en mi declaración anual de ISR?"
+            </code>
+          </div>
+          <div class="bg-gray-900 rounded-lg p-4">
+            <div class="text-xs text-gray-400 mb-2">EJEMPLO: Consulta Civil</div>
+            <code class="text-sm text-green-400">
+              "¿Cuáles son los requisitos para un contrato de arrendamiento válido?"
+            </code>
+          </div>
+          <div class="bg-gray-900 rounded-lg p-4">
+            <div class="text-xs text-gray-400 mb-2">EJEMPLO: Consulta Penal</div>
+            <code class="text-sm text-green-400">
+              "¿Qué es la presunción de inocencia según el CNPP?"
+            </code>
+          </div>
+        </div>
+      </section>
+
+      <!-- Support Section -->
+      <section>
+        <div class="bg-gray-100 dark:bg-gray-800 rounded-2xl p-8 text-center">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            ¿Necesitas ayuda?
+          </h2>
+          <p class="text-gray-600 dark:text-gray-300 mb-6">
+            La comunidad de LexMX está aquí para ayudarte
+          </p>
+          <div class="flex flex-wrap gap-4 justify-center">
+            <a 
+              href="https://github.com/ArtemioPadilla/LexMX/discussions"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+            >
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+              Foro de discusión
+            </a>
+            <a 
+              href="https://github.com/ArtemioPadilla/LexMX/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              Reportar problema
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

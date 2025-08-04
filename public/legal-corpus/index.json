@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "buildDate": "2025-08-04T06:34:17.373Z",
+  "documents": [
+    {
+      "id": "codigo-civil-federal",
+      "title": "CÓDIGO CIVIL FEDERAL",
+      "type": "codigo",
+      "primaryArea": "civil",
+      "hierarchy": 3,
+      "url": "/legal-corpus/codigo-civil-federal.json"
+    },
+    {
+      "id": "constitucion-politica-mexico",
+      "title": "CONSTITUCIÓN POLÍTICA DE LOS ESTADOS UNIDOS MEXICANOS",
+      "type": "constitucion",
+      "primaryArea": "general",
+      "hierarchy": 1,
+      "url": "/legal-corpus/constitucion-politica-mexico.json"
+    },
+    {
+      "id": "ley-federal-trabajo",
+      "title": "LEY FEDERAL DEL TRABAJO",
+      "type": "ley",
+      "primaryArea": "civil",
+      "hierarchy": 4,
+      "url": "/legal-corpus/ley-federal-trabajo.json"
+    }
+  ]
+}

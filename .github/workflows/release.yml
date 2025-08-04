@@ -1,0 +1,351 @@
+name: 🎉 Release Management
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.2.3)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  prepare-release:
+    name: 📋 Prepare Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      changelog: ${{ steps.changelog.outputs.changelog }}
+      
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for changelog
+          
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 🏷️ Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "push" ]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION="${{ inputs.version }}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+          
+      - name: 📝 Generate changelog
+        id: changelog
+        run: |
+          echo "📝 Generating changelog for version ${{ steps.version.outputs.version }}..."
+          
+          # Create changelog generation script
+          cat > generate-changelog.js << 'EOF'
+          const { execSync } = require('child_process');
+          const fs = require('fs');
+          
+          const generateChangelog = () => {
+            const version = process.env.VERSION;
+            
+            // Get commits since last tag
+            let lastTag;
+            try {
+              lastTag = execSync('git describe --tags --abbrev=0 HEAD^', { encoding: 'utf-8' }).trim();
+            } catch {
+              lastTag = '';
+            }
+            
+            const commitRange = lastTag ? `${lastTag}..HEAD` : 'HEAD';
+            const commits = execSync(`git log ${commitRange} --pretty=format:"%h|%s|%an|%ae"`, { encoding: 'utf-8' })
+              .split('\n')
+              .filter(Boolean)
+              .map(line => {
+                const [hash, subject, author] = line.split('|');
+                return { hash, subject, author };
+              });
+            
+            // Categorize commits
+            const categories = {
+              '✨ Features': [],
+              '🐛 Bug Fixes': [],
+              '📚 Documentation': [],
+              '⚡ Performance': [],
+              '🔒 Security': [],
+              '🎨 UI/UX': [],
+              '🔧 Maintenance': [],
+              '📚 Legal Corpus': []
+            };
+            
+            commits.forEach(commit => {
+              const subject = commit.subject;
+              
+              if (subject.match(/feat|feature|add|new/i)) {
+                categories['✨ Features'].push(commit);
+              } else if (subject.match(/fix|bug|issue/i)) {
+                categories['🐛 Bug Fixes'].push(commit);
+              } else if (subject.match(/doc|readme/i)) {
+                categories['📚 Documentation'].push(commit);
+              } else if (subject.match(/perf|performance|optimize/i)) {
+                categories['⚡ Performance'].push(commit);
+              } else if (subject.match(/security|vulnerability|cve/i)) {
+                categories['🔒 Security'].push(commit);
+              } else if (subject.match(/ui|ux|style|css/i)) {
+                categories['🎨 UI/UX'].push(commit);
+              } else if (subject.match(/corpus|legal|mexican|law/i)) {
+                categories['📚 Legal Corpus'].push(commit);
+              } else {
+                categories['🔧 Maintenance'].push(commit);
+              }
+            });
+            
+            // Generate markdown
+            let changelog = `# Release v${version}\n\n`;
+            changelog += `📅 **Release Date**: ${new Date().toLocaleDateString()}\n\n`;
+            
+            // Add summary
+            const totalCommits = commits.length;
+            const contributors = [...new Set(commits.map(c => c.author))].length;
+            changelog += `## 📊 Summary\n\n`;
+            changelog += `- ${totalCommits} commits\n`;
+            changelog += `- ${contributors} contributors\n\n`;
+            
+            // Add categorized changes
+            for (const [category, categoryCommits] of Object.entries(categories)) {
+              if (categoryCommits.length > 0) {
+                changelog += `## ${category}\n\n`;
+                categoryCommits.forEach(commit => {
+                  changelog += `- ${commit.subject} (${commit.hash})\n`;
+                });
+                changelog += '\n';
+              }
+            }
+            
+            // Add footer
+            changelog += `## 🙏 Contributors\n\n`;
+            const uniqueContributors = [...new Set(commits.map(c => c.author))];
+            uniqueContributors.forEach(contributor => {
+              changelog += `- @${contributor}\n`;
+            });
+            
+            changelog += `\n---\n\n`;
+            changelog += `**Full Changelog**: https://github.com/$GITHUB_REPOSITORY/compare/${lastTag}...v${version}\n`;
+            
+            // Save changelog
+            fs.writeFileSync('CHANGELOG.md', changelog);
+            
+            // Output for GitHub Actions (escape newlines)
+            const escaped = changelog.replace(/\n/g, '%0A').replace(/\r/g, '%0D');
+            console.log(`::set-output name=changelog::${escaped}`);
+            
+            return changelog;
+          };
+          
+          generateChangelog();
+          EOF
+          
+          VERSION="${{ steps.version.outputs.version }}" node generate-changelog.js
+          
+      - name: 📊 Release summary
+        run: |
+          echo "## 🎉 Release Preparation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | v${{ steps.version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Pre-release | ${{ inputs.prerelease && 'Yes' || 'No' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Triggered by | @${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Changelog Preview" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat CHANGELOG.md >> $GITHUB_STEP_SUMMARY
+
+  build-release:
+    name: 🏗️ Build Release Assets
+    needs: prepare-release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 🔧 Install dependencies
+        run: npm ci --legacy-peer-deps
+        
+      - name: 🏷️ Update version
+        run: |
+          npm version ${{ needs.prepare-release.outputs.version }} --no-git-tag-version
+          
+      - name: 📚 Build complete corpus
+        run: |
+          echo "📚 Building legal corpus..."
+          npm run build:corpus
+          npm run build:embeddings
+          
+      - name: 🏗️ Build application
+        run: |
+          echo "🏗️ Building application..."
+          npm run build
+          
+      - name: 📦 Create release archives
+        run: |
+          echo "📦 Creating release archives..."
+          
+          # Create dist archive
+          tar -czf lexmx-dist-v${{ needs.prepare-release.outputs.version }}.tar.gz dist/
+          
+          # Create corpus archive
+          tar -czf lexmx-corpus-v${{ needs.prepare-release.outputs.version }}.tar.gz \
+            public/legal-corpus/ \
+            public/embeddings/
+          
+          # Create source archive (excluding node_modules)
+          tar --exclude=node_modules --exclude=dist --exclude=.git \
+            -czf lexmx-source-v${{ needs.prepare-release.outputs.version }}.tar.gz .
+          
+          # Generate checksums
+          sha256sum lexmx-*.tar.gz > checksums.txt
+          
+      - name: 📊 Asset statistics
+        run: |
+          echo "## 📦 Release Assets" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Asset | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|------|" >> $GITHUB_STEP_SUMMARY
+          ls -lh lexmx-*.tar.gz | awk '{print "| " $9 " | " $5 " |"}' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔐 Checksums" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat checksums.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          
+      - name: 📤 Upload release assets
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-assets
+          path: |
+            lexmx-*.tar.gz
+            checksums.txt
+            CHANGELOG.md
+          retention-days: 7
+
+  create-release:
+    name: 🎉 Create GitHub Release
+    needs: [prepare-release, build-release]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📥 Download release assets
+        uses: actions/download-artifact@v3
+        with:
+          name: release-assets
+          
+      - name: 🎉 Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.prepare-release.outputs.version }}
+          name: LexMX v${{ needs.prepare-release.outputs.version }}
+          body: ${{ needs.prepare-release.outputs.changelog }}
+          draft: false
+          prerelease: ${{ inputs.prerelease || false }}
+          files: |
+            lexmx-*.tar.gz
+            checksums.txt
+            CHANGELOG.md
+          generate_release_notes: true
+          
+      - name: 📊 Release summary
+        run: |
+          echo "## 🎉 Release Published!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Release Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: v${{ needs.prepare-release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.prepare-release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Pre-release**: ${{ inputs.prerelease && 'Yes' || 'No' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Verify the release on GitHub" >> $GITHUB_STEP_SUMMARY
+          echo "2. Update documentation if needed" >> $GITHUB_STEP_SUMMARY
+          echo "3. Announce the release" >> $GITHUB_STEP_SUMMARY
+
+  update-documentation:
+    name: 📚 Update Documentation
+    needs: [prepare-release, create-release]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: 📝 Update README badges
+        run: |
+          # Update version badge in README
+          sed -i "s/version-[0-9.]*-/version-${{ needs.prepare-release.outputs.version }}-/" README.md
+          
+          # Update installation instructions
+          sed -i "s/lexmx@[0-9.]*/lexmx@${{ needs.prepare-release.outputs.version }}/" README.md
+          
+      - name: 📝 Update changelog
+        run: |
+          # Download the generated changelog
+          curl -L -o CHANGELOG_NEW.md \
+            https://github.com/${{ github.repository }}/releases/download/v${{ needs.prepare-release.outputs.version }}/CHANGELOG.md
+          
+          # Prepend to existing changelog
+          if [ -f CHANGELOG.md ]; then
+            cat CHANGELOG_NEW.md CHANGELOG.md > CHANGELOG_TEMP.md
+            mv CHANGELOG_TEMP.md CHANGELOG.md
+          else
+            mv CHANGELOG_NEW.md CHANGELOG.md
+          fi
+          
+      - name: 🔀 Create documentation PR
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: '📚 Update documentation for v${{ needs.prepare-release.outputs.version }}'
+          title: '📚 [Auto] Documentation update for v${{ needs.prepare-release.outputs.version }}'
+          body: |
+            ## 📚 Documentation Update
+            
+            This PR updates the documentation for release v${{ needs.prepare-release.outputs.version }}.
+            
+            ### Changes
+            - Updated version badges
+            - Updated installation instructions
+            - Added release changelog
+            
+            ---
+            *This PR was automatically generated by the release workflow.*
+          branch: docs-update-v${{ needs.prepare-release.outputs.version }}
+          delete-branch: true
+          labels: |
+            documentation
+            automated
+            release

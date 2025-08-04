@@ -1,0 +1,8 @@
+{
+  "version": "1.0.0",
+  "provider": "sentence-transformers/all-MiniLM-L6-v2",
+  "dimensions": 384,
+  "totalEmbeddings": 14,
+  "batchFiles": 1,
+  "buildDate": "2025-08-04T06:35:08.594Z"
+}

@@ -1,0 +1,117 @@
+---
+// Client-side translation loader
+import es from '../i18n/translations/es.json';
+import en from '../i18n/translations/en.json';
+---
+
+<script define:vars={{ es, en }}>
+  // Store translations globally
+  window.__translations = { es, en };
+  
+  function applyTranslations() {
+    try {
+      const lang = JSON.parse(localStorage.getItem('language') || '"es"');
+      const translations = window.__translations[lang] || window.__translations.es;
+      
+      if (!translations) {
+        console.error('Translations not found for language:', lang);
+        return;
+      }
+      
+      // Update all i18n elements
+      document.querySelectorAll('[data-i18n]').forEach((element) => {
+        const key = element.getAttribute('data-i18n');
+        if (!key) return;
+        
+        // Get translation value
+        const keys = key.split('.');
+        let value = translations;
+        
+        for (const k of keys) {
+          value = value?.[k];
+          if (value === undefined) break;
+        }
+        
+        if (typeof value === 'string') {
+          element.textContent = value;
+        }
+      });
+      
+      // Update placeholders
+      document.querySelectorAll('[data-i18n-placeholder]').forEach((element) => {
+        const key = element.getAttribute('data-i18n-placeholder');
+        if (!key) return;
+        
+        const keys = key.split('.');
+        let value = translations;
+        
+        for (const k of keys) {
+          value = value?.[k];
+          if (value === undefined) break;
+        }
+        
+        if (typeof value === 'string' && element instanceof HTMLInputElement) {
+          element.placeholder = value;
+        }
+      });
+      
+      // Update aria-labels
+      document.querySelectorAll('[data-i18n-aria]').forEach((element) => {
+        const key = element.getAttribute('data-i18n-aria');
+        if (!key) return;
+        
+        const keys = key.split('.');
+        let value = translations;
+        
+        for (const k of keys) {
+          value = value?.[k];
+          if (value === undefined) break;
+        }
+        
+        if (typeof value === 'string') {
+          element.setAttribute('aria-label', value);
+        }
+      });
+      
+      // Update document language
+      document.documentElement.lang = lang;
+      
+    } catch (error) {
+      console.error('Error applying translations:', error);
+    }
+  }
+  
+  // Apply translations on load
+  document.addEventListener('DOMContentLoaded', applyTranslations);
+  
+  // Listen for custom language change event
+  window.addEventListener('languageChanged', (e) => {
+    // Prevent any navigation attempts
+    if (e.detail && e.detail.language) {
+      e.preventDefault();
+      e.stopPropagation();
+      applyTranslations();
+    }
+  });
+  
+  // Listen for storage changes (from other tabs)
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'language') {
+      applyTranslations();
+    }
+  });
+  
+  // Make applyTranslations available globally
+  window.applyTranslations = applyTranslations;
+  
+  // Prevent accidental navigation to language routes
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const href = target.getAttribute('href') || target.closest('a')?.getAttribute('href');
+    if (href && (href === '/es/' || href === '/en/')) {
+      e.preventDefault();
+      e.stopPropagation();
+      console.warn('Prevented navigation to language route:', href);
+    }
+  }, true);
+</script>

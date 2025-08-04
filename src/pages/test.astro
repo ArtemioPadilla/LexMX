@@ -1,0 +1,52 @@
+---
+import { ThemeToggle } from '../components/ThemeToggle';
+import { LanguageSelector } from '../components/LanguageSelector';
+---
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Components</title>
+  <script is:inline>
+    // Initialize theme
+    (function() {
+      const stored = localStorage.getItem('theme');
+      const theme = stored ? JSON.parse(stored) : 'system';
+      let actualTheme;
+      if (theme === 'system') {
+        actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      } else {
+        actualTheme = theme;
+      }
+      if (actualTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+</head>
+<body class="p-8 bg-white dark:bg-gray-900">
+  <h1 class="text-2xl font-bold mb-8 text-gray-900 dark:text-white">Component Test Page</h1>
+  
+  <div class="space-y-8">
+    <div>
+      <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Theme Toggle:</h2>
+      <ThemeToggle client:load />
+    </div>
+    
+    <div>
+      <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Language Selector:</h2>
+      <LanguageSelector client:load />
+    </div>
+    
+    <div>
+      <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Both Together:</h2>
+      <div class="flex items-center space-x-4">
+        <LanguageSelector client:load />
+        <ThemeToggle client:load />
+      </div>
+    </div>
+  </div>
+</body>
+</html>

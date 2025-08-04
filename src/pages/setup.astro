@@ -1,0 +1,255 @@
+---
+// Provider setup page
+import BaseLayout from '../components/layout/BaseLayout.astro';
+import ProviderSetup from '../islands/ProviderSetup.tsx';
+---
+
+<BaseLayout title="Configuración - LexMX">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Header -->
+      <div class="text-center mb-12">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-legal-500 rounded-full mb-6">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+          Configuración de Proveedores IA
+        </h1>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+          Configura tus proveedores de inteligencia artificial para obtener las mejores respuestas legales. 
+          Tus configuraciones se almacenan de forma segura y encriptada localmente.
+        </p>
+      </div>
+
+      <!-- Provider Setup Component -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <ProviderSetup client:visible />
+      </div>
+
+      <!-- Help Section -->
+      <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <div class="flex items-start">
+            <svg class="w-6 h-6 text-blue-500 mt-1 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h3 class="text-lg font-semibold text-blue-900 mb-2">
+                ¿Necesitas Ayuda?
+              </h3>
+              <p class="text-blue-800 mb-3">
+                Consulta nuestra guía completa para configurar cada proveedor de IA.
+              </p>
+              <ul class="text-sm text-blue-700 space-y-1">
+                <li>• Cómo obtener claves API</li>
+                <li>• Configuración de modelos locales</li>
+                <li>• Optimización de costos</li>
+                <li>• Resolución de problemas</li>
+              </ul>
+              <a 
+                href="/docs/setup" 
+                class="inline-flex items-center mt-3 text-blue-600 hover:text-blue-500 font-medium"
+              >
+                Ver Documentación
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+          <div class="flex items-start">
+            <svg class="w-6 h-6 text-green-500 mt-1 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <div>
+              <h3 class="text-lg font-semibold text-green-900 mb-2">
+                Privacidad Garantizada
+              </h3>
+              <p class="text-green-800 mb-3">
+                Tus datos están completamente seguros y nunca salen de tu navegador.
+              </p>
+              <ul class="text-sm text-green-700 space-y-1">
+                <li>• Encriptación AES-256 local</li>
+                <li>• Sin envío de datos a servidores</li>
+                <li>• Cumplimiento GDPR/LFPDPPP</li>
+                <li>• Control total sobre tus datos</li>
+              </ul>
+              <a 
+                href="/privacy" 
+                class="inline-flex items-center mt-3 text-green-600 hover:text-green-500 font-medium"
+              >
+                Política de Privacidad
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Provider Comparison -->
+      <div class="mt-12">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">
+          Comparación de Proveedores
+        </h2>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Proveedor
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tipo
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Costo
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Mejor Para
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Configuración
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-xs font-bold">OAI</span>
+                      </div>
+                      <span class="font-medium text-gray-900">OpenAI</span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      Nube
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      Alto
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-900">
+                    Análisis legal complejo, redacción
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-500">
+                    API Key requerida
+                  </td>
+                </tr>
+                
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-xs font-bold">C</span>
+                      </div>
+                      <span class="font-medium text-gray-900">Claude</span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      Nube
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      Medio
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-900">
+                    Razonamiento legal, ética
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-500">
+                    API Key requerida
+                  </td>
+                </tr>
+                
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-xs font-bold">G</span>
+                      </div>
+                      <span class="font-medium text-gray-900">Gemini</span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      Nube
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      Bajo
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-900">
+                    Consultas generales, multiidioma
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-500">
+                    API Key requerida
+                  </td>
+                </tr>
+                
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-xs font-bold">O</span>
+                      </div>
+                      <span class="font-medium text-gray-900">Ollama</span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      Local
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      Gratis
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-900">
+                    Máxima privacidad, sin costos
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-500">
+                    Instalación local
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  /* Animations for loading states */
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+</style>

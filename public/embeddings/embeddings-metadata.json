@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0",
+  "buildDate": "2025-08-04T06:35:08.595Z",
+  "provider": {
+    "model": "sentence-transformers/all-MiniLM-L6-v2",
+    "dimensions": 384,
+    "maxTokens": 512
+  },
+  "corpus": {
+    "totalDocuments": 3,
+    "totalChunks": 14,
+    "processedChunks": 14,
+    "skippedChunks": 0
+  },
+  "processing": {
+    "chunkSize": 512,
+    "chunkOverlap": 50,
+    "batchSize": 100
+  },
+  "usage": {
+    "totalTokens": 0,
+    "estimatedCost": 0
+  },
+  "quality": {
+    "successRate": 100,
+    "errors": 0
+  }
+}

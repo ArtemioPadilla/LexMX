@@ -1,0 +1,315 @@
+name: 🔍 Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip tests'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '18'
+  CACHE_KEY_PREFIX: 'lexmx-v1'
+
+jobs:
+  # Build and test matrix
+  test:
+    name: 🧪 Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18, 20]
+        
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          
+      - name: 📚 Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ env.CACHE_KEY_PREFIX }}-deps-${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ env.CACHE_KEY_PREFIX }}-deps-${{ runner.os }}-node-${{ matrix.node-version }}-
+            
+      - name: 🔧 Install dependencies
+        run: npm ci
+        
+      - name: 🔍 Lint code
+        run: npm run lint
+        
+      - name: 📝 Type check
+        run: npm run type-check
+        
+      - name: 🧪 Run unit tests
+        if: ${{ !inputs.skip_tests }}
+        run: npm run test
+        
+      - name: 📊 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-node-${{ matrix.node-version }}
+          path: |
+            coverage/
+            test-results/
+          retention-days: 7
+
+  # End-to-end testing
+  e2e:
+    name: 🎭 E2E Tests
+    runs-on: ubuntu-latest
+    needs: test
+    if: ${{ !inputs.skip_tests }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📚 Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ env.CACHE_KEY_PREFIX }}-deps-${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
+          
+      - name: 🔧 Install dependencies
+        run: npm ci
+        
+      - name: 📚 Build legal corpus
+        run: npm run build:corpus
+        
+      - name: 🧮 Generate embeddings (simulated)
+        run: npm run build:embeddings
+        
+      - name: 🏗️ Build application
+        run: npm run build
+        
+      - name: 🎭 Install Playwright
+        run: npx playwright install --with-deps
+        
+      - name: 🧪 Run E2E tests
+        run: npm run test:e2e
+        
+      - name: 📊 Upload E2E results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-results
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  # Security scanning
+  security:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 🔧 Install dependencies
+        run: npm ci
+        
+      - name: 🔒 Run security audit
+        run: npm audit --audit-level moderate
+        
+      - name: 🔍 Run CodeQL analysis
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript
+          
+      - name: 🔍 Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v2
+
+  # Performance and bundle analysis
+  performance:
+    name: ⚡ Performance Check
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📚 Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ env.CACHE_KEY_PREFIX }}-deps-${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
+          
+      - name: 🔧 Install dependencies
+        run: npm ci
+        
+      - name: 📚 Build legal corpus
+        run: npm run build:corpus
+        
+      - name: 🧮 Generate embeddings (simulated)
+        run: npm run build:embeddings
+        
+      - name: 🏗️ Build application
+        run: npm run build
+        
+      - name: 📊 Analyze bundle size
+        run: |
+          echo "## Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          du -sh dist/ >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          find dist/ -name "*.js" -o -name "*.css" | head -10 | xargs ls -lh >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          
+      - name: 📊 Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: production-build
+          path: dist/
+          retention-days: 7
+          
+      - name: ⚡ Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v9
+        with:
+          configPath: './.lighthouserc.json'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+  # Legal corpus validation
+  corpus-validation:
+    name: 📚 Corpus Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 🔧 Install dependencies
+        run: npm ci
+        
+      - name: 📚 Build legal corpus
+        run: npm run build:corpus
+        
+      - name: 🔍 Validate corpus structure
+        run: |
+          # Check if corpus was built successfully
+          if [ ! -d "public/legal-corpus" ]; then
+            echo "❌ Legal corpus directory not found"
+            exit 1
+          fi
+          
+          # Check metadata file
+          if [ ! -f "public/legal-corpus/metadata.json" ]; then
+            echo "❌ Corpus metadata not found"
+            exit 1
+          fi
+          
+          # Validate JSON structure
+          if ! jq empty public/legal-corpus/metadata.json; then
+            echo "❌ Invalid metadata JSON"
+            exit 1
+          fi
+          
+          # Check document count
+          doc_count=$(jq -r '.totalDocuments' public/legal-corpus/metadata.json)
+          if [ "$doc_count" -eq 0 ]; then
+            echo "❌ No documents found in corpus"
+            exit 1
+          fi
+          
+          echo "✅ Legal corpus validation passed"
+          echo "📊 Documents: $doc_count"
+          echo "📊 Total size: $(jq -r '.totalSize' public/legal-corpus/metadata.json) bytes"
+          
+      - name: 📊 Corpus statistics
+        run: |
+          echo "## Legal Corpus Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+          jq '{totalDocuments, totalSize, legalAreas, buildDate}' public/legal-corpus/metadata.json >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # Quality gate - all checks must pass
+  quality-gate:
+    name: 🎯 Quality Gate
+    runs-on: ubuntu-latest
+    needs: [test, e2e, security, performance, corpus-validation]
+    if: always()
+    
+    steps:
+      - name: 🎯 Check all jobs status
+        run: |
+          echo "Test status: ${{ needs.test.result }}"
+          echo "E2E status: ${{ needs.e2e.result }}"
+          echo "Security status: ${{ needs.security.result }}"
+          echo "Performance status: ${{ needs.performance.result }}"
+          echo "Corpus validation status: ${{ needs.corpus-validation.result }}"
+          
+          # Check if any required job failed
+          if [[ "${{ needs.test.result }}" == "failure" || 
+                "${{ needs.security.result }}" == "failure" || 
+                "${{ needs.performance.result }}" == "failure" || 
+                "${{ needs.corpus-validation.result }}" == "failure" ]]; then
+            echo "❌ Quality gate failed - one or more required checks failed"
+            exit 1
+          fi
+          
+          # E2E tests are allowed to be skipped
+          if [[ "${{ needs.e2e.result }}" == "failure" ]]; then
+            echo "⚠️ E2E tests failed but continuing..."
+          fi
+          
+          echo "✅ Quality gate passed - all required checks successful"
+          
+      - name: 📊 Create summary
+        run: |
+          echo "## 🎯 Quality Gate Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ${{ needs.test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E Tests | ${{ needs.e2e.result == 'success' && '✅ Passed' || needs.e2e.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security | ${{ needs.security.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Performance | ${{ needs.performance.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Corpus Validation | ${{ needs.corpus-validation.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY

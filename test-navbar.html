@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Navbar Components</title>
+</head>
+<body>
+    <h1>Testing Navbar Components</h1>
+    <p>Testing language and theme toggle functionality</p>
+    
+    <script>
+        // Test localStorage interaction
+        console.log('Testing localStorage...');
+        
+        // Set language
+        localStorage.setItem('language', JSON.stringify('es'));
+        console.log('Language set to:', localStorage.getItem('language'));
+        
+        // Set theme
+        localStorage.setItem('theme', JSON.stringify('dark'));
+        console.log('Theme set to:', localStorage.getItem('theme'));
+        
+        // Simulate language change event
+        const event = new CustomEvent('languageChanged', { 
+            detail: { language: 'en' } 
+        });
+        window.dispatchEvent(event);
+        console.log('Language change event dispatched');
+        
+        // Check for navigation issues
+        window.addEventListener('beforeunload', (e) => {
+            console.log('Navigation attempt detected');
+        });
+        
+        console.log('Test complete. Check console for any errors.');
+    </script>
+</body>
+</html>

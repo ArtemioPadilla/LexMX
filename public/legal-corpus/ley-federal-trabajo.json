@@ -1,0 +1,17 @@
+{
+  "id": "ley-federal-trabajo",
+  "title": "LEY FEDERAL DEL TRABAJO",
+  "type": "ley",
+  "primaryArea": "civil",
+  "hierarchy": 4,
+  "source": "ley-federal-trabajo.txt",
+  "lastUpdated": "2025-08-04T06:34:17.373Z",
+  "content": [
+    {
+      "id": "ley-federal-trabajo_content",
+      "type": "text",
+      "title": "LEY FEDERAL DEL TRABAJO",
+      "content": "LEY FEDERAL DEL TRABAJO\n\nTÍTULO PRIMERO\nPRINCIPIOS GENERALES\n\nArtículo 1o. La presente Ley es de observancia general en toda la República y rige las relaciones de trabajo comprendidas en el artículo 123, Apartado A, de la Constitución.\n\nArtículo 2o. Las normas del trabajo tienden a conseguir el equilibrio entre los factores de la producción y la justicia social, así como propiciar el trabajo digno o decente en todas las relaciones laborales.\n\nSe entiende por trabajo digno o decente aquel en el que se respeta plenamente la dignidad humana del trabajador; no existe discriminación por origen étnico o nacional, género, edad, discapacidad, condición social, condiciones de salud, religión, condición migratoria, opiniones, preferencias sexuales o estado civil; se tiene acceso a la seguridad social y se percibe un salario remunerador; se recibe capacitación continua para el incremento de la productividad con beneficios compartidos, y se cuenta con condiciones óptimas de seguridad e higiene para prevenir riesgos de trabajo.\n\nArtículo 3o. El trabajo es un derecho y un deber social. No es artículo de comercio, exige respeto para las libertades y dignidad de quien lo presta y debe efectuarse en condiciones que aseguren la vida, la salud y un nivel económico decoroso para el trabajador y su familia.\n\nNo podrán establecerse distinciones entre los trabajadores por motivo de raza, sexo, edad, credo religioso, doctrina política o condición social.\n\nTÍTULO SEGUNDO\nRELACIONES INDIVIDUALES DE TRABAJO\n\nCAPÍTULO I\nDISPOSICIONES GENERALES\n\nArtículo 20. Se entiende por relación de trabajo, cualquiera que sea el acto que le dé origen, la prestación de un trabajo personal subordinado a una persona, mediante el pago de un salario.\n\nContrato individual de trabajo, cualquiera que sea su forma o denominación, es aquel por virtud del cual una persona se obliga a prestar a otra un trabajo personal subordinado, mediante el pago de un salario."
+    }
+  ]
+}

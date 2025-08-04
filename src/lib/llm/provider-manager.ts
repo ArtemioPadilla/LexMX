@@ -1,0 +1,379 @@
+// Main provider manager that orchestrates all LLM providers
+
+import type { 
+  LLMProvider, 
+  ProviderConfig, 
+  LLMRequest, 
+  LLMResponse, 
+  QueryContext,
+  UserProfile
+} from '@/types/llm';
+
+import { providerRegistry } from './provider-registry';
+import { secureStorage } from '../security/secure-storage';
+
+export class ProviderManager {
+  private providers: Map<string, LLMProvider> = new Map();
+  private initialized = false;
+
+  async initialize(): Promise<void> {
+    if (this.initialized) return;
+
+    try {
+      // Initialize secure storage
+      await secureStorage.initialize();
+
+      // Load saved provider configurations
+      await this.loadProviderConfigs();
+
+      this.initialized = true;
+    } catch (error) {
+      console.error('Failed to initialize ProviderManager:', error);
+      throw error;
+    }
+  }
+
+  // Provider configuration management
+  async configureProvider(config: ProviderConfig): Promise<void> {
+    try {
+      // Validate configuration
+      const validation = providerRegistry.validateConfig(config);
+      if (!validation.valid) {
+        throw new Error(`Invalid configuration: ${validation.errors.join(', ')}`);
+      }
+
+      // Store configuration securely
+      await secureStorage.storeProviderConfig(config);
+
+      // Initialize provider instance
+      await this.initializeProvider(config);
+
+      console.log(`Provider ${config.name} configured successfully`);
+    } catch (error) {
+      console.error(`Failed to configure provider ${config.id}:`, error);
+      throw error;
+    }
+  }
+
+  async removeProvider(providerId: string): Promise<void> {
+    // Remove from storage
+    await secureStorage.removeProviderConfig(providerId);
+
+    // Remove from memory
+    this.providers.delete(providerId);
+
+    // Remove from registry
+    providerRegistry.removeProvider(providerId);
+
+    console.log(`Provider ${providerId} removed`);
+  }
+
+  // Provider selection and routing
+  async selectOptimalProvider(context: QueryContext): Promise<LLMProvider | null> {
+    const availableProviders = Array.from(this.providers.values())
+      .filter(p => p.status === 'connected');
+
+    if (availableProviders.length === 0) {
+      return null;
+    }
+
+    // Score providers based on context
+    const scoredProviders = await Promise.all(
+      availableProviders.map(async provider => ({
+        provider,
+        score: await this.scoreProvider(provider, context)
+      }))
+    );
+
+    // Sort by score (descending)
+    scoredProviders.sort((a, b) => b.score - a.score);
+
+    return scoredProviders[0]?.provider || null;
+  }
+
+  private async scoreProvider(provider: LLMProvider, context: QueryContext): Promise<number> {
+    let score = 0;
+
+    // Privacy considerations
+    if (context.privacyRequired && provider.type === 'local') {
+      score += 50;
+    } else if (context.privacyRequired && provider.type === 'cloud') {
+      score -= 30;
+    }
+
+    // Offline mode
+    if (context.offlineMode) {
+      if (provider.type === 'local') {
+        score += 100; // Strongly prefer local when offline
+      } else {
+        score -= 100; // Can't use cloud providers offline
+      }
+    }
+
+    // Budget considerations
+    const config = await secureStorage.getProviderConfig(provider.id);
+    if (config?.costLimit) {
+      const metrics = provider.getMetrics();
+      const remainingBudget = context.userBudget - metrics.totalCost;
+      
+      if (remainingBudget <= 0) {
+        score -= 100; // Exclude if over budget
+      } else {
+        // Prefer providers with lower cost per token
+        const metadata = providerRegistry.getProviderMetadata(provider.id);
+        if (metadata) {
+          const costMultiplier = {
+            'free': 4,
+            'low': 3,
+            'medium': 2,
+            'high': 1
+          }[metadata.costLevel];
+          score += costMultiplier * 10;
+        }
+      }
+    }
+
+    // Complexity matching
+    if (context.complexity > 0.8) {
+      // High complexity queries prefer reasoning-capable models
+      const metadata = providerRegistry.getProviderMetadata(provider.id);
+      if (metadata?.capabilities.includes('reasoning')) {
+        score += 30;
+      }
+      if (metadata?.capabilities.includes('analysis')) {
+        score += 20;
+      }
+    }
+
+    // Urgency considerations
+    if (context.urgency === 'high') {
+      const metrics = provider.getMetrics();
+      // Prefer faster providers for urgent queries
+      const latencyScore = Math.max(0, 20 - (metrics.averageLatency / 100));
+      score += latencyScore;
+    }
+
+    // Legal area specialization
+    if (context.legalArea) {
+      const metadata = providerRegistry.getProviderMetadata(provider.id);
+      if (metadata?.recommendedFor.some(area => 
+        area.toLowerCase().includes(context.legalArea!.toLowerCase())
+      )) {
+        score += 25;
+      }
+    }
+
+    // Success rate
+    const metrics = provider.getMetrics();
+    score += metrics.successRate * 20;
+
+    // Provider priority from config
+    if (config) {
+      score += config.priority * 5;
+    }
+
+    return Math.max(0, score);
+  }
+
+  // Request processing with fallback
+  async processRequest(request: LLMRequest, context: QueryContext): Promise<LLMResponse> {
+    const provider = await this.selectOptimalProvider(context);
+    
+    if (!provider) {
+      throw new Error('No available LLM providers configured');
+    }
+
+    try {
+      // Process request with selected provider
+      const response = await provider.generateResponse(request);
+      
+      // Log successful usage
+      await this.logUsage(provider.id, request, response, true);
+      
+      return response;
+    } catch (error) {
+      // Log failed usage
+      await this.logUsage(provider.id, request, null, false);
+      
+      // Try fallback provider
+      const fallbackProvider = await this.selectFallbackProvider(provider, context);
+      
+      if (fallbackProvider) {
+        try {
+          const response = await fallbackProvider.generateResponse(request);
+          response.metadata = { ...response.metadata, fallback: true };
+          
+          await this.logUsage(fallbackProvider.id, request, response, true);
+          return response;
+        } catch (fallbackError) {
+          await this.logUsage(fallbackProvider.id, request, null, false);
+        }
+      }
+      
+      // If all fails, throw the original error
+      throw error;
+    }
+  }
+
+  private async selectFallbackProvider(
+    failedProvider: LLMProvider, 
+    context: QueryContext
+  ): Promise<LLMProvider | null> {
+    // Get all providers except the failed one
+    const candidates = Array.from(this.providers.values())
+      .filter(p => p.id !== failedProvider.id && p.status === 'connected');
+
+    if (candidates.length === 0) return null;
+
+    // For fallback, prefer different types (local vs cloud)
+    const differentType = candidates.find(p => p.type !== failedProvider.type);
+    if (differentType) return differentType;
+
+    // Otherwise, just return the highest scoring remaining provider
+    const scoredCandidates = await Promise.all(
+      candidates.map(async provider => ({
+        provider,
+        score: await this.scoreProvider(provider, context)
+      }))
+    );
+
+    scoredCandidates.sort((a, b) => b.score - a.score);
+    return scoredCandidates[0]?.provider || null;
+  }
+
+  // Provider status management
+  async checkProvidersHealth(): Promise<void> {
+    const providers = Array.from(this.providers.values());
+    
+    await Promise.all(providers.map(async provider => {
+      try {
+        const isAvailable = await provider.isAvailable();
+        provider.status = isAvailable ? 'connected' : 'disconnected';
+      } catch (error) {
+        provider.status = 'error';
+        console.error(`Health check failed for ${provider.name}:`, error);
+      }
+    }));
+  }
+
+  // Get provider information
+  getConfiguredProviders(): LLMProvider[] {
+    return Array.from(this.providers.values());
+  }
+
+  getAvailableProviders(): LLMProvider[] {
+    return Array.from(this.providers.values())
+      .filter(p => p.status === 'connected');
+  }
+
+  async getProviderConfig(providerId: string): Promise<ProviderConfig | null> {
+    return await secureStorage.getProviderConfig(providerId);
+  }
+
+  // User profile management
+  async applyUserProfile(profile: UserProfile): Promise<void> {
+    // Remove existing providers not in profile
+    const existingProviders = await secureStorage.getAllProviderConfigs();
+    for (const config of existingProviders) {
+      if (!profile.providers.includes(config.id)) {
+        await this.removeProvider(config.id);
+      }
+    }
+
+    // Configure profile providers
+    for (const providerId of profile.providers) {
+      const existingConfig = await secureStorage.getProviderConfig(providerId);
+      if (!existingConfig) {
+        // Create default config for new providers
+        const defaultConfig = providerRegistry.createDefaultConfig(providerId);
+        if (defaultConfig) {
+          // Apply profile preferences
+          defaultConfig.priority = profile.providers.indexOf(providerId) + 1;
+          // Don't auto-configure - user still needs to provide API keys
+        }
+      }
+    }
+  }
+
+  // Private methods
+  private async loadProviderConfigs(): Promise<void> {
+    try {
+      const configs = await secureStorage.getAllProviderConfigs();
+      
+      for (const config of configs) {
+        if (config.enabled) {
+          await this.initializeProvider(config);
+        }
+      }
+      
+      console.log(`Loaded ${configs.length} provider configurations`);
+    } catch (error) {
+      console.error('Failed to load provider configurations:', error);
+    }
+  }
+
+  private async initializeProvider(config: ProviderConfig): Promise<void> {
+    try {
+      // Import provider class dynamically
+      const ProviderClass = await this.importProviderClass(config.id);
+      
+      // Create provider instance
+      const provider = new ProviderClass(config);
+      
+      // Test connection
+      const isAvailable = await provider.testConnection();
+      provider.status = isAvailable ? 'connected' : 'disconnected';
+      
+      // Register provider
+      this.providers.set(config.id, provider);
+      providerRegistry.registerProvider(provider);
+      
+    } catch (error) {
+      console.error(`Failed to initialize provider ${config.id}:`, error);
+    }
+  }
+
+  private async importProviderClass(providerId: string): Promise<any> {
+    switch (providerId) {
+      case 'openai':
+        return (await import('./providers/openai')).OpenAIProvider;
+      case 'anthropic':
+        return (await import('./providers/claude')).ClaudeProvider;
+      case 'google':
+        return (await import('./providers/gemini')).GeminiProvider;
+      case 'ollama':
+        return (await import('./providers/ollama')).OllamaProvider;
+      case 'openai-compatible':
+        return (await import('./providers/openai-compatible')).OpenAICompatibleProvider;
+      default:
+        throw new Error(`Unknown provider: ${providerId}`);
+    }
+  }
+
+  private async logUsage(
+    providerId: string,
+    request: LLMRequest,
+    response: LLMResponse | null,
+    success: boolean
+  ): Promise<void> {
+    // Log usage for analytics and billing
+    const usage = {
+      timestamp: Date.now(),
+      providerId,
+      model: request.model,
+      success,
+      tokens: response?.usage.totalTokens || 0,
+      cost: response?.cost || 0,
+      latency: response?.latency || 0
+    };
+
+    // Store in secure storage if analytics enabled
+    const privacySettings = secureStorage.getPrivacySettings();
+    if (privacySettings.analytics !== 'none') {
+      // Store anonymized usage data
+    }
+  }
+}
+
+// Global provider manager instance
+export const providerManager = new ProviderManager();

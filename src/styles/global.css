@@ -1,0 +1,223 @@
+/* Global styles for LexMX */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS variables */
+:root {
+  --color-legal-50: #f0fdf4;
+  --color-legal-500: #22c55e;
+  --color-legal-600: #16a34a;
+}
+
+/* Base styles */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+  
+  /* Focus styles for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--color-legal-500);
+    outline-offset: 2px;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}
+
+/* Component styles */
+@layer components {
+  /* Button variants */
+  .btn-primary {
+    @apply bg-legal-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-legal-600 focus:outline-none focus:ring-2 focus:ring-legal-500 focus:ring-offset-2 transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-legal-500 focus:ring-offset-2 transition-colors;
+  }
+  
+  /* Form elements */
+  .input-primary {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-legal-500 focus:border-transparent transition-colors;
+  }
+  
+  /* Card styles */
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+  }
+  
+  /* Legal document styles */
+  .legal-text {
+    @apply font-legal leading-relaxed;
+  }
+  
+  .legal-article {
+    @apply mb-4 p-4 border-l-4 border-legal-200 bg-legal-50;
+  }
+  
+  .legal-citation {
+    @apply text-legal-600 font-medium hover:text-legal-700 cursor-pointer;
+  }
+  
+  /* Loading states */
+  .loading-pulse {
+    @apply animate-pulse bg-gray-200 rounded;
+  }
+  
+  /* Status indicators */
+  .status-connected {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800;
+  }
+  
+  .status-disconnected {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800;
+  }
+  
+  .status-pending {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800;
+  }
+  
+  /* Cost level indicators */
+  .cost-free {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  .cost-low {
+    @apply bg-blue-100 text-blue-800;
+  }
+  
+  .cost-medium {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+  
+  .cost-high {
+    @apply bg-red-100 text-red-800;
+  }
+}
+
+/* Utility classes */
+@layer utilities {
+  /* Text gradient */
+  .text-gradient {
+    background: linear-gradient(135deg, var(--color-legal-500), var(--color-legal-600));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Glass morphism effect */
+  .glass {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  /* Animation utilities */
+  .fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  .slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .bounce-in {
+    animation: bounceIn 0.5s ease-out;
+  }
+}
+
+/* Keyframe animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .legal-text {
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+  
+  .legal-article {
+    page-break-inside: avoid;
+    border-left: 2pt solid #000;
+    background: none;
+  }
+}
+
+/* Dark mode support (for future implementation) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark mode variables would go here */
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
