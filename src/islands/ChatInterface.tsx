@@ -1,10 +1,12 @@
 // Main chat interface for legal queries - integrates with RAG engine
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { LegalResponse, LegalArea, QueryType } from '../types/legal';
 import { LegalRAGEngine } from '../lib/rag/engine';
 import { providerManager } from '../lib/llm/provider-manager';
 import ProviderRecommendation from './ProviderRecommendation';
+import WebLLMProgress from '../components/WebLLMProgress';
+import MessageContent from '../components/MessageContent';
 
 export interface ChatMessage {
   id: string;
@@ -30,9 +32,13 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [ragEngine] = useState(() => new LegalRAGEngine());
   const [isInitialized, setIsInitialized] = useState(false);
+  const [webllmProgress, setWebllmProgress] = useState<{ progress: number; message: string } | null>(null);
   
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const previousMessageCountRef = useRef(0);
+  const shouldAutoScrollRef = useRef(true);
   
   // Initialize messages only on client side to avoid hydration mismatch
   useEffect(() => {
@@ -51,6 +57,11 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
   useEffect(() => {
     const initializeEngine = async () => {
       try {
+        // Set WebLLM progress callback
+        providerManager.setWebLLMProgressCallback((progress, message) => {
+          setWebllmProgress({ progress, message });
+        });
+        
         // Initialize provider manager first
         await providerManager.initialize();
         
@@ -72,10 +83,36 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
     initializeEngine();
   }, [ragEngine]);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Smart auto-scroll: only scroll for new messages, not streaming updates
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    
+    // Check if this is a new message (not just an update)
+    const isNewMessage = messages.length > previousMessageCountRef.current;
+    previousMessageCountRef.current = messages.length;
+    
+    // Check if user has scrolled up (with 100px tolerance)
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+    
+    // Only auto-scroll if:
+    // 1. It's a new message (not streaming update)
+    // 2. User is near the bottom or we should force scroll
+    if (isNewMessage && (isNearBottom || shouldAutoScrollRef.current)) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      shouldAutoScrollRef.current = true;
+    }
   }, [messages]);
+  
+  // Track when user manually scrolls
+  const handleScroll = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    
+    // If user scrolls away from bottom, disable auto-scroll
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+    shouldAutoScrollRef.current = isNearBottom;
+  }, []);
 
   // Auto-focus input
   useEffect(() => {
@@ -116,6 +153,9 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
     setMessages(prev => [...prev, userMessage]);
     setCurrentInput('');
     setIsProcessing(true);
+    
+    // Re-enable auto-scroll when user sends a message
+    shouldAutoScrollRef.current = true;
 
     // Add loading message
     const loadingId = (Date.now() + 1).toString();
@@ -129,14 +169,40 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
     setMessages(prev => [...prev, loadingMessage]);
 
     try {
-      // Process legal query with RAG engine
-      const legalResponse = await ragEngine.processLegalQuery(userMessage.content, {
-        legalArea: selectedArea || undefined,
-        includeReferences: true,
-        maxResults: 5
-      });
+      // Prepare for streaming response
+      let streamedContent = '';
+      
+      // Callback to handle streaming chunks
+      const handleChunk = (chunk: string) => {
+        streamedContent += chunk;
+        
+        // Update the message with the accumulated content
+        setMessages(prev => prev.map(msg => 
+          msg.id === loadingId 
+            ? {
+                ...msg,
+                content: streamedContent,
+                isStreaming: true
+              }
+            : msg
+        ));
+      };
 
-      // Replace loading message with actual response
+      // Process legal query with streaming
+      const legalResponse = await ragEngine.processLegalQueryStreaming(
+        userMessage.content,
+        handleChunk,
+        {
+          legalArea: selectedArea || undefined,
+          includeReferences: true,
+          maxResults: 5
+        }
+      );
+      
+      // Clear WebLLM progress when done
+      setWebllmProgress(null);
+
+      // Update the message with final response and metadata
       setMessages(prev => prev.map(msg => 
         msg.id === loadingId 
           ? {
@@ -209,6 +275,14 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
 
   return (
     <div className={`chat-interface flex flex-col h-full bg-white ${className}`}>
+      {/* WebLLM Progress Indicator */}
+      {webllmProgress && (
+        <WebLLMProgress
+          progress={webllmProgress.progress}
+          message={webllmProgress.message}
+          onClose={() => setWebllmProgress(null)}
+        />
+      )}
       {/* Header */}
       <div className="flex-shrink-0 border-b border-gray-200 bg-white p-4">
         <div className="flex items-center justify-between">
@@ -275,7 +349,11 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div 
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto p-4 space-y-4"
+      >
         {messages.map((message) => (
           <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-3xl ${message.type === 'user' ? 'ml-12' : 'mr-12'}`}>
@@ -306,7 +384,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
                   ? 'bg-blue-50 text-blue-900 border border-blue-200'
                   : 'bg-gray-50 text-gray-900'
               }`}>
-                <div className="whitespace-pre-wrap">{message.content}</div>
+                <MessageContent content={message.content} />
                 
                 {/* Legal Response Details */}
                 {message.legalResponse && (

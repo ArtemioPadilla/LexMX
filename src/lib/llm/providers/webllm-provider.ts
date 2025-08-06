@@ -164,15 +164,23 @@ export class WebLLMProvider implements LLMProvider {
       const promptTokens = Math.ceil(request.messages.reduce((sum, msg) => sum + msg.content.length, 0) / 4);
       const completionTokens = Math.ceil(content.length / 4);
 
+      const model = this.config.modelId || this.config.model || 'Llama-3.2-3B-Instruct-q4f16_1-MLC';
+      const processingTime = Date.now() - startTime;
+      
       return {
         content,
-        role: 'assistant',
-        model: this.config.modelId || this.config.model || 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
-        promptTokens,
-        completionTokens,
-        totalTokens: promptTokens + completionTokens,
-        finishReason: response.choices[0]?.finish_reason || 'stop',
-        processingTime: Date.now() - startTime
+        model: model,
+        provider: this.id,
+        usage: {
+          promptTokens,
+          completionTokens,
+          totalTokens: promptTokens + completionTokens
+        },
+        cost: 0,
+        latency: processingTime,
+        metadata: {
+          cached: false
+        }
       };
     } catch (error) {
       console.error('WebLLM complete error:', error);
@@ -214,15 +222,23 @@ export class WebLLMProvider implements LLMProvider {
         const promptTokens = Math.ceil(request.messages.reduce((sum, msg) => sum + msg.content.length, 0) / 4);
         const completionTokens = Math.ceil(fullContent.length / 4);
 
+        const model = this.config.modelId || this.config.model || 'Llama-3.2-3B-Instruct-q4f16_1-MLC';
+        const processingTime = Date.now() - startTime;
+        
         return {
           content: fullContent,
-          role: 'assistant',
-          model: this.config.modelId || this.config.model || 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
-          promptTokens,
-          completionTokens,
-          totalTokens: promptTokens + completionTokens,
-          finishReason: 'stop',
-          processingTime: Date.now() - startTime
+          model: model,
+          provider: this.id,
+          usage: {
+            promptTokens,
+            completionTokens,
+            totalTokens: promptTokens + completionTokens
+          },
+          cost: 0,
+          latency: processingTime,
+          metadata: {
+            cached: false
+          }
         };
       }
     } catch (error) {

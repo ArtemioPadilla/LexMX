@@ -6,8 +6,6 @@ const CACHE_NAME = 'lexmx-v1';
 const BASE_PATH = self.location.pathname.replace(/\/sw\.js$/, '') || '';
 
 const STATIC_ASSETS = [
-  `${BASE_PATH}/`,
-  `${BASE_PATH}/setup`,
   `${BASE_PATH}/manifest.json`,
   `${BASE_PATH}/favicon.svg`
 ];

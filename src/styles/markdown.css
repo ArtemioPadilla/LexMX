@@ -1,0 +1,150 @@
+/* Markdown styles for legal content with dark/light theme support */
+
+.markdown-content {
+  @apply text-gray-900 dark:text-gray-100 leading-relaxed;
+}
+
+/* Headings for legal sections */
+.markdown-content h1 {
+  @apply text-xl font-bold mt-4 mb-3 text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2;
+}
+
+.markdown-content h2 {
+  @apply text-lg font-semibold mt-4 mb-2 text-gray-900 dark:text-gray-100;
+}
+
+.markdown-content h3 {
+  @apply text-base font-semibold mt-3 mb-2 text-gray-800 dark:text-gray-200;
+}
+
+.markdown-content h4 {
+  @apply text-sm font-semibold mt-2 mb-1 text-gray-800 dark:text-gray-200;
+}
+
+/* Paragraphs */
+.markdown-content p {
+  @apply mb-3 leading-7;
+}
+
+/* Lists for procedures and requirements */
+.markdown-content ul {
+  @apply list-disc list-inside mb-3 space-y-1 ml-4;
+}
+
+.markdown-content ol {
+  @apply list-decimal list-inside mb-3 space-y-1 ml-4;
+}
+
+.markdown-content li {
+  @apply leading-7;
+}
+
+.markdown-content li > p {
+  @apply inline;
+}
+
+/* Code blocks for legal references */
+.markdown-content code {
+  @apply font-mono text-sm;
+}
+
+.markdown-content :not(pre) > code {
+  @apply bg-legal-50 dark:bg-legal-900/20 text-legal-700 dark:text-legal-300 px-1.5 py-0.5 rounded border border-legal-200 dark:border-legal-700;
+}
+
+.markdown-content pre {
+  @apply bg-gray-50 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto mb-3 border border-gray-200 dark:border-gray-700;
+}
+
+.markdown-content pre code {
+  @apply bg-transparent p-0 border-0 text-gray-900 dark:text-gray-100;
+}
+
+/* Blockquotes for legal citations */
+.markdown-content blockquote {
+  @apply border-l-4 border-legal-500 dark:border-legal-400 pl-4 py-2 mb-3 bg-legal-50 dark:bg-legal-900/20 italic text-gray-700 dark:text-gray-300;
+}
+
+.markdown-content blockquote p {
+  @apply mb-0;
+}
+
+/* Tables for legal comparisons */
+.markdown-content table {
+  @apply w-full mb-4 border-collapse;
+}
+
+.markdown-content th {
+  @apply bg-gray-50 dark:bg-gray-800 px-4 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300 border-b-2 border-gray-200 dark:border-gray-700;
+}
+
+.markdown-content td {
+  @apply px-4 py-2 text-sm border-b border-gray-200 dark:border-gray-700;
+}
+
+.markdown-content tr:hover td {
+  @apply bg-gray-50 dark:bg-gray-800/50;
+}
+
+/* Links */
+.markdown-content a {
+  @apply text-legal-600 dark:text-legal-400 hover:text-legal-700 dark:hover:text-legal-300 underline underline-offset-2 transition-colors;
+}
+
+/* Strong emphasis */
+.markdown-content strong {
+  @apply font-semibold text-gray-900 dark:text-gray-100;
+}
+
+/* Emphasis */
+.markdown-content em {
+  @apply italic text-gray-800 dark:text-gray-200;
+}
+
+/* Horizontal rules */
+.markdown-content hr {
+  @apply my-6 border-gray-300 dark:border-gray-700;
+}
+
+/* Special styling for legal references - will be handled by component */
+.markdown-content .legal-article-ref {
+  @apply bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-700 font-semibold;
+}
+
+/* Special styling for law names */
+.markdown-content .legal-law-name {
+  @apply text-legal-700 dark:text-legal-300;
+}
+
+/* Warning boxes */
+.markdown-content blockquote.warning {
+  @apply bg-amber-50 dark:bg-amber-900/20 border-amber-500 dark:border-amber-400 text-amber-900 dark:text-amber-200 not-italic font-medium;
+}
+
+/* Info boxes */
+.markdown-content blockquote.info {
+  @apply bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-400 text-blue-900 dark:text-blue-200 not-italic;
+}
+
+/* Nested content in dark theme */
+.dark .markdown-content {
+  /* Ensure nested elements inherit proper colors */
+  color-scheme: dark;
+}
+
+/* Adjust message bubble colors for better markdown visibility */
+.dark .bg-gray-50 .markdown-content {
+  @apply text-gray-100;
+}
+
+.dark .bg-legal-500 .markdown-content {
+  @apply text-white;
+}
+
+.dark .bg-legal-500 .markdown-content code:not(pre code) {
+  @apply bg-white/20 text-white border-white/30;
+}
+
+.dark .bg-legal-500 .markdown-content a {
+  @apply text-white underline hover:text-gray-200;
+}

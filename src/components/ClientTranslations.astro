@@ -17,7 +17,36 @@ const translationsScript = `
 <script>
   function applyTranslations() {
     try {
-      const lang = JSON.parse(localStorage.getItem('language') || '"es"');
+      // Get language from localStorage, handle both JSON and plain string formats
+      let lang = localStorage.getItem('language');
+      
+      // Handle various storage formats
+      if (lang) {
+        // If it's already just "es" or "en", use it
+        if (lang === 'es' || lang === 'en') {
+          // Already in correct format
+        } else if (lang.startsWith('"') && lang.endsWith('"')) {
+          // Remove surrounding quotes
+          lang = lang.slice(1, -1);
+        } else {
+          // Try to parse as JSON
+          try {
+            lang = JSON.parse(lang);
+          } catch (e) {
+            console.warn('Failed to parse language from localStorage, defaulting to es');
+            lang = 'es';
+          }
+        }
+      } else {
+        lang = 'es'; // Default language
+      }
+      
+      // Ensure lang is a valid string
+      if (typeof lang !== 'string' || (lang !== 'es' && lang !== 'en')) {
+        console.warn(`Invalid language value: ${lang}, defaulting to es`);
+        lang = 'es';
+      }
+      
       const translations = window.__translations[lang] || window.__translations.es;
       
       if (!translations) {

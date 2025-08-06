@@ -177,6 +177,40 @@ export class ProviderManager {
     return Math.max(0, score);
   }
 
+  // Request processing with streaming support
+  async processStreamingRequest(
+    request: LLMRequest, 
+    context: QueryContext,
+    onChunk: (chunk: string) => void
+  ): Promise<LLMResponse> {
+    const provider = await this.selectOptimalProvider(context);
+    
+    if (!provider) {
+      throw new Error('No available LLM providers configured');
+    }
+
+    // Check if provider supports streaming
+    if (!provider.stream) {
+      throw new Error(`Provider ${provider.name} does not support streaming`);
+    }
+
+    try {
+      // Process streaming request
+      const response = await provider.stream(request, onChunk);
+      
+      // Log successful usage
+      await this.logUsage(provider.id, request, response, true);
+      
+      return response;
+    } catch (error) {
+      // Log failed usage
+      await this.logUsage(provider.id, request, null, false);
+      
+      // For streaming, we don't fallback as it would restart the stream
+      throw error;
+    }
+  }
+
   // Request processing with fallback
   async processRequest(request: LLMRequest, context: QueryContext): Promise<LLMResponse> {
     const provider = await this.selectOptimalProvider(context);
@@ -433,9 +467,9 @@ export class ProviderManager {
       providerId,
       model: request.model,
       success,
-      tokens: response?.usage.totalTokens || 0,
+      tokens: response?.usage?.totalTokens || response?.totalTokens || 0,
       cost: response?.cost || 0,
-      latency: response?.latency || 0
+      latency: response?.latency || response?.processingTime || 0
     };
 
     // Store in secure storage if analytics enabled

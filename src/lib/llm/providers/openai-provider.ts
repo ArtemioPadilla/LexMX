@@ -4,12 +4,59 @@ import type {
   LLMResponse, 
   LLMRequest, 
   ProviderConfig,
-  StreamCallback 
+  StreamCallback,
+  LLMModel,
+  ProviderStatus,
+  LLMCapability,
+  CostLevel,
+  LLMProviderType,
+  ProviderMetrics
 } from '../../../types/llm';
 
 export class OpenAIProvider implements LLMProvider {
+  readonly id: string = 'openai';
+  readonly name: string = 'OpenAI';
+  readonly type: LLMProviderType = 'cloud';
+  readonly icon: string = '🤖';
+  readonly description: string = 'GPT-4 and GPT-3.5 models - Excellent for complex legal analysis';
+  readonly costLevel: CostLevel = 'medium';
+  readonly capabilities: LLMCapability[] = ['reasoning', 'analysis', 'citations', 'multilingual'];
+  
+  models: LLMModel[] = [
+    {
+      id: 'gpt-4-turbo',
+      name: 'GPT-4 Turbo',
+      description: 'Most capable model for complex legal reasoning',
+      contextLength: 128000,
+      maxTokens: 4096,
+      costPer1kTokens: { input: 0.01, output: 0.03 },
+      capabilities: ['reasoning', 'analysis', 'citations', 'multilingual'],
+      recommended: true
+    },
+    {
+      id: 'gpt-3.5-turbo',
+      name: 'GPT-3.5 Turbo',
+      description: 'Fast and cost-effective for simpler queries',
+      contextLength: 16384,
+      maxTokens: 4096,
+      costPer1kTokens: { input: 0.0005, output: 0.0015 },
+      capabilities: ['reasoning', 'analysis'],
+      recommended: false
+    }
+  ];
+  
+  status: ProviderStatus = 'disconnected';
+  
   private config: ProviderConfig;
   private baseUrl = 'https://api.openai.com/v1';
+  private metrics: ProviderMetrics = {
+    providerId: 'openai',
+    totalRequests: 0,
+    successRate: 1.0,
+    averageLatency: 0,
+    totalCost: 0,
+    lastUsed: Date.now()
+  };
 
   constructor(config: ProviderConfig) {
     this.config = config;
@@ -18,7 +65,41 @@ export class OpenAIProvider implements LLMProvider {
     }
   }
 
-  async complete(request: LLMRequest): Promise<LLMResponse> {
+  async generateResponse(request: LLMRequest): Promise<LLMResponse> {
+    const response = await this.complete(request);
+    return {
+      content: response.content,
+      model: response.model,
+      provider: this.id,
+      usage: {
+        promptTokens: response.promptTokens,
+        completionTokens: response.completionTokens,
+        totalTokens: response.totalTokens
+      },
+      cost: this.getCost(response.promptTokens, response.completionTokens, response.model),
+      latency: response.processingTime,
+      metadata: {
+        cached: false
+      }
+    };
+  }
+
+  async isAvailable(): Promise<boolean> {
+    return this.status === 'connected';
+  }
+
+  estimateCost(request: LLMRequest): number {
+    const model = request.model || this.config.model || 'gpt-3.5-turbo';
+    const estimatedPromptTokens = request.messages.reduce((sum, msg) => sum + msg.content.length / 4, 0);
+    const estimatedCompletionTokens = request.maxTokens || 1000;
+    return this.getCost(estimatedPromptTokens, estimatedCompletionTokens, model);
+  }
+
+  getMetrics(): ProviderMetrics {
+    return { ...this.metrics };
+  }
+
+  private async complete(request: LLMRequest): Promise<any> {
     const startTime = Date.now();
     
     try {
@@ -66,6 +147,25 @@ export class OpenAIProvider implements LLMProvider {
   }
 
   async stream(request: LLMRequest, onChunk: StreamCallback): Promise<LLMResponse> {
+    const response = await this.streamInternal(request, onChunk);
+    return {
+      content: response.content,
+      model: response.model,
+      provider: this.id,
+      usage: {
+        promptTokens: response.promptTokens,
+        completionTokens: response.completionTokens,
+        totalTokens: response.totalTokens
+      },
+      cost: this.getCost(response.promptTokens, response.completionTokens, response.model),
+      latency: response.processingTime,
+      metadata: {
+        cached: false
+      }
+    };
+  }
+
+  private async streamInternal(request: LLMRequest, onChunk: StreamCallback): Promise<any> {
     const startTime = Date.now();
     let fullContent = '';
     let promptTokens = 0;

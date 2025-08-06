@@ -5,6 +5,7 @@
 
 /* Import legal document styles */
 @import './legal-components.css';
+@import './markdown.css';
 
 /* Custom CSS variables */
 :root {

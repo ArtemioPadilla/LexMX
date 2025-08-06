@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate LexMX Icons</title>
+</head>
+<body>
+    <h1>LexMX Icon Generator</h1>
+    <canvas id="canvas192" width="192" height="192"></canvas>
+    <canvas id="canvas512" width="512" height="512"></canvas>
+    
+    <script>
+        function createIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Fill background with legal green
+            ctx.fillStyle = '#22c55e';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Draw white circle
+            const margin = size / 8;
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, (size/2) - margin, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            
+            // Draw scales of justice
+            const centerX = size / 2;
+            const centerY = size / 2;
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = Math.max(2, size / 50);
+            
+            // Vertical line
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - size/4);
+            ctx.lineTo(centerX, centerY + size/4);
+            ctx.stroke();
+            
+            // Horizontal beam
+            const beamWidth = size / 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX - beamWidth, centerY - size/4);
+            ctx.lineTo(centerX + beamWidth, centerY - size/4);
+            ctx.stroke();
+            
+            // Balance pans
+            const panRadius = size / 16;
+            // Left pan
+            ctx.beginPath();
+            ctx.arc(centerX - beamWidth, centerY - size/4, panRadius, 0, 2 * Math.PI);
+            ctx.stroke();
+            // Right pan
+            ctx.beginPath();
+            ctx.arc(centerX + beamWidth, centerY - size/4, panRadius, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            // Draw "MX" text
+            ctx.fillStyle = '#22c55e';
+            ctx.font = `bold ${size/6}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText('MX', centerX, centerY + size/3);
+            
+            // Convert to PNG and download
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.download = `icon-${size}.png`;
+                a.href = url;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        // Generate both icons
+        createIcon('canvas192', 192);
+        setTimeout(() => createIcon('canvas512', 512), 500);
+    </script>
+</body>
+</html>

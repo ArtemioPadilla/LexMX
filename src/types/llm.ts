@@ -5,6 +5,9 @@ export type CostLevel = 'free' | 'low' | 'medium' | 'high';
 export type LLMCapability = 'reasoning' | 'analysis' | 'citations' | 'ethics' | 'multilingual' | 'privacy' | 'offline' | 'customizable';
 export type ProviderStatus = 'connected' | 'disconnected' | 'error' | 'testing';
 
+// Streaming callback - receives chunks of text as they arrive
+export type StreamCallback = (chunk: string) => void;
+
 export interface LLMModel {
   id: string;
   name: string;
@@ -40,6 +43,7 @@ export interface LLMProvider {
   isAvailable(): Promise<boolean>;
   testConnection(): Promise<boolean>;
   generateResponse(request: LLMRequest): Promise<LLMResponse>;
+  stream?(request: LLMRequest, onChunk: StreamCallback): Promise<LLMResponse>;
   estimateCost(request: LLMRequest): number;
 }
 
@@ -68,6 +72,7 @@ export interface LLMRequest {
   temperature?: number;
   maxTokens?: number;
   systemPrompt?: string;
+  stream?: boolean;
   metadata?: {
     queryId: string;
     legalArea?: string;

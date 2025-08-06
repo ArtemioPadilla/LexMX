@@ -29,6 +29,9 @@ export default defineConfig({
     server: {
       port: 4321,
       host: true,
+      hmr: {
+        port: 4321
+      },
       headers: {
         // Allow service workers
         'Service-Worker-Allowed': '/',

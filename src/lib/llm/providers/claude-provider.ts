@@ -4,12 +4,69 @@ import type {
   LLMResponse, 
   LLMRequest, 
   ProviderConfig,
-  StreamCallback 
+  StreamCallback,
+  LLMModel,
+  ProviderStatus,
+  LLMCapability,
+  CostLevel,
+  LLMProviderType,
+  ProviderMetrics
 } from '../../../types/llm';
 
 export class ClaudeProvider implements LLMProvider {
+  readonly id: string = 'claude';
+  readonly name: string = 'Claude (Anthropic)';
+  readonly type: LLMProviderType = 'cloud';
+  readonly icon: string = '🦾';
+  readonly description: string = 'Claude 3 models - Excellent for nuanced legal reasoning and analysis';
+  readonly costLevel: CostLevel = 'medium';
+  readonly capabilities: LLMCapability[] = ['reasoning', 'analysis', 'citations', 'ethics', 'multilingual'];
+  
+  models: LLMModel[] = [
+    {
+      id: 'claude-3-opus-20240229',
+      name: 'Claude 3 Opus',
+      description: 'Most capable model for complex legal analysis',
+      contextLength: 200000,
+      maxTokens: 4096,
+      costPer1kTokens: { input: 0.015, output: 0.075 },
+      capabilities: ['reasoning', 'analysis', 'citations', 'ethics', 'multilingual'],
+      recommended: true
+    },
+    {
+      id: 'claude-3-sonnet-20240229',
+      name: 'Claude 3 Sonnet',
+      description: 'Balanced performance and cost',
+      contextLength: 200000,
+      maxTokens: 4096,
+      costPer1kTokens: { input: 0.003, output: 0.015 },
+      capabilities: ['reasoning', 'analysis', 'citations'],
+      recommended: false
+    },
+    {
+      id: 'claude-3-haiku-20240307',
+      name: 'Claude 3 Haiku',
+      description: 'Fast and cost-effective',
+      contextLength: 200000,
+      maxTokens: 4096,
+      costPer1kTokens: { input: 0.00025, output: 0.00125 },
+      capabilities: ['reasoning', 'analysis'],
+      recommended: false
+    }
+  ];
+  
+  status: ProviderStatus = 'disconnected';
+  
   private config: ProviderConfig;
   private baseUrl = 'https://api.anthropic.com/v1';
+  private metrics: ProviderMetrics = {
+    providerId: 'claude',
+    totalRequests: 0,
+    successRate: 1.0,
+    averageLatency: 0,
+    totalCost: 0,
+    lastUsed: Date.now()
+  };
 
   constructor(config: ProviderConfig) {
     this.config = config;
@@ -18,7 +75,41 @@ export class ClaudeProvider implements LLMProvider {
     }
   }
 
-  async complete(request: LLMRequest): Promise<LLMResponse> {
+  async generateResponse(request: LLMRequest): Promise<LLMResponse> {
+    const response = await this.complete(request);
+    return {
+      content: response.content,
+      model: response.model,
+      provider: this.id,
+      usage: {
+        promptTokens: response.promptTokens,
+        completionTokens: response.completionTokens,
+        totalTokens: response.totalTokens
+      },
+      cost: this.getCost(response.promptTokens, response.completionTokens, response.model),
+      latency: response.processingTime,
+      metadata: {
+        cached: false
+      }
+    };
+  }
+
+  async isAvailable(): Promise<boolean> {
+    return this.status === 'connected';
+  }
+
+  estimateCost(request: LLMRequest): number {
+    const model = request.model || this.config.model || 'claude-3-haiku-20240307';
+    const estimatedPromptTokens = request.messages.reduce((sum, msg) => sum + msg.content.length / 4, 0);
+    const estimatedCompletionTokens = request.maxTokens || 1000;
+    return this.getCost(estimatedPromptTokens, estimatedCompletionTokens, model);
+  }
+
+  getMetrics(): ProviderMetrics {
+    return { ...this.metrics };
+  }
+
+  private async complete(request: LLMRequest): Promise<any> {
     const startTime = Date.now();
     
     try {
@@ -68,6 +159,25 @@ export class ClaudeProvider implements LLMProvider {
   }
 
   async stream(request: LLMRequest, onChunk: StreamCallback): Promise<LLMResponse> {
+    const response = await this.streamInternal(request, onChunk);
+    return {
+      content: response.content,
+      model: response.model,
+      provider: this.id,
+      usage: {
+        promptTokens: response.promptTokens,
+        completionTokens: response.completionTokens,
+        totalTokens: response.totalTokens
+      },
+      cost: this.getCost(response.promptTokens, response.completionTokens, response.model),
+      latency: response.processingTime,
+      metadata: {
+        cached: false
+      }
+    };
+  }
+
+  private async streamInternal(request: LLMRequest, onChunk: StreamCallback): Promise<any> {
     const startTime = Date.now();
     let fullContent = '';
     let promptTokens = 0;

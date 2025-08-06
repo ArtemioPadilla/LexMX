@@ -22,6 +22,8 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [webllmProgress, setWebllmProgress] = useState<{ progress: number; message: string } | null>(null);
+  const [isPreloading, setIsPreloading] = useState(false);
+  const [preloadProgress, setPreloadProgress] = useState<{ progress: number; message: string } | null>(null);
 
   const supportedProviders = providerRegistry.getSupportedProviders();
   const userProfiles = providerRegistry.getRecommendedProfiles();
@@ -86,6 +88,42 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
       setError(err instanceof Error ? err.message : 'Configuration failed');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePreloadWebLLM = async () => {
+    try {
+      setIsPreloading(true);
+      setPreloadProgress({ progress: 0, message: 'Iniciando descarga...' });
+      
+      // Create a temporary WebLLM provider to trigger download
+      const webllmConfig = providerConfigs.get('webllm') || {
+        id: 'webllm',
+        name: 'WebLLM',
+        type: 'local' as const,
+        enabled: true,
+        model: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
+        initProgressCallback: (progress: number, message: string) => {
+          setPreloadProgress({ progress, message });
+        }
+      };
+      
+      // Import and initialize WebLLM
+      const { WebLLMProvider } = await import('../lib/llm/providers/webllm-provider');
+      const provider = new WebLLMProvider(webllmConfig);
+      await provider.initialize();
+      
+      setPreloadProgress({ progress: 100, message: '¡Modelo descargado exitosamente!' });
+      setTimeout(() => {
+        setPreloadProgress(null);
+        setIsPreloading(false);
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Error preloading WebLLM:', error);
+      setError('Error al descargar el modelo. Por favor, intenta de nuevo.');
+      setIsPreloading(false);
+      setPreloadProgress(null);
     }
   };
 
@@ -261,6 +299,9 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
           onCancel={() => setStep('providers')}
           isLoading={isLoading}
           error={error}
+          isPreloading={metadata.id === 'webllm' ? isPreloading : undefined}
+          preloadProgress={metadata.id === 'webllm' ? preloadProgress : undefined}
+          onPreload={metadata.id === 'webllm' ? handlePreloadWebLLM : undefined}
         />
       </div>
     );
@@ -472,13 +513,19 @@ function ProviderConfigForm({
   onSave, 
   onCancel, 
   isLoading, 
-  error 
+  error,
+  isPreloading,
+  preloadProgress,
+  onPreload
 }: {
   provider: ProviderMetadata;
   onSave: (config: ProviderConfig) => void;
   onCancel: () => void;
   isLoading: boolean;
   error: string | null;
+  isPreloading?: boolean;
+  preloadProgress?: { progress: number; message: string } | null;
+  onPreload?: () => void;
 }) {
   const [config, setConfig] = useState<Partial<ProviderConfig>>({
     id: provider.id,
@@ -550,6 +597,31 @@ function ProviderConfigForm({
               El modelo se descargará la primera vez que lo uses
             </p>
           </div>
+
+          {/* Preload Button */}
+          {onPreload && (
+            <div>
+              <button
+                type="button"
+                onClick={onPreload}
+                disabled={isPreloading}
+                className="w-full px-4 py-2 text-sm font-medium text-white bg-legal-600 rounded-md hover:bg-legal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-legal-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isPreloading ? 'Descargando modelo...' : 'Precargar modelo ahora'}
+              </button>
+              {preloadProgress && (
+                <div className="mt-2">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-legal-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${preloadProgress.progress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">{preloadProgress.message}</p>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
             <p className="text-sm text-amber-800">
