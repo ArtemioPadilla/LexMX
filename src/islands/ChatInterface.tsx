@@ -274,7 +274,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
   ];
 
   return (
-    <div className={`chat-interface flex flex-col h-full bg-white ${className}`}>
+    <div className={`chat-interface flex flex-col h-full bg-white dark:bg-gray-900 ${className}`}>
       {/* WebLLM Progress Indicator */}
       {webllmProgress && (
         <WebLLMProgress
@@ -284,14 +284,14 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
         />
       )}
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-gray-200 bg-white p-4">
+      <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Chat Legal</h1>
-            <p className="text-sm text-gray-600">
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Chat Legal</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Asistente legal para derecho mexicano
               {!isInitialized && (
-                <span className="ml-2 inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                <span className="ml-2 inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200">
                   Inicializando...
                 </span>
               )}
@@ -301,7 +301,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
               title="Opciones avanzadas"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -312,7 +312,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
             
             <button
               onClick={clearChat}
-              className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
               title="Limpiar chat"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -324,17 +324,17 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
 
         {/* Advanced Options */}
         {showAdvanced && (
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+          <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div className="flex items-center space-x-4">
               <div className="flex-1">
-                <label htmlFor="legal-area" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="legal-area" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Área legal específica
                 </label>
                 <select
                   id="legal-area"
                   value={selectedArea}
                   onChange={(e) => setSelectedArea(e.target.value as LegalArea | '')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-legal-500 focus:border-legal-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-legal-500 focus:border-legal-500"
                 >
                   {legalAreas.map(area => (
                     <option key={area.value} value={area.value}>
@@ -381,8 +381,8 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
                 message.type === 'user' 
                   ? 'bg-legal-500 text-white' 
                   : message.type === 'system'
-                  ? 'bg-blue-50 text-blue-900 border border-blue-200'
-                  : 'bg-gray-50 text-gray-900'
+                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-800'
+                  : 'bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
               }`}>
                 <MessageContent content={message.content} />
                 
@@ -392,16 +392,16 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
                     {/* Sources */}
                     {message.legalResponse.sources.length > 0 && (
                       <div>
-                        <h4 className="font-medium text-gray-900 mb-2">📚 Sources:</h4>
+                        <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">📚 Sources:</h4>
                         <div className="space-y-2">
                           {message.legalResponse.sources.map((source, index) => (
-                            <div key={index} className="p-2 bg-white rounded border text-sm">
+                            <div key={index} className="p-2 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-sm">
                               <div className="font-medium">{source.title}</div>
                               {source.article && (
-                                <div className="text-gray-600">Artículo {source.article}</div>
+                                <div className="text-gray-600 dark:text-gray-400">Artículo {source.article}</div>
                               )}
-                              <div className="text-gray-700 mt-1">{source.excerpt}</div>
-                              <div className="text-xs text-gray-500 mt-1">
+                              <div className="text-gray-700 dark:text-gray-300 mt-1">{source.excerpt}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 Relevancia: {Math.round(source.relevanceScore * 100)}%
                               </div>
                             </div>
@@ -412,7 +412,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
 
                     {/* Legal Warning */}
                     {message.legalResponse.legalWarning && (
-                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+                      <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded text-sm text-yellow-800 dark:text-yellow-200">
                         {message.legalResponse.legalWarning}
                       </div>
                     )}
@@ -438,7 +438,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
                             <button
                               key={index}
                               onClick={() => setCurrentInput(query)}
-                              className="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              className="px-3 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                             >
                               {query}
                             </button>
@@ -448,7 +448,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
                     )}
 
                     {/* Metadata */}
-                    <div className="text-xs text-gray-500 pt-2 border-t border-gray-200">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-700">
                       Confianza: {Math.round(message.legalResponse.confidence * 100)}% | 
                       Área: {message.legalResponse.legalArea} | 
                       Tiempo: {message.legalResponse.processingTime}ms
@@ -458,7 +458,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
                 )}
               </div>
               
-              <div className="text-xs text-gray-500 mt-1 px-1">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 px-1">
                 {isHydrated ? message.timestamp.toLocaleTimeString() : '--:--:--'}
               </div>
             </div>
@@ -469,14 +469,14 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
 
       {/* Example Questions (when chat is empty) */}
       {messages.length === 1 && (
-        <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-gray-50">
-          <h3 className="text-sm font-medium text-gray-900 mb-2">Preguntas de ejemplo:</h3>
+        <div className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Preguntas de ejemplo:</h3>
           <div className="grid grid-cols-1 gap-2">
             {exampleQuestions.map((question, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentInput(question)}
-                className="text-left p-2 text-sm text-gray-700 hover:bg-white hover:shadow-sm rounded border border-transparent hover:border-gray-200 transition-all"
+                className="text-left p-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 hover:shadow-sm rounded border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-all"
               >
                 {question}
               </button>
@@ -499,7 +499,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
       )}
 
       {/* Input */}
-      <div className="flex-shrink-0 border-t border-gray-200 bg-white p-4">
+      <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
         <form onSubmit={handleSubmit} className="flex space-x-3">
           <div className="flex-1">
             <textarea
@@ -509,7 +509,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
               onKeyDown={handleKeyDown}
               placeholder="Escribe tu consulta legal aquí... (Shift+Enter para nueva línea)"
               rows={1}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-legal-500 focus:border-legal-500"
+              className="w-full px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-legal-500 focus:border-legal-500 placeholder-gray-400 dark:placeholder-gray-500"
               style={{ minHeight: '52px', maxHeight: '120px' }}
               disabled={isProcessing || !isInitialized}
             />
@@ -533,7 +533,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
           </button>
         </form>
         
-        <div className="mt-2 text-xs text-gray-500">
+        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
           {!isInitialized ? (
             'Inicializando sistema...'
           ) : (
