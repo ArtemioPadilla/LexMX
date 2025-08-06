@@ -145,12 +145,12 @@ jobs:
         run: npm audit --audit-level moderate
         
       - name: 🔍 Run CodeQL analysis
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           languages: javascript
           
       - name: 🔍 Perform CodeQL analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
 
   # Performance and bundle analysis
   performance:
