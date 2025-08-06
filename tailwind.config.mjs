@@ -31,6 +31,15 @@ export default {
           800: '#525252',
           900: '#404040',
           950: '#262626'
+        },
+        hierarchy: {
+          1: '#dc2626',  // Red - Constitutional
+          2: '#ea580c',  // Orange - Treaties
+          3: '#d97706',  // Amber - Laws/Codes
+          4: '#65a30d',  // Lime - Regulations
+          5: '#0891b2',  // Cyan - Norms
+          6: '#7c3aed',  // Purple - State Laws
+          7: '#be185d'   // Pink - Administrative
         }
       },
       fontFamily: {

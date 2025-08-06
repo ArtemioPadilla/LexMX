@@ -1,0 +1,39 @@
+---
+import BaseLayout from '../../components/layout/BaseLayout.astro';
+import HydrationWrapper from '../../components/HydrationWrapper.astro';
+import DocumentRequestList from '../../islands/DocumentRequestList.tsx';
+---
+
+<BaseLayout title="Solicitudes de Documentos - LexMX">
+  <main class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          Solicitudes de Documentos
+        </h1>
+        <p class="text-lg text-gray-600 dark:text-gray-300">
+          Solicita documentos legales que aún no están en nuestro corpus y vota por las solicitudes de otros usuarios.
+        </p>
+      </div>
+
+      <!-- New Request Button -->
+      <div class="mb-8">
+        <a 
+          href="/requests/new" 
+          class="inline-flex items-center px-6 py-3 bg-legal-500 text-white font-medium rounded-lg hover:bg-legal-600 transition-colors"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Nueva Solicitud
+        </a>
+      </div>
+
+      <!-- Request List Component -->
+      <HydrationWrapper name="document-request-list">
+        <DocumentRequestList client:load />
+      </HydrationWrapper>
+    </div>
+  </main>
+</BaseLayout>

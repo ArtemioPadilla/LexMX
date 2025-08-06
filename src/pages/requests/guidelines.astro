@@ -1,0 +1,382 @@
+---
+// Guidelines page for document requests
+import BaseLayout from '../../components/layout/BaseLayout.astro';
+---
+
+<BaseLayout title="Guía de Solicitudes - LexMX">
+  <main class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Header -->
+      <div class="text-center mb-12">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+          Guía para Solicitar Documentos Legales
+        </h1>
+        <p class="text-lg text-gray-600 dark:text-gray-300">
+          Todo lo que necesitas saber para crear solicitudes efectivas y útiles para la comunidad
+        </p>
+      </div>
+
+      <!-- Content Sections -->
+      <div class="space-y-12">
+        
+        <!-- What to Request Section -->
+        <section class="bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+            <svg class="w-6 h-6 text-legal-600 dark:text-legal-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            ¿Qué documentos puedo solicitar?
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="text-lg font-semibold text-green-700 dark:text-green-400 mb-3">✅ Documentos Apropiados</h3>
+              <ul class="space-y-2 text-gray-600 dark:text-gray-300">
+                <li>• <strong>Leyes federales y estatales</strong> - Ley Federal del Trabajo, códigos civiles, etc.</li>
+                <li>• <strong>Reglamentos oficiales</strong> - Reglamentos de leyes vigentes</li>
+                <li>• <strong>Códigos</strong> - Código Civil Federal, Código Penal, etc.</li>
+                <li>• <strong>Normas Oficiales (NOMs)</strong> - Normas técnicas mexicanas</li>
+                <li>• <strong>Jurisprudencia</strong> - Tesis y criterios de la SCJN</li>
+                <li>• <strong>Tratados internacionales</strong> - Ratificados por México</li>
+                <li>• <strong>Decretos y acuerdos</strong> - Publicados en DOF</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 class="text-lg font-semibold text-red-700 dark:text-red-400 mb-3">❌ Documentos No Apropiados</h3>
+              <ul class="space-y-2 text-gray-600 dark:text-gray-300">
+                <li>• <strong>Documentos privados</strong> - Contratos, escrituras particulares</li>
+                <li>• <strong>Borradores o proyectos</strong> - Documentos no oficiales</li>
+                <li>• <strong>Opiniones legales</strong> - Artículos académicos, blogs</li>
+                <li>• <strong>Documentos internos</strong> - Manuales de procedimientos internos</li>
+                <li>• <strong>Formatos en blanco</strong> - Formatos sin contenido legal sustantivo</li>
+                <li>• <strong>Documentos derogados</strong> - Leyes ya sin vigencia</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- How to Create Good Requests -->
+        <section class="bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+            <svg class="w-6 h-6 text-legal-600 dark:text-legal-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Cómo crear una buena solicitud
+          </h2>
+
+          <div class="space-y-6">
+            <!-- Title Guidelines -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">1. Título Claro y Específico</h3>
+              <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 class="font-medium text-green-700 dark:text-green-400 mb-2">✅ Ejemplos Correctos</h4>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                      <li>• "Ley Federal de Protección de Datos Personales en Posesión de los Particulares"</li>
+                      <li>• "Reglamento de la Ley del Seguro Social"</li>
+                      <li>• "NOM-035-STPS-2018 Factores de riesgo psicosocial"</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 class="font-medium text-red-700 dark:text-red-400 mb-2">❌ Ejemplos Incorrectos</h4>
+                    <ul class="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                      <li>• "Ley de datos" (muy vago)</li>
+                      <li>• "NECESITO URGENTE LEY TRABAJO" (muy genérico)</li>
+                      <li>• "documento importante" (sin especificar)</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Description Guidelines -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">2. Descripción Informativa</h3>
+              <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <p class="text-gray-600 dark:text-gray-300 mb-3">Una buena descripción debe incluir:</p>
+                <ul class="space-y-2 text-gray-600 dark:text-gray-300">
+                  <li>• <strong>Por qué es importante:</strong> Explica la relevancia del documento</li>
+                  <li>• <strong>Casos de uso:</strong> Cuándo y cómo se usaría</li>
+                  <li>• <strong>Beneficio para la comunidad:</strong> Cómo ayudaría a otros usuarios</li>
+                  <li>• <strong>Contexto legal:</strong> Área del derecho que cubre</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Sources Guidelines -->
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">3. Fuentes Confiables</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                  <h4 class="font-medium text-green-700 dark:text-green-400 mb-2">🏛️ Fuentes Oficiales Recomendadas</h4>
+                  <ul class="text-sm text-green-700 dark:text-green-300 space-y-1">
+                    <li>• dof.gob.mx (Diario Oficial)</li>
+                    <li>• scjn.gob.mx (Suprema Corte)</li>
+                    <li>• diputados.gob.mx (Cámara de Diputados)</li>
+                    <li>• senado.gob.mx (Senado)</li>
+                    <li>• gob.mx (Portal del Gobierno)</li>
+                    <li>• cndh.org.mx (CNDH)</li>
+                  </ul>
+                </div>
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
+                  <h4 class="font-medium text-yellow-700 dark:text-yellow-400 mb-2">⚠️ Fuentes a Verificar</h4>
+                  <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                    <li>• Sitios de universidades</li>
+                    <li>• Portales de noticias jurídicas</li>
+                    <li>• Blogs legales</li>
+                    <li>• Redes sociales</li>
+                    <li>• Sitios no gubernamentales</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Voting and Priority System -->
+        <section class="bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+            <svg class="w-6 h-6 text-legal-600 dark:text-legal-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
+            </svg>
+            Sistema de Votación y Prioridades
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Cómo Funciona la Votación</h3>
+              <ul class="space-y-2 text-gray-600 dark:text-gray-300">
+                <li>• <strong>1 voto por usuario</strong> por solicitud</li>
+                <li>• Los votos determinan la prioridad</li>
+                <li>• Las solicitudes más votadas se procesan primero</li>
+                <li>• Los moderadores pueden ajustar prioridades</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Umbrales de Prioridad</h3>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-2 rounded">
+                  <span class="text-gray-600 dark:text-gray-300">5+ votos</span>
+                  <span class="px-2 py-1 bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200 text-xs rounded">Baja</span>
+                </div>
+                <div class="flex items-center justify-between bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
+                  <span class="text-gray-600 dark:text-gray-300">15+ votos</span>
+                  <span class="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300 text-xs rounded">Media</span>
+                </div>
+                <div class="flex items-center justify-between bg-orange-50 dark:bg-orange-900/20 p-2 rounded">
+                  <span class="text-gray-600 dark:text-gray-300">30+ votos</span>
+                  <span class="px-2 py-1 bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300 text-xs rounded">Alta</span>
+                </div>
+                <div class="flex items-center justify-between bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                  <span class="text-gray-600 dark:text-gray-300">50+ votos</span>
+                  <span class="px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300 text-xs rounded">Crítica</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Process and Timeline -->
+        <section class="bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+            <svg class="w-6 h-6 text-legal-600 dark:text-legal-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Proceso de Revisión
+          </h2>
+
+          <div class="space-y-6">
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                <span class="text-sm font-medium text-gray-600 dark:text-gray-300">1</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 dark:text-white">Envío de Solicitud</h3>
+                <p class="text-gray-600 dark:text-gray-300">Tu solicitud se publica inmediatamente y está disponible para votación</p>
+              </div>
+            </div>
+
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-blue-200 dark:bg-blue-600 rounded-full flex items-center justify-center">
+                <span class="text-sm font-medium text-blue-800 dark:text-blue-200">2</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 dark:text-white">Revisión Comunitaria</h3>
+                <p class="text-gray-600 dark:text-gray-300">Los usuarios votan y comentan. Se verifica la validez de las fuentes</p>
+              </div>
+            </div>
+
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-yellow-200 dark:bg-yellow-600 rounded-full flex items-center justify-center">
+                <span class="text-sm font-medium text-yellow-800 dark:text-yellow-200">3</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 dark:text-white">Revisión de Moderadores</h3>
+                <p class="text-gray-600 dark:text-gray-300">Los moderadores validan la calidad y relevancia del documento</p>
+              </div>
+            </div>
+
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-purple-200 dark:bg-purple-600 rounded-full flex items-center justify-center">
+                <span class="text-sm font-medium text-purple-800 dark:text-purple-200">4</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 dark:text-white">Procesamiento</h3>
+                <p class="text-gray-600 dark:text-gray-300">El documento se descarga, procesa y se generan embeddings</p>
+              </div>
+            </div>
+
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-green-200 dark:bg-green-600 rounded-full flex items-center justify-center">
+                <span class="text-sm font-medium text-green-800 dark:text-green-200">5</span>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 dark:text-white">Integración</h3>
+                <p class="text-gray-600 dark:text-gray-300">El documento se integra al corpus legal y está disponible para consultas</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Best Practices -->
+        <section class="bg-legal-50 dark:bg-legal-900/20 rounded-lg p-8">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+            <svg class="w-6 h-6 text-legal-600 dark:text-legal-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            Mejores Prácticas
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <h3 class="text-lg font-semibold text-legal-700 dark:text-legal-300 mb-4">💡 Consejos para el Éxito</h3>
+              <ul class="space-y-3 text-gray-700 dark:text-gray-300">
+                <li class="flex items-start">
+                  <span class="text-legal-600 dark:text-legal-400 mr-2">•</span>
+                  <span>Busca primero si el documento ya existe en LexMX</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-legal-600 dark:text-legal-400 mr-2">•</span>
+                  <span>Incluye el número de DOF si es aplicable</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-legal-600 dark:text-legal-400 mr-2">•</span>
+                  <span>Menciona reformas importantes recientes</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-legal-600 dark:text-legal-400 mr-2">•</span>
+                  <span>Proporciona múltiples fuentes cuando sea posible</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-legal-600 dark:text-legal-400 mr-2">•</span>
+                  <span>Usa un lenguaje profesional y objetivo</span>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 class="text-lg font-semibold text-red-700 dark:text-red-400 mb-4">⚠️ Errores Comunes</h3>
+              <ul class="space-y-3 text-gray-700 dark:text-gray-300">
+                <li class="flex items-start">
+                  <span class="text-red-600 dark:text-red-400 mr-2">•</span>
+                  <span>Solicitar documentos ya existentes en LexMX</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-red-600 dark:text-red-400 mr-2">•</span>
+                  <span>Usar enlaces rotos o temporales</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-red-600 dark:text-red-400 mr-2">•</span>
+                  <span>Descripciones demasiado breves o vagas</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-red-600 dark:text-red-400 mr-2">•</span>
+                  <span>Clasificación incorrecta del tipo de documento</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-red-600 dark:text-red-400 mr-2">•</span>
+                  <span>Solicitar documentos sin valor legal</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+            <svg class="w-6 h-6 text-legal-600 dark:text-legal-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Preguntas Frecuentes
+          </h2>
+
+          <div class="space-y-6">
+            <div>
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-2">¿Cuánto tiempo tarda en procesarse una solicitud?</h3>
+              <p class="text-gray-600 dark:text-gray-300">El tiempo varía según la prioridad y complejidad. Generalmente:</p>
+              <ul class="mt-2 ml-4 space-y-1 text-gray-600 dark:text-gray-300">
+                <li>• Solicitudes prioritarias: 1-3 días</li>
+                <li>• Solicitudes normales: 1-2 semanas</li>
+                <li>• Solicitudes complejas: 2-4 semanas</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-2">¿Puedo solicitar documentos de otros países?</h3>
+              <p class="text-gray-600 dark:text-gray-300">
+                LexMX se enfoca exclusivamente en la legislación mexicana. No se procesan documentos de otros países, 
+                salvo tratados internacionales ratificados por México.
+              </p>
+            </div>
+
+            <div>
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-2">¿Qué hago si mi solicitud fue rechazada?</h3>
+              <p class="text-gray-600 dark:text-gray-300">
+                Las solicitudes rechazadas incluyen una explicación. Puedes crear una nueva solicitud 
+                corrigiendo los problemas señalados o contactar a los moderadores para aclaraciones.
+              </p>
+            </div>
+
+            <div>
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-2">¿Hay límites en el número de solicitudes?</h3>
+              <p class="text-gray-600 dark:text-gray-300">
+                Hay un límite de 5 solicitudes por usuario por hora para prevenir spam. 
+                Usuarios con historial positivo pueden tener límites más altos.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Call to Action -->
+        <section class="text-center">
+          <div class="bg-legal-600 rounded-lg p-8 text-white">
+            <h2 class="text-2xl font-bold mb-4">¿Listo para contribuir?</h2>
+            <p class="text-legal-100 mb-6">
+              Ayuda a hacer crecer el corpus legal más completo de México
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+              <a 
+                href="/requests/new" 
+                class="bg-white text-legal-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+              >
+                Crear Nueva Solicitud
+              </a>
+              <a 
+                href="/requests" 
+                class="border border-legal-300 text-white px-6 py-3 rounded-lg font-semibold hover:bg-legal-500 transition-colors"
+              >
+                Ver Solicitudes Existentes
+              </a>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+</BaseLayout>

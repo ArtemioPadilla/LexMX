@@ -1,0 +1,62 @@
+/* Hydration stability styles */
+
+/* Prevent flashing during React hydration */
+astro-island {
+  display: contents;
+}
+
+/* Reserve space for interactive components */
+.language-selector,
+.theme-toggle {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Prevent layout shifts */
+.hydration-wrapper {
+  contain: layout;
+}
+
+/* Ensure components are always visible */
+.language-selector button,
+.theme-toggle button {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Error state styles */
+.hydration-error {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #c00;
+}
+
+/* Loading skeleton for components */
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+.skeleton {
+  animation-duration: 1s;
+  animation-fill-mode: forwards;
+  animation-iteration-count: infinite;
+  animation-name: shimmer;
+  animation-timing-function: linear;
+  background: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+  background-size: 800px 40px;
+  position: relative;
+}
+
+/* Dark mode skeleton */
+.dark .skeleton {
+  background: linear-gradient(to right, #374151 0%, #4b5563 20%, #374151 40%, #374151 100%);
+}

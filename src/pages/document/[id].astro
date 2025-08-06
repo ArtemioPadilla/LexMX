@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../../components/layout/BaseLayout.astro';
+import HydrationWrapper from '../../components/HydrationWrapper.astro';
+import DocumentViewerWrapper from '../../islands/DocumentViewerWrapper.tsx';
+
+// Required for dynamic routes in static site generation
+export async function getStaticPaths() {
+  // Define all possible document IDs
+  const documents = [
+    { id: 'codigo-civil-federal', title: 'Código Civil Federal' },
+    { id: 'cpeum', title: 'Constitución Política de los Estados Unidos Mexicanos' },
+    { id: 'lft', title: 'Ley Federal del Trabajo' },
+    { id: 'cpf', title: 'Código Penal Federal' },
+    { id: 'cff', title: 'Código Fiscal de la Federación' },
+    { id: 'ccom', title: 'Código de Comercio' },
+    { id: 'ccf', title: 'Código Civil Federal' },
+  ];
+  
+  return documents.map(doc => ({
+    params: { id: doc.id },
+    props: { title: doc.title }
+  }));
+}
+
+// Get the document ID from the URL
+const { id } = Astro.params;
+const { title } = Astro.props;
+---
+
+<BaseLayout title={`${title} - LexMX`}>
+  <main class="min-h-screen bg-white dark:bg-gray-900">
+    <!-- Document Viewer Component -->
+    <HydrationWrapper name="document-viewer">
+      <DocumentViewerWrapper documentId={id} documentTitle={title} client:load />
+    </HydrationWrapper>
+  </main>
+</BaseLayout>

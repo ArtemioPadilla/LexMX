@@ -1,0 +1,247 @@
+---
+import BaseLayout from '../components/layout/BaseLayout.astro';
+import HydrationWrapper from '../components/HydrationWrapper.astro';
+import WikiNavigation from '../islands/WikiNavigation.tsx';
+import LegalGlossary from '../islands/LegalGlossary.tsx';
+import LegislativeProcess from '../islands/LegislativeProcess.tsx';
+import GovernmentStructure from '../islands/GovernmentStructure.tsx';
+---
+
+<BaseLayout title="Wiki Legal - LexMX">
+  <div class="min-h-screen bg-white dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex">
+        <!-- Wiki Navigation -->
+        <aside class="hidden lg:block w-64 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto border-r border-gray-200 dark:border-gray-700">
+          <HydrationWrapper name="wiki-navigation" width="256px" height="100%">
+            <WikiNavigation client:load />
+          </HydrationWrapper>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 px-6 py-8">
+          <!-- Header -->
+          <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              Wiki Legal Mexicano
+            </h1>
+            <p class="text-lg text-gray-600 dark:text-gray-300">
+              Aprende sobre el sistema legal mexicano, desde conceptos básicos hasta procesos complejos.
+            </p>
+          </div>
+
+          <!-- Introduction Section -->
+          <section id="introduccion" class="mb-12 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Introducción al Derecho Mexicano
+            </h2>
+            <div class="prose prose-lg dark:prose-invert max-w-none">
+              <p>
+                El sistema jurídico mexicano es un sistema de derecho civil basado en códigos escritos, 
+                con influencia del derecho romano-germánico. La Constitución Política de los Estados 
+                Unidos Mexicanos es la ley suprema que establece los principios fundamentales del Estado 
+                y los derechos de los ciudadanos.
+              </p>
+              <p>
+                Este wiki te guiará a través de los conceptos fundamentales, la estructura del gobierno, 
+                los procesos legislativos y judiciales, y te proporcionará recursos para entender mejor 
+                el marco legal de México.
+              </p>
+            </div>
+          </section>
+
+          <!-- Legal System Overview -->
+          <section id="sistema-legal" class="mb-12 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              El Sistema Legal Mexicano
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  Derecho Civil
+                </h3>
+                <p class="text-gray-600 dark:text-gray-300">
+                  Sistema basado en códigos escritos que regulan las relaciones entre particulares.
+                </p>
+              </div>
+              
+              <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  Common Law vs Civil Law
+                </h3>
+                <p class="text-gray-600 dark:text-gray-300">
+                  A diferencia del common law, el derecho mexicano se basa en leyes codificadas.
+                </p>
+              </div>
+            </div>
+
+            <div class="prose prose-lg dark:prose-invert max-w-none">
+              <h3>Jerarquía Normativa</h3>
+              <ol>
+                <li>Constitución Política de los Estados Unidos Mexicanos</li>
+                <li>Tratados Internacionales</li>
+                <li>Leyes Federales y Generales</li>
+                <li>Constituciones Estatales</li>
+                <li>Leyes Estatales</li>
+                <li>Reglamentos</li>
+                <li>Normas Oficiales Mexicanas (NOM)</li>
+              </ol>
+            </div>
+          </section>
+
+          <!-- Legal Glossary -->
+          <section id="glosario" class="mb-12 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Glosario Legal
+            </h2>
+            <HydrationWrapper name="legal-glossary">
+              <LegalGlossary client:visible />
+            </HydrationWrapper>
+          </section>
+
+          <!-- Legislative Process -->
+          <section id="proceso-legislativo" class="mb-12 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Proceso Legislativo
+            </h2>
+            <HydrationWrapper name="legislative-process">
+              <LegislativeProcess client:visible />
+            </HydrationWrapper>
+          </section>
+
+          <!-- Government Structure -->
+          <section id="estructura-gobierno" class="mb-12 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Estructura del Gobierno
+            </h2>
+            <HydrationWrapper name="government-structure">
+              <GovernmentStructure client:visible />
+            </HydrationWrapper>
+          </section>
+
+          <!-- Law Areas -->
+          <section id="areas-derecho" class="mb-12 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Áreas del Derecho
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <!-- Constitutional Law -->
+              <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Derecho Constitucional
+                </h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">
+                  Estudia la organización del Estado y los derechos fundamentales.
+                </p>
+                <a href="/legal#constitutional" class="text-legal-600 hover:text-legal-700 font-medium">
+                  Ver documentos →
+                </a>
+              </div>
+
+              <!-- Civil Law -->
+              <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Derecho Civil
+                </h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">
+                  Regula las relaciones entre particulares, familia y propiedad.
+                </p>
+                <a href="/legal#civil" class="text-legal-600 hover:text-legal-700 font-medium">
+                  Ver documentos →
+                </a>
+              </div>
+
+              <!-- Criminal Law -->
+              <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Derecho Penal
+                </h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">
+                  Define los delitos y establece las penas correspondientes.
+                </p>
+                <a href="/legal#criminal" class="text-legal-600 hover:text-legal-700 font-medium">
+                  Ver documentos →
+                </a>
+              </div>
+
+              <!-- Labor Law -->
+              <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Derecho Laboral
+                </h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">
+                  Regula las relaciones entre trabajadores y empleadores.
+                </p>
+                <a href="/legal#labor" class="text-legal-600 hover:text-legal-700 font-medium">
+                  Ver documentos →
+                </a>
+              </div>
+
+              <!-- Tax Law -->
+              <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Derecho Fiscal
+                </h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">
+                  Normas sobre impuestos y obligaciones tributarias.
+                </p>
+                <a href="/legal#tax" class="text-legal-600 hover:text-legal-700 font-medium">
+                  Ver documentos →
+                </a>
+              </div>
+
+              <!-- Commercial Law -->
+              <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Derecho Mercantil
+                </h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">
+                  Regula las actividades comerciales y empresariales.
+                </p>
+                <a href="/legal#commercial" class="text-legal-600 hover:text-legal-700 font-medium">
+                  Ver documentos →
+                </a>
+              </div>
+            </div>
+          </section>
+
+          <!-- FAQ Section -->
+          <section id="faq" class="mb-12 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Preguntas Frecuentes
+            </h2>
+            <div class="space-y-4">
+              <details class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <summary class="font-semibold text-gray-900 dark:text-white cursor-pointer">
+                  ¿Qué es el amparo?
+                </summary>
+                <p class="mt-2 text-gray-600 dark:text-gray-300">
+                  El amparo es un juicio constitucional que protege los derechos fundamentales contra actos de autoridad.
+                </p>
+              </details>
+
+              <details class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <summary class="font-semibold text-gray-900 dark:text-white cursor-pointer">
+                  ¿Cuál es la diferencia entre ley federal y estatal?
+                </summary>
+                <p class="mt-2 text-gray-600 dark:text-gray-300">
+                  Las leyes federales aplican en todo el país, mientras que las estatales solo en el estado que las emite.
+                </p>
+              </details>
+
+              <details class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <summary class="font-semibold text-gray-900 dark:text-white cursor-pointer">
+                  ¿Qué es la jurisprudencia?
+                </summary>
+                <p class="mt-2 text-gray-600 dark:text-gray-300">
+                  Son criterios obligatorios establecidos por los tribunales al resolver casos similares de forma reiterada.
+                </p>
+              </details>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

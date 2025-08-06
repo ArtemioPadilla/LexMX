@@ -18,7 +18,7 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
             <h1 class="text-4xl sm:text-6xl font-bold text-gray-900 dark:text-white mb-6">
               <span class="text-legal-600 dark:text-legal-400">LexMX</span>
               <br />
-              <span class="text-3xl sm:text-5xl dark:text-gray-100" data-i18n="hero.title">Tu Asistente Legal Inteligente</span>
+              <span class="text-3xl sm:text-5xl dark:text-gray-100" data-i18n="hero.title">Tu Asistente Legal Mexicano</span>
             </h1>
             <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8" data-i18n="hero.subtitle">
               Combina el corpus completo de la legislación mexicana con IA avanzada para obtener respuestas legales precisas, contextualizadas y siempre actualizadas.
@@ -44,6 +44,15 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               <span data-i18n="hero.cta.setup">Configurar IA</span>
+            </a>
+            <a 
+              href="/requests" 
+              class="border border-legal-500 text-legal-600 dark:text-legal-400 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-legal-50 dark:hover:bg-legal-900/20 transition-colors inline-flex items-center"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Solicitar Documentos</span>
             </a>
           </div>
 
@@ -188,7 +197,7 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
               Islands Architecture y CDN global para cargas instantáneas y respuestas rápidas.
             </p>
             <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-              <li>• Carga inicial <1 segundo</li>
+              <li>• Carga inicial &lt;1 segundo</li>
               <li>• PWA con funcionamiento offline</li>
               <li>• Compresión avanzada de assets</li>
             </ul>

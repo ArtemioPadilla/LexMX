@@ -1,75 +1,53 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ErrorBoundary } from './ErrorBoundary';
+import { useTranslation, type Language } from '../i18n';
 
-type Language = 'es' | 'en';
-
-function LanguageSelectorInner() {
-  const [lang, setLang] = useState<Language>('es');
+export function LanguageSelector() {
+  const { language, setLanguage, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  // Initialize language on mount
+  // Initialize on mount
   useEffect(() => {
-    setMounted(true);
-    
-    // Get language from localStorage
-    const stored = localStorage.getItem('language');
-    if (stored) {
-      try {
-        const savedLang = JSON.parse(stored) as Language;
-        setLang(savedLang);
-        document.documentElement.lang = savedLang;
-      } catch (e) {
-        console.error('Error parsing language:', e);
-        localStorage.setItem('language', JSON.stringify('es'));
-      }
-    } else {
-      localStorage.setItem('language', JSON.stringify('es'));
-      document.documentElement.lang = 'es';
+    try {
+      setMounted(true);
+      // The i18n system handles language persistence and initialization
+      document.documentElement.lang = language;
+    } catch (err) {
+      console.error('Error initializing language selector:', err);
+      setError('Failed to initialize language');
     }
-  }, []);
+  }, [language]);
   
   // Handle language change
   const handleLanguageChange = useCallback((newLang: Language) => {
     try {
-      setLang(newLang);
+      setLanguage(newLang);
       setIsOpen(false);
-      
-      // Save to localStorage
-      localStorage.setItem('language', JSON.stringify(newLang));
-      
-      // Update HTML lang attribute
       document.documentElement.lang = newLang;
-      
-      // Dispatch custom event for translations update
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('languageChanged', { 
-          detail: { language: newLang } 
-        }));
-      }, 0);
     } catch (error) {
       console.error('Error changing language:', error);
     }
-  }, []);
+  }, [setLanguage]);
   
   // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.language-selector')) {
-        setIsOpen(false);
-      }
-    };
-    
-    if (isOpen) {
+    if (typeof window !== 'undefined' && isOpen) {
+      const handleClickOutside = (event: MouseEvent) => {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.language-selector')) {
+          setIsOpen(false);
+        }
+      };
+      
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [isOpen]);
   
   const languages = {
-    es: { name: 'Español', flag: '🇲🇽' },
-    en: { name: 'English', flag: '🇺🇸' },
+    es: { name: t('language.es'), flag: '🇲🇽' },
+    en: { name: t('language.en'), flag: '🇺🇸' },
   };
   
   if (!mounted) {
@@ -77,7 +55,7 @@ function LanguageSelectorInner() {
       <div className="relative language-selector">
         <button 
           className="flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600" 
-          aria-label="Cambiar idioma"
+          aria-label={t('common.changeLanguage') || 'Cambiar idioma'}
           disabled
         >
           <span className="text-lg">🇲🇽</span>
@@ -89,11 +67,24 @@ function LanguageSelectorInner() {
     );
   }
   
+  if (error) {
+    return (
+      <div className="relative language-selector">
+        <button 
+          className="flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-lg bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700" 
+          aria-label="Error en idioma"
+          disabled
+        >
+          <span className="text-lg">⚠️</span>
+        </button>
+      </div>
+    );
+  }
+  
   return (
     <div className="relative language-selector">
       <button
         onClick={(e) => {
-          e.preventDefault();
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
@@ -101,9 +92,9 @@ function LanguageSelectorInner() {
         aria-label="Cambiar idioma"
         aria-expanded={isOpen}
       >
-        <span className="text-lg">{languages[lang].flag}</span>
+        <span className="text-lg">{languages[language].flag}</span>
         <span className="hidden sm:inline text-sm font-medium text-gray-700 dark:text-gray-300">
-          {lang.toUpperCase()}
+          {language.toUpperCase()}
         </span>
         <svg className="hidden sm:block w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -116,12 +107,11 @@ function LanguageSelectorInner() {
             <button
               key={code}
               onClick={(e) => {
-                e.preventDefault();
                 e.stopPropagation();
                 handleLanguageChange(code);
               }}
               className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center space-x-2 ${
-                lang === code ? 'text-legal-600 dark:text-legal-400' : 'text-gray-700 dark:text-gray-300'
+                language === code ? 'text-legal-600 dark:text-legal-400' : 'text-gray-700 dark:text-gray-300'
               } ${code === 'es' ? 'rounded-t-lg' : 'rounded-b-lg'}`}
             >
               <span className="text-lg">{data.flag}</span>
@@ -131,13 +121,5 @@ function LanguageSelectorInner() {
         </div>
       )}
     </div>
-  );
-}
-
-export function LanguageSelector() {
-  return (
-    <ErrorBoundary componentName="LanguageSelector">
-      <LanguageSelectorInner />
-    </ErrorBoundary>
   );
 }

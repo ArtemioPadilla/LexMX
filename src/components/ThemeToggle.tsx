@@ -1,61 +1,72 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { ErrorBoundary } from './ErrorBoundary';
 
 type Theme = 'light' | 'dark' | 'system';
 
-function ThemeToggleInner() {
+export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>('system');
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Apply theme to document
   const applyTheme = useCallback((themeValue: Theme) => {
-    const root = document.documentElement;
-    let actualTheme = themeValue;
-    
-    if (themeValue === 'system') {
-      actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    
-    if (actualTheme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
+    // Only access browser APIs on client
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const root = document.documentElement;
+      let actualTheme = themeValue;
+      
+      if (themeValue === 'system') {
+        actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      
+      if (actualTheme === 'dark') {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
     }
   }, []);
   
   // Initialize theme on mount
   useEffect(() => {
-    setMounted(true);
-    
-    // Get theme from localStorage
-    const stored = localStorage.getItem('theme');
-    if (stored) {
-      try {
-        const savedTheme = JSON.parse(stored) as Theme;
-        setTheme(savedTheme);
-        applyTheme(savedTheme);
-      } catch (e) {
-        console.error('Error parsing theme:', e);
-        localStorage.setItem('theme', JSON.stringify('system'));
-        applyTheme('system');
+    try {
+      setMounted(true);
+      
+      // Only access browser APIs on client
+      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        // Get theme from localStorage
+        const stored = localStorage.getItem('theme');
+        if (stored) {
+          try {
+            const savedTheme = JSON.parse(stored) as Theme;
+            setTheme(savedTheme);
+            applyTheme(savedTheme);
+          } catch (e) {
+            console.error('Error parsing theme:', e);
+            localStorage.setItem('theme', JSON.stringify('system'));
+            applyTheme('system');
+          }
+        } else {
+          localStorage.setItem('theme', JSON.stringify('system'));
+          applyTheme('system');
+        }
+        
+        // Listen for system theme changes
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+          const currentTheme = localStorage.getItem('theme');
+          if (currentTheme && JSON.parse(currentTheme) === 'system') {
+            applyTheme('system');
+          }
+        };
+        
+        mediaQuery.addEventListener('change', handleSystemThemeChange);
+        return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
       }
-    } else {
-      localStorage.setItem('theme', JSON.stringify('system'));
-      applyTheme('system');
+    } catch (err) {
+      console.error('Error initializing theme:', err);
+      setError('Failed to initialize theme');
     }
-    
-    // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
-      const currentTheme = localStorage.getItem('theme');
-      if (currentTheme && JSON.parse(currentTheme) === 'system') {
-        applyTheme('system');
-      }
-    };
-    
-    mediaQuery.addEventListener('change', handleSystemThemeChange);
-    return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
   }, [applyTheme]);
   
   // Handle theme change
@@ -64,8 +75,11 @@ function ThemeToggleInner() {
       setTheme(newTheme);
       setIsOpen(false);
       
-      // Save to localStorage
-      localStorage.setItem('theme', JSON.stringify(newTheme));
+      // Only access browser APIs on client
+      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        // Save to localStorage
+        localStorage.setItem('theme', JSON.stringify(newTheme));
+      }
       
       // Apply theme
       applyTheme(newTheme);
@@ -76,14 +90,14 @@ function ThemeToggleInner() {
   
   // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.theme-toggle')) {
-        setIsOpen(false);
-      }
-    };
-    
-    if (isOpen) {
+    if (typeof window !== 'undefined' && isOpen) {
+      const handleClickOutside = (event: MouseEvent) => {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.theme-toggle')) {
+          setIsOpen(false);
+        }
+      };
+      
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
@@ -111,11 +125,24 @@ function ThemeToggleInner() {
     );
   }
   
+  if (error) {
+    return (
+      <div className="relative theme-toggle">
+        <button 
+          className="p-2 rounded-lg bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700" 
+          aria-label="Error en tema"
+          disabled
+        >
+          <span className="text-xl">⚠️</span>
+        </button>
+      </div>
+    );
+  }
+  
   return (
     <div className="relative theme-toggle">
       <button
         onClick={(e) => {
-          e.preventDefault();
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
@@ -132,7 +159,6 @@ function ThemeToggleInner() {
             <button
               key={t.value}
               onClick={(e) => {
-                e.preventDefault();
                 e.stopPropagation();
                 handleThemeChange(t.value);
               }}
@@ -147,13 +173,5 @@ function ThemeToggleInner() {
         </div>
       )}
     </div>
-  );
-}
-
-export function ThemeToggle() {
-  return (
-    <ErrorBoundary componentName="ThemeToggle">
-      <ThemeToggleInner />
-    </ErrorBoundary>
   );
 }

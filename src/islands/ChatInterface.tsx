@@ -1,9 +1,10 @@
 // Main chat interface for legal queries - integrates with RAG engine
 
 import React, { useState, useRef, useEffect } from 'react';
-import type { LegalResponse, LegalArea, QueryType } from '@/types/legal';
-import { LegalRAGEngine } from '@/lib/rag/engine';
-import { providerManager } from '@/lib/llm/provider-manager';
+import type { LegalResponse, LegalArea, QueryType } from '../types/legal';
+import { LegalRAGEngine } from '../lib/rag/engine';
+import { providerManager } from '../lib/llm/provider-manager';
+import ProviderRecommendation from './ProviderRecommendation';
 
 export interface ChatMessage {
   id: string;
@@ -20,14 +21,8 @@ interface ChatInterfaceProps {
 }
 
 export default function ChatInterface({ className = '', autoFocus = true }: ChatInterfaceProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      type: 'system',
-      content: '¡Bienvenido a LexMX! Soy tu asistente legal especializado en derecho mexicano. Puedes preguntarme sobre leyes, procedimientos, jurisprudencia y cualquier tema legal de México. ¿En qué puedo ayudarte?',
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isHydrated, setIsHydrated] = useState(false);
   
   const [currentInput, setCurrentInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -38,15 +33,38 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
   
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Initialize messages only on client side to avoid hydration mismatch
+  useEffect(() => {
+    setIsHydrated(true);
+    setMessages([
+      {
+        id: '1',
+        type: 'system',
+        content: '¡Bienvenido a LexMX! Soy tu asistente legal especializado en derecho mexicano. Puedes preguntarme sobre leyes, procedimientos, jurisprudencia y cualquier tema legal de México. ¿En qué puedo ayudarte?',
+        timestamp: new Date()
+      }
+    ]);
+  }, []);
 
-  // Initialize RAG engine
+  // Initialize RAG engine and provider manager
   useEffect(() => {
     const initializeEngine = async () => {
       try {
+        // Initialize provider manager first
+        await providerManager.initialize();
+        
+        // Then initialize RAG engine
         await ragEngine.initialize();
         setIsInitialized(true);
+        
+        // Check if providers are configured
+        const hasProviders = await providerManager.hasConfiguredProviders();
+        if (!hasProviders) {
+          addSystemMessage('ℹ️ No tienes proveedores configurados. Ve a Configuración para agregar proveedores de IA.');
+        }
       } catch (error) {
-        console.error('Failed to initialize RAG engine:', error);
+        console.error('Failed to initialize system:', error);
         addSystemMessage('⚠️ Error al inicializar el sistema. Algunas funciones pueden estar limitadas.');
       }
     };
@@ -156,14 +174,16 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
   };
 
   const clearChat = () => {
-    setMessages([
-      {
-        id: '1',
-        type: 'system',
-        content: '¡Bienvenido a LexMX! Soy tu asistente legal especializado en derecho mexicano. ¿En qué puedo ayudarte?',
-        timestamp: new Date()
-      }
-    ]);
+    if (isHydrated) {
+      setMessages([
+        {
+          id: '1',
+          type: 'system',
+          content: '¡Bienvenido a LexMX! Soy tu asistente legal especializado en derecho mexicano. ¿En qué puedo ayudarte?',
+          timestamp: new Date()
+        }
+      ]);
+    }
   };
 
   const legalAreas: { value: LegalArea | ''; label: string }[] = [
@@ -188,12 +208,12 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
   ];
 
   return (
-    <div className={`flex flex-col h-full bg-white ${className}`}>
+    <div className={`chat-interface flex flex-col h-full bg-white ${className}`}>
       {/* Header */}
       <div className="flex-shrink-0 border-b border-gray-200 bg-white p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">LexMX Chat</h1>
+            <h1 className="text-xl font-semibold text-gray-900">Chat Legal</h1>
             <p className="text-sm text-gray-600">
               Asistente legal para derecho mexicano
               {!isInitialized && (
@@ -361,7 +381,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
               </div>
               
               <div className="text-xs text-gray-500 mt-1 px-1">
-                {message.timestamp.toLocaleTimeString()}
+                {isHydrated ? message.timestamp.toLocaleTimeString() : '--:--:--'}
               </div>
             </div>
           </div>
@@ -387,6 +407,19 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
         </div>
       )}
 
+      {/* Provider Recommendation */}
+      {currentInput.trim().length > 10 && !isProcessing && (
+        <div className="flex-shrink-0 px-4 pb-2">
+          <ProviderRecommendation 
+            query={currentInput}
+            onSelectProvider={(providerId, model) => {
+              console.log('Selected provider:', providerId, model);
+              // TODO: Implement provider switching
+            }}
+          />
+        </div>
+      )}
+
       {/* Input */}
       <div className="flex-shrink-0 border-t border-gray-200 bg-white p-4">
         <form onSubmit={handleSubmit} className="flex space-x-3">
@@ -408,6 +441,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
             type="submit"
             disabled={!currentInput.trim() || isProcessing || !isInitialized}
             className="px-6 py-3 bg-legal-500 text-white rounded-lg hover:bg-legal-600 focus:outline-none focus:ring-2 focus:ring-legal-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            aria-label="Enviar mensaje"
           >
             {isProcessing ? (
               <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">

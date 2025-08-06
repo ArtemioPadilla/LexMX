@@ -2,12 +2,19 @@
 // Client-side translation loader
 import es from '../i18n/translations/es.json';
 import en from '../i18n/translations/en.json';
+
+// Create a safe script that embeds the translations
+const translationsScript = `
+  window.__translations = {
+    es: ${JSON.stringify(es)},
+    en: ${JSON.stringify(en)}
+  };
+`;
 ---
 
-<script define:vars={{ es, en }}>
-  // Store translations globally
-  window.__translations = { es, en };
-  
+<script is:inline set:html={translationsScript}></script>
+
+<script>
   function applyTranslations() {
     try {
       const lang = JSON.parse(localStorage.getItem('language') || '"es"');
@@ -81,8 +88,12 @@ import en from '../i18n/translations/en.json';
     }
   }
   
-  // Apply translations on load
-  document.addEventListener('DOMContentLoaded', applyTranslations);
+  // Apply translations immediately if DOM is ready, otherwise on load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyTranslations);
+  } else {
+    applyTranslations();
+  }
   
   // Listen for custom language change event
   window.addEventListener('languageChanged', (e) => {
@@ -106,12 +117,17 @@ import en from '../i18n/translations/en.json';
   
   // Prevent accidental navigation to language routes
   document.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    const href = target.getAttribute('href') || target.closest('a')?.getAttribute('href');
-    if (href && (href === '/es/' || href === '/en/')) {
-      e.preventDefault();
-      e.stopPropagation();
-      console.warn('Prevented navigation to language route:', href);
+    const target = e.target;
+    if (target && target.closest) {
+      const link = target.closest('a');
+      if (link) {
+        const href = link.getAttribute('href');
+        if (href && (href === '/es/' || href === '/en/')) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.warn('Prevented navigation to language route:', href);
+        }
+      }
     }
   }, true);
 </script>

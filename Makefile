@@ -82,8 +82,8 @@ clean-dist: ## Clean build artifacts
 	@echo "$(GREEN)✅ Build artifacts cleaned$(RESET)"
 
 ##@ Testing & Quality
-.PHONY: test test-unit test-e2e lint type-check format qa quality
-test: test-unit ## Run all unit tests
+.PHONY: test test-unit test-e2e test-all lint type-check format qa quality
+test: test-unit ## Run unit tests only (use test-all for comprehensive testing)
 	@echo "$(BOLD)$(BLUE)🧪 Running unit tests...$(RESET)"
 	@npm run test
 
@@ -93,7 +93,20 @@ test-unit: install ## Run unit tests only
 
 test-e2e: install ## Run end-to-end tests
 	@echo "$(BOLD)$(BLUE)🎭 Running E2E tests...$(RESET)"
+	@echo "$(YELLOW)🔧 Cleaning up any existing dev servers...$(RESET)"
+	@node scripts/kill-dev-servers.js
+	@echo "$(YELLOW)📦 Ensuring Playwright browsers are installed...$(RESET)"
+	@npx playwright install --with-deps
 	@npm run test:e2e
+
+test-all: install ## Run all tests (unit + E2E)
+	@echo "$(BOLD)$(BLUE)🧪 Running all tests...$(RESET)"
+	@echo "$(BLUE)📝 Running unit tests first...$(RESET)"
+	@npm run test
+	@echo "$(BLUE)🎭 Running E2E tests...$(RESET)"
+	@npx playwright install --with-deps
+	@npm run test:e2e
+	@echo "$(GREEN)✅ All tests completed!$(RESET)"
 
 lint: install ## Run ESLint
 	@echo "$(BOLD)$(BLUE)🔍 Running linter...$(RESET)"
@@ -237,9 +250,14 @@ docker-shell: ## Open shell in Docker container
 	@docker run -it --rm lexmx:latest /bin/sh
 
 ##@ Maintenance
-.PHONY: clean clean-all update-deps security-audit outdated
+.PHONY: clean clean-all clean-ports update-deps security-audit outdated
 clean: clean-dist ## Clean build artifacts only
 	@echo "$(GREEN)✅ Clean completed$(RESET)"
+
+clean-ports: ## Kill all dev servers and free up ports
+	@echo "$(BOLD)$(YELLOW)🔧 Cleaning up dev server ports...$(RESET)"
+	@node scripts/kill-dev-servers.js
+	@echo "$(GREEN)✅ Ports cleaned$(RESET)"
 
 clean-all: clean-dist corpus-clean ## Clean everything (build + corpus)
 	@echo "$(BOLD)$(YELLOW)🧹 Deep cleaning...$(RESET)"

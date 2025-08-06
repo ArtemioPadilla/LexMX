@@ -7,10 +7,12 @@ import type {
   LLMResponse, 
   QueryContext,
   UserProfile
-} from '@/types/llm';
+} from '../../types/llm';
 
 import { providerRegistry } from './provider-registry';
 import { secureStorage } from '../security/secure-storage';
+import { ProviderFactory } from './providers';
+import { intelligentSelector } from './intelligent-selector';
 
 export class ProviderManager {
   private providers: Map<string, LLMProvider> = new Map();
@@ -270,6 +272,72 @@ export class ProviderManager {
     return await secureStorage.getProviderConfig(providerId);
   }
 
+  // Check if any providers are configured
+  async hasConfiguredProviders(): Promise<boolean> {
+    // Ensure we're initialized
+    if (!this.initialized) {
+      await this.initialize();
+    }
+    
+    // Check both memory and storage
+    const memoryProviders = this.providers.size > 0;
+    const configs = await secureStorage.getAllProviderConfigs();
+    const storageProviders = configs.length > 0 && configs.some(config => 
+      config.enabled && (
+        config.id === 'webllm' || // WebLLM doesn't need API key
+        config.id === 'ollama' || // Ollama just needs endpoint
+        (config.apiKey && config.apiKey.trim() !== '')
+      )
+    );
+    
+    return memoryProviders || storageProviders;
+  }
+
+  // Intelligent provider selection
+  async selectProviderIntelligently(query: string): Promise<{ provider: LLMProvider; model: string; reasoning: string[] } | null> {
+    const selection = await intelligentSelector.selectProvider(
+      intelligentSelector.analyzeQuery(query)
+    );
+
+    if (!selection) {
+      return null;
+    }
+
+    const provider = this.providers.get(selection.providerId);
+    if (!provider) {
+      return null;
+    }
+
+    return {
+      provider,
+      model: selection.model,
+      reasoning: selection.reasoning
+    };
+  }
+
+  // Get provider recommendations
+  async getProviderRecommendations(query: string): Promise<Array<{
+    providerId: string;
+    model: string;
+    score: number;
+    estimatedCost: number;
+    reasoning: string[];
+    available: boolean;
+  }>> {
+    const recommendations = await intelligentSelector.getRecommendations(query, 3);
+    
+    return Promise.all(recommendations.map(async rec => ({
+      ...rec,
+      available: this.providers.has(rec.providerId) && 
+                 this.providers.get(rec.providerId)?.status === 'connected'
+    })));
+  }
+
+  // Get provider for a specific model
+  getProvider(providerId: string): LLMProvider | undefined {
+    return this.providers.get(providerId);
+  }
+
   // User profile management
   async applyUserProfile(profile: UserProfile): Promise<void> {
     // Remove existing providers not in profile
@@ -313,42 +381,45 @@ export class ProviderManager {
   }
 
   private async initializeProvider(config: ProviderConfig): Promise<void> {
+    console.log(`[ProviderManager] Initializing provider: ${config.id}`);
+    
     try {
-      // Import provider class dynamically
-      const ProviderClass = await this.importProviderClass(config.id);
+      // Create provider instance using factory
+      let provider: LLMProvider;
       
-      // Create provider instance
-      const provider = new ProviderClass(config);
+      if (config.id === 'webllm') {
+        // Handle WebLLM special initialization with progress callback
+        const webllmConfig = {
+          ...config,
+          initProgressCallback: this.webllmProgressCallback
+        };
+        console.log('[ProviderManager] Creating WebLLM provider with special config');
+        provider = ProviderFactory.createProvider(webllmConfig);
+      } else {
+        provider = ProviderFactory.createProvider(config);
+      }
       
-      // Test connection
-      const isAvailable = await provider.testConnection();
-      provider.status = isAvailable ? 'connected' : 'disconnected';
+      console.log(`[ProviderManager] Provider instance created: ${provider.id}`);
       
-      // Register provider
+      // Store provider instance
       this.providers.set(config.id, provider);
-      providerRegistry.registerProvider(provider);
       
+      // Test connection for all providers
+      const isAvailable = await provider.testConnection();
+      
+      console.log(`Provider ${config.id} initialized (connected: ${isAvailable})`);
     } catch (error) {
       console.error(`Failed to initialize provider ${config.id}:`, error);
     }
   }
 
-  private async importProviderClass(providerId: string): Promise<any> {
-    switch (providerId) {
-      case 'openai':
-        return (await import('./providers/openai')).OpenAIProvider;
-      case 'anthropic':
-        return (await import('./providers/claude')).ClaudeProvider;
-      case 'google':
-        return (await import('./providers/gemini')).GeminiProvider;
-      case 'ollama':
-        return (await import('./providers/ollama')).OllamaProvider;
-      case 'openai-compatible':
-        return (await import('./providers/openai-compatible')).OpenAICompatibleProvider;
-      default:
-        throw new Error(`Unknown provider: ${providerId}`);
-    }
+  private webllmProgressCallback?: (progress: number, message: string) => void;
+
+  // Set WebLLM progress callback for UI updates
+  setWebLLMProgressCallback(callback: (progress: number, message: string) => void): void {
+    this.webllmProgressCallback = callback;
   }
+
 
   private async logUsage(
     providerId: string,

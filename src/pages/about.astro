@@ -1,9 +1,10 @@
 ---
 import BaseLayout from '../components/layout/BaseLayout.astro';
+import HydrationWrapper from '../components/HydrationWrapper.astro';
 ---
 
-<BaseLayout title="Acerca de LexMX - Asistente Legal Mexicano">
-  <main class="min-h-screen bg-gradient-to-br from-legal-50 to-white dark:from-gray-900 dark:to-gray-800">
+<BaseLayout title="Acerca de - LexMX">
+  <main class="min-h-screen bg-white dark:bg-gray-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <!-- Hero Section -->
       <div class="text-center mb-16">
@@ -11,200 +12,178 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
           Acerca de LexMX
         </h1>
         <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-          Democratizando el acceso al conocimiento legal mexicano mediante inteligencia artificial
+          Tu asistente legal mexicano impulsado por inteligencia artificial, 
+          diseñado para democratizar el acceso a la información legal.
         </p>
       </div>
 
       <!-- Mission Section -->
       <section class="mb-16">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Nuestra Misión</h2>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
-            LexMX nace de la necesidad de hacer el sistema legal mexicano más accesible para todos. 
-            Creemos que el conocimiento legal no debe ser exclusivo de abogados, sino una herramienta 
-            disponible para cada ciudadano que busca entender sus derechos y obligaciones.
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          Nuestra Misión
+        </h2>
+        <div class="prose prose-lg dark:prose-invert max-w-none">
+          <p class="text-gray-600 dark:text-gray-300">
+            LexMX nace con la visión de hacer el derecho mexicano accesible para todos. 
+            Combinamos la inteligencia artificial más avanzada con el corpus legal mexicano 
+            completo para ofrecer respuestas precisas, contextualizadas y siempre actualizadas.
           </p>
           <p class="text-gray-600 dark:text-gray-300">
-            Mediante la combinación de tecnología de punta en IA y el corpus completo de la legislación 
-            mexicana, proporcionamos respuestas precisas, contextualizadas y siempre actualizadas a 
-            consultas legales complejas.
+            Creemos que el acceso a la información legal es un derecho fundamental, y trabajamos 
+            para eliminar las barreras técnicas y económicas que impiden a las personas entender 
+            y ejercer sus derechos.
           </p>
         </div>
       </section>
 
       <!-- Features Grid -->
       <section class="mb-16">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
           ¿Qué hace único a LexMX?
         </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <div class="w-12 h-12 bg-legal-100 dark:bg-legal-900 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-legal-600 dark:text-legal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Corpus Legal Completo
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+              100% Privado
             </h3>
             <p class="text-gray-600 dark:text-gray-300">
-              Acceso a toda la legislación federal mexicana, jurisprudencia de la SCJN, 
-              y reglamentos actualizados.
+              Todo el procesamiento ocurre en tu navegador. No almacenamos consultas, 
+              no rastreamos usuarios, y no enviamos datos a servidores externos.
             </p>
           </div>
-
-          <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              100% Cliente
+          <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+              Código Abierto
             </h3>
             <p class="text-gray-600 dark:text-gray-300">
-              Sin servidores, sin tracking. Todo el procesamiento ocurre en tu navegador 
-              para máxima privacidad.
+              LexMX es software libre bajo licencia MIT. Puedes revisar, modificar y 
+              contribuir al código en nuestro repositorio de GitHub.
             </p>
           </div>
-
-          <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <div class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Multi-LLM
+          <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+              Sin Costos Ocultos
             </h3>
             <p class="text-gray-600 dark:text-gray-300">
-              Compatible con OpenAI, Claude, Gemini y modelos locales. Tú eliges el proveedor 
-              que prefieras.
+              Usa tu propia clave API de OpenAI, Claude o Gemini. Solo pagas por lo que 
+              usas directamente al proveedor, sin intermediarios ni comisiones.
             </p>
           </div>
-
-          <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              RAG Avanzado
-            </h3>
-            <p class="text-gray-600 dark:text-gray-300">
-              Búsqueda híbrida que combina semántica y keywords para encontrar la información 
-              legal más relevante.
-            </p>
-          </div>
-
-          <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Costo Optimizado
-            </h3>
-            <p class="text-gray-600 dark:text-gray-300">
-              Selección inteligente de proveedores y cache semántico para reducir costos 
-              hasta 90%.
-            </p>
-          </div>
-
-          <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <div class="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-lg flex items-center justify-center mb-4">
-              <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               Siempre Actualizado
             </h3>
             <p class="text-gray-600 dark:text-gray-300">
-              Actualización automática del corpus legal para garantizar información vigente 
-              y precisa.
+              Nuestro corpus legal se actualiza constantemente con las últimas reformas 
+              y jurisprudencias del sistema legal mexicano.
             </p>
           </div>
         </div>
       </section>
 
-      <!-- Technology Stack -->
+      <!-- Technology Section -->
       <section class="mb-16">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Stack Tecnológico</h2>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="text-center">
-              <div class="text-3xl mb-2">🚀</div>
-              <p class="font-medium text-gray-900 dark:text-white">Astro</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Framework</p>
-            </div>
-            <div class="text-center">
-              <div class="text-3xl mb-2">⚛️</div>
-              <p class="font-medium text-gray-900 dark:text-white">React</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Islands</p>
-            </div>
-            <div class="text-center">
-              <div class="text-3xl mb-2">🎨</div>
-              <p class="font-medium text-gray-900 dark:text-white">Tailwind</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Estilos</p>
-            </div>
-            <div class="text-center">
-              <div class="text-3xl mb-2">📦</div>
-              <p class="font-medium text-gray-900 dark:text-white">TypeScript</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Tipos</p>
-            </div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          Tecnología de Vanguardia
+        </h2>
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              RAG (Retrieval Augmented Generation)
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300">
+              Utilizamos búsqueda híbrida que combina vectores semánticos con búsqueda por 
+              palabras clave para encontrar la información legal más relevante en cada consulta.
+            </p>
+          </div>
+          <div>
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              Multi-LLM Support
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300">
+              Compatible con múltiples proveedores de IA: OpenAI (GPT-4), Anthropic (Claude), 
+              Google (Gemini) y AWS Bedrock. El sistema selecciona automáticamente el mejor 
+              modelo para cada consulta.
+            </p>
+          </div>
+          <div>
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              Islands Architecture
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300">
+              Construido con Astro y React, optimizado para cargas ultrarrápidas. Solo carga 
+              JavaScript donde es necesario, manteniendo el sitio ligero y eficiente.
+            </p>
           </div>
         </div>
       </section>
 
-      <!-- Open Source -->
-      <section class="mb-16">
-        <div class="bg-legal-50 dark:bg-legal-900/20 rounded-2xl p-8">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Código Abierto</h2>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
-            LexMX es un proyecto de código abierto bajo licencia MIT. Creemos en la transparencia 
-            y la colaboración comunitaria para mejorar el acceso a la justicia.
-          </p>
-          <div class="flex flex-wrap gap-4">
-            <a 
-              href="https://github.com/ArtemioPadilla/LexMX" 
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
-            >
-              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-              </svg>
-              Ver en GitHub
-            </a>
-            <a 
-              href="https://github.com/ArtemioPadilla/LexMX/issues" 
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              Reportar un problema
-            </a>
-          </div>
-        </div>
+      <!-- Legal Notice -->
+      <section class="mb-16 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+          Aviso Legal Importante
+        </h2>
+        <p class="text-gray-700 dark:text-gray-300">
+          LexMX proporciona información legal general con fines educativos y de orientación. 
+          <strong>No constituye asesoría legal profesional</strong>. Las respuestas generadas 
+          por IA pueden contener errores o imprecisiones. Siempre consulte con un abogado 
+          certificado para casos específicos o decisiones legales importantes.
+        </p>
       </section>
 
-      <!-- Contact -->
-      <section>
-        <div class="text-center">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">¿Preguntas?</h2>
-          <p class="text-gray-600 dark:text-gray-300 mb-6">
-            Estamos aquí para ayudarte a aprovechar al máximo LexMX
-          </p>
+      <!-- Team Section -->
+      <section class="mb-16">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          Proyecto de Código Abierto
+        </h2>
+        <p class="text-gray-600 dark:text-gray-300 mb-6">
+          LexMX es un proyecto comunitario de código abierto. Agradecemos a todos los 
+          contribuidores que han ayudado a hacer realidad esta herramienta.
+        </p>
+        <div class="flex flex-wrap gap-4">
           <a 
-            href="/docs" 
-            class="inline-flex items-center px-6 py-3 bg-legal-500 text-white rounded-lg font-medium hover:bg-legal-600 transition-colors"
+            href="https://github.com/artemiopadilla/LexMX" 
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
           >
-            Ver Documentación
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+            Ver en GitHub
+          </a>
+          <a 
+            href="https://github.com/artemiopadilla/LexMX/issues" 
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Reportar un problema
+          </a>
+          <a 
+            href="https://github.com/artemiopadilla/LexMX/blob/main/CONTRIBUTING.md" 
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Contribuir al proyecto
           </a>
         </div>
+      </section>
+
+      <!-- Contact Section -->
+      <section>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          Contacto
+        </h2>
+        <p class="text-gray-600 dark:text-gray-300">
+          Para preguntas, sugerencias o colaboraciones, puedes contactarnos a través de:
+        </p>
+        <ul class="mt-4 space-y-2 text-gray-600 dark:text-gray-300">
+          <li>• GitHub Issues: Para reportar errores o solicitar funciones</li>
+          <li>• GitHub Discussions: Para preguntas y discusiones generales</li>
+          <li>• Pull Requests: Para contribuir directamente al código</li>
+        </ul>
       </section>
     </div>
   </main>

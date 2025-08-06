@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../../components/layout/BaseLayout.astro';
+import HydrationWrapper from '../../components/HydrationWrapper.astro';
+import DocumentRequestForm from '../../islands/DocumentRequestForm.tsx';
+---
+
+<BaseLayout title="Nueva Solicitud - LexMX">
+  <main class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Back Link -->
+      <div class="mb-6">
+        <a 
+          href="/requests" 
+          class="inline-flex items-center text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 transition-colors"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Volver a solicitudes
+        </a>
+      </div>
+
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          Nueva Solicitud de Documento
+        </h1>
+        <p class="text-lg text-gray-600 dark:text-gray-300">
+          Solicita un documento legal que te gustaría ver en nuestro corpus.
+        </p>
+      </div>
+
+      <!-- Request Form Component -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <HydrationWrapper name="document-request-form">
+          <DocumentRequestForm client:load />
+        </HydrationWrapper>
+      </div>
+    </div>
+  </main>
+</BaseLayout>

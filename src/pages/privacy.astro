@@ -1,11 +1,9 @@
 ---
 import BaseLayout from '../components/layout/BaseLayout.astro';
 
-const lastUpdated = new Date('2024-01-15').toLocaleDateString('es-MX', { 
-  year: 'numeric', 
-  month: 'long', 
-  day: 'numeric' 
-});
+// Use a stable date format to avoid hydration mismatches
+const lastUpdatedDate = new Date('2024-01-15');
+const lastUpdated = `${lastUpdatedDate.getDate()} de enero de ${lastUpdatedDate.getFullYear()}`;
 ---
 
 <BaseLayout title="Política de Privacidad - LexMX">

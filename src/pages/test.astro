@@ -1,52 +1,40 @@
 ---
+import BaseLayout from '../components/layout/BaseLayout.astro';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { LanguageSelector } from '../components/LanguageSelector';
+import HydrationWrapper from '../components/HydrationWrapper.astro';
 ---
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test Components</title>
-  <script is:inline>
-    // Initialize theme
-    (function() {
-      const stored = localStorage.getItem('theme');
-      const theme = stored ? JSON.parse(stored) : 'system';
-      let actualTheme;
-      if (theme === 'system') {
-        actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      } else {
-        actualTheme = theme;
-      }
-      if (actualTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      }
-    })();
-  </script>
-</head>
-<body class="p-8 bg-white dark:bg-gray-900">
-  <h1 class="text-2xl font-bold mb-8 text-gray-900 dark:text-white">Component Test Page</h1>
-  
-  <div class="space-y-8">
-    <div>
-      <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Theme Toggle:</h2>
-      <ThemeToggle client:load />
-    </div>
+<BaseLayout title="Test Components - LexMX">
+  <div class="max-w-4xl mx-auto p-8">
+    <h1 class="text-2xl font-bold mb-8 text-gray-900 dark:text-white">Component Test Page</h1>
     
-    <div>
-      <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Language Selector:</h2>
-      <LanguageSelector client:load />
-    </div>
-    
-    <div>
-      <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Both Together:</h2>
-      <div class="flex items-center space-x-4">
-        <LanguageSelector client:load />
-        <ThemeToggle client:load />
+    <div class="space-y-8">
+      <div>
+        <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Theme Toggle:</h2>
+        <HydrationWrapper name="theme-toggle-test" width="44px" height="40px">
+          <ThemeToggle client:load />
+        </HydrationWrapper>
+      </div>
+      
+      <div>
+        <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Language Selector:</h2>
+        <HydrationWrapper name="language-selector-test" width="100px" height="40px">
+          <LanguageSelector client:load />
+        </HydrationWrapper>
+      </div>
+      
+      <div>
+        <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Both Together:</h2>
+        <div class="flex items-center space-x-4">
+          <HydrationWrapper name="language-selector-test-2" width="100px" height="40px">
+            <LanguageSelector client:load />
+          </HydrationWrapper>
+          <HydrationWrapper name="theme-toggle-test-2" width="44px" height="40px">
+            <ThemeToggle client:load />
+          </HydrationWrapper>
+        </div>
       </div>
     </div>
   </div>
-</body>
-</html>
+</BaseLayout>

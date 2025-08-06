@@ -1,8 +1,8 @@
 // Secure storage manager with client-side encryption
 
-import type { SecureStorage, EncryptedData, PrivacySettings } from '@/types/security';
-import type { ProviderConfig } from '@/types/llm';
-import { cryptoManager } from './encryption';
+import type { SecureStorage, EncryptedData, PrivacySettings } from '../../types/security';
+import type { ProviderConfig } from '../../types/llm';
+import { cryptoManager, ClientCryptoManager } from './encryption';
 
 export class SecureStorageManager implements SecureStorage {
   private readonly prefix = 'lexmx_';
@@ -14,37 +14,87 @@ export class SecureStorageManager implements SecureStorage {
     sessionOnly: true,
     analytics: 'none'
   };
+  private isBrowser = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+  private cryptoAvailable = false;
+  private initialized = false;
 
   constructor() {
-    this.loadPrivacySettings();
-    this.setupCleanupHandlers();
+    if (this.isBrowser) {
+      this.loadPrivacySettings();
+      this.setupCleanupHandlers();
+      this.checkCryptoAvailability();
+    }
+  }
+
+  private checkCryptoAvailability(): void {
+    this.cryptoAvailable = ClientCryptoManager.isSupported();
+    if (!this.cryptoAvailable) {
+      console.warn('Web Crypto API not available. Storage will use fallback mode.');
+    }
   }
 
   async initialize(masterPassword?: string): Promise<void> {
-    // Initialize encryption key
-    await cryptoManager.generateKey(masterPassword);
+    if (this.initialized) return;
+    
+    try {
+      if (this.cryptoAvailable) {
+        // Initialize encryption key
+        await cryptoManager.generateKey(masterPassword);
+      }
+      this.initialized = true;
+    } catch (error) {
+      console.warn('Failed to initialize encryption:', error);
+      // Continue without encryption
+      this.initialized = true;
+    }
   }
 
   async store(key: string, data: any): Promise<void> {
     const storageKey = this.prefix + key;
     
+    // Ensure we're initialized
+    if (!this.initialized) {
+      await this.initialize();
+    }
+    
     try {
+      // Check if storage is available
+      if (!this.isBrowser) {
+        throw new Error('Storage not available in non-browser environment');
+      }
+      
       // Determine if data should be encrypted
-      const shouldEncrypt = this.shouldEncryptData(key, data);
+      const shouldEncrypt = this.shouldEncryptData(key, data) && this.cryptoAvailable;
       
       if (shouldEncrypt) {
-        // Encrypt sensitive data
-        const jsonData = JSON.stringify(data);
-        const encrypted = await cryptoManager.encrypt(jsonData);
-        
-        const secureData = {
-          encrypted: true,
-          data: encrypted,
-          timestamp: Date.now(),
-          version: 1
-        };
-        
-        this.storeInBrowser(storageKey, secureData);
+        try {
+          // Encrypt sensitive data
+          const jsonData = JSON.stringify(data);
+          const encrypted = await cryptoManager.encrypt(jsonData);
+          
+          const secureData = {
+            encrypted: true,
+            data: encrypted,
+            timestamp: Date.now(),
+            version: 1
+          };
+          
+          this.storeInBrowser(storageKey, secureData);
+        } catch (encryptError) {
+          console.warn('Encryption failed, storing with base64 encoding:', encryptError);
+          // Fallback to base64 encoding for sensitive data
+          const jsonData = JSON.stringify(data);
+          const encoded = btoa(encodeURIComponent(jsonData));
+          
+          const fallbackData = {
+            encrypted: false,
+            encoded: true,
+            data: encoded,
+            timestamp: Date.now()
+          };
+          
+          this.storeInBrowser(storageKey, fallbackData);
+        }
       } else {
         // Store non-sensitive data in plain text
         const plainData = {
@@ -57,21 +107,44 @@ export class SecureStorageManager implements SecureStorage {
       }
     } catch (error) {
       console.error('Error storing secure data:', error);
-      throw new Error(`Failed to store data for key: ${key}`);
+      // Provide more specific error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to store data for key "${key}": ${errorMessage}`);
     }
   }
 
   async retrieve(key: string): Promise<any | null> {
     const storageKey = this.prefix + key;
     
+    // Ensure we're initialized
+    if (!this.initialized) {
+      await this.initialize();
+    }
+    
     try {
       const storedData = this.retrieveFromBrowser(storageKey);
       if (!storedData) return null;
 
-      if (storedData.encrypted) {
-        // Decrypt encrypted data
-        const decrypted = await cryptoManager.decrypt(storedData.data);
-        return JSON.parse(decrypted);
+      if (storedData.encrypted && this.cryptoAvailable) {
+        try {
+          // Decrypt encrypted data
+          const decrypted = await cryptoManager.decrypt(storedData.data);
+          return JSON.parse(decrypted);
+        } catch (decryptError) {
+          console.warn('Decryption failed, clearing corrupted data:', decryptError);
+          // Clear corrupted data
+          await this.remove(key);
+          return null;
+        }
+      } else if (storedData.encoded) {
+        // Decode base64 encoded data
+        try {
+          const decoded = decodeURIComponent(atob(storedData.data));
+          return JSON.parse(decoded);
+        } catch (decodeError) {
+          console.error('Base64 decode failed:', decodeError);
+          return null;
+        }
       } else {
         // Return plain data
         return storedData.data;
@@ -139,14 +212,25 @@ export class SecureStorageManager implements SecureStorage {
 
   async getAllProviderConfigs(): Promise<ProviderConfig[]> {
     const configs: ProviderConfig[] = [];
-    const storage = this.privacySettings.sessionOnly ? sessionStorage : localStorage;
     
-    for (let i = 0; i < storage.length; i++) {
-      const key = storage.key(i);
-      if (key && key.startsWith(this.prefix + 'provider_')) {
-        const config = await this.retrieve(key.replace(this.prefix, ''));
-        if (config) configs.push(config);
+    try {
+      const storage = this.privacySettings.sessionOnly ? sessionStorage : localStorage;
+      
+      for (let i = 0; i < storage.length; i++) {
+        const key = storage.key(i);
+        if (key && key.startsWith(this.prefix + 'provider_')) {
+          try {
+            const config = await this.retrieve(key.replace(this.prefix, ''));
+            if (config) configs.push(config);
+          } catch (error) {
+            console.warn(`Failed to retrieve provider config from key ${key}:`, error);
+            // Continue with other configs even if one fails
+          }
+        }
       }
+    } catch (error) {
+      console.error('Error accessing storage in getAllProviderConfigs:', error);
+      // Return empty array if storage access fails
     }
     
     return configs;
@@ -190,17 +274,84 @@ export class SecureStorageManager implements SecureStorage {
   }
 
   private storeInBrowser(key: string, data: any): void {
-    const storage = this.privacySettings.sessionOnly ? sessionStorage : localStorage;
-    storage.setItem(key, JSON.stringify(data));
+    if (!this.isBrowser) {
+      throw new Error('Browser storage not available');
+    }
+    
+    try {
+      const storage = this.getStorage();
+      const serialized = JSON.stringify(data);
+      
+      // Check storage quota
+      const stats = this.getStorageStats();
+      const dataSize = new Blob([serialized]).size;
+      
+      if (stats.available < dataSize) {
+        // Try to clean up old data
+        this.cleanupExpiredData();
+        
+        // Check again
+        const newStats = this.getStorageStats();
+        if (newStats.available < dataSize) {
+          throw new Error(`Storage quota exceeded. Need ${dataSize} bytes, have ${newStats.available} bytes available.`);
+        }
+      }
+      
+      storage.setItem(key, serialized);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'QuotaExceededError' || error.message.includes('quota')) {
+          throw new Error('Storage quota exceeded. Please clear some data and try again.');
+        }
+        throw error;
+      }
+      throw new Error('Failed to store data in browser');
+    }
+  }
+  
+  private getStorage(): Storage {
+    if (!this.isBrowser) {
+      throw new Error('Browser storage not available');
+    }
+    
+    // Test storage availability
+    const testKey = '_test_storage_' + Date.now();
+    
+    try {
+      if (this.privacySettings.sessionOnly && typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(testKey, 'test');
+        sessionStorage.removeItem(testKey);
+        return sessionStorage;
+      }
+    } catch {
+      console.warn('SessionStorage not available, falling back to localStorage');
+    }
+    
+    try {
+      localStorage.setItem(testKey, 'test');
+      localStorage.removeItem(testKey);
+      return localStorage;
+    } catch {
+      throw new Error('No storage available. Check browser settings and privacy mode.');
+    }
   }
 
   private retrieveFromBrowser(key: string): any | null {
-    const storage = this.privacySettings.sessionOnly ? sessionStorage : localStorage;
-    const item = storage.getItem(key);
-    return item ? JSON.parse(item) : null;
+    if (!this.isBrowser) return null;
+    
+    try {
+      const storage = this.getStorage();
+      const item = storage.getItem(key);
+      return item ? JSON.parse(item) : null;
+    } catch (error) {
+      console.error('Error accessing browser storage:', error);
+      return null;
+    }
   }
 
   private loadPrivacySettings(): void {
+    if (!this.isBrowser) return;
+    
     try {
       // Privacy settings are stored in localStorage (not encrypted) for persistence
       const stored = localStorage.getItem(this.prefix + 'privacy_settings');
@@ -213,6 +364,8 @@ export class SecureStorageManager implements SecureStorage {
   }
 
   private savePrivacySettings(): void {
+    if (!this.isBrowser) return;
+    
     try {
       localStorage.setItem(
         this.prefix + 'privacy_settings',
@@ -224,6 +377,8 @@ export class SecureStorageManager implements SecureStorage {
   }
 
   private setupCleanupHandlers(): void {
+    if (!this.isBrowser) return;
+    
     // Clear data on exit if enabled
     if (this.privacySettings.clearDataOnExit) {
       window.addEventListener('beforeunload', () => {
@@ -240,7 +395,11 @@ export class SecureStorageManager implements SecureStorage {
   }
 
   private cleanupExpiredData(): void {
-    const storage = this.privacySettings.sessionOnly ? sessionStorage : localStorage;
+    if (!this.isBrowser) return;
+    
+    const storage = this.privacySettings.sessionOnly && typeof sessionStorage !== 'undefined'
+      ? sessionStorage 
+      : localStorage;
     const now = Date.now();
     const maxAge = 24 * 60 * 60 * 1000; // 24 hours
     
@@ -288,7 +447,13 @@ export class SecureStorageManager implements SecureStorage {
 
   // Get storage usage stats
   getStorageStats(): { used: number; available: number; keys: number } {
-    const storage = this.privacySettings.sessionOnly ? sessionStorage : localStorage;
+    if (!this.isBrowser) {
+      return { used: 0, available: 0, keys: 0 };
+    }
+    
+    const storage = this.privacySettings.sessionOnly && typeof sessionStorage !== 'undefined'
+      ? sessionStorage 
+      : localStorage;
     let used = 0;
     let keys = 0;
 

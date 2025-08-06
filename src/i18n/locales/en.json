@@ -1,0 +1,318 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "next": "Next",
+    "previous": "Previous",
+    "back": "Back",
+    "continue": "Continue",
+    "finish": "Finish",
+    "submit": "Submit",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "changeLanguage": "Change language"
+  },
+  "nav": {
+    "home": "Home",
+    "chat": "Legal Chat",
+    "wiki": "Legal Wiki",
+    "codes": "Legal Codes",
+    "requests": "Requests",
+    "setup": "Setup",
+    "about": "About",
+    "menu": "Menu",
+    "openMenu": "Open main menu",
+    "closeMenu": "Close menu",
+    "quickActions": "Quick Actions",
+    "resources": "Resources"
+  },
+  "home": {
+    "hero": {
+      "title": "Your Mexican Legal AI Assistant",
+      "subtitle": "Get accurate legal answers based on updated Mexican legislation",
+      "cta": "Start Free Consultation"
+    },
+    "features": {
+      "title": "Complete Legal Platform",
+      "ai": {
+        "title": "AI Legal Assistant",
+        "description": "Instant answers with legal sources and citations"
+      },
+      "corpus": {
+        "title": "Complete Legal Corpus",
+        "description": "Access to all Mexican federal laws and codes"
+      },
+      "privacy": {
+        "title": "Total Privacy",
+        "description": "Your data never leaves your browser"
+      },
+      "cost": {
+        "title": "Cost Optimized",
+        "description": "Choose from multiple AI providers"
+      }
+    }
+  },
+  "chat": {
+    "title": "Legal Chat",
+    "welcome": "Welcome to LexMX! I'm your AI assistant specialized in Mexican law. How can I help you today?",
+    "placeholder": "Type your legal question here... (Shift+Enter for new line)",
+    "send": "Send message",
+    "clear": "Clear chat",
+    "newConversation": "New conversation",
+    "examples": {
+      "title": "Example questions:",
+      "q1": "What does constitutional article 123 say about labor rights?",
+      "q2": "How to process a voluntary divorce in Mexico?",
+      "q3": "What are the tax obligations for individuals?",
+      "q4": "What is amparo and when does it apply?",
+      "q5": "What are the requirements to establish a corporation?"
+    },
+    "errors": {
+      "noProviders": "No AI providers configured. Go to Settings to add your OpenAI, Claude, Gemini or other provider API key.",
+      "providerError": "Error connecting to AI provider. Please check your configuration.",
+      "networkError": "Network connection error. Please check your internet connection."
+    },
+    "legalArea": {
+      "all": "All areas",
+      "constitutional": "Constitutional Law",
+      "civil": "Civil Law",
+      "criminal": "Criminal Law",
+      "labor": "Labor Law",
+      "tax": "Tax Law",
+      "commercial": "Commercial Law",
+      "administrative": "Administrative Law",
+      "family": "Family Law",
+      "property": "Property Law"
+    }
+  },
+  "setup": {
+    "title": "AI Provider Setup",
+    "subtitle": "Configure your artificial intelligence providers for the best legal answers. Your settings are stored securely and encrypted locally.",
+    "wizard": {
+      "welcome": {
+        "title": "Welcome to LexMX",
+        "description": "Let's configure your AI providers for accurate legal consultations. This will only take a few minutes.",
+        "start": "Get Started"
+      },
+      "profile": {
+        "title": "Select Your Profile",
+        "description": "Choose a configuration profile that matches your needs",
+        "privacy": {
+          "title": "Privacy First",
+          "description": "Use local models like Ollama. No data sent to external servers."
+        },
+        "balanced": {
+          "title": "Balanced",
+          "description": "Mix of performance and cost with cloud providers."
+        },
+        "performance": {
+          "title": "Performance",
+          "description": "Best models for complex legal analysis."
+        }
+      },
+      "providers": {
+        "title": "Choose Your Providers",
+        "description": "Select and configure the AI providers you want to use"
+      },
+      "complete": {
+        "title": "Setup Complete!",
+        "description": "Your AI providers are configured and ready to use.",
+        "startChat": "Start Legal Chat"
+      }
+    },
+    "providers": {
+      "openai": {
+        "name": "OpenAI",
+        "description": "GPT-4 and GPT-3.5 models",
+        "apiKeyPlaceholder": "sk-..."
+      },
+      "claude": {
+        "name": "Claude",
+        "description": "Advanced reasoning for legal analysis",
+        "apiKeyPlaceholder": "sk-ant-..."
+      },
+      "gemini": {
+        "name": "Google Gemini",
+        "description": "Fast and cost-effective",
+        "apiKeyPlaceholder": "AIza..."
+      },
+      "ollama": {
+        "name": "Ollama",
+        "description": "Local models for maximum privacy",
+        "endpointPlaceholder": "http://localhost:11434"
+      }
+    },
+    "validation": {
+      "required": "This field is required",
+      "invalidKey": "Invalid API key format",
+      "connectionError": "Could not connect to provider",
+      "testConnection": "Test Connection",
+      "testing": "Testing...",
+      "success": "Connection successful!"
+    }
+  },
+  "wiki": {
+    "title": "Mexican Law Wiki",
+    "navigation": {
+      "title": "Section Navigation",
+      "government": "Government Structure",
+      "legal": "Legal System",
+      "areas": "Areas of Law",
+      "resources": "Educational Resources"
+    },
+    "sections": {
+      "government": {
+        "title": "Mexican Government Structure",
+        "powers": "Division of Powers",
+        "levels": "Government Levels",
+        "executive": "Executive Branch",
+        "legislative": "Legislative Branch",
+        "judicial": "Judicial Branch"
+      },
+      "legal": {
+        "title": "Mexican Legal System",
+        "hierarchy": "Hierarchy of Laws",
+        "process": "Legislative Process",
+        "constitution": "Political Constitution of the United Mexican States",
+        "treaties": "International Treaties",
+        "federal": "Federal Laws and Codes"
+      },
+      "areas": {
+        "title": "Areas of Law",
+        "civil": "Civil Law",
+        "criminal": "Criminal Law",
+        "labor": "Labor Law",
+        "tax": "Tax Law",
+        "commercial": "Commercial Law",
+        "constitutional": "Constitutional Law"
+      },
+      "resources": {
+        "title": "Educational Resources",
+        "glossary": "Legal Glossary",
+        "faq": "Frequently Asked Questions",
+        "guides": "Practical Guides"
+      }
+    },
+    "progress": "Section {{current}} of {{total}}"
+  },
+  "requests": {
+    "title": "Document Requests",
+    "new": "New Request",
+    "list": {
+      "empty": "No requests found",
+      "filter": {
+        "all": "All",
+        "pending": "Pending",
+        "approved": "Approved",
+        "completed": "Completed"
+      },
+      "sort": {
+        "recent": "Most Recent",
+        "votes": "Most Voted",
+        "oldest": "Oldest"
+      }
+    },
+    "form": {
+      "title": "New Document Request",
+      "documentTitle": "Document Title",
+      "type": "Document Type",
+      "description": "Description",
+      "justification": "Justification",
+      "submit": "Submit Request",
+      "types": {
+        "law": "Federal Law",
+        "code": "Federal Code",
+        "regulation": "Regulation",
+        "nom": "Official Standard (NOM)",
+        "state": "State Law"
+      }
+    },
+    "status": {
+      "pending": "Pending",
+      "reviewing": "Under Review",
+      "approved": "Approved",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "rejected": "Rejected"
+    },
+    "actions": {
+      "vote": "Vote",
+      "voted": "Voted",
+      "comment": "Comment",
+      "share": "Share"
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: January 2024",
+    "sections": {
+      "commitment": {
+        "title": "Our Privacy Commitment",
+        "content": "At LexMX, your privacy is our top priority. All data processing happens locally in your browser."
+      },
+      "dataCollection": {
+        "title": "Data We Collect",
+        "content": "LexMX operates entirely in your browser. We do not collect, store, or transmit any personal data."
+      },
+      "localStorage": {
+        "title": "Local Storage",
+        "content": "Your preferences and encrypted API keys are stored locally in your browser."
+      }
+    }
+  },
+  "legal": {
+    "disclaimer": "Legal Notice: LexMX provides general legal information for educational purposes. It does not constitute professional legal advice. Always consult with a certified lawyer for specific cases.",
+    "terms": "By using this service, you accept our terms and conditions.",
+    "copyright": "© 2024 LexMX. Open source under MIT license."
+  },
+  "provider": {
+    "recommendations": "Recommended Providers",
+    "cost": {
+      "free": "Free",
+      "veryLow": "Very Low",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "notConfigured": "Not configured",
+    "matchScore": "Match",
+    "configureNow": "Configure now",
+    "recommendationNote": "Recommendations based on query type, complexity, and required resources."
+  },
+  "errors": {
+    "404": {
+      "title": "Page Not Found",
+      "message": "The page you're looking for doesn't exist.",
+      "action": "Go to Home"
+    },
+    "500": {
+      "title": "Server Error",
+      "message": "Something went wrong. Please try again later.",
+      "action": "Reload Page"
+    },
+    "offline": {
+      "title": "You're Offline",
+      "message": "Please check your internet connection.",
+      "action": "Try Again"
+    }
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "es": "Español",
+    "en": "English"
+  }
+}

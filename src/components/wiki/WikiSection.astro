@@ -1,0 +1,36 @@
+---
+interface Props {
+  id: string;
+  title: string;
+  description?: string;
+}
+
+const { id, title, description } = Astro.props;
+---
+
+<section id={id} class="wiki-section">
+  <div class="mb-8">
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+      {title}
+    </h2>
+    {description && (
+      <p class="text-lg text-gray-600 dark:text-gray-300 mb-6">
+        {description}
+      </p>
+    )}
+  </div>
+  
+  <div class="wiki-content">
+    <slot />
+  </div>
+</section>
+
+<style>
+  .wiki-section {
+    @apply mb-16 scroll-mt-8;
+  }
+
+  .wiki-content {
+    @apply space-y-6;
+  }
+</style>

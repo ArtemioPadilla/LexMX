@@ -33,6 +33,13 @@ export interface DocumentMetadata {
   lastUpdated: string;
   url?: string;
   article?: string;
+  // Lineage information
+  lineageId?: string;
+  confidence?: number;
+  version?: string;
+  lastVerified?: string;
+  sourceInstitution?: string;
+  publicationDate?: string;
 }
 
 export interface SearchOptions {

@@ -1,0 +1,318 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "back": "Atrás",
+    "continue": "Continuar",
+    "finish": "Finalizar",
+    "submit": "Enviar",
+    "confirm": "Confirmar",
+    "yes": "Sí",
+    "no": "No",
+    "changeLanguage": "Cambiar idioma"
+  },
+  "nav": {
+    "home": "Inicio",
+    "chat": "Chat Legal",
+    "wiki": "Wiki Legal",
+    "codes": "Códigos",
+    "requests": "Solicitudes",
+    "setup": "Configuración",
+    "about": "Acerca de",
+    "menu": "Menú",
+    "openMenu": "Abrir menú principal",
+    "closeMenu": "Cerrar menú",
+    "quickActions": "Acciones Rápidas",
+    "resources": "Recursos"
+  },
+  "home": {
+    "hero": {
+      "title": "Tu Asistente Legal Mexicano con IA",
+      "subtitle": "Obtén respuestas legales precisas basadas en legislación mexicana actualizada",
+      "cta": "Iniciar Consulta Gratis"
+    },
+    "features": {
+      "title": "Plataforma Legal Completa",
+      "ai": {
+        "title": "Asistente IA Legal",
+        "description": "Respuestas instantáneas con fuentes y citas legales"
+      },
+      "corpus": {
+        "title": "Corpus Legal Completo",
+        "description": "Acceso a todas las leyes y códigos federales mexicanos"
+      },
+      "privacy": {
+        "title": "Privacidad Total",
+        "description": "Tus datos nunca salen de tu navegador"
+      },
+      "cost": {
+        "title": "Costo Optimizado",
+        "description": "Elige entre múltiples proveedores de IA"
+      }
+    }
+  },
+  "chat": {
+    "title": "Chat Legal",
+    "welcome": "¡Bienvenido a LexMX! Soy tu asistente legal especializado en derecho mexicano. ¿En qué puedo ayudarte?",
+    "placeholder": "Escribe tu consulta legal aquí... (Shift+Enter para nueva línea)",
+    "send": "Enviar mensaje",
+    "clear": "Limpiar chat",
+    "newConversation": "Nueva conversación",
+    "examples": {
+      "title": "Preguntas de ejemplo:",
+      "q1": "¿Qué dice el artículo 123 constitucional sobre los derechos laborales?",
+      "q2": "¿Cómo tramitar un divorcio voluntario en México?",
+      "q3": "¿Cuáles son las obligaciones fiscales de una persona física?",
+      "q4": "¿Qué es el juicio de amparo y cuándo procede?",
+      "q5": "¿Cuáles son los requisitos para constituir una sociedad anónima?"
+    },
+    "errors": {
+      "noProviders": "No tienes proveedores de IA configurados. Ve a Configuración para agregar tu clave API de OpenAI, Claude, Gemini u otros proveedores.",
+      "providerError": "Error al conectar con el proveedor de IA. Por favor revisa tu configuración.",
+      "networkError": "Error de conexión de red. Por favor revisa tu conexión a internet."
+    },
+    "legalArea": {
+      "all": "Todas las áreas",
+      "constitutional": "Derecho Constitucional",
+      "civil": "Derecho Civil",
+      "criminal": "Derecho Penal",
+      "labor": "Derecho Laboral",
+      "tax": "Derecho Fiscal",
+      "commercial": "Derecho Mercantil",
+      "administrative": "Derecho Administrativo",
+      "family": "Derecho Familiar",
+      "property": "Derecho de Propiedad"
+    }
+  },
+  "setup": {
+    "title": "Configuración de Proveedores IA",
+    "subtitle": "Configura tus proveedores de inteligencia artificial para obtener las mejores respuestas legales. Tus configuraciones se almacenan de forma segura y encriptada localmente.",
+    "wizard": {
+      "welcome": {
+        "title": "Bienvenido a LexMX",
+        "description": "Configuremos tus proveedores de IA para consultas legales precisas. Solo tomará unos minutos.",
+        "start": "Comenzar Configuración"
+      },
+      "profile": {
+        "title": "Selecciona tu Perfil",
+        "description": "Elige un perfil de configuración que se ajuste a tus necesidades",
+        "privacy": {
+          "title": "Privacidad Primero",
+          "description": "Usa modelos locales como Ollama. Sin envío de datos a servidores externos."
+        },
+        "balanced": {
+          "title": "Balanceado",
+          "description": "Mezcla de rendimiento y costo con proveedores en la nube."
+        },
+        "performance": {
+          "title": "Rendimiento",
+          "description": "Los mejores modelos para análisis legal complejo."
+        }
+      },
+      "providers": {
+        "title": "Elige tus Proveedores",
+        "description": "Selecciona y configura los proveedores de IA que deseas usar"
+      },
+      "complete": {
+        "title": "¡Configuración Completa!",
+        "description": "Tus proveedores de IA están configurados y listos para usar.",
+        "startChat": "Iniciar Chat Legal"
+      }
+    },
+    "providers": {
+      "openai": {
+        "name": "OpenAI",
+        "description": "Modelos GPT-4 y GPT-3.5",
+        "apiKeyPlaceholder": "sk-..."
+      },
+      "claude": {
+        "name": "Claude",
+        "description": "Razonamiento avanzado para análisis legal",
+        "apiKeyPlaceholder": "sk-ant-..."
+      },
+      "gemini": {
+        "name": "Google Gemini",
+        "description": "Rápido y económico",
+        "apiKeyPlaceholder": "AIza..."
+      },
+      "ollama": {
+        "name": "Ollama",
+        "description": "Modelos locales para máxima privacidad",
+        "endpointPlaceholder": "http://localhost:11434"
+      }
+    },
+    "validation": {
+      "required": "Este campo es requerido",
+      "invalidKey": "Formato de clave API inválido",
+      "connectionError": "No se pudo conectar con el proveedor",
+      "testConnection": "Probar Conexión",
+      "testing": "Probando...",
+      "success": "¡Conexión exitosa!"
+    }
+  },
+  "wiki": {
+    "title": "Wiki del Derecho Mexicano",
+    "navigation": {
+      "title": "Navegación de Secciones",
+      "government": "Estructura del Gobierno",
+      "legal": "Sistema Legal",
+      "areas": "Áreas del Derecho",
+      "resources": "Recursos Educativos"
+    },
+    "sections": {
+      "government": {
+        "title": "Estructura del Gobierno Mexicano",
+        "powers": "División de Poderes",
+        "levels": "Niveles de Gobierno",
+        "executive": "Poder Ejecutivo",
+        "legislative": "Poder Legislativo",
+        "judicial": "Poder Judicial"
+      },
+      "legal": {
+        "title": "Sistema Legal Mexicano",
+        "hierarchy": "Jerarquía de Leyes",
+        "process": "Proceso Legislativo",
+        "constitution": "Constitución Política de los Estados Unidos Mexicanos",
+        "treaties": "Tratados Internacionales",
+        "federal": "Leyes Federales y Códigos"
+      },
+      "areas": {
+        "title": "Áreas del Derecho",
+        "civil": "Derecho Civil",
+        "criminal": "Derecho Penal",
+        "labor": "Derecho Laboral",
+        "tax": "Derecho Fiscal",
+        "commercial": "Derecho Mercantil",
+        "constitutional": "Derecho Constitucional"
+      },
+      "resources": {
+        "title": "Recursos Educativos",
+        "glossary": "Glosario Legal",
+        "faq": "Preguntas Frecuentes",
+        "guides": "Guías Prácticas"
+      }
+    },
+    "progress": "Sección {{current}} de {{total}}"
+  },
+  "requests": {
+    "title": "Solicitudes de Documentos",
+    "new": "Nueva Solicitud",
+    "list": {
+      "empty": "No se encontraron solicitudes",
+      "filter": {
+        "all": "Todas",
+        "pending": "Pendientes",
+        "approved": "Aprobadas",
+        "completed": "Completadas"
+      },
+      "sort": {
+        "recent": "Más Recientes",
+        "votes": "Más Votadas",
+        "oldest": "Más Antiguas"
+      }
+    },
+    "form": {
+      "title": "Nueva Solicitud de Documento",
+      "documentTitle": "Título del Documento",
+      "type": "Tipo de Documento",
+      "description": "Descripción",
+      "justification": "Justificación",
+      "submit": "Enviar Solicitud",
+      "types": {
+        "law": "Ley Federal",
+        "code": "Código Federal",
+        "regulation": "Reglamento",
+        "nom": "Norma Oficial Mexicana",
+        "state": "Ley Estatal"
+      }
+    },
+    "status": {
+      "pending": "Pendiente",
+      "reviewing": "En Revisión",
+      "approved": "Aprobada",
+      "inProgress": "En Progreso",
+      "completed": "Completada",
+      "rejected": "Rechazada"
+    },
+    "actions": {
+      "vote": "Votar",
+      "voted": "Votado",
+      "comment": "Comentar",
+      "share": "Compartir"
+    }
+  },
+  "privacy": {
+    "title": "Política de Privacidad",
+    "lastUpdated": "Última actualización: Enero 2024",
+    "sections": {
+      "commitment": {
+        "title": "Nuestro Compromiso de Privacidad",
+        "content": "En LexMX, tu privacidad es nuestra máxima prioridad. Todo el procesamiento de datos ocurre localmente en tu navegador."
+      },
+      "dataCollection": {
+        "title": "Datos que Recopilamos",
+        "content": "LexMX opera completamente en tu navegador. No recopilamos, almacenamos ni transmitimos ningún dato personal."
+      },
+      "localStorage": {
+        "title": "Almacenamiento Local",
+        "content": "Tus preferencias y claves API encriptadas se almacenan localmente en tu navegador."
+      }
+    }
+  },
+  "legal": {
+    "disclaimer": "Aviso Legal: LexMX proporciona información legal general con fines educativos. No constituye asesoría legal profesional. Siempre consulte con un abogado certificado para casos específicos.",
+    "terms": "Al usar este servicio, aceptas nuestros términos y condiciones.",
+    "copyright": "© 2024 LexMX. Código abierto bajo licencia MIT."
+  },
+  "provider": {
+    "recommendations": "Proveedores Recomendados",
+    "cost": {
+      "free": "Gratis",
+      "veryLow": "Muy Bajo",
+      "low": "Bajo",
+      "medium": "Medio",
+      "high": "Alto"
+    },
+    "notConfigured": "No configurado",
+    "matchScore": "Coincidencia",
+    "configureNow": "Configurar ahora",
+    "recommendationNote": "Recomendaciones basadas en el tipo de consulta, complejidad y recursos necesarios."
+  },
+  "errors": {
+    "404": {
+      "title": "Página No Encontrada",
+      "message": "La página que buscas no existe.",
+      "action": "Ir al Inicio"
+    },
+    "500": {
+      "title": "Error del Servidor",
+      "message": "Algo salió mal. Por favor intenta más tarde.",
+      "action": "Recargar Página"
+    },
+    "offline": {
+      "title": "Sin Conexión",
+      "message": "Por favor revisa tu conexión a internet.",
+      "action": "Reintentar"
+    }
+  },
+  "theme": {
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema"
+  },
+  "language": {
+    "es": "Español",
+    "en": "English"
+  }
+}

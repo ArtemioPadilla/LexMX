@@ -23,32 +23,27 @@ export default defineConfig({
   ],
 
   vite: {
-    build: {
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            // Core application chunks
-            'legal-corpus': ['./src/data/legal-corpus/index.ts'],
-            'rag-engine': ['./src/lib/rag/engine.ts'],
-            'llm-providers': [
-              './src/lib/llm/providers/openai.ts',
-              './src/lib/llm/providers/claude.ts',
-              './src/lib/llm/providers/gemini.ts',
-              './src/lib/llm/providers/ollama.ts'
-            ],
-            'vector-search': [
-              './src/lib/rag/vectorizer.ts',
-              './src/lib/rag/retriever.ts'
-            ],
-            'security': ['./src/lib/security/encryption.ts']
-          }
-        }
-      },
-      chunkSizeWarningLimit: 1000,
-      target: 'esnext'
+    define: {
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
+    },
+    server: {
+      port: 4321,
+      host: true,
+      headers: {
+        // Allow service workers
+        'Service-Worker-Allowed': '/',
+        // Required for WebLLM but only in development
+        ...(process.env.NODE_ENV === 'development' ? {
+          'Cross-Origin-Embedder-Policy': 'credentialless',
+          'Cross-Origin-Opener-Policy': 'same-origin'
+        } : {})
+      }
     },
     optimizeDeps: {
-      include: ['react', 'react-dom', 'nanostores', '@nanostores/persistent']
+      include: ['react', 'react-dom', '@mlc-ai/web-llm']
+    },
+    ssr: {
+      noExternal: ['@astrojs/react']
     }
   },
 
@@ -59,7 +54,4 @@ export default defineConfig({
       wrap: true
     }
   }
-  
-  // Note: assets and viewTransitions are now built-in features in Astro 4.x
-  // No experimental flags needed
 });

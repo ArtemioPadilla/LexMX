@@ -125,12 +125,12 @@ export class LegalRAGEngine {
           lastUpdated: result.metadata?.lastUpdated
         })),
         confidence: this.calculateConfidence(searchResults, llmResponse),
-        queryType: processedQuery.queryType,
-        legalArea: processedQuery.legalArea || 'general',
+        queryType: processedQuery.queryType as QueryType,
+        legalArea: (processedQuery.legalArea || 'constitutional') as LegalArea,
         processingTime: Date.now() - startTime,
         fromCache: false,
         legalWarning: this.generateLegalWarning(),
-        recommendedActions: this.generateRecommendedActions(processedQuery.queryType),
+        recommendedActions: this.generateRecommendedActions(processedQuery.queryType as QueryType),
         relatedQueries: this.generateRelatedQueries(processedQuery)
       };
 
@@ -149,8 +149,8 @@ export class LegalRAGEngine {
         answer: 'Lo siento, ocurrió un error al procesar tu consulta legal. Por favor, intenta nuevamente o consulta directamente con un abogado.',
         sources: [],
         confidence: 0,
-        queryType: 'information',
-        legalArea: 'general',
+        queryType: 'conceptual' as QueryType,
+        legalArea: 'constitutional' as LegalArea,
         processingTime: Date.now() - startTime,
         fromCache: false,
         legalWarning: this.generateLegalWarning()

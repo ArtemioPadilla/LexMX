@@ -3,6 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import legal document styles */
+@import './legal-components.css';
+
 /* Custom CSS variables */
 :root {
   --color-legal-50: #f0fdf4;

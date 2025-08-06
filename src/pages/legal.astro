@@ -1,209 +1,160 @@
 ---
 import BaseLayout from '../components/layout/BaseLayout.astro';
-
-// Sample legal codes structure - in production this would come from the corpus
-const legalCodes = [
-  {
-    category: 'Constitucional',
-    icon: '⚖️',
-    codes: [
-      { name: 'Constitución Política de los Estados Unidos Mexicanos', articles: 136, lastUpdate: '2024' },
-      { name: 'Ley de Amparo', articles: 267, lastUpdate: '2023' }
-    ]
-  },
-  {
-    category: 'Civil',
-    icon: '📜',
-    codes: [
-      { name: 'Código Civil Federal', articles: 3074, lastUpdate: '2024' },
-      { name: 'Código Federal de Procedimientos Civiles', articles: 608, lastUpdate: '2023' }
-    ]
-  },
-  {
-    category: 'Penal',
-    icon: '⚡',
-    codes: [
-      { name: 'Código Penal Federal', articles: 429, lastUpdate: '2024' },
-      { name: 'Código Nacional de Procedimientos Penales', articles: 486, lastUpdate: '2024' }
-    ]
-  },
-  {
-    category: 'Laboral',
-    icon: '👷',
-    codes: [
-      { name: 'Ley Federal del Trabajo', articles: 1010, lastUpdate: '2024' },
-      { name: 'Ley del Seguro Social', articles: 313, lastUpdate: '2024' }
-    ]
-  },
-  {
-    category: 'Fiscal',
-    icon: '💰',
-    codes: [
-      { name: 'Código Fiscal de la Federación', articles: 305, lastUpdate: '2024' },
-      { name: 'Ley del Impuesto Sobre la Renta', articles: 206, lastUpdate: '2024' },
-      { name: 'Ley del IVA', articles: 68, lastUpdate: '2024' }
-    ]
-  },
-  {
-    category: 'Comercial',
-    icon: '🏢',
-    codes: [
-      { name: 'Código de Comercio', articles: 1500, lastUpdate: '2024' },
-      { name: 'Ley General de Sociedades Mercantiles', articles: 264, lastUpdate: '2023' }
-    ]
-  }
-];
+import HydrationWrapper from '../components/HydrationWrapper.astro';
 ---
 
 <BaseLayout title="Códigos Legales - LexMX">
-  <main class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <main class="min-h-screen bg-white dark:bg-gray-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <!-- Header -->
-      <div class="text-center mb-12">
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          Códigos y Leyes de México
-        </h1>
-        <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-          Explora el corpus completo de la legislación mexicana federal. Todos los documentos están actualizados y procesados para búsqueda inteligente.
-        </p>
+      <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-8">
+        Códigos Legales Mexicanos
+      </h1>
+      
+      <p class="text-lg text-gray-600 dark:text-gray-300 mb-12">
+        Accede al corpus completo de la legislación mexicana actualizada.
+      </p>
+
+      <!-- Legal Categories Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Constitutional -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 bg-legal-100 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-legal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+              </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4">
+              Constitucional
+            </h2>
+          </div>
+          <p class="text-gray-600 dark:text-gray-300 mb-4">
+            Constitución Política, Ley de Amparo y jurisprudencia constitucional.
+          </p>
+          <a href="/document/cpeum" class="text-legal-600 hover:text-legal-700 font-medium">
+            Ver documentos →
+          </a>
+        </div>
+
+        <!-- Civil -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4">
+              Civil
+            </h2>
+          </div>
+          <p class="text-gray-600 dark:text-gray-300 mb-4">
+            Código Civil Federal, códigos estatales y legislación familiar.
+          </p>
+          <a href="/document/ccf" class="text-legal-600 hover:text-legal-700 font-medium">
+            Ver documentos →
+          </a>
+        </div>
+
+        <!-- Penal -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4">
+              Penal
+            </h2>
+          </div>
+          <p class="text-gray-600 dark:text-gray-300 mb-4">
+            Código Penal Federal, CNPP y legislación en materia criminal.
+          </p>
+          <a href="/document/cpf" class="text-legal-600 hover:text-legal-700 font-medium">
+            Ver documentos →
+          </a>
+        </div>
+
+        <!-- Laboral -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4">
+              Laboral
+            </h2>
+          </div>
+          <p class="text-gray-600 dark:text-gray-300 mb-4">
+            Ley Federal del Trabajo, LSS, INFONAVIT y normativa laboral.
+          </p>
+          <a href="/document/lft" class="text-legal-600 hover:text-legal-700 font-medium">
+            Ver documentos →
+          </a>
+        </div>
+
+        <!-- Fiscal -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4">
+              Fiscal
+            </h2>
+          </div>
+          <p class="text-gray-600 dark:text-gray-300 mb-4">
+            CFF, LISR, LIVA y toda la legislación tributaria federal.
+          </p>
+          <a href="/document/cff" class="text-legal-600 hover:text-legal-700 font-medium">
+            Ver documentos →
+          </a>
+        </div>
+
+        <!-- Mercantil -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4">
+              Mercantil
+            </h2>
+          </div>
+          <p class="text-gray-600 dark:text-gray-300 mb-4">
+            Código de Comercio, LGSM, LGTOC y legislación comercial.
+          </p>
+          <a href="/document/ccom" class="text-legal-600 hover:text-legal-700 font-medium">
+            Ver documentos →
+          </a>
+        </div>
       </div>
 
       <!-- Search Bar -->
-      <div class="max-w-2xl mx-auto mb-12">
-        <div class="relative">
-          <input
-            type="text"
-            placeholder="Buscar en todos los códigos..."
-            class="w-full px-6 py-4 pr-12 text-lg border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-legal-500 dark:bg-gray-800 dark:text-white"
-          />
-          <button class="absolute right-4 top-1/2 transform -translate-y-1/2">
-            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="mt-12">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          Buscar en el Corpus Legal
+        </h2>
+        <div class="max-w-2xl">
+          <div class="relative">
+            <input
+              type="text"
+              placeholder="Buscar leyes, códigos, artículos..."
+              class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-legal-500 focus:border-transparent"
+            />
+            <svg class="absolute left-4 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-          </button>
-        </div>
-        <div class="mt-4 flex flex-wrap gap-2 justify-center">
-          <span class="text-sm text-gray-500 dark:text-gray-400">Búsquedas populares:</span>
-          <button class="text-sm text-legal-600 dark:text-legal-400 hover:underline">despido injustificado</button>
-          <button class="text-sm text-legal-600 dark:text-legal-400 hover:underline">pensión alimenticia</button>
-          <button class="text-sm text-legal-600 dark:text-legal-400 hover:underline">contrato de arrendamiento</button>
-          <button class="text-sm text-legal-600 dark:text-legal-400 hover:underline">ISR personas físicas</button>
-        </div>
-      </div>
-
-      <!-- Statistics -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
-          <p class="text-3xl font-bold text-legal-600 dark:text-legal-400">50+</p>
-          <p class="text-sm text-gray-600 dark:text-gray-300">Códigos y Leyes</p>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
-          <p class="text-3xl font-bold text-blue-600 dark:text-blue-400">15,000+</p>
-          <p class="text-sm text-gray-600 dark:text-gray-300">Artículos</p>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
-          <p class="text-3xl font-bold text-green-600 dark:text-green-400">2024</p>
-          <p class="text-sm text-gray-600 dark:text-gray-300">Última actualización</p>
-        </div>
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
-          <p class="text-3xl font-bold text-purple-600 dark:text-purple-400">100%</p>
-          <p class="text-sm text-gray-600 dark:text-gray-300">Cobertura federal</p>
-        </div>
-      </div>
-
-      <!-- Legal Codes Grid -->
-      <div class="space-y-8">
-        {legalCodes.map((category) => (
-          <section>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-              <span class="text-3xl mr-3">{category.icon}</span>
-              {category.category}
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {category.codes.map((code) => (
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow cursor-pointer group">
-                  <div class="flex justify-between items-start mb-2">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white group-hover:text-legal-600 dark:group-hover:text-legal-400 transition-colors">
-                      {code.name}
-                    </h3>
-                    <svg class="w-5 h-5 text-gray-400 group-hover:text-legal-600 dark:group-hover:text-legal-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                  <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 space-x-4">
-                    <span class="flex items-center">
-                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      {code.articles} artículos
-                    </span>
-                    <span class="flex items-center">
-                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Actualizado {code.lastUpdate}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
-
-      <!-- Additional Resources -->
-      <section class="mt-16">
-        <div class="bg-legal-50 dark:bg-legal-900/20 rounded-2xl p-8">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Recursos Adicionales
-          </h2>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <h3 class="font-medium text-gray-900 dark:text-white mb-2">Jurisprudencia</h3>
-              <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                Tesis y criterios de la Suprema Corte de Justicia
-              </p>
-              <a href="/chat" class="text-legal-600 dark:text-legal-400 hover:underline text-sm font-medium">
-                Consultar jurisprudencia →
-              </a>
-            </div>
-            <div>
-              <h3 class="font-medium text-gray-900 dark:text-white mb-2">Reglamentos</h3>
-              <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                Reglamentos federales y normas oficiales mexicanas
-              </p>
-              <a href="/chat" class="text-legal-600 dark:text-legal-400 hover:underline text-sm font-medium">
-                Ver reglamentos →
-              </a>
-            </div>
-            <div>
-              <h3 class="font-medium text-gray-900 dark:text-white mb-2">Reformas</h3>
-              <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                Últimas reformas y modificaciones legislativas
-              </p>
-              <a href="/chat" class="text-legal-600 dark:text-legal-400 hover:underline text-sm font-medium">
-                Ver reformas →
-              </a>
-            </div>
           </div>
         </div>
-      </section>
-
-      <!-- CTA -->
-      <section class="mt-12 text-center">
-        <p class="text-gray-600 dark:text-gray-300 mb-6">
-          ¿No encuentras lo que buscas? Usa nuestro asistente de IA para consultas específicas
-        </p>
-        <a 
-          href="/chat" 
-          class="inline-flex items-center px-8 py-4 bg-legal-500 text-white rounded-lg font-medium hover:bg-legal-600 transition-colors"
-        >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-          Abrir Chat Legal
-        </a>
-      </section>
+      </div>
     </div>
   </main>
 </BaseLayout>

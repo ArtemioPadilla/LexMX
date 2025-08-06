@@ -25,6 +25,20 @@ export interface ProviderMetadata {
 
 // Registry of all supported providers
 export const SUPPORTED_PROVIDERS: Record<string, ProviderMetadata> = {
+  webllm: {
+    id: 'webllm',
+    name: 'WebLLM (Browser)',
+    type: 'local',
+    icon: '/icons/webllm.svg',
+    description: 'Run AI models directly in your browser - 100% private, no API costs, works offline',
+    costLevel: 'free',
+    capabilities: ['privacy', 'offline', 'reasoning', 'analysis'],
+    setupComplexity: 'easy',
+    recommendedFor: ['Maximum privacy', 'Offline usage', 'No recurring costs', 'Sensitive legal data'],
+    documentation: 'https://github.com/mlc-ai/web-llm',
+    website: 'https://webllm.mlc.ai'
+  },
+  
   openai: {
     id: 'openai',
     name: 'OpenAI',
@@ -109,6 +123,11 @@ export interface UserProfile {
     speed: 'fast' | 'balanced' | 'thorough';
   };
   recommended: boolean;
+  limits?: {
+    dailyCostLimit: number;
+    monthlyCostLimit: number;
+    requestsPerHour: number;
+  };
 }
 
 export const USER_PROFILES: Record<string, UserProfile> = {
@@ -117,7 +136,7 @@ export const USER_PROFILES: Record<string, UserProfile> = {
     name: 'Privacy First',
     description: 'Only local models, maximum privacy, no cloud services',
     icon: '🔒',
-    providers: ['ollama'],
+    providers: ['webllm', 'ollama'],
     preferences: {
       privacy: 'maximum',
       cost: 'minimize',
@@ -275,7 +294,10 @@ export class ProviderRegistry {
 
     // Validate local provider requirements
     if (metadata.type === 'local') {
-      if (!config.endpoint) {
+      // WebLLM doesn't need endpoint or API key
+      if (config.id === 'webllm') {
+        // No validation needed for WebLLM
+      } else if (!config.endpoint) {
         errors.push(`Endpoint is required for ${metadata.name}`);
       } else {
         try {

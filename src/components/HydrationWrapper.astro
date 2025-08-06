@@ -1,0 +1,56 @@
+---
+// Wrapper component to handle hydration loading states
+export interface Props {
+  name: string;
+  width?: string;
+  height?: string;
+  class?: string;
+}
+
+const { name, width = 'auto', height = '40px', class: className = '' } = Astro.props;
+---
+
+<div 
+  class={`hydration-wrapper ${className}`}
+  data-component={name}
+  style={`min-width: ${width}; min-height: ${height};`}
+>
+  <slot />
+</div>
+
+<style>
+  .hydration-wrapper {
+    display: inline-flex;
+    align-items: center;
+    contain: layout;
+  }
+</style>
+
+<script>
+  // Ensure components are visible after hydration
+  document.addEventListener('DOMContentLoaded', () => {
+    const wrappers = document.querySelectorAll('.hydration-wrapper');
+    
+    wrappers.forEach((wrapper) => {
+      // Add hydrated class when astro-island appears
+      const observer = new MutationObserver((mutations) => {
+        const hasIsland = wrapper.querySelector('astro-island');
+        if (hasIsland) {
+          wrapper.classList.add('hydrated');
+          observer.disconnect();
+        }
+      });
+      
+      observer.observe(wrapper, { 
+        childList: true, 
+        subtree: true 
+      });
+      
+      // Fallback: ensure visibility after 1 second
+      setTimeout(() => {
+        wrapper.classList.add('hydrated');
+        observer.disconnect();
+      }, 1000);
+    });
+  });
+</script>

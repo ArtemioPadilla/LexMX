@@ -1,0 +1,414 @@
+/* Wiki-specific styles for LexMX */
+
+/* Animation utilities */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% {
+    animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+    transform: translate3d(0,0,0);
+  }
+  40%, 43% {
+    animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+    transform: translate3d(0, -8px, 0);
+  }
+  70% {
+    animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+    transform: translate3d(0, -4px, 0);
+  }
+  90% {
+    transform: translate3d(0,-1px,0);
+  }
+}
+
+/* Apply animations */
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s;
+}
+
+/* Wiki Navigation Cards */
+.wiki-nav-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.wiki-nav-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.wiki-nav-card:active {
+  transform: translateY(0);
+}
+
+/* Government Structure Interactive Elements */
+.government-structure .power-branch,
+.government-structure .government-level {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.government-structure .power-branch:hover,
+.government-structure .government-level:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Legal Hierarchy Levels */
+.hierarchy-level {
+  position: relative;
+  transition: all 0.2s ease-in-out;
+}
+
+.hierarchy-level::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+  transition: width 0.3s ease-in-out;
+}
+
+.hierarchy-level:hover::before {
+  width: 4px;
+}
+
+.hierarchy-level:hover {
+  padding-left: 20px;
+  background-color: rgba(59, 130, 246, 0.05);
+  border-radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .hierarchy-level:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+  }
+}
+
+/* Legal Areas Cards */
+.law-area-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.law-area-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.law-area-card:hover::after {
+  opacity: 0.6;
+}
+
+.law-area-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Resource Links */
+.resource-link {
+  position: relative;
+  display: inline-block;
+}
+
+.resource-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background-color: currentColor;
+  transition: width 0.3s ease-in-out;
+}
+
+.resource-link:hover::after {
+  width: 100%;
+}
+
+/* Legal Glossary Specific Styles */
+.legal-glossary .glossary-term {
+  transition: all 0.2s ease-in-out;
+}
+
+.legal-glossary .glossary-term:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Legislative Process Styles */
+.legislative-process .process-step {
+  position: relative;
+}
+
+.legislative-process .process-step::before {
+  content: '';
+  position: absolute;
+  left: 25px;
+  top: 60px;
+  bottom: -10px;
+  width: 2px;
+  background: linear-gradient(to bottom, #e5e7eb, #d1d5db);
+  z-index: 0;
+}
+
+.legislative-process .process-step:last-child::before {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .legislative-process .process-step::before {
+    background: linear-gradient(to bottom, #374151, #4b5563);
+  }
+}
+
+.legislative-process .step-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Progress indicators */
+.progress-indicator {
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-indicator::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shine 2s infinite;
+}
+
+@keyframes shine {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* FAQ Accordion Enhancements */
+details[open] summary {
+  margin-bottom: 12px;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details summary {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+details[open] summary ~ * {
+  animation: slideDown 0.3s ease-in-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile-first responsive adjustments */
+@media (max-width: 768px) {
+  .wiki-nav-card {
+    padding: 12px;
+  }
+  
+  .wiki-nav-card h3 {
+    font-size: 14px;
+  }
+  
+  .wiki-nav-card p {
+    font-size: 12px;
+  }
+  
+  .hierarchy-level:hover {
+    padding-left: 16px;
+  }
+  
+  .law-area-card {
+    padding: 16px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .wiki-nav-card,
+  .law-area-card,
+  .government-structure .power-branch,
+  .government-structure .government-level {
+    border-width: 2px;
+  }
+  
+  .hierarchy-level:hover::before {
+    width: 6px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .wiki-nav-card,
+  .law-area-card,
+  .hierarchy-level,
+  .resource-link,
+  .government-structure .power-branch,
+  .government-structure .government-level {
+    transition: none;
+  }
+  
+  .animate-fadeIn,
+  .animate-slideIn,
+  .animate-pulse,
+  .animate-bounce {
+    animation: none;
+  }
+  
+  .hierarchy-level:hover {
+    transform: none;
+  }
+  
+  .law-area-card:hover,
+  .wiki-nav-card:hover {
+    transform: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .wiki-navigation,
+  .sidebar,
+  .call-to-action {
+    display: none;
+  }
+  
+  .wiki-section {
+    page-break-inside: avoid;
+    margin-bottom: 2rem;
+  }
+  
+  .hierarchy-level,
+  .law-area-card {
+    break-inside: avoid;
+  }
+  
+  details[open] summary ~ * {
+    display: block !important;
+  }
+}
+
+/* Focus styles for better accessibility */
+.wiki-nav-card:focus,
+.law-area-card:focus,
+.resource-link:focus {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wiki-nav-card:focus,
+  .law-area-card:focus,
+  .resource-link:focus {
+    outline-color: #60a5fa;
+  }
+}
+
+/* Loading states */
+.wiki-loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .wiki-loading {
+    background: linear-gradient(90deg, #2d3748 25%, #4a5568 50%, #2d3748 75%);
+    background-size: 200% 100%;
+  }
+}
+
+/* Utility classes for wiki components */
+.wiki-card {
+  @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200;
+}
+
+.wiki-badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.wiki-button {
+  @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200;
+}
+
+.wiki-input {
+  @apply block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white;
+}

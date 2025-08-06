@@ -1,9 +1,11 @@
 // Provider setup wizard component
 
 import React, { useState, useEffect } from 'react';
-import type { ProviderMetadata, UserProfile, ProviderConfig } from '@/types/llm';
-import { providerRegistry } from '@/lib/llm/provider-registry';
-import { secureStorage } from '@/lib/security/secure-storage';
+import type { ProviderConfig, CostLevel } from '../types/llm';
+import { providerRegistry } from '../lib/llm/provider-registry';
+import type { ProviderMetadata, UserProfile } from '../lib/llm/provider-registry';
+import { secureStorage } from '../lib/security/secure-storage';
+import { providerManager } from '../lib/llm/provider-manager';
 
 interface ProviderSetupProps {
   onComplete?: (configs: ProviderConfig[]) => void;
@@ -19,6 +21,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
   const [currentProvider, setCurrentProvider] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [webllmProgress, setWebllmProgress] = useState<{ progress: number; message: string } | null>(null);
 
   const supportedProviders = providerRegistry.getSupportedProviders();
   const userProfiles = providerRegistry.getRecommendedProfiles();
@@ -53,11 +56,23 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
       }
 
       await secureStorage.storeProviderConfig(config);
+      
+      // For WebLLM, set up progress callback before initialization
+      if (config.id === 'webllm') {
+        providerManager.setWebLLMProgressCallback((progress, message) => {
+          console.log(`[WebLLM] ${message}`);
+          setWebllmProgress({ progress, message });
+        });
+      }
+      
+      // Initialize provider manager to load the new config
+      await providerManager.initialize();
+      
       setProviderConfigs(prev => new Map(prev).set(config.id, config));
       
       // Move to next unconfigured provider or test step
       const nextProvider = selectedProviders.find(id => 
-        !providerConfigs.has(id) && id !== providerId
+        !providerConfigs.has(id) && id !== config.id
       );
       
       if (nextProvider) {
@@ -316,7 +331,11 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
       </div>
 
       <button
-        onClick={() => onComplete?.(Array.from(providerConfigs.values()))}
+        onClick={() => {
+          onComplete?.(Array.from(providerConfigs.values()));
+          // Navigate to chat after completing setup
+          window.location.href = '/chat';
+        }}
         className="w-full bg-legal-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-legal-600 transition-colors"
       >
         Comenzar a Usar LexMX
@@ -334,7 +353,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="provider-setup max-w-2xl mx-auto p-6">
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex space-x-2">
@@ -356,6 +375,30 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
       </div>
 
       {steps[step]()}
+      
+      {/* WebLLM Download Progress Modal */}
+      {webllmProgress && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Descargando modelo WebLLM</h3>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">{webllmProgress.message}</p>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-legal-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${webllmProgress.progress}%` }}
+                />
+              </div>
+              <p className="text-xs text-gray-500 text-center">
+                {webllmProgress.progress}% completado
+              </p>
+            </div>
+            <p className="text-xs text-gray-500 mt-4">
+              Esto puede tomar varios minutos la primera vez...
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -370,7 +413,7 @@ function ProviderCard({
   selected: boolean;
   onToggle: () => void;
 }) {
-  const costColors = {
+  const costColors: Record<CostLevel, string> = {
     free: 'bg-green-100 text-green-800',
     low: 'bg-blue-100 text-blue-800',
     medium: 'bg-yellow-100 text-yellow-800',
@@ -409,7 +452,7 @@ function ProviderCard({
           <p className="text-sm text-gray-600 mb-2">{provider.description}</p>
           
           <div className="flex flex-wrap gap-1">
-            {provider.capabilities.map(capability => (
+            {provider.capabilities.map((capability: string) => (
               <span
                 key={capability}
                 className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
@@ -473,7 +516,50 @@ function ProviderConfigForm({
         </div>
       )}
 
-      {provider.type === 'local' && (
+      {provider.type === 'local' && provider.id === 'webllm' && (
+        <div className="space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+            <h3 className="font-medium text-blue-900 mb-2">
+              🚀 Modelo de IA en tu navegador
+            </h3>
+            <p className="text-sm text-blue-700">
+              WebLLM ejecuta modelos de IA directamente en tu navegador. No necesitas API key ni servidor.
+            </p>
+            <ul className="mt-2 text-sm text-blue-700 space-y-1">
+              <li>✓ 100% privado - nada sale de tu dispositivo</li>
+              <li>✓ Sin costos - completamente gratis</li>
+              <li>✓ Funciona offline una vez descargado</li>
+            </ul>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Modelo a usar
+            </label>
+            <select
+              value={config.model || 'Llama-3.2-3B-Instruct-q4f16_1-MLC'}
+              onChange={(e) => setConfig(prev => ({ ...prev, model: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-legal-500 focus:border-transparent"
+            >
+              <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Llama 3.2 3B (Recomendado - 1.7GB)</option>
+              <option value="Phi-3.5-mini-instruct-q4f16_1-MLC">Phi 3.5 Mini (Más rápido - 1.2GB)</option>
+              <option value="gemma-2-2b-it-q4f32_1-MLC">Gemma 2 2B (Compacto - 1.3GB)</option>
+              <option value="Llama-3.1-8B-Instruct-q4f32_1-MLC">Llama 3.1 8B (Más potente - 4.3GB)</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              El modelo se descargará la primera vez que lo uses
+            </p>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+            <p className="text-sm text-amber-800">
+              <strong>Requisitos:</strong> Chrome o Edge actualizado, mínimo 4GB de RAM disponible
+            </p>
+          </div>
+        </div>
+      )}
+
+      {provider.type === 'local' && provider.id !== 'webllm' && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Endpoint *
