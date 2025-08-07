@@ -322,7 +322,38 @@
     "notConfigured": "Not configured",
     "matchScore": "Match",
     "configureNow": "Configure now",
-    "recommendationNote": "Recommendations based on query type, complexity, and required resources."
+    "recommendationNote": "Recommendations based on query type, complexity, and required resources.",
+    "availableProviders": "Available Providers",
+    "selectProvider": "Select AI",
+    "webllm": {
+      "name": "WebLLM (Local)",
+      "description": "Runs in your browser",
+      "selectModel": "Select a model",
+      "searchModel": "Search model...",
+      "allFamilies": "All",
+      "recommended": "Recommended",
+      "noModelsFound": "No models found",
+      "dataWarning": "⚠️ Data Usage Warning",
+      "dataWarningMessage": "Models require a one-time download that may use significant amounts of data.",
+      "mobileWarning": "Not recommended on mobile connections. Use WiFi to avoid excessive charges.",
+      "downloadSize": "Download size",
+      "confirmDownload": "Download model {{name}}?",
+      "confirmDownloadMessage": "This will download {{size}} of data. Make sure you're connected to WiFi to avoid mobile data charges.",
+      "downloadConfirm": "Download",
+      "downloadCancel": "Cancel",
+      "modelDescriptions": {
+        "fast": "Fast and efficient for basic queries",
+        "balanced": "Ideal balance between speed and capability",
+        "complex": "Complex and detailed legal analysis",
+        "instructions": "Optimized for following instructions",
+        "compact": "Compact and efficient model",
+        "reasoning": "Excellent for reasoning",
+        "multilingual": "Good multilingual performance",
+        "versatile": "Powerful and versatile for legal analysis",
+        "light": "Lightweight and efficient"
+      }
+    },
+    "otherProviders": "Other Providers"
   },
   "errors": {
     "404": {

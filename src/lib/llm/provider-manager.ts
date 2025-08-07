@@ -28,10 +28,39 @@ export class ProviderManager {
       // Load saved provider configurations
       await this.loadProviderConfigs();
 
+      // Ensure WebLLM is always available as a default option
+      await this.ensureWebLLMAvailable();
+
       this.initialized = true;
     } catch (error) {
       console.error('Failed to initialize ProviderManager:', error);
       throw error;
+    }
+  }
+
+  private async ensureWebLLMAvailable(): Promise<void> {
+    // Check if WebLLM is already configured
+    const webllmConfig = await secureStorage.getProviderConfig('webllm');
+    
+    if (!webllmConfig) {
+      // Create default WebLLM configuration
+      const defaultWebLLMConfig: ProviderConfig = {
+        id: 'webllm',
+        name: 'WebLLM (Local)',
+        type: 'local',
+        enabled: true,
+        priority: 100, // High priority as it's free and private
+        model: '', // No model selected by default
+        // No API key needed for WebLLM
+      };
+      
+      // Store the default configuration
+      await secureStorage.storeProviderConfig(defaultWebLLMConfig);
+      
+      // Initialize the WebLLM provider
+      await this.initializeProvider(defaultWebLLMConfig);
+      
+      console.log('WebLLM provider added as default option');
     }
   }
 
