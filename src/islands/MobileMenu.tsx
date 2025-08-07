@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from '../i18n';
+import { useTranslation } from '../i18n/index';
 
 interface NavItem {
   href: string;
@@ -64,6 +64,7 @@ export default function MobileMenu() {
 
   const navItems: NavItem[] = [
     { href: '/chat', label: t('nav.chat'), icon: '💬' },
+    { href: '/casos', label: t('nav.cases') || 'Mis Casos', icon: '📁' },
     { href: '/wiki', label: t('nav.wiki'), icon: '📚' },
     { href: '/legal', label: t('nav.codes'), icon: '⚖️' },
     { href: '/requests', label: t('nav.requests'), icon: '📋' },

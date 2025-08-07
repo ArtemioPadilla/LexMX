@@ -74,6 +74,10 @@ export class LegalRAGEngine {
       maxResults?: number;
       includeReferences?: boolean;
       forceRefresh?: boolean;
+      corpusFilter?: {
+        areas?: LegalArea[];
+        documents?: string[];
+      };
     } = {}
   ): Promise<LegalResponse> {
     if (!this.initialized) {
@@ -170,6 +174,10 @@ export class LegalRAGEngine {
       maxResults?: number;
       includeReferences?: boolean;
       forceRefresh?: boolean;
+      corpusFilter?: {
+        areas?: LegalArea[];
+        documents?: string[];
+      };
     } = {}
   ): Promise<LegalResponse> {
     if (!this.initialized) {

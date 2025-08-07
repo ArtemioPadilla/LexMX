@@ -1,0 +1,30 @@
+---
+// Cases management page
+import BaseLayout from '../components/layout/BaseLayout.astro';
+import HydrationWrapper from '../components/HydrationWrapper.astro';
+import CaseManager from '../islands/CaseManager';
+
+const title = 'Mis Casos - LexMX';
+const description = 'Gestiona tus casos legales con documentos, notas y consultas integradas';
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          Mis Casos
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400">
+          Organiza tus casos legales con documentos, notas y consultas en un solo lugar
+        </p>
+      </div>
+
+      <!-- Case Manager Interface -->
+      <HydrationWrapper name="case-manager" width="100%" height="600px">
+        <CaseManager client:load />
+      </HydrationWrapper>
+    </div>
+  </div>
+</BaseLayout>

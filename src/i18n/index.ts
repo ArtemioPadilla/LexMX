@@ -1,3 +1,4 @@
+import React from 'react';
 import esTranslations from './locales/es.json';
 import enTranslations from './locales/en.json';
 
@@ -146,6 +147,3 @@ export function setLanguage(lang: Language): void {
 export function getLanguage(): Language {
   return i18n.language;
 }
-
-// Add React import for the hook
-import React from 'react';

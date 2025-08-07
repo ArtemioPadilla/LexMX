@@ -29,17 +29,12 @@ export default defineConfig({
     server: {
       port: 4321,
       host: true,
-      hmr: {
-        port: 4321
-      },
+      hmr: false, // Temporarily disable HMR to stop constant refreshes
       headers: {
         // Allow service workers
-        'Service-Worker-Allowed': '/',
-        // Required for WebLLM but only in development
-        ...(process.env.NODE_ENV === 'development' ? {
-          'Cross-Origin-Embedder-Policy': 'credentialless',
-          'Cross-Origin-Opener-Policy': 'same-origin'
-        } : {})
+        'Service-Worker-Allowed': '/'
+        // CORS headers temporarily disabled to fix WebSocket issues
+        // Will need a different approach for WebLLM support
       }
     },
     optimizeDeps: {

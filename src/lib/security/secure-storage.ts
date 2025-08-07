@@ -240,6 +240,15 @@ export class SecureStorageManager implements SecureStorage {
     await this.remove(`provider_${providerId}`);
   }
 
+  // Preferred provider management
+  async getPreferredProvider(): Promise<string | null> {
+    return await this.retrieve('preferred_provider');
+  }
+
+  async setPreferredProvider(providerId: string): Promise<void> {
+    await this.store('preferred_provider', providerId);
+  }
+
   // Query and response caching with privacy controls
   async storeQuery(queryId: string, query: string, response: any): Promise<void> {
     if (!this.privacySettings.encryptQueries && !this.privacySettings.encryptResponses) {

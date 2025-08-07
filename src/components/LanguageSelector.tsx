@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useTranslation, type Language } from '../i18n';
+import { useTranslation, type Language } from '../i18n/index';
 
 export function LanguageSelector() {
   const { language, setLanguage, t } = useTranslation();
@@ -25,6 +25,14 @@ export function LanguageSelector() {
       setLanguage(newLang);
       setIsOpen(false);
       document.documentElement.lang = newLang;
+      
+      // Trigger a custom event for client-side translations
+      window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: newLang } }));
+      
+      // Call applyTranslations if it exists
+      if (typeof window !== 'undefined' && (window as any).applyTranslations) {
+        (window as any).applyTranslations();
+      }
     } catch (error) {
       console.error('Error changing language:', error);
     }

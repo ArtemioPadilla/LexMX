@@ -79,6 +79,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
   <!-- Global styles -->
   <style>
     @import '/src/styles/global.css';
+    @import '/src/styles/hydration.css';
   </style>
   
   <!-- Theme initialization (prevent flash) -->
@@ -130,6 +131,9 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
           <a href="/chat" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.chat">
             Chat Legal
           </a>
+          <a href="/casos" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.cases">
+            Mis Casos
+          </a>
           <a href="/wiki" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.wiki">
             Wiki Legal
           </a>
@@ -147,20 +151,23 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
           </a>
         </nav>
         
-        <!-- Theme and Language Controls -->
+        <!-- Controls Container -->
         <div class="flex items-center space-x-2">
+          <!-- Theme and Language Controls (visible on all screen sizes) -->
           <HydrationWrapper name="language-selector" width="100px" height="40px">
             <LanguageSelector client:load />
           </HydrationWrapper>
           <HydrationWrapper name="theme-toggle" width="44px" height="40px">
             <ThemeToggle client:load />
           </HydrationWrapper>
+          
+          <!-- Mobile menu (only visible on mobile) -->
+          <div class="lg:hidden">
+            <HydrationWrapper name="mobile-menu" width="48px" height="48px">
+              <MobileMenu client:load />
+            </HydrationWrapper>
+          </div>
         </div>
-
-        <!-- Mobile menu -->
-        <HydrationWrapper name="mobile-menu" width="48px" height="48px">
-          <MobileMenu client:load />
-        </HydrationWrapper>
       </div>
     </div>
   </header>

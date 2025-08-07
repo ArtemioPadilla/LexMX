@@ -25,6 +25,7 @@
   "nav": {
     "home": "Home",
     "chat": "Legal Chat",
+    "cases": "My Cases",
     "wiki": "Legal Wiki",
     "codes": "Legal Codes",
     "requests": "Requests",
@@ -35,6 +36,30 @@
     "closeMenu": "Close menu",
     "quickActions": "Quick Actions",
     "resources": "Resources"
+  },
+  "hero": {
+    "title": "Your Mexican Legal AI Assistant",
+    "subtitle": "Get accurate legal answers based on updated Mexican legislation",
+    "cta": {
+      "chat": "Open Legal Chat",
+      "setup": "Configure AI"
+    }
+  },
+  "features": {
+    "title": "Main Features",
+    "subtitle": "LexMX combines cutting-edge technology with the most complete Mexican legal knowledge",
+    "multiLLM": {
+      "title": "Multiple AI Providers",
+      "description": "Integrates OpenAI, Claude, Gemini and local models. Automatic cost and quality optimization."
+    },
+    "corpus": {
+      "title": "Complete Legal Corpus",
+      "description": "+500MB of Mexican legislation processed and vectorized for precise searches."
+    },
+    "privacy": {
+      "title": "Maximum Privacy",
+      "description": "All processing happens in your browser. No servers, no tracking, no data sent."
+    }
   },
   "home": {
     "hero": {
@@ -69,6 +94,16 @@
     "send": "Send message",
     "clear": "Clear chat",
     "newConversation": "New conversation",
+    "advancedOptions": "Advanced options",
+    "legalAreaSelect": "Specific legal area",
+    "system": "System",
+    "recommendations": "Recommendations",
+    "relatedQueries": "Related queries",
+    "confidence": "Confidence",
+    "area": "Area",
+    "time": "Time",
+    "fromCache": "From cache",
+    "inputHelp": "Press Enter to send, Shift+Enter for new line",
     "examples": {
       "title": "Example questions:",
       "q1": "What does constitutional article 123 say about labor rights?",

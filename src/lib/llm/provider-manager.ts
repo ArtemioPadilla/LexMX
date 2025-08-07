@@ -478,6 +478,57 @@ export class ProviderManager {
       // Store anonymized usage data
     }
   }
+
+  // Get all enabled providers
+  async getEnabledProviders(): Promise<ProviderConfig[]> {
+    const configs: ProviderConfig[] = [];
+    const allConfigs = await secureStorage.getAllProviderConfigs();
+    
+    for (const config of allConfigs) {
+      if (config.enabled) {
+        configs.push(config);
+      }
+    }
+    
+    return configs;
+  }
+
+  // Get current provider (based on last used or preference)
+  async getCurrentProvider(): Promise<ProviderConfig | null> {
+    // First check if there's a preferred provider in storage
+    const preferred = await secureStorage.getPreferredProvider();
+    if (preferred) {
+      const config = await this.getProviderConfig(preferred);
+      if (config && config.enabled) {
+        return config;
+      }
+    }
+    
+    // Otherwise return the first enabled provider
+    const enabledProviders = await this.getEnabledProviders();
+    return enabledProviders.length > 0 ? enabledProviders[0] : null;
+  }
+
+  // Set preferred provider
+  async setPreferredProvider(providerId: string, model?: string): Promise<void> {
+    await secureStorage.setPreferredProvider(providerId);
+    
+    // If model is specified, update the provider config
+    if (model) {
+      const config = await this.getProviderConfig(providerId);
+      if (config) {
+        config.model = model;
+        await secureStorage.storeProviderConfig(config);
+        
+        // Reinitialize the provider with new model
+        const provider = this.providers.get(providerId);
+        if (provider && provider.id === 'webllm') {
+          // For WebLLM, we need to reinitialize with the new model
+          await this.initializeProvider(config);
+        }
+      }
+    }
+  }
 }
 
 // Global provider manager instance

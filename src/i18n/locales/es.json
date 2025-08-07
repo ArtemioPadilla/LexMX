@@ -25,6 +25,7 @@
   "nav": {
     "home": "Inicio",
     "chat": "Chat Legal",
+    "cases": "Mis Casos",
     "wiki": "Wiki Legal",
     "codes": "Códigos",
     "requests": "Solicitudes",
@@ -35,6 +36,30 @@
     "closeMenu": "Cerrar menú",
     "quickActions": "Acciones Rápidas",
     "resources": "Recursos"
+  },
+  "hero": {
+    "title": "Tu Asistente Legal Mexicano con IA",
+    "subtitle": "Obtén respuestas legales precisas basadas en legislación mexicana actualizada",
+    "cta": {
+      "chat": "Abrir Chat Legal",
+      "setup": "Configurar IA"
+    }
+  },
+  "features": {
+    "title": "Características Principales",
+    "subtitle": "LexMX combina tecnología de vanguardia con el conocimiento legal mexicano más completo",
+    "multiLLM": {
+      "title": "Múltiples Proveedores de IA",
+      "description": "Integra OpenAI, Claude, Gemini y modelos locales. Optimización automática de costos y calidad."
+    },
+    "corpus": {
+      "title": "Corpus Legal Completo",
+      "description": "+500MB de legislación mexicana procesada y vectorizada para búsquedas precisas."
+    },
+    "privacy": {
+      "title": "Máxima Privacidad",
+      "description": "Todo el procesamiento ocurre en tu navegador. Sin servidores, sin tracking, sin datos enviados."
+    }
   },
   "home": {
     "hero": {
@@ -69,6 +94,16 @@
     "send": "Enviar mensaje",
     "clear": "Limpiar chat",
     "newConversation": "Nueva conversación",
+    "advancedOptions": "Opciones avanzadas",
+    "legalAreaSelect": "Área legal específica",
+    "system": "Sistema",
+    "recommendations": "Recomendaciones",
+    "relatedQueries": "Consultas relacionadas",
+    "confidence": "Confianza",
+    "area": "Área",
+    "time": "Tiempo",
+    "fromCache": "Desde caché",
+    "inputHelp": "Presiona Enter para enviar, Shift+Enter para nueva línea",
     "examples": {
       "title": "Preguntas de ejemplo:",
       "q1": "¿Qué dice el artículo 123 constitucional sobre los derechos laborales?",

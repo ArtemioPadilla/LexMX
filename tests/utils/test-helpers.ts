@@ -257,3 +257,164 @@ export async function switchLanguage(
   // Wait for UI to update
   await page.waitForTimeout(300);
 }
+
+/**
+ * Set up WebLLM mock provider
+ * @param page - Playwright page object
+ */
+export async function setupWebLLMProvider(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const webllmConfig = {
+      id: 'webllm',
+      name: 'WebLLM',
+      type: 'local',
+      enabled: true,
+      model: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
+      priority: 1
+    };
+    
+    // Store provider config
+    localStorage.setItem('lexmx_provider_webllm', JSON.stringify(webllmConfig));
+    localStorage.setItem('lexmx_preferred_provider', 'webllm');
+    
+    // Mock WebLLM initialization
+    (window as any).webllmInitialized = true;
+  });
+}
+
+/**
+ * Create a test case in case manager
+ * @param page - Playwright page object
+ * @param caseData - Case data
+ */
+export async function createTestCase(
+  page: Page,
+  caseData = {
+    title: 'Test Case',
+    description: 'Test case description',
+    client: 'Test Client',
+    caseNumber: '123/2024',
+    legalArea: 'civil'
+  }
+): Promise<void> {
+  const cases = [{
+    id: Date.now().toString(),
+    ...caseData,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    documents: [],
+    notes: [],
+    conversations: [],
+    deadlines: [],
+    parties: []
+  }];
+  
+  await page.evaluate((casesData) => {
+    localStorage.setItem('lexmx_cases', JSON.stringify(casesData));
+  }, cases);
+}
+
+/**
+ * Select corpus documents
+ * @param page - Playwright page object
+ * @param documentIds - Array of document IDs to select
+ */
+export async function selectCorpusDocuments(
+  page: Page,
+  documentIds: string[]
+): Promise<void> {
+  // Open corpus selector
+  await page.click('.corpus-selector button').first();
+  await page.waitForSelector('.corpus-selector div.absolute', { state: 'visible' });
+  
+  // Switch to documents tab
+  await page.click('button:has-text("Por Documento")');
+  
+  // Select each document
+  for (const docId of documentIds) {
+    await page.click(`button[data-doc-id="${docId}"]`);
+  }
+  
+  // Close selector
+  await page.keyboard.press('Escape');
+}
+
+/**
+ * Wait for provider selector to be ready
+ * @param page - Playwright page object
+ */
+export async function waitForProviderSelector(page: Page): Promise<void> {
+  await page.waitForSelector('.provider-selector', { state: 'visible' });
+  await waitForComponentHydration(page, '.provider-selector');
+}
+
+/**
+ * Select a provider from the dropdown
+ * @param page - Playwright page object
+ * @param providerId - Provider ID to select
+ */
+export async function selectProvider(
+  page: Page,
+  providerId: string
+): Promise<void> {
+  // Open provider selector
+  await page.click('.provider-selector button').first();
+  await page.waitForSelector('.provider-selector div.absolute', { state: 'visible' });
+  
+  // Select provider by its text content
+  const providerName = providerId.charAt(0).toUpperCase() + providerId.slice(1);
+  await page.click(`.provider-selector button:has-text("${providerName}")`).first();
+}
+
+/**
+ * Toggle dark mode using the theme toggle
+ * @param page - Playwright page object
+ */
+export async function toggleDarkMode(page: Page): Promise<void> {
+  const themeToggle = page.locator('.theme-toggle button').first();
+  await themeToggle.waitFor({ state: 'visible' });
+  await themeToggle.click();
+  
+  // Wait for dropdown to appear - it's a div, not a menu with role
+  await page.waitForSelector('.theme-toggle div.absolute', { state: 'visible' });
+  
+  // Click dark mode option
+  await page.click('.theme-toggle button:has-text("Oscuro")');
+  
+  // Wait for theme to apply
+  await page.waitForTimeout(300);
+}
+
+/**
+ * Check if element is visible in dark mode
+ * @param page - Playwright page object
+ * @param selector - Element selector
+ */
+export async function isVisibleInDarkMode(
+  page: Page,
+  selector: string
+): Promise<boolean> {
+  const element = page.locator(selector).first();
+  
+  // Check if element exists and is visible
+  if (!await element.isVisible()) {
+    return false;
+  }
+  
+  // Check if text is readable (contrast check)
+  const color = await element.evaluate((el) => {
+    const styles = window.getComputedStyle(el);
+    return styles.color;
+  });
+  
+  // Parse RGB values
+  const rgb = color.match(/\d+/g);
+  if (!rgb) return false;
+  
+  // Simple brightness check (higher values = brighter)
+  const brightness = (parseInt(rgb[0]) + parseInt(rgb[1]) + parseInt(rgb[2])) / 3;
+  
+  // In dark mode, text should be bright (> 128)
+  return brightness > 128;
+}
