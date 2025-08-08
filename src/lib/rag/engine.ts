@@ -174,6 +174,7 @@ export class LegalRAGEngine {
       maxResults?: number;
       includeReferences?: boolean;
       forceRefresh?: boolean;
+      abortSignal?: AbortSignal;
       corpusFilter?: {
         areas?: LegalArea[];
         documents?: string[];
@@ -215,7 +216,8 @@ export class LegalRAGEngine {
         processedQuery,
         context,
         onChunk,
-        options.legalArea
+        options.legalArea,
+        options.abortSignal
       );
 
       // Create final legal response
@@ -572,7 +574,8 @@ Por favor, proporciona una respuesta legal precisa y completa, citando las fuent
     processedQuery: ProcessedQuery,
     context: string,
     onChunk: (chunk: string) => void,
-    legalArea?: LegalArea
+    legalArea?: LegalArea,
+    abortSignal?: AbortSignal
   ): Promise<LLMResponse> {
     const systemPrompt = this.createLegalSystemPrompt(legalArea);
     
@@ -603,7 +606,8 @@ Por favor, proporciona una respuesta legal precisa y completa, citando las fuent
       systemPrompt,
       temperature: 0.1,
       maxTokens: Math.min(this.config.maxContextLength, 2000),
-      stream: true // Enable streaming
+      stream: true, // Enable streaming
+      abortSignal // Pass abort signal for cancellation
     };
 
     return await providerManager.processStreamingRequest(llmRequest, queryContext, onChunk);

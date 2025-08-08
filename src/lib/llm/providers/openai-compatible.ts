@@ -146,12 +146,12 @@ export class OpenAICompatibleProvider extends BaseLLMProvider implements LocalPr
           messages: this.formatMessages(request.messages, request.systemPrompt),
           temperature: request.temperature ?? this.config.temperature ?? 0.1,
           max_tokens: request.maxTokens ?? this.config.maxTokens ?? 2000,
-          top_p: 0.9,
-          frequency_penalty: 0,
-          presence_penalty: 0,
+          top_p: request.topP ?? 0.9,
+          frequency_penalty: request.frequencyPenalty ?? 0,
+          presence_penalty: request.presencePenalty ?? 0,
           stream: false
         }),
-        signal: AbortSignal.timeout(120000) // 2 minute timeout for local models
+        signal: request.abortSignal || AbortSignal.timeout(120000) // Use abort signal or 2 minute timeout
       });
 
       if (!response.ok) {

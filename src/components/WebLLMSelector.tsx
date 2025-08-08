@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '../i18n';
+import { providerManager } from '../lib/llm/provider-manager';
 
 interface Model {
   id: string;
@@ -122,6 +123,26 @@ export default function WebLLMSelector({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFamily, setSelectedFamily] = useState('all');
   const [showConfirmDialog, setShowConfirmDialog] = useState<Model | null>(null);
+  const [showRemoveDialog, setShowRemoveDialog] = useState<Model | null>(null);
+  const [cachedModels, setCachedModels] = useState<Set<string>>(new Set());
+  
+  useEffect(() => {
+    // Load cached models status
+    const updateCachedModels = () => {
+      const cached = new Set<string>();
+      MODELS.forEach(model => {
+        if (providerManager.isWebLLMModelCached(model.id)) {
+          cached.add(model.id);
+        }
+      });
+      setCachedModels(cached);
+    };
+    
+    updateCachedModels();
+    // Check periodically in case models are loaded elsewhere
+    const interval = setInterval(updateCachedModels, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const filteredModels = useMemo(() => {
     return MODELS.filter(model => {
@@ -136,7 +157,14 @@ export default function WebLLMSelector({
   }, [searchQuery, selectedFamily, t]);
 
   const handleModelSelect = (model: Model) => {
-    setShowConfirmDialog(model);
+    if (cachedModels.has(model.id)) {
+      // If already cached, just select it
+      onChange(model.id);
+      onClose?.();
+    } else {
+      // Show download confirmation
+      setShowConfirmDialog(model);
+    }
   };
 
   const confirmDownload = () => {
@@ -145,6 +173,19 @@ export default function WebLLMSelector({
       setShowConfirmDialog(null);
       onClose?.();
     }
+  };
+  
+  const handleRemoveFromCache = async (model: Model) => {
+    const success = await providerManager.removeWebLLMModelFromCache(model.id);
+    if (success) {
+      setCachedModels(prev => {
+        const next = new Set(prev);
+        next.delete(model.id);
+        return next;
+      });
+      // TODO: Show success message
+    }
+    setShowRemoveDialog(null);
   };
 
   const selectedModel = MODELS.find(m => m.id === value);
@@ -203,46 +244,79 @@ export default function WebLLMSelector({
         </div>
       </div>
 
-      {/* Model List */}
-      <div className="overflow-y-auto max-h-[400px] border border-gray-200 dark:border-gray-700 rounded-lg">
+      {/* Model List - Fixed max height to prevent overflow */}
+      <div className="overflow-y-auto scrollbar-thin max-h-[200px] border border-gray-200 dark:border-gray-700 rounded-lg">
         {filteredModels.length > 0 ? (
           <div className="p-2 space-y-1">
-            {filteredModels.map(model => (
-              <button
-                key={model.id}
-                type="button"
-                onClick={() => handleModelSelect(model)}
-                className={`w-full px-3 py-3 rounded-lg text-left transition-colors ${
-                  value === model.id
-                    ? 'bg-legal-50 dark:bg-legal-900/20 border border-legal-300 dark:border-legal-700'
-                    : 'hover:bg-gray-50 dark:hover:bg-gray-700'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900 dark:text-gray-100">
-                      {model.name}
-                      {model.recommended && (
-                        <span className="ml-2 text-xs text-legal-600 dark:text-legal-400">
-                          ⭐ {t('provider.webllm.recommended')}
-                        </span>
-                      )}
+            {filteredModels.map(model => {
+              const isCached = cachedModels.has(model.id);
+              const isSelected = value === model.id;
+              
+              return (
+                <div
+                  key={model.id}
+                  className={`relative px-3 py-3 rounded-lg transition-colors ${
+                    isSelected
+                      ? 'bg-legal-50 dark:bg-legal-900/20 border border-legal-300 dark:border-legal-700'
+                      : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleModelSelect(model)}
+                    className="w-full text-left"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900 dark:text-gray-100">
+                            {model.name}
+                          </span>
+                          {model.recommended && (
+                            <span className="text-xs text-legal-600 dark:text-legal-400">
+                              ⭐ {t('provider.webllm.recommended')}
+                            </span>
+                          )}
+                          {isCached && (
+                            <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                              ✓ {t('provider.webllm.cached')}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {t(`provider.webllm.modelDescriptions.${model.descriptionKey}`)}
+                        </div>
+                      </div>
+                      <div className="ml-3 flex items-start gap-2">
+                        <div className="text-right">
+                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {model.size}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {model.family}
+                          </div>
+                        </div>
+                        {isCached && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowRemoveDialog(model);
+                            }}
+                            className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded transition-colors"
+                            title={t('provider.webllm.removeFromCache')}
+                          >
+                            <svg className="w-4 h-4 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      {t(`provider.webllm.modelDescriptions.${model.descriptionKey}`)}
-                    </div>
-                  </div>
-                  <div className="ml-3 text-right">
-                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {model.size}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {model.family}
-                    </div>
-                  </div>
+                  </button>
                 </div>
-              </button>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="p-8 text-center text-gray-500 dark:text-gray-400">
@@ -251,7 +325,7 @@ export default function WebLLMSelector({
         )}
       </div>
 
-      {/* Confirmation Dialog */}
+      {/* Download Confirmation Dialog */}
       {showConfirmDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
@@ -288,6 +362,38 @@ export default function WebLLMSelector({
                 className="flex-1 px-4 py-2 bg-legal-500 text-white rounded-lg hover:bg-legal-600 transition-colors"
               >
                 {t('provider.webllm.downloadConfirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Remove from Cache Confirmation Dialog */}
+      {showRemoveDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              {t('provider.webllm.confirmRemove').replace('{{name}}', showRemoveDialog.name)}
+            </h3>
+            
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                {t('provider.webllm.confirmRemoveMessage').replace('{{size}}', showRemoveDialog.size)}
+              </p>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowRemoveDialog(null)}
+                className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                {t('provider.webllm.removeCancel')}
+              </button>
+              <button
+                onClick={() => handleRemoveFromCache(showRemoveDialog)}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                {t('provider.webllm.removeConfirm')}
               </button>
             </div>
           </div>

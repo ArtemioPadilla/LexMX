@@ -114,6 +114,7 @@ export class GeminiProvider implements LLMProvider {
           headers: {
             'Content-Type': 'application/json'
           },
+          signal: request.abortSignal,
           body: JSON.stringify({
             contents,
             generationConfig: {
@@ -194,6 +195,7 @@ export class GeminiProvider implements LLMProvider {
           headers: {
             'Content-Type': 'application/json'
           },
+          signal: request.abortSignal,
           body: JSON.stringify({
             contents,
             generationConfig: {
@@ -221,6 +223,12 @@ export class GeminiProvider implements LLMProvider {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+        
+        // Check if request was aborted
+        if (request.abortSignal?.aborted) {
+          reader.cancel();
+          throw new Error('Request aborted');
+        }
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');

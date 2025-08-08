@@ -351,7 +351,20 @@
         "multilingual": "Buen rendimiento multilingüe",
         "versatile": "Potente y versátil para análisis legal",
         "light": "Ligero y eficiente"
-      }
+      },
+      "cached": "En caché",
+      "modelCached": "Modelo almacenado localmente",
+      "removeFromCache": "Eliminar del caché",
+      "confirmRemove": "¿Eliminar {{name}} del caché?",
+      "confirmRemoveMessage": "Esto liberará {{size}} de espacio. El modelo se descargará de nuevo la próxima vez que lo uses.",
+      "removeConfirm": "Eliminar",
+      "removeCancel": "Cancelar",
+      "cacheRemoved": "Caché eliminado exitosamente",
+      "downloadingModel": "Descargando modelo IA",
+      "firstTimeDownload": "Primera vez usando este modelo. Se almacenará localmente.",
+      "modelLoaded": "Modelo cargado ✓",
+      "preloadModel": "Precargar modelo",
+      "downloadProgress": "Progreso de descarga"
     },
     "otherProviders": "Otros Proveedores"
   },

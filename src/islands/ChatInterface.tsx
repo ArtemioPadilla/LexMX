@@ -1,6 +1,6 @@
 // Main chat interface for legal queries - integrates with RAG engine
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { LegalResponse, LegalArea, QueryType } from '../types/legal';
 import { LegalRAGEngine } from '../lib/rag/engine';
 import { providerManager } from '../lib/llm/provider-manager';
@@ -9,6 +9,7 @@ import WebLLMProgress from '../components/WebLLMProgress';
 import MessageContent from '../components/MessageContent';
 import ProviderSelector from '../components/ProviderSelector';
 import CorpusSelector from '../components/CorpusSelector';
+import ModelSelectorModal from '../components/ModelSelectorModal';
 import { useTranslation } from '../i18n';
 
 export interface ChatMessage {
@@ -42,6 +43,14 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
     documents: []
   });
   
+  // Modal state for model selector
+  const [showModelSelector, setShowModelSelector] = useState(false);
+  const [currentProvider, setCurrentProvider] = useState('webllm');
+  const [currentModel, setCurrentModel] = useState('');
+  
+  // Abort controller for stopping generation
+  const abortControllerRef = useRef<AbortController | null>(null);
+  
   // Memoize the corpus selection callback to prevent infinite re-renders
   const handleCorpusSelectionChange = useCallback((selection: { areas: LegalArea[]; documents: string[] }) => {
     setCorpusSelection(selection);
@@ -70,12 +79,22 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
 
   // Initialize RAG engine and provider manager
   useEffect(() => {
+    // Create progress listener
+    const progressListener = (progress: number, message: string) => {
+      setWebllmProgress({ progress, message });
+      
+      // Auto-clear progress after completion
+      if (progress === 100) {
+        setTimeout(() => {
+          setWebllmProgress(null);
+        }, 3000);
+      }
+    };
+
     const initializeEngine = async () => {
       try {
-        // Set WebLLM progress callback
-        providerManager.setWebLLMProgressCallback((progress, message) => {
-          setWebllmProgress({ progress, message });
-        });
+        // Register WebLLM progress listener
+        providerManager.addWebLLMProgressListener(progressListener);
         
         // Initialize provider manager first
         await providerManager.initialize();
@@ -96,6 +115,11 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
     };
 
     initializeEngine();
+    
+    // Cleanup: unregister listener on unmount
+    return () => {
+      providerManager.removeWebLLMProgressListener(progressListener);
+    };
   }, [ragEngine]);
 
   // Smart auto-scroll: only scroll for new messages, not streaming updates
@@ -169,6 +193,9 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
     setCurrentInput('');
     setIsProcessing(true);
     
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
+    
     // Re-enable auto-scroll when user sends a message
     shouldAutoScrollRef.current = true;
 
@@ -203,7 +230,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
         ));
       };
 
-      // Process legal query with streaming
+      // Process legal query with streaming (with abort signal support)
       const legalResponse = await ragEngine.processLegalQueryStreaming(
         userMessage.content,
         handleChunk,
@@ -213,12 +240,12 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
           maxResults: 5,
           corpusFilter: corpusSelection.areas.length > 0 || corpusSelection.documents.length > 0
             ? corpusSelection
-            : undefined
+            : undefined,
+          abortSignal: abortControllerRef.current?.signal
         }
       );
       
-      // Clear WebLLM progress when done
-      setWebllmProgress(null);
+      // Progress is now auto-cleared by the listener after 100%
 
       // Update the message with final response and metadata
       setMessages(prev => prev.map(msg => 
@@ -247,6 +274,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
       ));
     } finally {
       setIsProcessing(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -255,6 +283,12 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
       e.preventDefault();
       handleSubmit(e);
     }
+  };
+  
+  const handleStopGeneration = () => {
+    // Abort the current request
+    abortControllerRef.current?.abort();
+    setIsProcessing(false);
   };
 
   const clearChat = () => {
@@ -293,14 +327,6 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
 
   return (
     <div className={`chat-interface flex flex-col h-full bg-white dark:bg-gray-900 ${className}`}>
-      {/* WebLLM Progress Indicator */}
-      {webllmProgress && (
-        <WebLLMProgress
-          progress={webllmProgress.progress}
-          message={webllmProgress.message}
-          onClose={() => setWebllmProgress(null)}
-        />
-      )}
       {/* Header */}
       <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
         <div className="flex items-center justify-between">
@@ -516,6 +542,17 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
         </div>
       )}
 
+      {/* WebLLM Progress Indicator - Inline in chat */}
+      {webllmProgress && (
+        <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-yellow-50 dark:bg-yellow-900/20 p-4">
+          <WebLLMProgress
+            progress={webllmProgress.progress}
+            message={webllmProgress.message}
+            variant="inline"
+          />
+        </div>
+      )}
+      
       {/* Input */}
       <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
         {/* Selectors */}
@@ -523,11 +560,25 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
           <CorpusSelector 
             onSelectionChange={handleCorpusSelectionChange}
           />
-          <ProviderSelector 
-            onProviderChange={(providerId, model) => {
-              console.log('Provider changed:', providerId, model);
-            }}
-          />
+          <button
+            onClick={() => setShowModelSelector(true)}
+            className="flex items-center space-x-2 px-3 py-2 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors text-sm"
+          >
+            <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <span className="text-gray-700 dark:text-gray-300">
+              {currentProvider === 'webllm' ? 'WebLLM' : currentProvider}
+              {currentModel && (
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                  ({currentModel.split('-')[0]})
+                </span>
+              )}
+            </span>
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
         </div>
         
         <form onSubmit={handleSubmit} className="flex space-x-3">
@@ -545,22 +596,29 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
             />
           </div>
           
-          <button
-            type="submit"
-            disabled={!currentInput.trim() || isProcessing || !isInitialized}
-            className="px-6 py-3 bg-legal-500 text-white rounded-lg hover:bg-legal-600 focus:outline-none focus:ring-2 focus:ring-legal-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            aria-label={t('chat.send')}
-          >
-            {isProcessing ? (
-              <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          {isProcessing ? (
+            <button
+              type="button"
+              onClick={handleStopGeneration}
+              className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+              aria-label="Detener generación"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <rect x="6" y="6" width="12" height="12" />
               </svg>
-            ) : (
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={!currentInput.trim() || !isInitialized}
+              className="px-6 py-3 bg-legal-500 text-white rounded-lg hover:bg-legal-600 focus:outline-none focus:ring-2 focus:ring-legal-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              aria-label={t('chat.send')}
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
-            )}
-          </button>
+            </button>
+          )}
         </form>
         
         <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -571,6 +629,23 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
           )}
         </div>
       </div>
+      
+      {/* Model Selector Modal */}
+      <ModelSelectorModal
+        isOpen={showModelSelector}
+        onClose={() => setShowModelSelector(false)}
+        currentProvider={currentProvider}
+        currentModel={currentModel}
+        onModelSelect={(provider, model) => {
+          setCurrentProvider(provider);
+          setCurrentModel(model || '');
+          console.log('Model selected:', provider, model);
+          // Update provider manager
+          if (model) {
+            providerManager.setPreferredProvider(provider, model);
+          }
+        }}
+      />
     </div>
   );
 }

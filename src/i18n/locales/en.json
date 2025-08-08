@@ -351,7 +351,20 @@
         "multilingual": "Good multilingual performance",
         "versatile": "Powerful and versatile for legal analysis",
         "light": "Lightweight and efficient"
-      }
+      },
+      "cached": "Cached",
+      "modelCached": "Model stored locally",
+      "removeFromCache": "Remove from cache",
+      "confirmRemove": "Remove {{name}} from cache?",
+      "confirmRemoveMessage": "This will free up {{size}} of space. The model will be downloaded again next time you use it.",
+      "removeConfirm": "Remove",
+      "removeCancel": "Cancel",
+      "cacheRemoved": "Cache removed successfully",
+      "downloadingModel": "Downloading AI model",
+      "firstTimeDownload": "First time using this model. It will be stored locally.",
+      "modelLoaded": "Model loaded ✓",
+      "preloadModel": "Preload model",
+      "downloadProgress": "Download progress"
     },
     "otherProviders": "Other Providers"
   },

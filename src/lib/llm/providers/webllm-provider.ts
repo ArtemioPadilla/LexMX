@@ -211,6 +211,11 @@ export class WebLLMProvider implements LLMProvider {
         });
 
         for await (const chunk of response) {
+          // Check if request was aborted
+          if (request.abortSignal?.aborted) {
+            throw new Error('Request aborted');
+          }
+          
           const delta = chunk.choices[0]?.delta?.content || '';
           fullContent += delta;
           

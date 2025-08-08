@@ -1,12 +1,20 @@
 // Provider setup wizard component
 
-import React, { useState, useEffect } from 'react';
-import type { ProviderConfig, CostLevel } from '../types/llm';
+import { useState, useEffect } from 'react';
+import type { ProviderConfig, CostLevel, LLMModel } from '../types/llm';
 import { providerRegistry } from '../lib/llm/provider-registry';
 import type { ProviderMetadata, UserProfile } from '../lib/llm/provider-registry';
 import { secureStorage } from '../lib/security/secure-storage';
 import { providerManager } from '../lib/llm/provider-manager';
-import WebLLMModelSelector from '../components/WebLLMModelSelector';
+import WebLLMModelGrid from '../components/providers/WebLLMModelGrid';
+import ProviderModelGrid from '../components/providers/ProviderModelGrid';
+import TestConnectionStatus from '../components/providers/TestConnectionStatus';
+import ProviderConfigForm from '../components/providers/ProviderConfigForm';
+// Import provider classes to get their models
+import { OpenAIProvider } from '../lib/llm/providers/openai-provider';
+import { ClaudeProvider } from '../lib/llm/providers/claude-provider';
+import { GeminiProvider } from '../lib/llm/providers/gemini-provider';
+import { BedrockProvider } from '../lib/llm/providers/bedrock-provider';
 
 interface ProviderSetupProps {
   onComplete?: (configs: ProviderConfig[]) => void;
@@ -25,9 +33,37 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
   const [webllmProgress, setWebllmProgress] = useState<{ progress: number; message: string } | null>(null);
   const [isPreloading, setIsPreloading] = useState(false);
   const [preloadProgress, setPreloadProgress] = useState<{ progress: number; message: string } | null>(null);
+  const [showPreloadConfirm, setShowPreloadConfirm] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<Record<string, 'untested' | 'testing' | 'success' | 'error'>>({});
+  const [testingConnection, setTestingConnection] = useState(false);
 
   const supportedProviders = providerRegistry.getSupportedProviders();
   const userProfiles = providerRegistry.getRecommendedProfiles();
+  
+  // Get models for a specific provider
+  const getProviderModels = (providerId: string): LLMModel[] => {
+    const dummyConfig: ProviderConfig = { 
+      id: providerId, 
+      name: providerId, 
+      type: providerId === 'webllm' || providerId === 'ollama' || providerId === 'openai-compatible' ? 'local' : 'cloud',
+      enabled: true,
+      priority: 1,
+      createdAt: Date.now()
+    };
+    
+    switch (providerId) {
+      case 'openai':
+        return new OpenAIProvider(dummyConfig).models;
+      case 'anthropic':
+        return new ClaudeProvider(dummyConfig).models;
+      case 'google':
+        return new GeminiProvider(dummyConfig).models;
+      case 'bedrock':
+        return new BedrockProvider(dummyConfig).models;
+      default:
+        return [];
+    }
+  };
 
   const handleProfileSelect = (profile: UserProfile) => {
     setSelectedProfile(profile);
@@ -92,7 +128,30 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
     }
   };
 
+  const testProviderConnection = async (providerId: string) => {
+    setTestingConnection(true);
+    setConnectionStatus(prev => ({ ...prev, [providerId]: 'testing' }));
+    
+    try {
+      const provider = providerManager.getProvider(providerId);
+      if (provider && provider.testConnection) {
+        const success = await provider.testConnection();
+        setConnectionStatus(prev => ({ ...prev, [providerId]: success ? 'success' : 'error' }));
+      } else {
+        setConnectionStatus(prev => ({ ...prev, [providerId]: 'error' }));
+      }
+    } catch (error) {
+      console.error(`Failed to test connection for ${providerId}:`, error);
+      setConnectionStatus(prev => ({ ...prev, [providerId]: 'error' }));
+    } finally {
+      setTestingConnection(false);
+    }
+  };
+
   const handlePreloadWebLLM = async () => {
+    // Close confirmation dialog
+    setShowPreloadConfirm(false);
+    
     try {
       setIsPreloading(true);
       setPreloadProgress({ progress: 0, message: 'Iniciando descarga...' });
@@ -311,13 +370,12 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
 
         <ProviderConfigForm
           provider={metadata}
+          models={getProviderModels(metadata.id)}
           onSave={handleProviderConfigSave}
           onCancel={() => setStep('providers')}
           isLoading={isLoading}
           error={error}
-          isPreloading={metadata.id === 'webllm' ? isPreloading : undefined}
-          preloadProgress={metadata.id === 'webllm' ? preloadProgress : undefined}
-          onPreload={metadata.id === 'webllm' ? handlePreloadWebLLM : undefined}
+          showModelSelection={true}
         />
       </div>
     );
@@ -456,6 +514,51 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
           </div>
         </div>
       )}
+      
+      {/* Preload Confirmation Dialog */}
+      {showPreloadConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              ¿Descargar modelo Llama 3.2 3B?
+            </h3>
+            
+            <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
+              <div className="flex items-start space-x-2">
+                <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                    Advertencia de Uso de Datos
+                  </p>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                    Se descargará aproximadamente 1.7GB de datos.
+                  </p>
+                  <p className="text-sm font-medium text-yellow-700 dark:text-yellow-300 mt-1">
+                    ⚠️ No recomendado en conexiones móviles. Usa WiFi para evitar cargos excesivos.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowPreloadConfirm(false)}
+                className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handlePreloadWebLLM}
+                className="flex-1 px-4 py-2 bg-legal-500 text-white rounded-lg hover:bg-legal-600 transition-colors"
+              >
+                Descargar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -524,7 +627,8 @@ function ProviderCard({
   );
 }
 
-function ProviderConfigForm({ 
+// This function is no longer used - replaced by imported ProviderConfigForm component
+function LegacyProviderConfigForm({ 
   provider, 
   onSave, 
   onCancel, 
@@ -532,7 +636,9 @@ function ProviderConfigForm({
   error,
   isPreloading,
   preloadProgress,
-  onPreload
+  onPreload,
+  connectionStatus,
+  onTestConnection
 }: {
   provider: ProviderMetadata;
   onSave: (config: ProviderConfig) => void;
@@ -542,6 +648,8 @@ function ProviderConfigForm({
   isPreloading?: boolean;
   preloadProgress?: { progress: number; message: string } | null;
   onPreload?: () => void;
+  connectionStatus?: 'untested' | 'testing' | 'success' | 'error';
+  onTestConnection?: () => void;
 }) {
   const [config, setConfig] = useState<Partial<ProviderConfig>>({
     id: provider.id,
@@ -552,31 +660,81 @@ function ProviderConfigForm({
     temperature: 0.1,
     costLimit: { daily: 10, monthly: 200 }
   });
+  const [selectedModelId, setSelectedModelId] = useState<string>('');
+  
+  // Get models for the provider
+  const getModels = (): LLMModel[] => {
+    const dummyConfig: ProviderConfig = { id: provider.id, name: provider.name, enabled: true };
+    
+    switch (provider.id) {
+      case 'openai':
+        return new OpenAIProvider(dummyConfig).models;
+      case 'anthropic':
+        return new ClaudeProvider(dummyConfig).models;
+      case 'google':
+        return new GeminiProvider(dummyConfig).models;
+      default:
+        return [];
+    }
+  };
+  
+  const providerModels = getModels();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(config as ProviderConfig);
+    const finalConfig = { ...config, model: selectedModelId || config.model };
+    onSave(finalConfig as ProviderConfig);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {provider.type === 'cloud' && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            API Key *
-          </label>
-          <input
-            type="password"
-            required
-            placeholder={`Ingresa tu clave API de ${provider.name}`}
-            value={config.apiKey || ''}
-            onChange={(e) => setConfig(prev => ({ ...prev, apiKey: e.target.value }))}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-legal-500 focus:border-transparent"
-          />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Tu clave se almacena encriptada localmente
-          </p>
-        </div>
+        <>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              API Key *
+            </label>
+            <input
+              type="password"
+              required
+              placeholder={`Ingresa tu clave API de ${provider.name}`}
+              value={config.apiKey || ''}
+              onChange={(e) => setConfig(prev => ({ ...prev, apiKey: e.target.value }))}
+              className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-legal-500 focus:border-transparent"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Tu clave se almacena encriptada localmente
+            </p>
+          </div>
+          
+          {/* Model Selection for Cloud Providers */}
+          {providerModels.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Selecciona un modelo
+              </label>
+              <ProviderModelGrid
+                models={providerModels}
+                selectedModelId={selectedModelId}
+                onModelSelect={setSelectedModelId}
+                showCost={true}
+                columns={2}
+              />
+            </div>
+          )}
+          
+          {/* Test Connection Button */}
+          {onTestConnection && config.apiKey && (
+            <div>
+              <TestConnectionStatus
+                status={connectionStatus || 'untested'}
+                onTest={onTestConnection}
+                disabled={!config.apiKey}
+                className="w-full"
+              />
+            </div>
+          )}
+        </>
       )}
 
       {provider.type === 'local' && provider.id === 'webllm' && (
@@ -596,16 +754,17 @@ function ProviderConfigForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Modelo a usar
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Selecciona un modelo
             </label>
-            <WebLLMModelSelector
-              value={config.model || 'Llama-3.2-3B-Instruct-q4f16_1-MLC'}
-              onChange={(modelId) => setConfig(prev => ({ ...prev, model: modelId }))}
+            <WebLLMModelGrid
+              selectedModelId={selectedModelId || config.model || 'Llama-3.2-3B-Instruct-q4f16_1-MLC'}
+              onModelSelect={(modelId) => {
+                setSelectedModelId(modelId);
+                setConfig(prev => ({ ...prev, model: modelId }));
+              }}
+              showDataWarning={true}
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              El modelo se descargará la primera vez que lo uses
-            </p>
           </div>
 
           {/* Preload Button */}

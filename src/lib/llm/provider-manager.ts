@@ -17,6 +17,7 @@ import { intelligentSelector } from './intelligent-selector';
 export class ProviderManager {
   private providers: Map<string, LLMProvider> = new Map();
   private initialized = false;
+  private loadedWebLLMModels = new Set<string>();
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
@@ -30,11 +31,76 @@ export class ProviderManager {
 
       // Ensure WebLLM is always available as a default option
       await this.ensureWebLLMAvailable();
+      
+      // Load cached model tracking
+      this.loadCachedModels();
 
       this.initialized = true;
     } catch (error) {
       console.error('Failed to initialize ProviderManager:', error);
       throw error;
+    }
+  }
+  
+  private loadCachedModels(): void {
+    try {
+      const cached = localStorage.getItem('webllm_loaded_models');
+      if (cached) {
+        const models = JSON.parse(cached);
+        this.loadedWebLLMModels = new Set(models);
+      }
+    } catch (error) {
+      console.error('Failed to load cached models list:', error);
+    }
+  }
+  
+  isWebLLMModelCached(modelId: string): boolean {
+    return this.loadedWebLLMModels.has(modelId);
+  }
+  
+  markWebLLMModelAsCached(modelId: string): void {
+    this.loadedWebLLMModels.add(modelId);
+    try {
+      localStorage.setItem('webllm_loaded_models', JSON.stringify([...this.loadedWebLLMModels]));
+    } catch (error) {
+      console.error('Failed to save cached models list:', error);
+    }
+  }
+  
+  async removeWebLLMModelFromCache(modelId: string): Promise<boolean> {
+    try {
+      // Try to clear from browser cache
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        for (const cacheName of cacheNames) {
+          if (cacheName.includes('webllm') || cacheName.includes(modelId)) {
+            await caches.delete(cacheName);
+          }
+        }
+      }
+      
+      // Remove from tracking
+      this.loadedWebLLMModels.delete(modelId);
+      localStorage.setItem('webllm_loaded_models', JSON.stringify([...this.loadedWebLLMModels]));
+      
+      // Clear IndexedDB entries related to this model
+      if ('indexedDB' in window) {
+        try {
+          const databases = await indexedDB.databases();
+          for (const db of databases) {
+            if (db.name?.includes('webllm') || db.name?.includes(modelId)) {
+              await indexedDB.deleteDatabase(db.name);
+            }
+          }
+        } catch (e) {
+          console.warn('Could not clear IndexedDB:', e);
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to remove model from cache:', error);
+      return false;
     }
   }
 
@@ -224,7 +290,7 @@ export class ProviderManager {
     }
 
     try {
-      // Process streaming request
+      // Process streaming request with abort signal
       const response = await provider.stream(request, onChunk);
       
       // Log successful usage
@@ -454,7 +520,13 @@ export class ProviderManager {
         // Handle WebLLM special initialization with progress callback
         const webllmConfig = {
           ...config,
-          initProgressCallback: this.webllmProgressCallback
+          initProgressCallback: (progress: number, message: string) => {
+            this.notifyProgressListeners(progress, message);
+            // Mark as cached when loading is complete
+            if (progress === 100 && config.model) {
+              this.markWebLLMModelAsCached(config.model);
+            }
+          }
         };
         console.log('[ProviderManager] Creating WebLLM provider with special config');
         provider = ProviderFactory.createProvider(webllmConfig);
@@ -476,11 +548,34 @@ export class ProviderManager {
     }
   }
 
-  private webllmProgressCallback?: (progress: number, message: string) => void;
+  private webllmProgressListeners: Set<(progress: number, message: string) => void> = new Set();
 
-  // Set WebLLM progress callback for UI updates
+  // Add WebLLM progress listener for UI updates (supports multiple listeners)
+  addWebLLMProgressListener(callback: (progress: number, message: string) => void): void {
+    this.webllmProgressListeners.add(callback);
+  }
+
+  // Remove WebLLM progress listener
+  removeWebLLMProgressListener(callback: (progress: number, message: string) => void): void {
+    this.webllmProgressListeners.delete(callback);
+  }
+
+  // Legacy method for backward compatibility
   setWebLLMProgressCallback(callback: (progress: number, message: string) => void): void {
-    this.webllmProgressCallback = callback;
+    // Clear previous listeners and add new one for backward compatibility
+    this.webllmProgressListeners.clear();
+    this.webllmProgressListeners.add(callback);
+  }
+
+  // Notify all progress listeners
+  private notifyProgressListeners(progress: number, message: string): void {
+    this.webllmProgressListeners.forEach(listener => {
+      try {
+        listener(progress, message);
+      } catch (error) {
+        console.error('Error in progress listener:', error);
+      }
+    });
   }
 
 
@@ -556,6 +651,39 @@ export class ProviderManager {
           await this.initializeProvider(config);
         }
       }
+    }
+  }
+
+  // Initialize WebLLM model immediately (triggers download)
+  async initializeWebLLMModel(modelId: string): Promise<void> {
+    console.log(`[ProviderManager] Initializing WebLLM model: ${modelId}`);
+    
+    // Get or create WebLLM config
+    let config = await this.getProviderConfig('webllm');
+    
+    if (!config) {
+      // Create default WebLLM config
+      config = {
+        id: 'webllm',
+        name: 'WebLLM',
+        enabled: true,
+        model: modelId
+      };
+      await secureStorage.storeProviderConfig(config);
+    } else {
+      // Update model in existing config
+      config.model = modelId;
+      await secureStorage.storeProviderConfig(config);
+    }
+    
+    // Initialize the provider which will trigger the download
+    await this.initializeProvider(config);
+    
+    // Get the provider and trigger initialization
+    const provider = this.providers.get('webllm');
+    if (provider && 'initialize' in provider) {
+      console.log('[ProviderManager] Triggering WebLLM initialization/download');
+      await (provider as any).initialize();
     }
   }
 }

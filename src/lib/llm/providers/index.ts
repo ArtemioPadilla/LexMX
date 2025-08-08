@@ -4,9 +4,12 @@ import { ClaudeProvider } from './claude-provider';
 import { GeminiProvider } from './gemini-provider';
 import { OllamaProvider } from './ollama-provider';
 import { WebLLMProvider } from './webllm-provider';
+import { BedrockProvider } from './bedrock-provider';
+import { AzureProvider } from './azure-provider';
+import { VertexProvider } from './vertex-provider';
 import type { LLMProvider, ProviderConfig } from '../../../types/llm';
 
-export { OpenAIProvider, ClaudeProvider, GeminiProvider, OllamaProvider, WebLLMProvider };
+export { OpenAIProvider, ClaudeProvider, GeminiProvider, OllamaProvider, WebLLMProvider, BedrockProvider, AzureProvider, VertexProvider };
 
 export class ProviderFactory {
   static createProvider(config: ProviderConfig): LLMProvider {
@@ -29,6 +32,12 @@ export class ProviderFactory {
           ...config,
           modelId: config.model || 'Llama-3.2-3B-Instruct-q4f16_1-MLC'
         });
+      case 'bedrock':
+        return new BedrockProvider(config);
+      case 'azure':
+        return new AzureProvider(config);
+      case 'vertex':
+        return new VertexProvider(config);
       default:
         console.error(`[ProviderFactory] Unknown provider: ${config.id}`);
         throw new Error(`Unknown provider: ${config.id}`);
@@ -36,6 +45,6 @@ export class ProviderFactory {
   }
 
   static isProviderSupported(providerId: string): boolean {
-    return ['openai', 'anthropic', 'claude', 'google', 'gemini', 'ollama', 'webllm'].includes(providerId);
+    return ['openai', 'anthropic', 'claude', 'google', 'gemini', 'ollama', 'webllm', 'bedrock', 'azure', 'vertex'].includes(providerId);
   }
 }

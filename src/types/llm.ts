@@ -73,6 +73,16 @@ export interface LLMRequest {
   maxTokens?: number;
   systemPrompt?: string;
   stream?: boolean;
+  
+  // Additional parameters for fine-tuning
+  topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
+  stop?: string[];
+  
+  // Abort signal for cancellation
+  abortSignal?: AbortSignal;
+  
   metadata?: {
     queryId: string;
     legalArea?: string;
@@ -125,8 +135,28 @@ export interface ProviderConfig {
   priority: number;
   
   // Connection settings
-  apiKey?: string;
-  endpoint?: string;
+  apiKey?: string;        // For cloud providers & secured local instances
+  endpoint?: string;      // For local providers (Ollama, OpenAI-compatible)
+  
+  // AWS Bedrock specific
+  region?: string;        // AWS region
+  accessKeyId?: string;   // IAM access key
+  secretAccessKey?: string; // IAM secret key
+  sessionToken?: string;  // Optional session token for temporary credentials
+  
+  // Azure OpenAI specific
+  azureResourceName?: string;    // Azure OpenAI resource name
+  azureDeploymentName?: string;  // Model deployment name
+  azureApiVersion?: string;      // API version (e.g., "2024-02-01")
+  azureTenantId?: string;        // Azure AD tenant ID for OAuth
+  azureClientId?: string;        // Azure AD client ID
+  azureClientSecret?: string;    // Azure AD client secret
+  
+  // Google Cloud Vertex AI specific
+  gcpProjectId?: string;         // GCP project ID
+  gcpLocation?: string;          // GCP region (e.g., "us-central1")
+  gcpServiceAccountKey?: string | object; // Service account key JSON
+  
   model?: string;
   
   // Preferences

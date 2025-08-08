@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <path d="M 24 4 L 8 14 L 8 34 L 24 44 L 40 34 L 40 14 Z" fill="none" stroke="#4285F4" stroke-width="2" opacity="0.3"/>
+  
+  <!-- Google Cloud Colors: Blue, Red, Yellow, Green -->
+  <path d="M 24 10 L 34 16 L 34 24 L 28 24 L 28 16 L 24 14 Z" fill="#4285F4"/>
+  <path d="M 34 24 L 34 32 L 24 38 L 24 30 L 28 30 L 28 24 Z" fill="#EA4335"/>
+  <path d="M 24 38 L 14 32 L 14 24 L 20 24 L 20 30 L 24 32 Z" fill="#FBBC04"/>
+  <path d="M 14 24 L 14 16 L 24 10 L 24 18 L 20 18 L 20 24 Z" fill="#34A853"/>
+  
+  <!-- Center hexagon -->
+  <path d="M 24 18 L 28 20.5 L 28 24.5 L 24 27 L 20 24.5 L 20 20.5 Z" fill="#ffffff" stroke="#4285F4" stroke-width="1"/>
+</svg>

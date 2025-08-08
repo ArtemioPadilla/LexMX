@@ -1,11 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from '../i18n';
+import { providerManager } from '../lib/llm/provider-manager';
 
 interface Model {
   id: string;
   name: string;
   size: string;
   family: string;
-  description: string;
+  descriptionKey: string;
   recommended?: boolean;
 }
 
@@ -22,14 +24,14 @@ const MODELS: Model[] = [
     name: 'Llama 3.2 1B',
     size: '0.8GB',
     family: 'Llama',
-    description: 'Rápido y eficiente para consultas básicas'
+    descriptionKey: 'fast'
   },
   {
     id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
     name: 'Llama 3.2 3B',
     size: '1.7GB',
     family: 'Llama',
-    description: 'Balance ideal entre velocidad y capacidad',
+    descriptionKey: 'balanced',
     recommended: true
   },
   {
@@ -37,14 +39,14 @@ const MODELS: Model[] = [
     name: 'Llama 3.1 8B',
     size: '4.3GB',
     family: 'Llama',
-    description: 'Análisis legal complejo y detallado'
+    descriptionKey: 'complex'
   },
   {
     id: 'Hermes-3-Llama-3.2-3B-q4f16_1-MLC',
     name: 'Hermes 3 Llama 3.2 3B',
     size: '1.8GB',
     family: 'Llama',
-    description: 'Optimizado para seguir instrucciones'
+    descriptionKey: 'instructions'
   },
   
   // Gemma Family
@@ -53,14 +55,14 @@ const MODELS: Model[] = [
     name: 'Gemma 2 2B',
     size: '1.3GB',
     family: 'Gemma',
-    description: 'Modelo de Google, compacto y eficiente'
+    descriptionKey: 'compact'
   },
   {
     id: 'gemma-2-9b-it-q4f32_1-MLC',
     name: 'Gemma 2 9B',
     size: '5.1GB',
     family: 'Gemma',
-    description: 'Mayor capacidad para tareas complejas'
+    descriptionKey: 'complex'
   },
   
   // Phi Family
@@ -69,7 +71,7 @@ const MODELS: Model[] = [
     name: 'Phi 3.5 Mini',
     size: '1.2GB',
     family: 'Phi',
-    description: 'Microsoft, excelente para razonamiento'
+    descriptionKey: 'reasoning'
   },
   
   // Qwen Family
@@ -78,7 +80,7 @@ const MODELS: Model[] = [
     name: 'Qwen 2.5 7B',
     size: '3.8GB',
     family: 'Qwen',
-    description: 'Buen rendimiento multilingüe'
+    descriptionKey: 'multilingual'
   },
   
   // Mistral Family
@@ -87,7 +89,7 @@ const MODELS: Model[] = [
     name: 'Mistral 7B v0.3',
     size: '3.9GB',
     family: 'Mistral',
-    description: 'Potente y versátil para análisis legal'
+    descriptionKey: 'versatile'
   },
   
   // StableLM Family
@@ -96,12 +98,12 @@ const MODELS: Model[] = [
     name: 'StableLM 2 Zephyr 1.6B',
     size: '0.9GB',
     family: 'StableLM',
-    description: 'Ligero y eficiente'
+    descriptionKey: 'light'
   }
 ];
 
 const MODEL_FAMILIES = [
-  { id: 'all', name: 'Todos', icon: '🔷' },
+  { id: 'all', name: 'provider.webllm.allFamilies', icon: '🔷' },
   { id: 'Llama', name: 'Llama', icon: '🦙' },
   { id: 'Gemma', name: 'Gemma', icon: '💎' },
   { id: 'Phi', name: 'Phi', icon: '🔬' },
@@ -115,22 +117,55 @@ export default function WebLLMModelSelector({
   onChange,
   className = ''
 }: WebLLMModelSelectorProps) {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFamily, setSelectedFamily] = useState('all');
   const [isOpen, setIsOpen] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState<Model | null>(null);
+  const [showRemoveDialog, setShowRemoveDialog] = useState<Model | null>(null);
+  const [cachedModels, setCachedModels] = useState<Set<string>>(new Set());
+  
+  useEffect(() => {
+    // Load cached models status
+    const updateCachedModels = () => {
+      const cached = new Set<string>();
+      MODELS.forEach(model => {
+        if (providerManager.isWebLLMModelCached(model.id)) {
+          cached.add(model.id);
+        }
+      });
+      setCachedModels(cached);
+    };
+    
+    updateCachedModels();
+    // Check periodically in case models are loaded elsewhere
+    const interval = setInterval(updateCachedModels, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const filteredModels = useMemo(() => {
     return MODELS.filter(model => {
       const matchesSearch = searchQuery.trim() === '' || 
         model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        model.description.toLowerCase().includes(searchQuery.toLowerCase());
+        t(`provider.webllm.modelDescriptions.${model.descriptionKey}`).toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesFamily = selectedFamily === 'all' || model.family === selectedFamily;
       
       return matchesSearch && matchesFamily;
     });
-  }, [searchQuery, selectedFamily]);
+  }, [searchQuery, selectedFamily, t]);
+  
+  const handleRemoveFromCache = async (model: Model) => {
+    const success = await providerManager.removeWebLLMModelFromCache(model.id);
+    if (success) {
+      setCachedModels(prev => {
+        const next = new Set(prev);
+        next.delete(model.id);
+        return next;
+      });
+    }
+    setShowRemoveDialog(null);
+  };
 
   const selectedModel = MODELS.find(m => m.id === value);
 
@@ -149,15 +184,18 @@ export default function WebLLMModelSelector({
                 <div className="font-medium text-gray-900 dark:text-gray-100">
                   {selectedModel.name}
                   {selectedModel.recommended && (
-                    <span className="ml-2 text-xs text-legal-600 dark:text-legal-400">⭐ Recomendado</span>
+                    <span className="ml-2 text-xs text-legal-600 dark:text-legal-400">⭐ {t('provider.webllm.recommended')}</span>
+                  )}
+                  {cachedModels.has(selectedModel.id) && (
+                    <span className="ml-2 text-xs text-green-600 dark:text-green-400">✓ {t('provider.webllm.cached')}</span>
                   )}
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {selectedModel.size} • {selectedModel.description}
+                  {selectedModel.size} • {t(`provider.webllm.modelDescriptions.${selectedModel.descriptionKey}`)}
                 </div>
               </>
             ) : (
-              <span className="text-gray-500 dark:text-gray-400">Selecciona un modelo</span>
+              <span className="text-gray-500 dark:text-gray-400">{t('provider.webllm.selectModel')}</span>
             )}
           </div>
           <svg className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,7 +211,7 @@ export default function WebLLMModelSelector({
           <div className="p-3 border-b border-gray-200 dark:border-gray-700">
             <input
               type="text"
-              placeholder="Buscar modelo..."
+              placeholder={t('provider.webllm.searchModel')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-legal-500"
@@ -195,14 +233,14 @@ export default function WebLLMModelSelector({
                   }`}
                 >
                   <span className="mr-1">{family.icon}</span>
-                  {family.name}
+                  {family.id === 'all' ? t(family.name) : family.name}
                 </button>
               ))}
             </div>
           </div>
 
           {/* Model List */}
-          <div className="overflow-y-auto max-h-[350px]">
+          <div className="overflow-y-auto scrollbar-thin max-h-[350px]">
             {filteredModels.length > 0 ? (
               <div className="p-2 space-y-1">
                 {filteredModels.map(model => (
@@ -210,7 +248,13 @@ export default function WebLLMModelSelector({
                     key={model.id}
                     type="button"
                     onClick={() => {
-                      setShowConfirmDialog(model);
+                      const isCached = cachedModels.has(model.id);
+                      if (isCached) {
+                        onChange(model.id);
+                        setIsOpen(false);
+                      } else {
+                        setShowConfirmDialog(model);
+                      }
                     }}
                     className={`w-full px-3 py-2 rounded-lg text-left transition-colors ${
                       value === model.id
@@ -220,23 +264,47 @@ export default function WebLLMModelSelector({
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900 dark:text-gray-100">
-                          {model.name}
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900 dark:text-gray-100">
+                            {model.name}
+                          </span>
                           {model.recommended && (
-                            <span className="ml-2 text-xs text-legal-600 dark:text-legal-400">⭐ Recomendado</span>
+                            <span className="text-xs text-legal-600 dark:text-legal-400">⭐ {t('provider.webllm.recommended')}</span>
+                          )}
+                          {cachedModels.has(model.id) && (
+                            <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                              ✓ {t('provider.webllm.cached')}
+                            </span>
                           )}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {model.description}
+                          {t(`provider.webllm.modelDescriptions.${model.descriptionKey}`)}
                         </div>
                       </div>
-                      <div className="ml-3 text-right">
-                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {model.size}
+                      <div className="ml-3 flex items-start gap-2">
+                        <div className="text-right">
+                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {model.size}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {model.family}
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {model.family}
-                        </div>
+                        {cachedModels.has(model.id) && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowRemoveDialog(model);
+                            }}
+                            className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded transition-colors"
+                            title={t('provider.webllm.removeFromCache')}
+                          >
+                            <svg className="w-4 h-4 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </button>
@@ -244,7 +312,7 @@ export default function WebLLMModelSelector({
               </div>
             ) : (
               <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                No se encontraron modelos
+                {t('provider.webllm.noModelsFound')}
               </div>
             )}
           </div>
@@ -256,7 +324,7 @@ export default function WebLLMModelSelector({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-              ¿Descargar modelo {showConfirmDialog.name}?
+              {t('provider.webllm.confirmDownload').replace('{{name}}', showConfirmDialog.name)}
             </h3>
             
             <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
@@ -266,13 +334,13 @@ export default function WebLLMModelSelector({
                 </svg>
                 <div>
                   <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                    Advertencia de Uso de Datos
+                    {t('provider.webllm.dataWarning')}
                   </p>
                   <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                    Se descargará {showConfirmDialog.size} de datos. Los modelos se almacenan localmente para uso futuro.
+                    {t('provider.webllm.confirmDownloadMessage').replace('{{size}}', showConfirmDialog.size)}
                   </p>
                   <p className="text-sm font-medium text-yellow-700 dark:text-yellow-300 mt-1">
-                    ⚠️ No recomendado en conexiones móviles. Usa WiFi para evitar cargos excesivos.
+                    ⚠️ {t('provider.webllm.mobileWarning')}
                   </p>
                 </div>
               </div>
@@ -281,7 +349,7 @@ export default function WebLLMModelSelector({
             <div className="mb-4">
               <div className="flex justify-between items-center py-2 border-t border-gray-200 dark:border-gray-700">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Tamaño de descarga:
+                  {t('provider.webllm.downloadSize')}:
                 </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {showConfirmDialog.size}
@@ -289,7 +357,7 @@ export default function WebLLMModelSelector({
               </div>
               <div className="flex justify-between items-center py-2 border-t border-gray-200 dark:border-gray-700">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Familia:
+                  {MODEL_FAMILIES.find(f => f.id === showConfirmDialog.family)?.name || showConfirmDialog.family}:
                 </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {showConfirmDialog.family}
@@ -302,7 +370,7 @@ export default function WebLLMModelSelector({
                 onClick={() => setShowConfirmDialog(null)}
                 className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
-                Cancelar
+                {t('provider.webllm.downloadCancel')}
               </button>
               <button
                 onClick={() => {
@@ -314,7 +382,39 @@ export default function WebLLMModelSelector({
                 }}
                 className="flex-1 px-4 py-2 bg-legal-500 text-white rounded-lg hover:bg-legal-600 transition-colors"
               >
-                Descargar
+                {t('provider.webllm.downloadConfirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Remove from Cache Confirmation Dialog */}
+      {showRemoveDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              {t('provider.webllm.confirmRemove').replace('{{name}}', showRemoveDialog.name)}
+            </h3>
+            
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                {t('provider.webllm.confirmRemoveMessage').replace('{{size}}', showRemoveDialog.size)}
+              </p>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowRemoveDialog(null)}
+                className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                {t('provider.webllm.removeCancel')}
+              </button>
+              <button
+                onClick={() => handleRemoveFromCache(showRemoveDialog)}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                {t('provider.webllm.removeConfirm')}
               </button>
             </div>
           </div>

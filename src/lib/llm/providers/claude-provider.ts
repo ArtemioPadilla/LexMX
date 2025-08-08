@@ -124,6 +124,7 @@ export class ClaudeProvider implements LLMProvider {
           'X-API-Key': this.config.apiKey!,
           'anthropic-version': '2023-06-01'
         },
+        signal: request.abortSignal,
         body: JSON.stringify({
           model: request.model || this.config.model || 'claude-3-haiku-20240307',
           messages: otherMessages,
@@ -194,6 +195,7 @@ export class ClaudeProvider implements LLMProvider {
           'X-API-Key': this.config.apiKey!,
           'anthropic-version': '2023-06-01'
         },
+        signal: request.abortSignal,
         body: JSON.stringify({
           model: request.model || this.config.model || 'claude-3-haiku-20240307',
           messages: otherMessages,
@@ -220,6 +222,12 @@ export class ClaudeProvider implements LLMProvider {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+        
+        // Check if request was aborted
+        if (request.abortSignal?.aborted) {
+          reader.cancel();
+          throw new Error('Request aborted');
+        }
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
@@ -277,6 +285,7 @@ export class ClaudeProvider implements LLMProvider {
           'X-API-Key': this.config.apiKey!,
           'anthropic-version': '2023-06-01'
         },
+        signal: request.abortSignal,
         body: JSON.stringify({
           model: 'claude-3-haiku-20240307',
           messages: [{ role: 'user', content: 'Test' }],

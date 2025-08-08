@@ -107,6 +107,48 @@ export const SUPPORTED_PROVIDERS: Record<string, ProviderMetadata> = {
     recommendedFor: ['Advanced users', 'Custom model setups', 'Local infrastructure', 'Enterprise deployments'],
     documentation: 'https://lmstudio.ai/docs',
     website: 'https://lmstudio.ai'
+  },
+  
+  bedrock: {
+    id: 'bedrock',
+    name: 'AWS Bedrock',
+    type: 'cloud',
+    icon: '/icons/aws.svg',
+    description: 'Access Claude, Llama, and other models through AWS - Enterprise-grade security and compliance',
+    costLevel: 'medium',
+    capabilities: ['reasoning', 'analysis', 'multilingual', 'enterprise'],
+    setupComplexity: 'moderate',
+    recommendedFor: ['Enterprise users', 'AWS ecosystem integration', 'Multiple model access', 'Compliance requirements'],
+    documentation: 'https://docs.aws.amazon.com/bedrock/',
+    website: 'https://aws.amazon.com/bedrock'
+  },
+  
+  azure: {
+    id: 'azure',
+    name: 'Azure OpenAI',
+    type: 'cloud',
+    icon: '/icons/azure.svg',
+    description: 'Enterprise OpenAI models with Azure security and compliance',
+    costLevel: 'medium',
+    capabilities: ['reasoning', 'analysis', 'citations', 'multilingual'],
+    setupComplexity: 'medium',
+    recommendedFor: ['Enterprise users', 'Azure ecosystem integration', 'Microsoft 365 users', 'Compliance requirements'],
+    documentation: 'https://learn.microsoft.com/en-us/azure/cognitive-services/openai/',
+    website: 'https://azure.microsoft.com/en-us/products/cognitive-services/openai-service'
+  },
+  
+  vertex: {
+    id: 'vertex',
+    name: 'Google Cloud Vertex AI',
+    type: 'cloud',
+    icon: '/icons/gcp.svg',
+    description: 'Access Gemini and PaLM models through Google Cloud Platform',
+    costLevel: 'medium',
+    capabilities: ['reasoning', 'analysis', 'multilingual', 'ethics'],
+    setupComplexity: 'medium',
+    recommendedFor: ['GCP users', 'Google ecosystem integration', 'Large context window needs', 'Multimodal analysis'],
+    documentation: 'https://cloud.google.com/vertex-ai/docs',
+    website: 'https://cloud.google.com/vertex-ai'
   }
 };
 
@@ -287,7 +329,32 @@ export class ProviderRegistry {
 
     // Validate cloud provider requirements
     if (metadata.type === 'cloud') {
-      if (!config.apiKey) {
+      // Special validation for AWS Bedrock
+      if (config.id === 'bedrock') {
+        if (!config.apiKey && (!config.accessKeyId || !config.secretAccessKey)) {
+          errors.push(`API key or IAM credentials required for ${metadata.name}`);
+        }
+      }
+      // Special validation for Azure
+      else if (config.id === 'azure') {
+        if (!config.apiKey && (!config.azureTenantId || !config.azureClientId || !config.azureClientSecret)) {
+          errors.push(`API key or Azure AD credentials required for ${metadata.name}`);
+        }
+        if (!config.azureResourceName) {
+          errors.push(`Azure resource name is required for ${metadata.name}`);
+        }
+      }
+      // Special validation for Vertex AI
+      else if (config.id === 'vertex') {
+        if (!config.apiKey && !config.gcpServiceAccountKey) {
+          errors.push(`API key or service account key required for ${metadata.name}`);
+        }
+        if (!config.gcpProjectId) {
+          errors.push(`GCP project ID is required for ${metadata.name}`);
+        }
+      }
+      // Standard validation for other cloud providers
+      else if (!config.apiKey) {
         errors.push(`API key is required for ${metadata.name}`);
       }
     }

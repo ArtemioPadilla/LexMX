@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { providerManager } from '../lib/llm/provider-manager';
 import { providerRegistry } from '../lib/llm/provider-registry';
 import WebLLMSelector from './WebLLMSelector';
+import WebLLMProgress from './WebLLMProgress';
 import { useTranslation } from '../i18n';
 import type { ProviderConfig } from '../types/llm';
 
@@ -18,6 +19,7 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showWebLLMSelector, setShowWebLLMSelector] = useState(false);
+  const [webllmProgress, setWebllmProgress] = useState<{ progress: number; message: string } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -56,6 +58,21 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
         setCurrentModel(model);
       }
       
+      // If WebLLM with model, set up progress callback
+      if (providerId === 'webllm' && model) {
+        setWebllmProgress({ progress: 0, message: 'Initializing model...' });
+        
+        // Set progress callback
+        providerManager.setWebLLMProgressCallback((progress, message) => {
+          setWebllmProgress({ progress, message });
+          
+          // Clear progress when complete
+          if (progress === 100) {
+            setTimeout(() => setWebllmProgress(null), 2000);
+          }
+        });
+      }
+      
       // Update provider manager
       await providerManager.setPreferredProvider(providerId, model);
       
@@ -63,6 +80,7 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
       onProviderChange?.(providerId, model);
     } catch (error) {
       console.error('Error setting provider:', error);
+      setWebllmProgress(null);
     }
   };
 
@@ -138,7 +156,7 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
       </button>
 
       {isOpen && (
-        <div className="absolute top-full mt-2 right-0 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-[600px] overflow-hidden">
+        <div className="absolute top-full mt-2 right-0 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-[500px] overflow-y-auto scrollbar-thin">
           <div className="p-2">
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 py-1 uppercase tracking-wider">
               {t('provider.availableProviders')}
@@ -178,7 +196,7 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
 
               {/* WebLLM Model Selector */}
               {currentProvider === 'webllm' && showWebLLMSelector && (
-                <div className="mt-2 p-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="mt-2 p-2 border-t border-gray-200 dark:border-gray-700 max-h-[400px] overflow-y-auto scrollbar-thin">
                   <WebLLMSelector
                     value={currentModel}
                     onChange={(modelId) => {
@@ -187,6 +205,17 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
                       setIsOpen(false);
                     }}
                     onClose={() => setShowWebLLMSelector(false)}
+                  />
+                </div>
+              )}
+              
+              {/* Inline WebLLM Progress */}
+              {webllmProgress && (
+                <div className="mt-2 p-2 border-t border-gray-200 dark:border-gray-700">
+                  <WebLLMProgress
+                    progress={webllmProgress.progress}
+                    message={webllmProgress.message}
+                    variant="inline"
                   />
                 </div>
               )}

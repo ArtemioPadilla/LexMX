@@ -122,6 +122,12 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                 </tr>
               </thead>
               <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <!-- Browser-Based (Recommended) -->
+                <tr class="bg-gradient-to-r from-legal-50 to-transparent dark:from-legal-900/10">
+                  <td colspan="5" class="px-6 py-2 text-xs font-semibold text-legal-700 dark:text-legal-300 uppercase tracking-wider">
+                    🌐 Navegador - Sin Configuración
+                  </td>
+                </tr>
                 <tr>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
@@ -152,6 +158,12 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                   </td>
                 </tr>
                 
+                <!-- Standard Cloud Providers -->
+                <tr class="bg-gradient-to-r from-blue-50 to-transparent dark:from-blue-900/10">
+                  <td colspan="5" class="px-6 py-2 text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">
+                    ☁️ Proveedores de Nube Estándar
+                  </td>
+                </tr>
                 <tr>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
@@ -162,12 +174,12 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
                       Nube
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200">
                       Alto
                     </span>
                   </td>
@@ -189,12 +201,12 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
                       Nube
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
                       Medio
                     </span>
                   </td>
@@ -216,12 +228,12 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
                       Nube
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200">
                       Bajo
                     </span>
                   </td>
@@ -232,7 +244,109 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                     API Key requerida
                   </td>
                 </tr>
+
+                <!-- Enterprise Cloud Platforms -->
+                <tr class="bg-gradient-to-r from-purple-50 to-transparent dark:from-purple-900/10">
+                  <td colspan="5" class="px-6 py-2 text-xs font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                    🏢 Plataformas Empresariales
+                  </td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="w-8 h-8 bg-orange-400 dark:bg-orange-600 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-xs font-bold text-white">AWS</span>
+                      </div>
+                      <span class="font-medium text-gray-900 dark:text-gray-100">AWS Bedrock</span>
+                      <span class="ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200">
+                        Enterprise
+                      </span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                      Nube
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+                      Medio
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                    Empresas, múltiples modelos, integración AWS
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    API Key o credenciales IAM
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="w-8 h-8 bg-blue-600 dark:bg-blue-700 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-xs font-bold text-white">AZ</span>
+                      </div>
+                      <span class="font-medium text-gray-900 dark:text-gray-100">Azure OpenAI</span>
+                      <span class="ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200">
+                        Enterprise
+                      </span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                      Nube
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+                      Medio
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                    Empresas, integración Microsoft, compliance
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    API Key o Azure AD + recurso
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="w-8 h-8 bg-gradient-to-br from-blue-500 via-red-500 to-yellow-500 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-xs font-bold text-white">GCP</span>
+                      </div>
+                      <span class="font-medium text-gray-900 dark:text-gray-100">Google Vertex AI</span>
+                      <span class="ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200">
+                        Enterprise
+                      </span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                      Nube
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+                      Medio
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                    Contexto largo (1M tokens), integración GCP
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    API Key o cuenta de servicio
+                  </td>
+                </tr>
                 
+                <!-- Local/Self-Hosted Options -->
+                <tr class="bg-gradient-to-r from-green-50 to-transparent dark:from-green-900/10">
+                  <td colspan="5" class="px-6 py-2 text-xs font-semibold text-green-700 dark:text-green-300 uppercase tracking-wider">
+                    💻 Opciones Locales/Auto-Hospedadas
+                  </td>
+                </tr>
                 <tr>
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
@@ -243,12 +357,12 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200">
                       Local
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200">
                       Gratis
                     </span>
                   </td>
@@ -256,7 +370,34 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                     Máxima privacidad, sin costos
                   </td>
                   <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    Instalación local
+                    Instalación local + URL
+                  </td>
+                </tr>
+
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="w-8 h-8 bg-gray-600 dark:bg-gray-500 rounded-lg flex items-center justify-center mr-3">
+                        <span class="text-xs font-bold text-white">API</span>
+                      </div>
+                      <span class="font-medium text-gray-900 dark:text-gray-100">OpenAI Compatible</span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200">
+                      Local
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200">
+                      Gratis
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                    LM Studio, vLLM, FastChat, custom
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    URL endpoint + API key opcional
                   </td>
                 </tr>
               </tbody>
