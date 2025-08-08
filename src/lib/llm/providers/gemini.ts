@@ -1,7 +1,10 @@
 // Google Gemini provider implementation
 
 import type { CloudProvider, LLMRequest, LLMResponse, LLMModel, ProviderConfig } from '@/types/llm';
+import type { LegalArea } from '@/types/legal';
 import { BaseLLMProvider } from '../base-provider';
+import { promptBuilder } from '../prompt-builder';
+import { i18n } from '@/i18n';
 
 export class GeminiProvider extends BaseLLMProvider implements CloudProvider {
   public readonly type = 'cloud' as const;
@@ -266,48 +269,16 @@ export class GeminiProvider extends BaseLLMProvider implements CloudProvider {
     }
   }
 
-  // Legal-specific optimizations for Gemini
-  createLegalSystemPrompt(legalArea?: string): string {
-    const basePrompt = `Eres un asistente especializado en derecho mexicano. Tu función es proporcionar información legal precisa sobre el sistema jurídico de México.
-
-DIRECTRICES PRINCIPALES:
-1. FUENTES LEGALES VÁLIDAS:
-   - Constitución Política de los Estados Unidos Mexicanos
-   - Códigos federales mexicanos (Civil, Penal, Fiscal, etc.)
-   - Leyes federales vigentes de México
-   - Jurisprudencia de la Suprema Corte de Justicia de la Nación
-
-2. FORMATO DE RESPUESTA:
-   - Respuesta clara y estructurada
-   - Citas específicas de artículos legales
-   - Referencias a jurisprudencia cuando sea relevante
-   - Procedimientos explicados paso a paso
-
-3. RESPONSABILIDAD PROFESIONAL:
-   - SIEMPRE incluye advertencia sobre asesoría legal profesional
-   - Indica cuando la información puede requerir verificación
-   - No proporciones consejos para casos específicos
-   - Distingue entre información general y asesoría especializada
-
-4. CONTEXTO MEXICANO:
-   - Respeta la jerarquía normativa mexicana
-   - Considera el federalismo mexicano
-   - Incluye aspectos culturales y sociales del derecho mexicano`;
-
-    if (legalArea) {
-      const areaPrompts = {
-        'constitutional': '\n\nENFOQUE ESPECIALIZADO: Derecho Constitucional y Amparo en México.',
-        'civil': '\n\nENFOQUE ESPECIALIZADO: Derecho Civil mexicano, contratos y responsabilidad civil.',
-        'criminal': '\n\nENFOQUE ESPECIALIZADO: Derecho Penal mexicano y sistema de justicia penal.',
-        'labor': '\n\nENFOQUE ESPECIALIZADO: Derecho Laboral y Ley Federal del Trabajo.',
-        'tax': '\n\nENFOQUE ESPECIALIZADO: Derecho Fiscal mexicano y obligaciones tributarias.',
-        'commercial': '\n\nENFOQUE ESPECIALIZADO: Derecho Mercantil y sociedades en México.'
-      };
-
-      return basePrompt + (areaPrompts[legalArea as keyof typeof areaPrompts] || '');
-    }
-
-    return basePrompt;
+  // Get legal system prompt using the centralized prompt builder
+  getLegalSystemPrompt(legalArea?: string): string {
+    // Validate and cast to LegalArea type
+    const legalAreaTyped = legalArea as LegalArea | undefined;
+    return promptBuilder.buildSystemPrompt({
+      language: i18n.language,
+      legalArea: legalAreaTyped,
+      provider: 'gemini',
+      includeSpecialization: true
+    });
   }
 
   // Gemini excels at multilingual legal analysis

@@ -2,12 +2,14 @@
 
 import type { RAGConfig, RAGResponse, ProcessedQuery } from '@/types/rag';
 import type { LLMRequest, LLMResponse, QueryContext } from '@/types/llm';
-import type { LegalQuery, LegalResponse, LegalArea, QueryType } from '@/types/legal';
+import type { LegalResponse, LegalArea, QueryType } from '@/types/legal';
 
 import { IndexedDBVectorStore } from '@/lib/storage/indexeddb-vector-store';
 import { HybridSearchEngine } from './hybrid-search';
 import { MexicanLegalDocumentProcessor } from '@/lib/legal/document-processor';
 import { providerManager } from '@/lib/llm/provider-manager';
+import { promptBuilder } from '@/lib/llm/prompt-builder';
+import { i18n } from '@/i18n';
 
 export interface RAGEngineConfig extends RAGConfig {
   enableCache: boolean;
@@ -20,7 +22,7 @@ export class LegalRAGEngine {
   private vectorStore: IndexedDBVectorStore;
   private searchEngine: HybridSearchEngine;
   private documentProcessor: MexicanLegalDocumentProcessor;
-  private cache: Map<string, { response: RAGResponse; timestamp: number }> = new Map();
+  private cache: Map<string, { response: LegalResponse; timestamp: number }> = new Map();
   
   private config: RAGEngineConfig = {
     corpusPath: '/legal-corpus/',
@@ -129,7 +131,7 @@ export class LegalRAGEngine {
           lastUpdated: result.metadata?.lastUpdated
         })),
         confidence: this.calculateConfidence(searchResults, llmResponse),
-        queryType: processedQuery.queryType as QueryType,
+        queryType: this.isValidQueryType(processedQuery.queryType) ? processedQuery.queryType : 'conceptual',
         legalArea: (processedQuery.legalArea || 'constitutional') as LegalArea,
         processingTime: Date.now() - startTime,
         fromCache: false,
@@ -337,7 +339,7 @@ export class LegalRAGEngine {
       return 'analytical';
     }
 
-    return 'information'; // Default
+    return 'conceptual'; // Default
   }
 
   /**
@@ -414,7 +416,7 @@ export class LegalRAGEngine {
   /**
    * Detect query intent
    */
-  private detectQueryIntent(query: string, queryType: QueryType): string {
+  private detectQueryIntent(_query: string, queryType: QueryType): string {
     const intentMap = {
       citation: 'citation',
       procedural: 'procedure',
@@ -507,7 +509,7 @@ El amparo protege a las personas contra:
   /**
    * Build legal context from search results
    */
-  private buildLegalContext(searchResults: any[], processedQuery: ProcessedQuery): string {
+  private buildLegalContext(searchResults: any[], _processedQuery: ProcessedQuery): string {
     if (searchResults.length === 0) {
       return 'No se encontraron documentos legales relevantes para esta consulta.';
     }
@@ -533,20 +535,24 @@ El amparo protege a las personas contra:
     context: string,
     legalArea?: LegalArea
   ): Promise<LLMResponse> {
-    const systemPrompt = this.createLegalSystemPrompt(legalArea);
+    const systemPrompt = promptBuilder.buildSystemPrompt({
+      language: i18n.language,
+      legalArea,
+      includeSpecialization: true
+    });
     
-    const prompt = `${context}
-
-Consulta del usuario: ${processedQuery.originalQuery}
-
-Tipo de consulta: ${processedQuery.queryType}
-Área legal: ${processedQuery.legalArea || 'general'}
-
-Por favor, proporciona una respuesta legal precisa y completa, citando las fuentes relevantes del contexto proporcionado.`;
+    const prompt = promptBuilder.buildQueryPrompt({
+      query: processedQuery.originalQuery,
+      context,
+      language: i18n.language,
+      template: 'contextWithQuery',
+      queryType: processedQuery.queryType as QueryType,
+      legalArea: processedQuery.legalArea as LegalArea | undefined
+    });
 
     const queryContext: QueryContext = {
       query: processedQuery.originalQuery,
-      legalArea: processedQuery.legalArea,
+      legalArea: processedQuery.legalArea as LegalArea | undefined,
       complexity: this.assessQueryComplexity(processedQuery),
       urgency: 'medium',
       privacyRequired: false,
@@ -577,20 +583,24 @@ Por favor, proporciona una respuesta legal precisa y completa, citando las fuent
     legalArea?: LegalArea,
     abortSignal?: AbortSignal
   ): Promise<LLMResponse> {
-    const systemPrompt = this.createLegalSystemPrompt(legalArea);
+    const systemPrompt = promptBuilder.buildSystemPrompt({
+      language: i18n.language,
+      legalArea,
+      includeSpecialization: true
+    });
     
-    const prompt = `${context}
-
-Consulta del usuario: ${processedQuery.originalQuery}
-
-Tipo de consulta: ${processedQuery.queryType}
-Área legal: ${processedQuery.legalArea || 'general'}
-
-Por favor, proporciona una respuesta legal precisa y completa, citando las fuentes relevantes del contexto proporcionado.`;
+    const prompt = promptBuilder.buildQueryPrompt({
+      query: processedQuery.originalQuery,
+      context,
+      language: i18n.language,
+      template: 'contextWithQuery',
+      queryType: processedQuery.queryType as QueryType,
+      legalArea: processedQuery.legalArea as LegalArea | undefined
+    });
 
     const queryContext: QueryContext = {
       query: processedQuery.originalQuery,
-      legalArea: processedQuery.legalArea,
+      legalArea: processedQuery.legalArea as LegalArea | undefined,
       complexity: this.assessQueryComplexity(processedQuery),
       urgency: 'medium',
       privacyRequired: false,
@@ -613,44 +623,6 @@ Por favor, proporciona una respuesta legal precisa y completa, citando las fuent
     return await providerManager.processStreamingRequest(llmRequest, queryContext, onChunk);
   }
 
-  /**
-   * Create legal system prompt
-   */
-  private createLegalSystemPrompt(legalArea?: LegalArea): string {
-    let prompt = `Eres un asistente legal especializado en derecho mexicano. Tu función es proporcionar información legal precisa basada en:
-
-- Constitución Política de los Estados Unidos Mexicanos
-- Códigos y leyes federales mexicanas vigentes
-- Jurisprudencia de la Suprema Corte de Justicia de la Nación
-- Legislación mexicana actualizada
-
-INSTRUCCIONES CRÍTICAS:
-1. Siempre cita artículos específicos y fuentes legales
-2. Incluye referencias a jurisprudencia cuando sea relevante
-3. SIEMPRE advierte que no constituye asesoría legal profesional
-4. Recomienda verificar la vigencia de la información
-5. Usa lenguaje claro pero técnicamente preciso
-
-FORMATO:
-- Respuesta directa y estructurada
-- Fundamento legal específico
-- Procedimientos paso a paso cuando aplique
-- Advertencias sobre asesoría profesional`;
-
-    if (legalArea) {
-      const areaSpecializations = {
-        constitutional: '\n\nESPECIALÍZATE en derecho constitucional mexicano, garantías individuales y juicio de amparo.',
-        civil: '\n\nESPECIALÍZATE en derecho civil mexicano, contratos, responsabilidad civil y bienes.',
-        criminal: '\n\nESPECIALÍZATE en derecho penal mexicano, sistema acusatorio y debido proceso.',
-        labor: '\n\nESPECIALÍZATE en derecho laboral mexicano, Ley Federal del Trabajo y seguridad social.',
-        tax: '\n\nESPECIALÍZATE en derecho fiscal mexicano, obligaciones tributarias y procedimientos fiscales.'
-      };
-
-      prompt += areaSpecializations[legalArea] || '';
-    }
-
-    return prompt;
-  }
 
   /**
    * Assess query complexity for provider selection
@@ -683,9 +655,9 @@ FORMATO:
       confidence += avgScore * 0.3;
     }
 
-    // Adjust based on LLM response metadata
-    if (llmResponse.metadata?.confidence) {
-      confidence = (confidence + llmResponse.metadata.confidence) / 2;
+    // Adjust based on LLM response confidence
+    if (llmResponse.confidence) {
+      confidence = (confidence + llmResponse.confidence) / 2;
     }
 
     return Math.min(Math.max(confidence, 0), 1);
@@ -695,41 +667,20 @@ FORMATO:
    * Generate legal warning
    */
   private generateLegalWarning(): string {
-    return "⚠️ Esta información es solo para fines educativos y no constituye asesoría legal profesional. Para casos específicos, siempre consulte con un abogado certificado.";
+    return promptBuilder.getLegalWarning(i18n.language);
   }
 
   /**
    * Generate recommended actions
    */
   private generateRecommendedActions(queryType: QueryType): string[] {
-    const actions = {
-      citation: [
-        "Verificar la vigencia del artículo citado",
-        "Consultar jurisprudencia relacionada",
-        "Revisar reformas recientes"
-      ],
-      procedural: [
-        "Verificar requisitos específicos en la jurisdicción correspondiente",
-        "Confirmar plazos y fechas límite",
-        "Consultar con un abogado para casos complejos"
-      ],
-      conceptual: [
-        "Profundizar en la jurisprudencia sobre el tema",
-        "Revisar doctrina especializada",
-        "Consultar casos prácticos similares"
-      ]
-    };
-
-    return actions[queryType] || [
-      "Verificar la información con fuentes oficiales",
-      "Consultar con un profesional del derecho"
-    ];
+    return promptBuilder.getRecommendedActions(queryType, i18n.language);
   }
 
   /**
    * Generate related queries
    */
-  private generateRelatedQueries(processedQuery: ProcessedQuery): string[] {
+  private generateRelatedQueries(_processedQuery: ProcessedQuery): string[] {
     // This would be enhanced with actual semantic similarity
     return [
       "¿Qué dice la jurisprudencia sobre este tema?",
@@ -751,6 +702,21 @@ FORMATO:
   }
 
   /**
+   * Type guard for QueryType
+   */
+  private isValidQueryType(type: any): type is QueryType {
+    const validTypes: QueryType[] = [
+      'citation',
+      'procedural',
+      'conceptual',
+      'comparative',
+      'analytical',
+      'conceptual'
+    ];
+    return validTypes.includes(type);
+  }
+
+  /**
    * Cache management
    */
   private getCachedResponse(query: string): LegalResponse | null {
@@ -765,7 +731,7 @@ FORMATO:
       return null;
     }
 
-    return cached.response as LegalResponse;
+    return cached.response;
   }
 
   private cacheResponse(query: string, response: LegalResponse): void {

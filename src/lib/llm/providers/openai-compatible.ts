@@ -1,7 +1,10 @@
 // OpenAI-compatible API provider for local LLMs (LM Studio, vLLM, etc.)
 
 import type { LocalProvider, LLMRequest, LLMResponse, LocalModel, ProviderConfig } from '@/types/llm';
+import type { LegalArea } from '@/types/legal';
 import { BaseLLMProvider } from '../base-provider';
+import { promptBuilder } from '../prompt-builder';
+import { i18n } from '@/i18n';
 
 export class OpenAICompatibleProvider extends BaseLLMProvider implements LocalProvider {
   public readonly type = 'local' as const;
@@ -350,43 +353,17 @@ export class OpenAICompatibleProvider extends BaseLLMProvider implements LocalPr
     }
   }
 
-  // Legal-specific optimizations
-  createLegalSystemPrompt(legalArea?: string): string {
-    const basePrompt = `You are a legal assistant specialized in Mexican law. Provide accurate legal information based on:
+  // Get legal system prompt using the centralized prompt builder
+  getLegalSystemPrompt(legalArea?: string): string {
+    // Validate and cast to LegalArea type
+    const legalAreaTyped = legalArea as LegalArea | undefined;
 
-- Constitución Política de los Estados Unidos Mexicanos
-- Mexican federal codes and laws
-- Supreme Court of Justice jurisprudence
-- Current Mexican legislation
-
-INSTRUCTIONS:
-1. Always cite specific articles and legal sources
-2. Include jurisprudence references when relevant
-3. ALWAYS warn that this is not professional legal advice
-4. Recommend verifying information currency
-5. Use clear but technically precise language
-
-FORMAT:
-- Direct and structured response
-- Specific legal foundation
-- Step-by-step procedures when applicable
-- Professional consultation recommendations
-
-RESPOND IN SPANISH unless specifically requested otherwise.`;
-
-    if (legalArea) {
-      const areaPrompts = {
-        'constitutional': '\n\nSPECIALIZE in Mexican constitutional law, individual guarantees, and amparo proceedings.',
-        'civil': '\n\nSPECIALIZE in Mexican civil law, contracts, civil liability, and property.',
-        'criminal': '\n\nSPECIALIZE in Mexican criminal law, accusatory system, and due process.',
-        'labor': '\n\nSPECIALIZE in Mexican labor law, Federal Labor Law, and social security.',
-        'tax': '\n\nSPECIALIZE in Mexican tax law, tax obligations, and fiscal procedures.'
-      };
-
-      return basePrompt + (areaPrompts[legalArea as keyof typeof areaPrompts] || '');
-    }
-
-    return basePrompt;
+    return promptBuilder.buildSystemPrompt({
+      language: i18n.language,
+      legalArea: legalAreaTyped,
+      provider: 'openai-compatible',
+      includeSpecialization: true
+    });
   }
 
   // Detect common local LLM setups

@@ -12,6 +12,8 @@ import type {
   LLMProviderType,
   ProviderMetrics
 } from '../../../types/llm';
+import { promptBuilder } from '../prompt-builder';
+import { i18n } from '@/i18n';
 
 export interface WebLLMConfig extends ProviderConfig {
   modelId?: string;
@@ -360,5 +362,15 @@ export class WebLLMProvider implements LLMProvider {
   getModelContextWindow(modelId: string): number {
     const model = this.models.find(m => m.id === modelId);
     return model?.contextLength || 4096;
+  }
+
+  // Get legal system prompt using the centralized prompt builder
+  getLegalSystemPrompt(legalArea?: LegalArea): string {
+    return promptBuilder.buildSystemPrompt({
+      language: i18n.language,
+      legalArea: legalArea,
+      provider: 'webllm',
+      includeSpecialization: true
+    });
   }
 }

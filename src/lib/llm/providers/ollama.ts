@@ -1,7 +1,10 @@
 // Ollama local LLM provider implementation
 
 import type { LocalProvider, LLMRequest, LLMResponse, LocalModel, ProviderConfig } from '@/types/llm';
+import type { LegalArea } from '@/types/legal';
 import { BaseLLMProvider } from '../base-provider';
+import { promptBuilder } from '../prompt-builder';
+import { i18n } from '@/i18n';
 
 export class OllamaProvider extends BaseLLMProvider implements LocalProvider {
   public readonly type = 'local' as const;
@@ -368,41 +371,17 @@ export class OllamaProvider extends BaseLLMProvider implements LocalProvider {
     }
   }
 
-  // Legal-specific optimizations for local models
-  createLegalSystemPrompt(legalArea?: string): string {
-    const basePrompt = `Eres un asistente especializado en derecho mexicano. Proporciona información legal precisa basada en:
+  // Get legal system prompt using the centralized prompt builder
+  getLegalSystemPrompt(legalArea?: string): string {
+    // Validate and cast to LegalArea type
+    const legalAreaTyped = legalArea as LegalArea | undefined;
 
-- Constitución Política de los Estados Unidos Mexicanos
-- Códigos y leyes federales mexicanas vigentes
-- Jurisprudencia de la Suprema Corte de Justicia de la Nación
-- Legislación mexicana actualizada
-
-INSTRUCCIONES:
-1. Cita artículos específicos y su fuente legal
-2. Incluye referencias a jurisprudencia cuando sea relevante
-3. SIEMPRE advierte que no constituye asesoría legal profesional
-4. Recomienda verificar la vigencia de la información
-5. Usa lenguaje claro pero técnicamente preciso
-
-FORMATO:
-- Respuesta directa y estructurada
-- Fundamento legal específico
-- Procedimientos explicados paso a paso cuando aplique
-- Advertencias sobre la necesidad de asesoría profesional`;
-
-    if (legalArea) {
-      const areaPrompts = {
-        'constitutional': '\n\nESPECIALÍZATE en derecho constitucional mexicano, garantías individuales y juicio de amparo.',
-        'civil': '\n\nESPECIALÍZATE en derecho civil mexicano, contratos, responsabilidad civil y bienes.',
-        'criminal': '\n\nESPECIALÍZATE en derecho penal mexicano, sistema acusatorio y debido proceso.',
-        'labor': '\n\nESPECIALÍZATE en derecho laboral mexicano, Ley Federal del Trabajo y seguridad social.',
-        'tax': '\n\nESPECIALÍZATE en derecho fiscal mexicano, obligaciones tributarias y procedimientos fiscales.'
-      };
-
-      return basePrompt + (areaPrompts[legalArea as keyof typeof areaPrompts] || '');
-    }
-
-    return basePrompt;
+    return promptBuilder.buildSystemPrompt({
+      language: i18n.language,
+      legalArea: legalAreaTyped,
+      provider: 'ollama',
+      includeSpecialization: true
+    });
   }
 
   // Recommend best local models for legal work

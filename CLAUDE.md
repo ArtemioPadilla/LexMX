@@ -247,9 +247,37 @@ interface ChunkingStrategy {
 
 ### Legal Query Enhancement
 1. Analyze query patterns in `src/lib/legal/classifier.ts`
-2. Add specialized prompts in `src/data/configs/prompt-templates.json`
-3. Update chunking strategy for specific legal areas
-4. Test against known legal precedents
+2. Update prompts in i18n files (`src/i18n/locales/[es|en].json`)
+3. Use PromptBuilder for centralized prompt management
+4. Update chunking strategy for specific legal areas
+5. Test against known legal precedents
+
+### System Prompts with i18n
+
+#### Architecture
+- **Centralized Prompt Builder**: `src/lib/llm/prompt-builder.ts`
+- **Internationalized Prompts**: Stored in `src/i18n/locales/[es|en].json`
+- **Dynamic Language Support**: Prompts adapt to user's selected language
+- **Provider Optimization**: Each LLM provider can access optimized prompts
+
+#### Adding/Modifying Prompts
+1. Edit `systemPrompts` section in both `es.json` and `en.json`
+2. Ensure consistent placeholder format (`{{variableName}}`)
+3. Run tests: `npm test src/i18n/__tests__/i18n-validation.test.ts`
+4. All providers automatically use updated prompts
+
+#### Prompt Structure
+```json
+{
+  "systemPrompts": {
+    "base": { /* Core prompt components */ },
+    "specializations": { /* Legal area-specific prompts */ },
+    "queryTemplates": { /* Query formatting templates */ },
+    "legalWarning": "...",
+    "recommendedActions": { /* Query type-specific actions */ }
+  }
+}
+```
 
 ## Mexican Legal Specifics
 

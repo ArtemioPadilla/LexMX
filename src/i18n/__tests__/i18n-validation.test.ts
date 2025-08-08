@@ -168,4 +168,165 @@ describe('i18n Translation Files Validation', () => {
       expect(emptyValues).toHaveLength(0);
     });
   });
+
+  describe('systemPrompts validation', () => {
+    it('should have systemPrompts section in all locales', () => {
+      locales.forEach(locale => {
+        const filePath = path.join(localesPath, `${locale}.json`);
+        const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        
+        expect(content).toHaveProperty('systemPrompts');
+        expect(content.systemPrompts).toBeDefined();
+      });
+    });
+
+    it('should have required systemPrompts structure', () => {
+      locales.forEach(locale => {
+        const filePath = path.join(localesPath, `${locale}.json`);
+        const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        const systemPrompts = content.systemPrompts;
+        
+        // Check base structure
+        expect(systemPrompts).toHaveProperty('base');
+        expect(systemPrompts.base).toHaveProperty('role');
+        expect(systemPrompts.base).toHaveProperty('sources');
+        expect(systemPrompts.base).toHaveProperty('instructions');
+        expect(systemPrompts.base).toHaveProperty('format');
+        
+        // Check sources
+        const sources = systemPrompts.base.sources;
+        expect(sources).toHaveProperty('constitution');
+        expect(sources).toHaveProperty('federal');
+        expect(sources).toHaveProperty('jurisprudence');
+        expect(sources).toHaveProperty('legislation');
+        
+        // Check instructions
+        const instructions = systemPrompts.base.instructions;
+        expect(instructions).toHaveProperty('citation');
+        expect(instructions).toHaveProperty('references');
+        expect(instructions).toHaveProperty('disclaimer');
+        expect(instructions).toHaveProperty('verification');
+        expect(instructions).toHaveProperty('clarity');
+        
+        // Check format
+        const format = systemPrompts.base.format;
+        expect(format).toHaveProperty('response');
+        expect(format).toHaveProperty('legalBasis');
+        expect(format).toHaveProperty('procedures');
+        expect(format).toHaveProperty('warnings');
+      });
+    });
+
+    it('should have all legal area specializations', () => {
+      const requiredSpecializations = [
+        'constitutional',
+        'civil',
+        'criminal',
+        'labor',
+        'tax',
+        'commercial',
+        'administrative',
+        'family',
+        'property'
+      ];
+      
+      locales.forEach(locale => {
+        const filePath = path.join(localesPath, `${locale}.json`);
+        const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        const specializations = content.systemPrompts?.specializations;
+        
+        expect(specializations).toBeDefined();
+        
+        requiredSpecializations.forEach(spec => {
+          expect(specializations).toHaveProperty(spec);
+          expect(typeof specializations[spec]).toBe('string');
+          expect(specializations[spec].length).toBeGreaterThan(0);
+        });
+      });
+    });
+
+    it('should have query templates', () => {
+      const requiredTemplates = [
+        'userQuery',
+        'contextWithQuery',
+        'analysisRequest',
+        'documentSearch',
+        'precedentLookup'
+      ];
+      
+      locales.forEach(locale => {
+        const filePath = path.join(localesPath, `${locale}.json`);
+        const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        const templates = content.systemPrompts?.queryTemplates;
+        
+        expect(templates).toBeDefined();
+        
+        requiredTemplates.forEach(template => {
+          expect(templates).toHaveProperty(template);
+          expect(typeof templates[template]).toBe('string');
+          expect(templates[template].length).toBeGreaterThan(0);
+        });
+      });
+    });
+
+    it('should have legal warning and recommended actions', () => {
+      locales.forEach(locale => {
+        const filePath = path.join(localesPath, `${locale}.json`);
+        const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        const systemPrompts = content.systemPrompts;
+        
+        // Check legal warning
+        expect(systemPrompts).toHaveProperty('legalWarning');
+        expect(typeof systemPrompts.legalWarning).toBe('string');
+        expect(systemPrompts.legalWarning.length).toBeGreaterThan(0);
+        
+        // Check recommended actions
+        expect(systemPrompts).toHaveProperty('recommendedActions');
+        const actions = systemPrompts.recommendedActions;
+        
+        ['citation', 'procedural', 'conceptual', 'default'].forEach(actionType => {
+          expect(actions).toHaveProperty(actionType);
+          expect(Array.isArray(actions[actionType])).toBe(true);
+          expect(actions[actionType].length).toBeGreaterThan(0);
+        });
+      });
+    });
+
+    it('should have consistent template placeholders across languages', () => {
+      const placeholderPattern = /\{\{(\w+)\}\}/g;
+      
+      // Get placeholders from Spanish (reference)
+      const esPath = path.join(localesPath, 'es.json');
+      const esContent = JSON.parse(fs.readFileSync(esPath, 'utf-8'));
+      const esTemplates = esContent.systemPrompts?.queryTemplates;
+      
+      const esPlaceholders: Record<string, Set<string>> = {};
+      
+      if (esTemplates) {
+        Object.keys(esTemplates).forEach(key => {
+          const matches = esTemplates[key].matchAll(placeholderPattern);
+          esPlaceholders[key] = new Set(Array.from(matches).map(m => m[1]));
+        });
+      }
+      
+      // Compare with other languages
+      locales.slice(1).forEach(locale => {
+        const filePath = path.join(localesPath, `${locale}.json`);
+        const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        const templates = content.systemPrompts?.queryTemplates;
+        
+        if (templates) {
+          Object.keys(templates).forEach(key => {
+            const matches = templates[key].matchAll(placeholderPattern);
+            const placeholders = new Set(Array.from(matches).map(m => m[1]));
+            
+            // Should have the same placeholders as Spanish
+            if (esPlaceholders[key]) {
+              expect(placeholders).toEqual(esPlaceholders[key]);
+            }
+          });
+        }
+      });
+    });
+  });
 });

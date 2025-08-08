@@ -1,7 +1,10 @@
 // Anthropic Claude provider implementation
 
 import type { CloudProvider, LLMRequest, LLMResponse, LLMModel, ProviderConfig } from '@/types/llm';
+import type { LegalArea } from '@/types/legal';
 import { BaseLLMProvider } from '../base-provider';
+import { promptBuilder } from '../prompt-builder';
+import { i18n } from '@/i18n';
 
 export class ClaudeProvider extends BaseLLMProvider implements CloudProvider {
   public readonly type = 'cloud' as const;
@@ -125,7 +128,7 @@ export class ClaudeProvider extends BaseLLMProvider implements CloudProvider {
           max_tokens: request.maxTokens ?? this.config.maxTokens ?? 4000,
           temperature: request.temperature ?? this.config.temperature ?? 0.1,
           messages: this.formatMessages(request.messages),
-          system: request.systemPrompt || this.createLegalSystemPrompt()
+          system: request.systemPrompt || promptBuilder.buildSystemPrompt({ language: i18n.language, provider: 'claude' })
         }),
         signal: AbortSignal.timeout(60000) // 60 second timeout
       });
@@ -175,7 +178,7 @@ export class ClaudeProvider extends BaseLLMProvider implements CloudProvider {
 
     // Estimate input tokens (rough approximation: 1 token ≈ 4 characters)
     const inputText = request.messages.map(m => m.content).join(' ');
-    const systemPrompt = request.systemPrompt || this.createLegalSystemPrompt();
+    const systemPrompt = request.systemPrompt || promptBuilder.buildSystemPrompt({ language: i18n.language, provider: 'claude' });
     const totalInputText = inputText + systemPrompt;
     const estimatedInputTokens = Math.ceil(totalInputText.length / 4);
     
@@ -227,52 +230,17 @@ export class ClaudeProvider extends BaseLLMProvider implements CloudProvider {
     };
   }
 
-  // Legal-specific optimizations for Claude
-  createLegalSystemPrompt(legalArea?: string): string {
-    const basePrompt = `Eres Claude, un asistente de IA especializado en derecho mexicano. Tu función es proporcionar información legal precisa y útil sobre el sistema jurídico mexicano.
+  // Get legal system prompt using the centralized prompt builder
+  getLegalSystemPrompt(legalArea?: string): string {
+    // Validate and cast to LegalArea type
+    const legalAreaTyped = legalArea as LegalArea | undefined;
 
-PRINCIPIOS FUNDAMENTALES:
-1. Precisión Legal: Basa tus respuestas únicamente en:
-   - Constitución Política de los Estados Unidos Mexicanos
-   - Códigos y leyes federales vigentes de México
-   - Jurisprudencia firme de la Suprema Corte de Justicia de la Nación
-   - Legislación mexicana actualizada
-
-2. Responsabilidad Ética:
-   - SIEMPRE incluye advertencias sobre la necesidad de asesoría legal profesional
-   - No proporciones consejos legales específicos para casos particulares
-   - Indica cuándo la información puede requerir verificación de vigencia
-
-3. Formato de Respuesta Profesional:
-   - Cita artículos específicos y su fuente legal
-   - Referencias a jurisprudencia relevante cuando exista
-   - Explica procedimientos paso a paso cuando sea apropiado
-   - Usa lenguaje claro pero manteniendo precisión técnica
-
-4. Transparencia:
-   - Indica las limitaciones de tu conocimiento
-   - Sugiere cuándo consultar fuentes oficiales actualizadas
-   - Distingue entre principios establecidos y áreas de interpretación
-
-5. Contexto Mexicano:
-   - Considera la jerarquía normativa mexicana
-   - Respeta el federalismo y competencias estatales/federales
-   - Incluye referencias al sistema de justicia mexicano`;
-
-    if (legalArea) {
-      const areaPrompts = {
-        'constitutional': '\n\nESPECIALIZACIÓN: Derecho Constitucional Mexicano y Juicio de Amparo. Enfócate en derechos fundamentales, garantías individuales, y control constitucional.',
-        'civil': '\n\nESPECIALIZACIÓN: Derecho Civil Mexicano. Enfócate en personas, bienes, contratos, responsabilidad civil, y derecho familiar.',
-        'criminal': '\n\nESPECIALIZACIÓN: Derecho Penal Mexicano y Sistema Acusatorio Adversarial. Considera presunción de inocencia y debido proceso.',
-        'labor': '\n\nESPECIALIZACIÓN: Derecho Laboral Mexicano. Enfócate en Ley Federal del Trabajo, relaciones laborales, y seguridad social.',
-        'tax': '\n\nESPECIALIZACIÓN: Derecho Fiscal Mexicano. Enfócate en obligaciones tributarias, procedimientos fiscales, y Código Fiscal de la Federación.',
-        'administrative': '\n\nESPECIALIZACIÓN: Derecho Administrativo Mexicano. Enfócate en actos administrativos, procedimientos, y responsabilidad patrimonial del Estado.'
-      };
-
-      return basePrompt + (areaPrompts[legalArea as keyof typeof areaPrompts] || '');
-    }
-
-    return basePrompt;
+    return promptBuilder.buildSystemPrompt({
+      language: i18n.language,
+      legalArea: legalAreaTyped,
+      provider: 'claude',
+      includeSpecialization: true
+    });
   }
 
   // Claude excels at constitutional analysis

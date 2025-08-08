@@ -1,7 +1,10 @@
 // OpenAI provider implementation
 
 import type { CloudProvider, LLMRequest, LLMResponse, LLMModel, ProviderConfig } from '@/types/llm';
+import type { LegalArea } from '@/types/legal';
 import { BaseLLMProvider } from '../base-provider';
+import { promptBuilder } from '../prompt-builder';
+import { i18n } from '@/i18n';
 
 export class OpenAIProvider extends BaseLLMProvider implements CloudProvider {
   public readonly type = 'cloud' as const;
@@ -228,46 +231,17 @@ export class OpenAIProvider extends BaseLLMProvider implements CloudProvider {
     };
   }
 
-  // Legal-specific optimizations
-  createLegalSystemPrompt(legalArea?: string): string {
-    const basePrompt = `Eres un asistente legal especializado en el sistema jurídico mexicano. 
-
-INSTRUCCIONES CRÍTICAS:
-1. Proporciona información legal precisa basada únicamente en:
-   - Constitución Política de los Estados Unidos Mexicanos
-   - Códigos y leyes federales vigentes
-   - Jurisprudencia de la SCJN
-   - Legislación mexicana actualizada
-
-2. SIEMPRE incluye:
-   - Citas específicas de artículos y leyes
-   - Referencias a jurisprudencia cuando aplique
-   - Advertencia sobre consultar un abogado para casos específicos
-
-3. FORMATO DE RESPUESTA:
-   - Respuesta clara y directa
-   - Fundamento legal específico
-   - Referencias jurisprudenciales si existen
-   - Recomendaciones de procedimiento cuando sea necesario
-
-4. LIMITACIONES:
-   - Indica cuándo la información puede estar desactualizada
-   - No proporcionas asesoría legal específica para casos particulares
-   - Recomienda verificar la vigencia de la información`;
-
-    if (legalArea) {
-      const areaPrompts = {
-        'constitutional': 'Especialízate en derecho constitucional mexicano y amparo.',
-        'civil': 'Enfócate en derecho civil, contratos, responsabilidad civil y bienes.',
-        'criminal': 'Especialízate en derecho penal mexicano y sistema acusatorio.',
-        'labor': 'Enfócate en derecho laboral, Ley Federal del Trabajo y seguridad social.',
-        'tax': 'Especialízate en derecho fiscal mexicano y obligaciones tributarias.'
-      };
-
-      return basePrompt + '\n\n' + (areaPrompts[legalArea as keyof typeof areaPrompts] || '');
-    }
-
-    return basePrompt;
+  // Get legal system prompt using the centralized prompt builder
+  getLegalSystemPrompt(legalArea?: string): string {
+    // Validate and cast to LegalArea type
+    const legalAreaTyped = legalArea as LegalArea | undefined;
+    
+    return promptBuilder.buildSystemPrompt({
+      language: i18n.language,
+      legalArea: legalAreaTyped,
+      provider: 'openai',
+      includeSpecialization: true
+    });
   }
 }
 

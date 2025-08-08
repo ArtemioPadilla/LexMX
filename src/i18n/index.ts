@@ -45,9 +45,10 @@ class I18n {
     }
   }
 
-  t(key: string, params?: Record<string, any>): string {
+  t(key: string, params?: Record<string, any>, language?: Language): string {
     const keys = key.split('.');
-    let value: any = translations[this.currentLanguage];
+    const lang = language || this.currentLanguage;
+    let value: any = translations[lang];
 
     for (const k of keys) {
       value = value?.[k];
@@ -90,9 +91,10 @@ class I18n {
   }
 
   // Helper method to get all translations for a section
-  getSection(section: string): Record<string, any> {
+  getSection(section: string, language?: Language): Record<string, any> {
     const keys = section.split('.');
-    let value: any = translations[this.currentLanguage];
+    const lang = language || this.currentLanguage;
+    let value: any = translations[lang];
 
     for (const k of keys) {
       value = value?.[k];
