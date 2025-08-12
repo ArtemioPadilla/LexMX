@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS } from '../utils/test-ids';
 
 interface GlossaryTerm {
   id: string;
@@ -127,9 +129,15 @@ const categories = [
 ];
 
 export default function LegalGlossary() {
+  const [isHydrated, setIsHydrated] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [selectedTerm, setSelectedTerm] = useState<GlossaryTerm | null>(null);
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const filteredTerms = useMemo(() => {
     return glossaryTerms.filter(term => {
@@ -152,9 +160,19 @@ export default function LegalGlossary() {
     };
     return colorMap[category] || 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-200';
   };
+  // Handle SSR/hydration
+  if (!isHydrated) {
+    return (
+      <HydrationBoundary 
+        fallback={<LoadingStates.LegalGlossary />} 
+        testId="legal-glossary"
+      />
+    );
+  }
 
   return (
-    <div className="legal-glossary">
+    <div
+      data-testid="legal-glossary" className="legal-glossary">
       {/* Search and Filters */}
       <div className="mb-8 space-y-4">
         <div className="relative">

@@ -9,6 +9,21 @@ LexMX es un asistente legal basado en IA que combina el corpus completo de la le
 [![Astro](https://img.shields.io/badge/Built%20with-Astro-orange)](https://astro.build/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](https://www.typescriptlang.org/)
 
+## 🎥 Demo
+
+<div align="center">
+  <a href="https://ArtemioPadilla.github.io/LexMX">
+    <picture>
+      <source srcset="docs/demo/lexmx-demo.gif" type="image/gif">
+      <img src="docs/demo/screenshot-home.png" alt="LexMX Demo - Legal AI Assistant for Mexico" width="800" loading="lazy">
+    </picture>
+  </a>
+  
+  **[🚀 Probar Demo en Vivo](https://ArtemioPadilla.github.io/LexMX)** | **[📹 Ver Demo Completo](docs/demo/lexmx-demo.gif)** | **[📺 Ver Video MP4](docs/demo/lexmx-demo.mp4)**
+  
+  *Asistente legal con IA • Múltiples proveedores LLM • Corpus legal mexicano completo*
+</div>
+
 ## 🌟 Características principales
 
 ### 📁 **Gestión de Casos Legales** *(NUEVO)*
@@ -48,11 +63,6 @@ LexMX es un asistente legal basado en IA que combina el corpus completo de la le
 - Cache inteligente multinivel
 - PWA con funcionamiento offline
 
-## 🚀 Demo en vivo
-
-**[➤ Probar LexMX](https://ArtemioPadilla.github.io/LexMX)**
-
-*Necesitarás tu propio token API de al menos uno de los proveedores soportados.*
 
 ## 📋 Requisitos previos
 

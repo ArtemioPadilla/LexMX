@@ -104,7 +104,7 @@ const MODELS: Model[] = [
 ];
 
 const MODEL_FAMILIES = [
-  { id: 'all', name: 'provider.webllm.allFamilies', icon: '🔷' },
+  { id: 'all', name: 'providers.webllm.allFamilies', icon: '🔷' },
   { id: 'Llama', name: 'Llama', icon: '🦙' },
   { id: 'Gemma', name: 'Gemma', icon: '💎' },
   { id: 'Phi', name: 'Phi', icon: '🔬' },
@@ -148,7 +148,7 @@ export default function WebLLMSelector({
     return MODELS.filter(model => {
       const matchesSearch = searchQuery.trim() === '' || 
         model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t(`provider.webllm.modelDescriptions.${model.descriptionKey}`).toLowerCase().includes(searchQuery.toLowerCase());
+        t(`providers.webllm.modelDescriptions.${model.descriptionKey}`).toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesFamily = selectedFamily === 'all' || model.family === selectedFamily;
       
@@ -200,13 +200,13 @@ export default function WebLLMSelector({
           </svg>
           <div className="flex-1">
             <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-              {t('provider.webllm.dataWarning')}
+              {t('providers.webllm.dataWarning')}
             </h4>
             <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-              {t('provider.webllm.dataWarningMessage')}
+              {t('providers.webllm.dataWarningMessage')}
             </p>
             <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1 font-medium">
-              {t('provider.webllm.mobileWarning')}
+              {t('providers.webllm.mobileWarning')}
             </p>
           </div>
         </div>
@@ -216,7 +216,7 @@ export default function WebLLMSelector({
       <div className="mb-3">
         <input
           type="text"
-          placeholder={t('provider.webllm.searchModel')}
+          placeholder={t('providers.webllm.searchModel')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-legal-500"
@@ -274,17 +274,17 @@ export default function WebLLMSelector({
                           </span>
                           {model.recommended && (
                             <span className="text-xs text-legal-600 dark:text-legal-400">
-                              ⭐ {t('provider.webllm.recommended')}
+                              ⭐ {t('providers.webllm.recommended')}
                             </span>
                           )}
                           {isCached && (
                             <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-                              ✓ {t('provider.webllm.cached')}
+                              ✓ {t('providers.webllm.cached')}
                             </span>
                           )}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {t(`provider.webllm.modelDescriptions.${model.descriptionKey}`)}
+                          {t(`providers.webllm.modelDescriptions.${model.descriptionKey}`)}
                         </div>
                       </div>
                       <div className="ml-3 flex items-start gap-2">
@@ -304,7 +304,7 @@ export default function WebLLMSelector({
                               setShowRemoveDialog(model);
                             }}
                             className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded transition-colors"
-                            title={t('provider.webllm.removeFromCache')}
+                            title={t('providers.webllm.removeFromCache')}
                           >
                             <svg className="w-4 h-4 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -320,7 +320,7 @@ export default function WebLLMSelector({
           </div>
         ) : (
           <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-            {t('provider.webllm.noModelsFound')}
+            {t('providers.webllm.noModelsFound')}
           </div>
         )}
       </div>
@@ -330,19 +330,19 @@ export default function WebLLMSelector({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-              {t('provider.webllm.confirmDownload').replace('{{name}}', showConfirmDialog.name)}
+              {t('providers.webllm.confirmDownload').replace('{{name}}', showConfirmDialog.name)}
             </h3>
             
             <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                ⚠️ {t('provider.webllm.confirmDownloadMessage').replace('{{size}}', showConfirmDialog.size)}
+                ⚠️ {t('providers.webllm.confirmDownloadMessage').replace('{{size}}', showConfirmDialog.size)}
               </p>
             </div>
 
             <div className="mb-4">
               <div className="flex justify-between items-center py-2 border-t border-gray-200 dark:border-gray-700">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {t('provider.webllm.downloadSize')}:
+                  {t('providers.webllm.downloadSize')}:
                 </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {showConfirmDialog.size}
@@ -355,13 +355,13 @@ export default function WebLLMSelector({
                 onClick={() => setShowConfirmDialog(null)}
                 className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
-                {t('provider.webllm.downloadCancel')}
+                {t('providers.webllm.downloadCancel')}
               </button>
               <button
                 onClick={confirmDownload}
                 className="flex-1 px-4 py-2 bg-legal-500 text-white rounded-lg hover:bg-legal-600 transition-colors"
               >
-                {t('provider.webllm.downloadConfirm')}
+                {t('providers.webllm.downloadConfirm')}
               </button>
             </div>
           </div>
@@ -373,12 +373,12 @@ export default function WebLLMSelector({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-              {t('provider.webllm.confirmRemove').replace('{{name}}', showRemoveDialog.name)}
+              {t('providers.webllm.confirmRemove').replace('{{name}}', showRemoveDialog.name)}
             </h3>
             
             <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
               <p className="text-sm text-blue-800 dark:text-blue-200">
-                {t('provider.webllm.confirmRemoveMessage').replace('{{size}}', showRemoveDialog.size)}
+                {t('providers.webllm.confirmRemoveMessage').replace('{{size}}', showRemoveDialog.size)}
               </p>
             </div>
 
@@ -387,13 +387,13 @@ export default function WebLLMSelector({
                 onClick={() => setShowRemoveDialog(null)}
                 className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
-                {t('provider.webllm.removeCancel')}
+                {t('providers.webllm.removeCancel')}
               </button>
               <button
                 onClick={() => handleRemoveFromCache(showRemoveDialog)}
                 className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
               >
-                {t('provider.webllm.removeConfirm')}
+                {t('providers.webllm.removeConfirm')}
               </button>
             </div>
           </div>

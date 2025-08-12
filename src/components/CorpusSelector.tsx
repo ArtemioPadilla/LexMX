@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../i18n/index';
 import type { LegalArea } from '../types/legal';
+import { TEST_IDS } from '../utils/test-ids';
 
 interface CorpusDocument {
   id: string;
@@ -56,22 +58,23 @@ const CORPUS_DOCUMENTS: CorpusDocument[] = [
   { id: 'lfpa', title: 'Ley Federal de Procedimiento Administrativo', area: 'administrative', type: 'law', shortName: 'LFPA', articles: 102 },
 ];
 
-const LEGAL_AREAS: { value: LegalArea; label: string; icon: string }[] = [
-  { value: 'constitutional', label: 'Constitucional', icon: '⚖️' },
-  { value: 'labor', label: 'Laboral', icon: '👷' },
-  { value: 'civil', label: 'Civil', icon: '👥' },
-  { value: 'criminal', label: 'Penal', icon: '🚨' },
-  { value: 'tax', label: 'Fiscal', icon: '💰' },
-  { value: 'commercial', label: 'Mercantil', icon: '🏢' },
-  { value: 'administrative', label: 'Administrativo', icon: '📋' },
-];
-
 export default function CorpusSelector({ onSelectionChange, className = '' }: CorpusSelectorProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedAreas, setSelectedAreas] = useState<Set<LegalArea>>(new Set());
   const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'areas' | 'documents'>('areas');
+
+  const LEGAL_AREAS: { value: LegalArea; label: string; icon: string }[] = [
+    { value: 'constitutional', label: t('corpus.areas.constitutional'), icon: '⚖️' },
+    { value: 'labor', label: t('corpus.areas.labor'), icon: '👷' },
+    { value: 'civil', label: t('corpus.areas.civil'), icon: '👥' },
+    { value: 'criminal', label: t('corpus.areas.criminal'), icon: '🚨' },
+    { value: 'tax', label: t('corpus.areas.tax'), icon: '💰' },
+    { value: 'commercial', label: t('corpus.areas.commercial'), icon: '🏢' },
+    { value: 'administrative', label: t('corpus.areas.administrative'), icon: '📋' },
+  ];
 
   // Filter documents based on search and selected areas
   const filteredDocuments = CORPUS_DOCUMENTS.filter(doc => {
@@ -162,6 +165,7 @@ export default function CorpusSelector({ onSelectionChange, className = '' }: Co
     <div className={`relative corpus-selector ${className}`}>
       <button
         type="button"
+        data-testid={TEST_IDS.corpus.selectorToggle}
         onClick={(e) => {
           e.stopPropagation();
           setIsOpen(!isOpen);
@@ -173,7 +177,7 @@ export default function CorpusSelector({ onSelectionChange, className = '' }: Co
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
         </svg>
         <span className="text-gray-700 dark:text-gray-300">
-          {selectedCount === 0 ? 'Todo el corpus' : selectedCount === totalCount ? 'Todo el corpus' : `${selectedCount} documentos`}
+          {selectedCount === 0 ? t('corpus.all') : t('corpus.selected', { count: selectedCount })}
         </span>
         <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -193,14 +197,14 @@ export default function CorpusSelector({ onSelectionChange, className = '' }: Co
             {/* Header */}
             <div className="p-3 md:p-3 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium text-gray-900 dark:text-gray-100">Seleccionar Corpus</h3>
+                <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('corpus.selectTitle')}</h3>
                 <div className="flex items-center space-x-2">
                   {/* Mobile close button */}
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
                     className="md:hidden p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    aria-label="Cerrar"
+                    aria-label={t('common.close')}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -209,17 +213,19 @@ export default function CorpusSelector({ onSelectionChange, className = '' }: Co
                   <div className="flex space-x-2">
                     <button
                       type="button"
+                      data-testid={TEST_IDS.corpus.selectAll}
                       onClick={handleSelectAll}
                       className="text-xs px-2 py-1 text-legal-600 dark:text-legal-400 hover:text-legal-700 dark:hover:text-legal-300"
                     >
-                      Seleccionar todo
+                      {t('corpus.selectAll')}
                     </button>
                     <button
                       type="button"
+                      data-testid={TEST_IDS.corpus.clearAll}
                       onClick={handleClearAll}
                       className="text-xs px-2 py-1 text-gray-600 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                     >
-                      Limpiar
+                      {t('corpus.clear')}
                     </button>
                   </div>
                 </div>
@@ -236,7 +242,7 @@ export default function CorpusSelector({ onSelectionChange, className = '' }: Co
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                   }`}
                 >
-                  Por Área
+                  {t('corpus.byArea')}
                 </button>
                 <button
                   type="button"
@@ -247,7 +253,7 @@ export default function CorpusSelector({ onSelectionChange, className = '' }: Co
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
                   }`}
                 >
-                  Por Documento
+                  {t('corpus.byDocument')}
                 </button>
               </div>
             </div>
@@ -257,7 +263,7 @@ export default function CorpusSelector({ onSelectionChange, className = '' }: Co
             <div className="p-3 border-b border-gray-200 dark:border-gray-700">
               <input
                 type="text"
-                placeholder="Buscar documento..."
+                placeholder={t('corpus.searchDocument')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-legal-500"
@@ -380,8 +386,8 @@ export default function CorpusSelector({ onSelectionChange, className = '' }: Co
           <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
             <div className="text-xs text-gray-600 dark:text-gray-400 text-center">
               {selectedCount === 0 ? 
-                'Usando todo el corpus legal mexicano' : 
-                `${selectedCount} de ${totalCount} documentos seleccionados`}
+                t('corpus.all') : 
+                t('corpus.selected', { count: selectedCount })}
             </div>
           </div>
         </div>

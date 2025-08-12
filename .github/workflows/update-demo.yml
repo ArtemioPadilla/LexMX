@@ -1,0 +1,220 @@
+name: 🎬 Update Demo
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**/*.tsx'
+      - 'src/**/*.astro'
+      - 'src/**/*.css'
+      - 'src/components/**'
+      - 'src/islands/**'
+      - 'src/pages/**'
+      - 'demo.config.json'
+      - '.github/workflows/update-demo.yml'
+  
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: 'Force demo update even without changes'
+        required: false
+        default: false
+        type: boolean
+      demo_type:
+        description: 'Type of demo to generate'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - quick
+          - chat
+  
+  schedule:
+    # Run weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-changes:
+    name: 🔍 Check for UI Changes
+    runs-on: ubuntu-latest
+    outputs:
+      should_update: ${{ steps.check.outputs.should_update }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      
+      - name: 🔍 Check for UI changes
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] && [[ "${{ inputs.force_update }}" == "true" ]]; then
+            echo "should_update=true" >> $GITHUB_OUTPUT
+            echo "✅ Force update requested"
+          elif [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo "should_update=true" >> $GITHUB_OUTPUT
+            echo "✅ Scheduled update"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            # Check if UI files changed
+            UI_CHANGED=$(git diff --name-only HEAD~1 HEAD | grep -E "(\.tsx|\.astro|\.css|components/|islands/|pages/)" || true)
+            if [[ -n "$UI_CHANGED" ]]; then
+              echo "should_update=true" >> $GITHUB_OUTPUT
+              echo "✅ UI files changed, demo update needed"
+            else
+              echo "should_update=false" >> $GITHUB_OUTPUT
+              echo "⏭️ No UI changes, skipping demo update"
+            fi
+          else
+            echo "should_update=false" >> $GITHUB_OUTPUT
+          fi
+
+  generate-demo:
+    name: 🎥 Generate Demo
+    needs: check-changes
+    if: needs.check-changes.outputs.should_update == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: 🎬 Install ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg gifsicle imagemagick
+          ffmpeg -version
+          gifsicle --version
+      
+      - name: 📚 Install dependencies
+        run: |
+          npm ci
+          npx playwright install chromium
+          npx playwright install-deps chromium
+      
+      - name: 🚀 Start dev server
+        run: |
+          npm run dev &
+          echo "Waiting for server to start..."
+          sleep 10
+          curl -f http://localhost:4321 || (echo "Server failed to start" && exit 1)
+      
+      - name: 🎬 Record demo
+        run: |
+          DEMO_TYPE="${{ inputs.demo_type || 'full' }}"
+          echo "Recording $DEMO_TYPE demo..."
+          npm run demo:record
+          npm run demo:screenshots
+      
+      - name: 📊 Check demo files
+        id: demo_check
+        run: |
+          echo "Generated demo files:"
+          ls -lh docs/demo/
+          
+          # Check if files were modified
+          if git diff --quiet docs/demo/; then
+            echo "demo_changed=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ Demo files unchanged"
+          else
+            echo "demo_changed=true" >> $GITHUB_OUTPUT
+            echo "✅ Demo files updated"
+          fi
+      
+      - name: 🗜️ Optimize demo files
+        if: steps.demo_check.outputs.demo_changed == 'true'
+        run: |
+          # Additional optimization with imagemagick if needed
+          for gif in docs/demo/*.gif; do
+            if [[ -f "$gif" ]]; then
+              SIZE=$(stat -c%s "$gif")
+              if [[ $SIZE -gt 3145728 ]]; then  # If larger than 3MB
+                echo "Optimizing $gif (current size: $SIZE bytes)"
+                convert "$gif" -fuzz 5% -layers Optimize "$gif.tmp"
+                mv "$gif.tmp" "$gif"
+              fi
+            fi
+          done
+      
+      - name: 📁 Archive old demos
+        if: steps.demo_check.outputs.demo_changed == 'true'
+        run: |
+          # Create archive directory if it doesn't exist
+          mkdir -p docs/demo/archive
+          
+          # Archive existing demos (keep last 3 versions)
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          for file in docs/demo/lexmx-demo*.{gif,mp4} 2>/dev/null; do
+            if [[ -f "$file" && ! "$file" =~ archive ]]; then
+              BASENAME=$(basename "$file")
+              cp "$file" "docs/demo/archive/${TIMESTAMP}_${BASENAME}"
+            fi
+          done
+          
+          # Clean up old archives (keep only last 3)
+          cd docs/demo/archive
+          ls -t | tail -n +10 | xargs -r rm
+          cd -
+      
+      - name: 💾 Commit and push changes
+        if: steps.demo_check.outputs.demo_changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          git add docs/demo/
+          git commit -m "🎬 Update demo assets [skip ci]
+          
+          Auto-generated demo update:
+          - Type: ${{ inputs.demo_type || 'full' }}
+          - Trigger: ${{ github.event_name }}
+          - Commit: ${{ github.sha }}"
+          
+          git push
+      
+      - name: 📝 Create summary
+        run: |
+          echo "## 🎬 Demo Update Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ steps.demo_check.outputs.demo_changed }}" == "true" ]]; then
+            echo "✅ **Demo successfully updated!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📁 Generated Files:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            ls -lh docs/demo/*.{gif,mp4,png} 2>/dev/null | grep -v archive || true
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ **No demo changes detected**" >> $GITHUB_STEP_SUMMARY
+            echo "Demo files are already up to date." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔧 Configuration:" >> $GITHUB_STEP_SUMMARY
+          echo "- Demo Type: \`${{ inputs.demo_type || 'full' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Trigger: \`${{ github.event_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Force Update: \`${{ inputs.force_update || 'false' }}\`" >> $GITHUB_STEP_SUMMARY
+
+  cleanup:
+    name: 🧹 Cleanup
+    needs: generate-demo
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🧹 Clean up artifacts
+        run: |
+          echo "Cleanup complete"

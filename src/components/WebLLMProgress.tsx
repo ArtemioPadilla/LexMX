@@ -25,7 +25,7 @@ export default function WebLLMProgress({ progress, message, onClose, variant = '
           />
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {t('provider.webllm.firstTimeDownload')}
+          {t('providers.webllm.firstTimeDownload')}
         </p>
       </div>
     );
@@ -34,7 +34,7 @@ export default function WebLLMProgress({ progress, message, onClose, variant = '
   return (
     <div className="fixed bottom-4 right-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-4 max-w-sm z-50">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('provider.webllm.downloadingModel')}</h3>
+        <h3 className="font-medium text-gray-900 dark:text-gray-100">{t('providers.webllm.downloadingModel')}</h3>
         {onClose && (
           <button
             onClick={onClose}
@@ -63,7 +63,7 @@ export default function WebLLMProgress({ progress, message, onClose, variant = '
       </div>
       
       <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-        {t('provider.webllm.firstTimeDownload')}
+        {t('providers.webllm.firstTimeDownload')}
       </p>
     </div>
   );

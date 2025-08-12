@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS } from '../utils/test-ids';
 import type { 
   DocumentRequest, 
   ModerationAction, 
@@ -30,6 +32,7 @@ export default function ModerationPanel({
   onMerge,
   onPriorityChange
 }: ModerationPanelProps) {
+  const [isHydrated, setIsHydrated] = useState(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'assigned' | 'stats' | 'all'>('pending');
   const [selectedRequests, setSelectedRequests] = useState<Set<string>>(new Set());
   const [actionModal, setActionModal] = useState<{
@@ -38,6 +41,11 @@ export default function ModerationPanel({
     reason: string;
   }>({ type: null, requestId: null, reason: '' });
   const [filter, setFilter] = useState<RequestFilter>({});
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const pendingRequests = requests.filter(r => r.status === 'pending');
   const assignedRequests = requests.filter(r => r.assignedTo === moderator.id);
@@ -163,9 +171,19 @@ export default function ModerationPanel({
     if (diffHours < 24) return `hace ${diffHours}h`;
     return `hace ${diffDays}d`;
   };
+  // Handle SSR/hydration
+  if (!isHydrated) {
+    return (
+      <HydrationBoundary 
+        fallback={<LoadingStates.ModerationPanel />} 
+        testId="moderation-panel"
+      />
+    );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div
+      data-testid="moderation-panel" className="max-w-7xl mx-auto p-6">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">

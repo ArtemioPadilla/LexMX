@@ -1,23 +1,31 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation, type Language } from '../i18n/index';
+import { HydrationBoundary, LoadingStates } from './HydrationBoundary';
+import { TEST_IDS } from '../utils/test-ids';
 
 export function LanguageSelector() {
   const { language, setLanguage, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Initialize on mount
+  // Handle hydration
   useEffect(() => {
-    try {
-      setMounted(true);
-      // The i18n system handles language persistence and initialization
-      document.documentElement.lang = language;
-    } catch (err) {
-      console.error('Error initializing language selector:', err);
-      setError('Failed to initialize language');
+    setIsHydrated(true);
+  }, []);
+
+  // Initialize language on mount
+  useEffect(() => {
+    if (isHydrated) {
+      try {
+        // The i18n system handles language persistence and initialization
+        document.documentElement.lang = language;
+      } catch (err) {
+        console.error('Error initializing language selector:', err);
+        setError('Failed to initialize language');
+      }
     }
-  }, [language]);
+  }, [language, isHydrated]);
   
   // Handle language change
   const handleLanguageChange = useCallback((newLang: Language) => {
@@ -58,29 +66,23 @@ export function LanguageSelector() {
     en: { name: t('language.en'), flag: '🇺🇸' },
   };
   
-  if (!mounted) {
+  // Handle SSR/hydration
+  if (!isHydrated) {
     return (
-      <div className="relative language-selector">
-        <button 
-          className="flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600" 
-          aria-label={t('common.changeLanguage') || 'Cambiar idioma'}
-          disabled
-        >
-          <span className="text-lg">🇲🇽</span>
-          <span className="hidden sm:inline text-sm font-medium text-gray-700 dark:text-gray-300">
-            ES
-          </span>
-        </button>
-      </div>
+      <HydrationBoundary 
+        fallback={<LoadingStates.LanguageSelector />}
+        testId="language-selector"
+      />
     );
   }
+
   
   if (error) {
     return (
       <div className="relative language-selector">
         <button 
           className="flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-lg bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700" 
-          aria-label="Error en idioma"
+          aria-label={t('errors.languageError')}
           disabled
         >
           <span className="text-lg">⚠️</span>
@@ -92,12 +94,13 @@ export function LanguageSelector() {
   return (
     <div className="relative language-selector">
       <button
+        data-testid="language-selector"
         onClick={(e) => {
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
         className="flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600"
-        aria-label="Cambiar idioma"
+        aria-label={t('language.change')}
         aria-expanded={isOpen}
       >
         <span className="text-lg">{languages[language].flag}</span>
@@ -114,6 +117,7 @@ export function LanguageSelector() {
           {(Object.entries(languages) as [Language, typeof languages[Language]][]).map(([code, data]) => (
             <button
               key={code}
+              data-testid={`language-option-${code}`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleLanguageChange(code);

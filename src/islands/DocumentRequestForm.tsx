@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS } from '../utils/test-ids';
 import type { 
   DocumentRequest, 
   DocumentSource, 
@@ -24,6 +26,7 @@ interface DocumentRequestFormProps {
 }
 
 export default function DocumentRequestForm({ onSubmit, onSuggestionsUpdate }: DocumentRequestFormProps) {
+  const [isHydrated, setIsHydrated] = useState(false);
   const [formState, setFormState] = useState<SmartFormState>({
     title: '',
     description: '',
@@ -41,6 +44,11 @@ export default function DocumentRequestForm({ onSubmit, onSuggestionsUpdate }: D
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // Debounced search for suggestions and duplicate detection
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -283,15 +291,27 @@ export default function DocumentRequestForm({ onSubmit, onSuggestionsUpdate }: D
   const inferTerritorialScope = (authority?: string): 'national' | 'federal' | 'state' | 'municipal' => {
     if (!authority) return 'federal';
     
-    const lowerAuthority = authority.toLowerCase();
+    const lowerAuthority = authority?.toLowerCase();
     if (lowerAuthority.includes('municipal')) return 'municipal';
     if (lowerAuthority.includes('estado') || lowerAuthority.includes('estatal')) return 'state';
     if (lowerAuthority.includes('nacional')) return 'national';
     return 'federal';
   };
 
+  // Handle SSR/hydration
+  if (!isHydrated) {
+    return (
+      <HydrationBoundary 
+        fallback={<LoadingStates.DocumentRequestForm />} 
+        testId="document-request-form"
+      />
+    );
+  }
+
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+    <div 
+      data-testid="document-request-form"
+      className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
           Solicitar Nuevo Documento Legal

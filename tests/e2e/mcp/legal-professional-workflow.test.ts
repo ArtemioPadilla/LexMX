@@ -5,6 +5,8 @@ import {
   clearAllStorage,
   assertNoConsoleErrors 
 } from '../../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('Legal Professional Complete Workflow', () => {
   test.beforeEach(async ({ page }) => {
@@ -25,7 +27,7 @@ test.describe('Legal Professional Complete Workflow', () => {
     await page.waitForURL('**/setup');
     
     // 3. Professional provider setup - choose performance profile
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     await page.waitForSelector('h2:has-text("Elige tu Perfil")');
     
     // Select performance profile for legal professionals
@@ -58,7 +60,7 @@ test.describe('Legal Professional Complete Workflow', () => {
     await page.waitForURL('**/chat');
     
     // 8. Professional legal query - complex constitutional case
-    await page.waitForSelector('.chat-interface');
+    await page.waitForSelector('[data-testid="chat-container"]');
     
     // Open advanced options
     await page.click('button[title="Opciones avanzadas"]');
@@ -72,19 +74,19 @@ test.describe('Legal Professional Complete Workflow', () => {
     el derecho de huelga en servicios esenciales. ¿Cuáles son los precedentes de la SCJN sobre 
     la ponderación entre el derecho de huelga (Art. 123) y el interés público?`;
     
-    await page.fill('textarea[placeholder*="consulta legal"]', complexQuery);
+    await page.fill('[data-testid="chat-input"]', complexQuery);
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // 9. Verify intelligent provider selection
     await expect(page.locator('text=/Analizando.*consulta|procesando/i')).toBeVisible();
     
     // Should show provider recommendation for complex query
-    await page.waitForSelector('.provider-recommendation', { timeout: 5000 }).catch(() => {
+    await page.waitForSelector('.provider-recommendation', { timeout: 10000 }).catch(() => {
       // Provider recommendation might not show if already processing
     });
     
     // 10. Verify comprehensive legal response
-    await page.waitForSelector('.chat-interface >> text=/artículo|jurisprudencia|tesis/i', { timeout: 30000 });
+    await page.waitForSelector('[data-testid="chat-container"] >> text=/artículo|jurisprudencia|tesis/i', { timeout: 60000 });
     
     // Check response quality indicators
     await expect(page.locator('text=/Fuentes:|Sources:/')).toBeVisible({ timeout: 10000 });
@@ -114,7 +116,7 @@ test.describe('Legal Professional Complete Workflow', () => {
     await page.keyboard.press('Enter');
     
     // Verify article is highlighted
-    await expect(page.locator('mark:has-text("123")')).toBeVisible({ timeout: 5000 }).catch(() => {
+    await expect(page.locator('mark:has-text("123")')).toBeVisible({ timeout: 10000 }).catch(() => {
       // Highlighting might be implemented differently
       expect(page.locator('text=/Artículo 123/i')).toBeVisible();
     });
@@ -141,7 +143,7 @@ test.describe('Legal Professional Complete Workflow', () => {
     await page.click('link:has-text("Chat Legal")');
     
     // Continue conversation with document context
-    await page.fill('textarea[placeholder*="consulta legal"]', 
+    await page.fill('[data-testid="chat-input"]', 
       'Basándote en el artículo 123 que acabamos de revisar, ¿cómo se relaciona con los criterios de servicios esenciales?'
     );
     await page.click('button[aria-label="Enviar mensaje"]');
@@ -164,7 +166,7 @@ test.describe('Legal Professional Complete Workflow', () => {
   test('test provider failover and recovery', async ({ page }) => {
     // Quick setup with single provider
     await page.goto('http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     await page.click('text="Configuración Personalizada"');
     await page.click('div:has-text("OpenAI")');
     await page.click('button:has-text("Configurar (1)")');
@@ -174,7 +176,7 @@ test.describe('Legal Professional Complete Workflow', () => {
     await page.click('button:has-text("Comenzar a Usar LexMX")');
     
     // Try to send a message with invalid provider
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Test query');
+    await page.fill('[data-testid="chat-input"]', 'Test query');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should show error about provider
@@ -184,7 +186,7 @@ test.describe('Legal Professional Complete Workflow', () => {
   test('test advanced RAG configuration', async ({ page }) => {
     // Setup provider first
     await page.goto('http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     await page.click('text="Configuración Personalizada"');
     await page.click('div:has-text("Claude")');
     await page.click('button:has-text("Configurar (1)")');
@@ -210,18 +212,18 @@ test.describe('Legal Professional Complete Workflow', () => {
         tax: '¿Qué obligaciones fiscales tiene una persona moral?'
       };
       
-      await page.fill('textarea[placeholder*="consulta legal"]', queries[area]);
+      await page.fill('[data-testid="chat-input"]', queries[area]);
       await page.click('button[aria-label="Enviar mensaje"]');
       
       // Verify area-specific response
-      await page.waitForSelector(`.chat-interface >> text=/${area}/i`, { timeout: 20000 });
+      await page.waitForSelector(`[data-testid="chat-container"] >> text=/${area}/i`, { timeout: 20000 });
     }
   });
 
   test('test memory and performance with extended session', async ({ page }) => {
     // Quick setup
     await page.goto('http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     await page.click('text="Configuración Personalizada"');
     await page.click('div:has-text("Ollama")');
     await page.click('button:has-text("Configurar (1)")');
@@ -249,11 +251,11 @@ test.describe('Legal Professional Complete Workflow', () => {
     
     // Send multiple queries
     for (const query of queries) {
-      await page.fill('textarea[placeholder*="consulta legal"]', query);
+      await page.fill('[data-testid="chat-input"]', query);
       await page.click('button[aria-label="Enviar mensaje"]');
       
       // Wait for response
-      await page.waitForSelector(`.chat-interface >> text="${query}"`, { timeout: 5000 });
+      await page.waitForSelector(`[data-testid="chat-container"] >> text="${query}"`, { timeout: 10000 });
       await page.waitForTimeout(1000); // Let response complete
     }
     

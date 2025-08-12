@@ -1,5 +1,6 @@
 import { Page, expect } from '@playwright/test';
 import { waitForHydration, waitForComponentHydration } from './hydration-helpers';
+import { MockProviderManager, setupMockProviders, ProviderScenarios } from './mock-provider-manager';
 
 /**
  * Common setup for LexMX tests
@@ -11,7 +12,8 @@ export async function setupPage(page: Page): Promise<void> {
   page.on('console', (msg) => {
     if (msg.type() === 'error' && 
         !msg.text().includes('Failed to load resource') &&
-        !msg.text().includes('favicon.ico')) {
+        !msg.text().includes('favicon.ico') &&
+        !msg.text().includes('initialization warning')) {
       errors.push(msg.text());
     }
   });
@@ -26,7 +28,20 @@ export async function setupPage(page: Page): Promise<void> {
   // Ensure page is navigated to a valid URL before any operations
   if (page.url() === 'about:blank') {
     await page.goto('http://localhost:4321');
+    await page.waitForLoadState('domcontentloaded');
   }
+  
+  // Set Spanish as default language for all tests with consistent format
+  await page.evaluate(() => {
+    localStorage.setItem('language', JSON.stringify('es'));
+    document.documentElement.setAttribute('data-language', 'es');
+    document.documentElement.lang = 'es';
+    // Also set on window for immediate access
+    (window as any).__INITIAL_LANGUAGE__ = 'es';
+  });
+  
+  // Wait a bit for language initialization to complete
+  await page.waitForTimeout(200);
 }
 
 /**
@@ -38,9 +53,11 @@ export async function navigateAndWaitForHydration(
   page: Page,
   path: string
 ): Promise<void> {
-  await page.goto(path);
+  await page.goto(path, { waitUntil: 'domcontentloaded' });
   await waitForHydration(page);
   await page.waitForLoadState('networkidle');
+  // Additional wait for React components to fully initialize
+  await page.waitForTimeout(500);
 }
 
 /**
@@ -48,7 +65,7 @@ export async function navigateAndWaitForHydration(
  * @param page - Playwright page object
  * @param providers - Array of provider configurations
  */
-export async function setupMockProviders(
+export async function setupLegacyMockProviders(
   page: Page,
   providers = [{
     id: 'openai',
@@ -263,6 +280,84 @@ export async function switchLanguage(
  * @param page - Playwright page object
  */
 export async function setupWebLLMProvider(page: Page): Promise<void> {
+  // First inject the WebLLM mock
+  await page.evaluate(() => {
+    // Create comprehensive WebLLM mock
+    (window as any).webllm = {
+      ChatModule: class {
+        private engine: any = null;
+        
+        async reload(modelId: string, config?: any, progressCallback?: any): Promise<any> {
+          // Simulate instant initialization
+          if (progressCallback) {
+            progressCallback({ progress: 1.0, text: 'Mock model ready!' });
+          }
+          
+          this.engine = {
+            chat: async (messages: any[]) => ({
+              choices: [{
+                message: {
+                  content: 'Mock legal response from WebLLM',
+                  role: 'assistant'
+                }
+              }]
+            }),
+            generate: async (prompt: string) => 'Mock legal response from WebLLM',
+            resetChat: async () => {},
+            unload: async () => {}
+          };
+          
+          return this.engine;
+        }
+        
+        getEngine() {
+          return this.engine;
+        }
+      },
+      
+      MLCEngine: class {
+        async reload() { return this; }
+        async chat() { 
+          return { 
+            choices: [{ 
+              message: { 
+                content: 'Mock legal response', 
+                role: 'assistant' 
+              } 
+            }] 
+          }; 
+        }
+        async generate() { return 'Mock legal response'; }
+        async resetChat() {}
+        async unload() {}
+      },
+      
+      prebuiltAppConfig: {
+        model_list: [
+          {
+            model_id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
+            model_name: 'Llama 3.2 3B',
+            vram_required_MB: 2048,
+          },
+          {
+            model_id: 'Gemma-2-2b-it-q4f16_1-MLC',
+            model_name: 'Gemma 2 2B',
+            vram_required_MB: 1536,
+          }
+        ]
+      },
+      
+      isWebGPUAvailable: () => true,
+      hasModelInCache: () => false,
+      deleteModelFromCache: async () => {}
+    };
+    
+    // Mark WebLLM as initialized
+    (window as any).webllmInitialized = true;
+    (window as any).__webllmMockLoaded = true;
+  });
+  
+  // Then set up the provider configuration
   await page.evaluate(() => {
     const webllmConfig = {
       id: 'webllm',
@@ -276,9 +371,7 @@ export async function setupWebLLMProvider(page: Page): Promise<void> {
     // Store provider config
     localStorage.setItem('lexmx_provider_webllm', JSON.stringify(webllmConfig));
     localStorage.setItem('lexmx_preferred_provider', 'webllm');
-    
-    // Mock WebLLM initialization
-    (window as any).webllmInitialized = true;
+    localStorage.setItem('lexmx_providers', JSON.stringify([webllmConfig]));
   });
 }
 
@@ -289,7 +382,7 @@ export async function setupWebLLMProvider(page: Page): Promise<void> {
  */
 export async function createTestCase(
   page: Page,
-  caseData = {
+  caseData: any = {
     title: 'Test Case',
     description: 'Test case description',
     client: 'Test Client',
@@ -297,22 +390,33 @@ export async function createTestCase(
     legalArea: 'civil'
   }
 ): Promise<void> {
-  const cases = [{
+  // Get existing cases first
+  const existingCases = await page.evaluate(() => {
+    return JSON.parse(localStorage.getItem('lexmx_cases') || '[]');
+  });
+  
+  const newCase = {
     id: Date.now().toString(),
     ...caseData,
-    status: 'active',
+    status: caseData.status || 'active',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    documents: [],
-    notes: [],
-    conversations: [],
-    deadlines: [],
-    parties: []
-  }];
+    documents: caseData.documents || [],
+    notes: caseData.notes || [],
+    conversations: caseData.conversations || [],
+    deadlines: caseData.deadlines || [],
+    parties: caseData.parties || []
+  };
+  
+  const updatedCases = [...existingCases, newCase];
   
   await page.evaluate((casesData) => {
     localStorage.setItem('lexmx_cases', JSON.stringify(casesData));
-  }, cases);
+  }, updatedCases);
+  
+  // Force page reload to ensure CaseManager picks up the new case
+  await page.reload();
+  await page.waitForSelector('.case-manager', { timeout: 5000 });
 }
 
 /**
@@ -379,8 +483,9 @@ export async function toggleDarkMode(page: Page): Promise<void> {
   // Wait for dropdown to appear - it's a div, not a menu with role
   await page.waitForSelector('.theme-toggle div.absolute', { state: 'visible' });
   
-  // Click dark mode option
-  await page.click('.theme-toggle button:has-text("Oscuro")');
+  // Click dark mode option - try both Spanish and English
+  const darkButton = page.locator('.theme-toggle button:has-text("Oscuro"), .theme-toggle button:has-text("Dark")').first();
+  await darkButton.click();
   
   // Wait for theme to apply
   await page.waitForTimeout(300);
@@ -417,4 +522,47 @@ export async function isVisibleInDarkMode(
   
   // In dark mode, text should be bright (> 128)
   return brightness > 128;
+}
+
+/**
+ * Set up all mock providers for testing
+ * @param page - Playwright page object
+ * @returns MockProviderManager instance
+ */
+export async function setupAllMockProviders(page: Page): Promise<MockProviderManager> {
+  // Setup WebLLM mock (existing function)
+  await setupWebLLMProvider(page);
+  
+  // Setup general provider mocks
+  const providerManager = await setupMockProviders(page);
+  
+  return providerManager;
+}
+
+/**
+ * Set up provider scenarios for testing
+ * @param page - Playwright page object
+ * @param scenario - The scenario to set up
+ */
+export async function setupProviderScenario(
+  page: Page, 
+  scenario: 'all-need-keys' | 'only-webllm' | 'mixed' | 'rate-limited'
+): Promise<void> {
+  const manager = await setupAllMockProviders(page);
+  const scenarios = new ProviderScenarios(manager);
+  
+  switch (scenario) {
+    case 'all-need-keys':
+      await scenarios.allCloudProvidersNeedKeys(page);
+      break;
+    case 'only-webllm':
+      await scenarios.onlyWebLLMAvailable(page);
+      break;
+    case 'mixed':
+      await scenarios.mixedAvailability(page);
+      break;
+    case 'rate-limited':
+      await scenarios.providerWithRateLimit(page, 'openai');
+      break;
+  }
 }

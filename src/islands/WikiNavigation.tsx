@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS } from '../utils/test-ids';
 
 interface WikiSection {
   id: string;
@@ -35,9 +37,15 @@ const wikiSections: WikiSection[] = [
 ];
 
 export default function WikiNavigation() {
+  const [isHydrated, setIsHydrated] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
     // Small delay to ensure proper initial state
@@ -65,8 +73,17 @@ export default function WikiNavigation() {
         observer.observe(element);
       }
     });
+  // Handle SSR/hydration
+  if (!isHydrated) {
+    return (
+      <HydrationBoundary 
+        fallback={<LoadingStates.WikiNavigation />} 
+        testId="wiki-navigation"
+      />
+    );
+  }
 
-    return () => {
+  return () => {
       clearTimeout(initTimer);
       observer.disconnect();
     };
@@ -81,7 +98,8 @@ export default function WikiNavigation() {
   };
 
   return (
-    <div className="wiki-navigation">
+    <div
+      data-testid="wiki-navigation" className="wiki-navigation">
       {/* Mobile Menu Button */}
       <div className="lg:hidden mb-4">
         <button

@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS } from '../utils/test-ids';
 import type { LegalDocument, LegalContent } from '../types/legal';
 import { DocumentTextView } from '../components/legal/DocumentTextView';
 import { DocumentPDFView } from '../components/legal/DocumentPDFView';
@@ -23,12 +25,18 @@ export default function DocumentViewer({
   initialView = 'text', 
   initialSection 
 }: DocumentViewerProps) {
+  const [isHydrated, setIsHydrated] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>(initialView as ViewMode);
   const [currentSection, setCurrentSection] = useState<string | null>(initialSection);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [highlightedChunks, setHighlightedChunks] = useState<string[]>([]);
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // Process document content for navigation
   const documentStructure = useMemo(() => {
@@ -81,7 +89,7 @@ export default function DocumentViewer({
     try {
       // Simple text search in document content
       const results = document.content?.filter(content => 
-        content.content.toLowerCase().includes(query.toLowerCase())
+        content.content?.toLowerCase().includes(query.toLowerCase())
       ) || [];
       
       setSearchResults(results);
@@ -129,12 +137,23 @@ export default function DocumentViewer({
       };
 
       window.addEventListener('keydown', handleKeyPress);
-      return () => window.removeEventListener('keydown', handleKeyPress);
+  // Handle SSR/hydration
+  if (!isHydrated) {
+    return (
+      <HydrationBoundary 
+        fallback={<LoadingStates.DocumentViewer />} 
+        testId="document-viewer"
+      />
+    );
+  }
+
+  return () => window.removeEventListener('keydown', handleKeyPress);
     }
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div
+      data-testid="document-viewer" className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

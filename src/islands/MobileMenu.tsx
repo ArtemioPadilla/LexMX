@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS } from '../utils/test-ids';
 import { useTranslation } from '../i18n/index';
 
 interface NavItem {
@@ -8,8 +10,14 @@ interface NavItem {
 }
 
 export default function MobileMenu() {
+  const [isHydrated, setIsHydrated] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -37,8 +45,17 @@ export default function MobileMenu() {
 
       // Prevent body scroll when menu is open
       document.body.style.overflow = 'hidden';
+  // Handle SSR/hydration
+  if (!isHydrated) {
+    return (
+      <HydrationBoundary 
+        fallback={<LoadingStates.MobileMenu />} 
+        testId="mobile-menu"
+      />
+    );
+  }
 
-      return () => {
+  return () => {
         document.removeEventListener('click', handleClickOutside);
         document.removeEventListener('keydown', handleEscape);
         document.body.style.overflow = '';
@@ -48,7 +65,8 @@ export default function MobileMenu() {
 
   if (!mounted) {
     return (
-      <div className="lg:hidden">
+    <div
+      data-testid="mobile-menu" className="lg:hidden">
         <button
           className="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900 p-2"
           aria-label={t('nav.openMenu') || 'Abrir menú principal'}

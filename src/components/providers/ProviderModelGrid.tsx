@@ -57,7 +57,7 @@ export default function ProviderModelGrid({
                 </h4>
                 {model.recommended && (
                   <span className="text-xs px-2 py-1 bg-legal-500/20 text-legal-400 rounded-full">
-                    ⭐ {t('provider.webllm.recommended')}
+                    ⭐ {t('providers.webllm.recommended')}
                   </span>
                 )}
               </div>

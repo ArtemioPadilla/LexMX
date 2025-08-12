@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '../../i18n';
 import { providerManager } from '../../lib/llm/provider-manager';
 
@@ -119,7 +119,7 @@ export default function WebLLMModelGrid({
   const [cachedModels, setCachedModels] = useState<Set<string>>(new Set());
   const [showConfirmDialog, setShowConfirmDialog] = useState<Model | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Check cached models
     const updateCachedModels = () => {
       const cached = new Set<string>();
@@ -174,7 +174,7 @@ export default function WebLLMModelGrid({
             </svg>
             <div>
               <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                {t('provider.webllm.dataWarning')}
+                {t('providers.webllm.dataWarning')}
               </p>
               <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
                 Los modelos se descargarán la primera vez que los uses (0.8GB - 5GB).
@@ -231,7 +231,7 @@ export default function WebLLMModelGrid({
                 </div>
                 
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t(`provider.webllm.modelDescriptions.${model.descriptionKey}`)}
+                  {t(`providers.webllm.modelDescriptions.${model.descriptionKey}`)}
                 </p>
                 
                 <div className="flex items-center gap-2 flex-wrap">
@@ -241,13 +241,13 @@ export default function WebLLMModelGrid({
                   
                   {model.recommended && (
                     <span className="text-xs px-2 py-1 bg-legal-500/20 text-legal-600 dark:text-legal-400 rounded-full">
-                      ⭐ {t('provider.webllm.recommended')}
+                      ⭐ {t('providers.webllm.recommended')}
                     </span>
                   )}
                   
                   {isCached && (
                     <span className="text-xs px-2 py-1 bg-green-500/20 text-green-600 dark:text-green-400 rounded-full">
-                      ✓ {t('provider.webllm.cached')}
+                      ✓ {t('providers.webllm.cached')}
                     </span>
                   )}
                 </div>
@@ -273,19 +273,19 @@ export default function WebLLMModelGrid({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-              {t('provider.webllm.confirmDownload').replace('{{name}}', showConfirmDialog.name)}
+              {t('providers.webllm.confirmDownload').replace('{{name}}', showConfirmDialog.name)}
             </h3>
             
             <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                ⚠️ {t('provider.webllm.confirmDownloadMessage').replace('{{size}}', showConfirmDialog.size)}
+                ⚠️ {t('providers.webllm.confirmDownloadMessage').replace('{{size}}', showConfirmDialog.size)}
               </p>
             </div>
 
             <div className="mb-4">
               <div className="flex justify-between items-center py-2 border-t border-gray-200 dark:border-gray-700">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {t('provider.webllm.downloadSize')}:
+                  {t('providers.webllm.downloadSize')}:
                 </span>
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {showConfirmDialog.size}
@@ -298,13 +298,13 @@ export default function WebLLMModelGrid({
                 onClick={() => setShowConfirmDialog(null)}
                 className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
-                {t('provider.webllm.downloadCancel')}
+                {t('providers.webllm.downloadCancel')}
               </button>
               <button
                 onClick={handleConfirmDownload}
                 className="flex-1 px-4 py-2 bg-legal-500 text-white rounded-lg hover:bg-legal-600 transition-colors"
               >
-                {t('provider.webllm.downloadConfirm')}
+                {t('providers.webllm.downloadConfirm')}
               </button>
             </div>
           </div>

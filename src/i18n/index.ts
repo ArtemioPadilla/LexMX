@@ -1,4 +1,4 @@
-import React from 'react';
+import { useReducer, useEffect } from 'react';
 import esTranslations from './locales/es.json';
 import enTranslations from './locales/en.json';
 
@@ -18,15 +18,24 @@ class I18n {
   private listeners: Set<(lang: Language) => void> = new Set();
 
   constructor() {
-    // Check for saved language preference
+    // Check for saved language preference - handle both string and JSON format
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('language') as Language;
-      if (saved && (saved === 'es' || saved === 'en')) {
-        this.currentLanguage = saved;
-      } else {
-        // Detect browser language
-        const browserLang = navigator.language.toLowerCase();
-        this.currentLanguage = browserLang.startsWith('es') ? 'es' : 'en';
+      try {
+        const saved = localStorage.getItem('language');
+        if (saved) {
+          // Handle both "es" and '"es"' formats
+          const lang = saved.startsWith('"') ? JSON.parse(saved) : saved;
+          if (lang === 'es' || lang === 'en') {
+            this.currentLanguage = lang as Language;
+          }
+        } else {
+          // Detect browser language
+          const browserLang = navigator.language.toLowerCase();
+          this.currentLanguage = browserLang.startsWith('es') ? 'es' : 'en';
+        }
+      } catch (e) {
+        // If parsing fails, default to Spanish
+        this.currentLanguage = 'es';
       }
     }
   }
@@ -120,9 +129,9 @@ export const i18n = new I18n();
 
 // Export hook for React components
 export function useTranslation() {
-  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+  const [, forceUpdate] = useReducer(x => x + 1, 0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const unsubscribe = i18n.onChange(() => {
       forceUpdate();
     });

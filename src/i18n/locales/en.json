@@ -20,7 +20,28 @@
     "confirm": "Confirm",
     "yes": "Yes",
     "no": "No",
-    "changeLanguage": "Change language"
+    "changeLanguage": "Change language",
+    "selectAll": "Select all",
+    "clear": "Clear",
+    "upload": "Upload",
+    "download": "Download",
+    "new": "New",
+    "create": "Create",
+    "update": "Update",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "completed": "Completed",
+    "optional": "Optional",
+    "required": "Required",
+    "none": "None",
+    "all": "All",
+    "searchPlaceholder": "Search...",
+    "noResults": "No results found",
+    "skipToContent": "Skip to main content",
+    "configure": "Configure",
+    "free": "Free"
   },
   "nav": {
     "home": "Home",
@@ -383,16 +404,159 @@
       "title": "You're Offline",
       "message": "Please check your internet connection.",
       "action": "Try Again"
-    }
+    },
+    "languageError": "Language error"
   },
   "theme": {
     "light": "Light",
     "dark": "Dark",
-    "system": "System"
+    "system": "System",
+    "toggle": "Toggle theme",
+    "changeTheme": "Change theme",
+    "error": "Theme error"
   },
   "language": {
     "es": "Español",
-    "en": "English"
+    "en": "English",
+    "change": "Change language"
+  },
+  "cases": {
+    "title": "My Cases",
+    "description": "Organize your legal cases, documents, and notes in one place",
+    "pageTitle": "My Cases - LexMX",
+    "newCase": "New Case",
+    "createNewCase": "Create New Case",
+    "searchCases": "Search cases...",
+    "noCases": "No cases created",
+    "noCasesDescription": "Create your first case to start organizing your legal documents",
+    "noResults": "No cases found",
+    "caseTitle": "Case Title",
+    "caseDescription": "Case Description",
+    "client": "Client",
+    "caseNumber": "Case Number",
+    "court": "Court",
+    "status": "Status",
+    "createdDate": "Created Date",
+    "lastModified": "Last Modified",
+    "titleRequired": "Title is required",
+    "createCase": "Create Case",
+    "editCase": "Edit Case",
+    "deleteCase": "Delete Case",
+    "confirmDelete": "Are you sure you want to delete this case?",
+    "exampleTitle": "E.g., Divorce García vs. Martínez",
+    "briefDescription": "Brief case description...",
+    "clientName": "Client name",
+    "caseNumberExample": "E.g., 123/2024",
+    "legalArea": "Legal Area",
+    "selectCase": "Select a case",
+    "orCreateNew": "or create a new one to get started",
+    "partiesInvolved": "Parties Involved",
+    "noParties": "No parties registered",
+    "upcomingDeadlines": "Upcoming Deadlines",
+    "noPendingDeadlines": "No pending deadlines",
+    "noDocuments": "No documents",
+    "addNote": "Add a note...",
+    "noNotes": "No notes",
+    "chatComingSoon": "Integrated chat coming soon",
+    "chatDescription": "You'll be able to make specific queries about this case",
+    "timelineComingSoon": "Timeline coming soon",
+    "timelineDescription": "Temporal view of all case events",
+    "deadlineTypes": {
+      "court": "Hearing",
+      "filing": "Filing",
+      "meeting": "Meeting",
+      "other": "Other"
+    },
+    "tabs": {
+      "summary": "Summary",
+      "documents": "Documents",
+      "notes": "Notes",
+      "chat": "Chat",
+      "timeline": "Timeline"
+    },
+    "statuses": {
+      "active": "Active",
+      "pending": "Pending",
+      "closed": "Closed",
+      "archived": "Archived",
+      "review": "Under Review"
+    },
+    "upload": {
+      "title": "Upload Documents",
+      "dragDrop": "Click to upload or drag files here",
+      "supportedFormats": "PDF, DOC, DOCX, TXT (Max 10MB)",
+      "uploading": "Uploading...",
+      "uploadSuccess": "Upload successful",
+      "uploadError": "Upload failed"
+    }
+  },
+  "corpus": {
+    "title": "Select Corpus",
+    "selectTitle": "Select Legal Corpus",
+    "all": "All corpus",
+    "selected": "{{count}} selected",
+    "byArea": "By Area",
+    "byDocument": "By Document",
+    "selectAll": "Select all",
+    "clear": "Clear",
+    "searchDocument": "Search document...",
+    "close": "Close",
+    "areas": {
+      "constitutional": "Constitutional",
+      "labor": "Labor",
+      "civil": "Civil",
+      "criminal": "Criminal",
+      "tax": "Tax",
+      "commercial": "Commercial",
+      "administrative": "Administrative",
+      "family": "Family",
+      "environmental": "Environmental",
+      "intellectual": "Intellectual Property"
+    },
+    "documents": {
+      "constitution": "Political Constitution",
+      "federalLaborLaw": "Federal Labor Law",
+      "civilCode": "Federal Civil Code",
+      "criminalCode": "Federal Criminal Code",
+      "taxCode": "Tax Code",
+      "commercialCode": "Commercial Code"
+    }
+  },
+  "providers": {
+    "configure": "Configure Providers",
+    "selectProvider": "Select Provider",
+    "configureProvider": "Configure {{provider}}",
+    "notConfigured": "Not configured",
+    "costLevel": "Cost Level",
+    "performance": "Performance",
+    "privacy": "Privacy",
+    "availability": "Availability"
+  },
+  "footer": {
+    "quickLinks": "Quick Links",
+    "legalResources": "Legal Resources",
+    "legalNotice": "Legal Notice",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "contact": "Contact",
+    "openSource": "Open Source Project",
+    "viewOnGithub": "View on GitHub",
+    "reportIssue": "Report an Issue",
+    "contribute": "Contribute",
+    "resources": {
+      "deputies": "Chamber of Deputies",
+      "gazette": "Official Gazette"
+    }
+  },
+  "accessibility": {
+    "skipToContent": "Skip to main content",
+    "mainNavigation": "Main navigation",
+    "closeDialog": "Close dialog",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "toggleTheme": "Toggle theme",
+    "selectLanguage": "Select language",
+    "changeLanguage": "Change language"
   },
   "systemPrompts": {
     "base": {

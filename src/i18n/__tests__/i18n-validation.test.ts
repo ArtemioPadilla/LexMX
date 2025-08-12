@@ -17,61 +17,43 @@ describe('i18n Translation Files Validation', () => {
 
       it('should not have duplicate keys at any level', () => {
         const filePath = path.join(localesPath, `${locale}.json`);
-        const fileContent = fs.readFileSync(filePath, 'utf-8');
+        const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
         
-        // Check for duplicate keys by analyzing the raw JSON text
-        const lines = fileContent.split('\n');
-        const keyPattern = /^\s*"([^"]+)":/;
-        const keyStack: { key: string; level: number }[] = [];
-        const seenKeys = new Map<string, Set<string>>();
-        
-        let currentLevel = 0;
-        const levelPath: string[] = [];
-        
-        lines.forEach((line, lineNumber) => {
-          // Track nesting level
-          const openBraces = (line.match(/{/g) || []).length;
-          const closeBraces = (line.match(/}/g) || []).length;
-          
-          if (closeBraces > 0) {
-            currentLevel -= closeBraces;
-            levelPath.pop();
+        // Recursively check for duplicate keys using the parsed JSON
+        function checkDuplicates(obj: any, path: string = ''): void {
+          if (typeof obj !== 'object' || obj === null) {
+            return;
           }
           
-          const match = line.match(keyPattern);
-          if (match) {
-            const key = match[1];
-            const fullPath = [...levelPath].join('.');
-            
-            if (!seenKeys.has(fullPath)) {
-              seenKeys.set(fullPath, new Set());
-            }
-            
-            const keysAtLevel = seenKeys.get(fullPath)!;
-            
-            // Check for duplicate
-            if (keysAtLevel.has(key)) {
+          const keys = Object.keys(obj);
+          const seenKeys = new Set<string>();
+          
+          for (const key of keys) {
+            if (seenKeys.has(key)) {
               throw new Error(
-                `Duplicate key "${key}" found at line ${lineNumber + 1} in ${locale}.json. ` +
-                `Path: ${fullPath ? fullPath + '.' : ''}${key}`
+                `Duplicate key "${key}" found in ${locale}.json at path: ${path}`
               );
             }
+            seenKeys.add(key);
             
-            keysAtLevel.add(key);
-          }
-          
-          if (openBraces > 0) {
-            // Extract the key before the opening brace
-            const keyMatch = line.match(/^\s*"([^"]+)":\s*{/);
-            if (keyMatch) {
-              levelPath.push(keyMatch[1]);
+            // Recursively check nested objects
+            if (typeof obj[key] === 'object' && obj[key] !== null) {
+              const newPath = path ? `${path}.${key}` : key;
+              checkDuplicates(obj[key], newPath);
             }
-            currentLevel += openBraces;
           }
-        });
+        }
         
-        // If we get here, no duplicates were found
-        expect(true).toBe(true);
+        // Check the parsed JSON structure
+        try {
+          checkDuplicates(content);
+          expect(true).toBe(true);
+        } catch (error) {
+          if (error instanceof Error) {
+            throw error;
+          }
+          throw new Error('Unknown error checking for duplicates');
+        }
       });
 
       it('should have consistent structure', () => {

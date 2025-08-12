@@ -1,12 +1,18 @@
 import { test, expect } from '@playwright/test';
+import { setupPage, navigateToPage, waitForPageReady, setupAllMockProviders, setupProviderScenario } from '../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('Provider Setup to Chat Journey', () => {
   test.beforeEach(async ({ page }) => {
+  await setupPage(page);
     // Clear storage before each test
     await page.goto('http://localhost:4321/');
     await page.evaluate(() => {
       localStorage.clear();
       sessionStorage.clear();
+      // Set Spanish language for consistency
+      localStorage.setItem('language', '"es"');
     });
   });
 
@@ -18,13 +24,13 @@ test.describe('Provider Setup to Chat Journey', () => {
     await page.waitForSelector('.provider-setup', { state: 'visible' });
     
     // 3. Start configuration
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     
-    // 4. Select balanced profile
-    await page.click('div:has-text("Balanceado"):has-text("Mezcla de rendimiento y costo")');
+    // 4. Select balanced profile - look for the actual text on the page
+    await page.click('div:has-text("Balanced Professional"):has-text("optimal value and performance")');
     
     // 5. Should advance to provider selection
-    await expect(page.locator('h2:has-text("Selecciona Proveedores de IA")')).toBeVisible();
+    await expect(page.locator('h2:has-text("Selecciona Proveedores de IA"), h2:has-text("Select AI Providers")')).toBeVisible();
     
     // 6. Select OpenAI provider
     await page.click('div:has-text("OpenAI"):has-text("GPT-4")');
@@ -35,29 +41,29 @@ test.describe('Provider Setup to Chat Journey', () => {
     // 8. Configure OpenAI with test API key
     await expect(page.locator('h2:has-text("Configurar OpenAI")')).toBeVisible();
     await page.fill('input[type="password"]', 'sk-test-1234567890abcdef');
-    await page.click('button:has-text("Guardar")');
+    await page.click('button:has-text("Guardar"), button:has-text("Save")');
     
     // 9. Wait for test phase
     await expect(page.locator('h2:has-text("Probando Conexiones")')).toBeVisible({ timeout: 10000 });
     
     // 10. Wait for completion
-    await expect(page.locator('h2:has-text("¡Configuración Completa!")')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h2:has-text("¡Configuración Completa!"), h2:has-text("Setup Complete!")')).toBeVisible({ timeout: 10000 });
     
-    // 11. Click "Comenzar a Usar LexMX" button
-    await page.click('button:has-text("Comenzar a Usar LexMX")');
+    // 11. Click "Comenzar a Usar LexMX" or "Start Using LexMX" button
+    await page.click('button:has-text("Comenzar a Usar LexMX"), button:has-text("Start Using LexMX")');
     
     // 12. Should navigate to chat page
     await page.waitForURL('**/chat', { timeout: 10000 });
     
     // 13. Wait for chat interface to load
-    await page.waitForSelector('.chat-interface', { state: 'visible' });
+    await page.waitForSelector('[data-testid="chat-container"]', { state: 'visible' });
     
     // 14. Verify no error message about missing providers
     const errorMessage = page.locator('text=/No tienes proveedores de IA configurados/');
     await expect(errorMessage).not.toBeVisible();
     
     // 15. Try sending a message
-    const textarea = page.locator('textarea[placeholder*="consulta legal"]');
+    const textarea = page.locator('[data-testid="chat-input"], textarea[placeholder*="legal query"]');
     await textarea.fill('¿Qué es el artículo 123 constitucional?');
     
     const sendButton = page.locator('button[aria-label="Enviar mensaje"]');
@@ -74,32 +80,32 @@ test.describe('Provider Setup to Chat Journey', () => {
   test('persists provider configuration after page refresh', async ({ page }) => {
     // 1. Complete setup first
     await page.goto('http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
-    await page.click('text="Configuración Personalizada"');
-    await page.click('div:has-text("Claude"):has-text("Razonamiento avanzado")');
-    await page.click('button:has-text("Configurar (1)")');
+    await page.click('[data-testid="setup-begin"]');
+    await page.click('button:has-text("Configuración Personalizada"), button:has-text("Custom Configuration")');
+    await page.click('div:has-text("Claude"):has-text("Advanced reasoning")');
+    await page.click('button:has-text("Configurar"), button:has-text("Configure")');
     await page.fill('input[type="password"]', 'sk-ant-test-key');
-    await page.click('button:has-text("Guardar")');
-    await page.waitForSelector('h2:has-text("¡Configuración Completa!")', { timeout: 10000 });
+    await page.click('button:has-text("Guardar"), button:has-text("Save")');
+    await page.waitForSelector('h2:has-text("¡Configuración Completa!"), h2:has-text("Setup Complete!")', { timeout: 10000 });
     
     // 2. Navigate to chat
-    await page.click('button:has-text("Comenzar a Usar LexMX")');
+    await page.click('button:has-text("Comenzar a Usar LexMX"), button:has-text("Start Using LexMX")');
     await page.waitForURL('**/chat');
     
     // 3. Refresh the page
     await page.reload();
     
     // 4. Wait for chat to reinitialize
-    await page.waitForSelector('.chat-interface', { state: 'visible' });
+    await page.waitForSelector('[data-testid="chat-container"]', { state: 'visible' });
     
     // 5. Verify provider is still configured
     const errorMessage = page.locator('text=/No tienes proveedores de IA configurados/');
     await expect(errorMessage).not.toBeVisible();
     
     // 6. Try sending a message to confirm functionality
-    const textarea = page.locator('textarea[placeholder*="consulta legal"]');
+    const textarea = page.locator('[data-testid="chat-input"], textarea[placeholder*="legal query"]');
     await textarea.fill('Test message after refresh');
-    await page.click('button[aria-label="Enviar mensaje"]');
+    await page.click('button[aria-label="Enviar mensaje"], button[aria-label="Send message"]');
     await expect(page.locator('text="Test message after refresh"')).toBeVisible();
   });
 
@@ -115,14 +121,14 @@ test.describe('Provider Setup to Chat Journey', () => {
     await page.goto('http://localhost:4321/chat');
     
     // 3. Should show warning message about no providers
-    await page.waitForSelector('.chat-interface', { state: 'visible' });
+    await page.waitForSelector('[data-testid="chat-container"]', { state: 'visible' });
     const warningMessage = page.locator('text=/No tienes proveedores configurados/');
     await expect(warningMessage).toBeVisible({ timeout: 10000 });
     
     // 4. Try to send a message
-    const textarea = page.locator('textarea[placeholder*="consulta legal"]');
+    const textarea = page.locator('[data-testid="chat-input"], textarea[placeholder*="legal query"]');
     await textarea.fill('Test query without providers');
-    await page.click('button[aria-label="Enviar mensaje"]');
+    await page.click('button[aria-label="Enviar mensaje"], button[aria-label="Send message"]');
     
     // 5. Should show error message
     const errorMessage = page.locator('text=/No tienes proveedores de IA configurados/');
@@ -132,60 +138,60 @@ test.describe('Provider Setup to Chat Journey', () => {
   test('supports multiple provider configuration', async ({ page }) => {
     // 1. Navigate to setup
     await page.goto('http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     
     // 2. Select custom configuration
-    await page.click('text="Configuración Personalizada"');
+    await page.click('button:has-text("Configuración Personalizada"), button:has-text("Custom Configuration")');
     
     // 3. Select multiple providers
     await page.click('div:has-text("OpenAI"):has-text("GPT-4")');
-    await page.click('div:has-text("Claude"):has-text("Razonamiento avanzado")');
+    await page.click('div:has-text("Claude"):has-text("Advanced reasoning")');
     
     // 4. Click configure
-    await page.click('button:has-text("Configurar (2)")');
+    await page.click('button:has-text("Configurar"), button:has-text("Configure")');
     
     // 5. Configure OpenAI
     await expect(page.locator('h2:has-text("Configurar OpenAI")')).toBeVisible();
     await page.fill('input[type="password"]', 'sk-openai-test-key');
-    await page.click('button:has-text("Guardar")');
+    await page.click('button:has-text("Guardar"), button:has-text("Save")');
     
     // 6. Configure Claude
     await expect(page.locator('h2:has-text("Configurar Claude")')).toBeVisible({ timeout: 10000 });
     await page.fill('input[type="password"]', 'sk-ant-claude-test-key');
-    await page.click('button:has-text("Guardar")');
+    await page.click('button:has-text("Guardar"), button:has-text("Save")');
     
     // 7. Wait for completion
-    await expect(page.locator('h2:has-text("¡Configuración Completa!")')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h2:has-text("¡Configuración Completa!"), h2:has-text("Setup Complete!")')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('text=/Configuraste 2 proveedor/')).toBeVisible();
     
     // 8. Navigate to chat
-    await page.click('button:has-text("Comenzar a Usar LexMX")');
+    await page.click('button:has-text("Comenzar a Usar LexMX"), button:has-text("Start Using LexMX")');
     await page.waitForURL('**/chat');
     
     // 9. Verify chat works with multiple providers
-    const textarea = page.locator('textarea[placeholder*="consulta legal"]');
+    const textarea = page.locator('[data-testid="chat-input"], textarea[placeholder*="legal query"]');
     await textarea.fill('Query with multiple providers');
-    await page.click('button[aria-label="Enviar mensaje"]');
+    await page.click('button[aria-label="Enviar mensaje"], button[aria-label="Send message"]');
     await expect(page.locator('text="Query with multiple providers"')).toBeVisible();
   });
 
   test('handles provider configuration errors gracefully', async ({ page }) => {
     // 1. Navigate to setup
     await page.goto('http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
-    await page.click('text="Configuración Personalizada"');
+    await page.click('[data-testid="setup-begin"]');
+    await page.click('button:has-text("Configuración Personalizada"), button:has-text("Custom Configuration")');
     await page.click('div:has-text("OpenAI")');
     await page.click('button:has-text("Configurar (1)")');
     
     // 2. Try to save without API key
-    await page.click('button:has-text("Guardar")');
+    await page.click('button:has-text("Guardar"), button:has-text("Save")');
     
     // 3. Should remain on configuration page (not advance)
     await expect(page.locator('h2:has-text("Configurar OpenAI")')).toBeVisible();
     
     // 4. Enter invalid API key format
     await page.fill('input[type="password"]', 'invalid-key');
-    await page.click('button:has-text("Guardar")');
+    await page.click('button:has-text("Guardar"), button:has-text("Save")');
     
     // 5. May show error or proceed to test - handle both cases
     const errorText = page.locator('text=/formato|inválido|error/i');

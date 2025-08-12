@@ -1,0 +1,181 @@
+{
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "output": {
+    "dir": "docs/demo",
+    "formats": {
+      "gif": {
+        "enabled": true,
+        "fps": 10,
+        "quality": "high",
+        "maxSize": "3MB",
+        "optimization": "gifsicle"
+      },
+      "mp4": {
+        "enabled": true,
+        "fps": 30,
+        "quality": "high"
+      },
+      "screenshots": {
+        "enabled": true,
+        "format": "png"
+      }
+    }
+  },
+  "demos": {
+    "full": {
+      "name": "lexmx-demo",
+      "description": "Full feature showcase",
+      "scenes": [
+        {
+          "page": "/",
+          "duration": 2500,
+          "waitFor": "networkidle",
+          "actions": [
+            {
+              "type": "scroll",
+              "target": "smooth",
+              "to": 0,
+              "delay": 500
+            },
+            {
+              "type": "hover",
+              "selector": "a:has-text('Abrir Chat Legal')",
+              "delay": 300
+            }
+          ]
+        },
+        {
+          "page": "/setup",
+          "duration": 3500,
+          "waitFor": "networkidle",
+          "actions": [
+            {
+              "type": "hover",
+              "selector": "[data-provider='webllm'], .provider-card:has-text('WebLLM')",
+              "delay": 400
+            },
+            {
+              "type": "hover",
+              "selector": "[data-provider='openai'], .provider-card:has-text('OpenAI')",
+              "delay": 400
+            },
+            {
+              "type": "hover",
+              "selector": "[data-provider='claude'], .provider-card:has-text('Claude')",
+              "delay": 400
+            },
+            {
+              "type": "hover",
+              "selector": "[data-provider='gemini'], .provider-card:has-text('Gemini')",
+              "delay": 400
+            }
+          ]
+        },
+        {
+          "page": "/chat",
+          "duration": 4000,
+          "waitFor": "networkidle",
+          "actions": [
+            {
+              "type": "type",
+              "selector": "textarea[placeholder*='consulta'], textarea[placeholder*='Escribe']",
+              "text": "¿Cuáles son los requisitos para un contrato laboral válido en México?",
+              "delay": 50
+            },
+            {
+              "type": "wait",
+              "duration": 1500
+            }
+          ]
+        },
+        {
+          "page": "/casos",
+          "duration": 2000,
+          "waitFor": "networkidle",
+          "actions": []
+        },
+        {
+          "page": "/",
+          "duration": 1500,
+          "waitFor": "networkidle",
+          "actions": [
+            {
+              "type": "click",
+              "selector": "button[aria-label*='tema'], button:has-text('🌙'), button:has-text('☀️')",
+              "delay": 500
+            },
+            {
+              "type": "wait",
+              "duration": 800
+            },
+            {
+              "type": "click",
+              "selector": "button[aria-label*='tema'], button:has-text('🌙'), button:has-text('☀️')",
+              "delay": 500
+            }
+          ]
+        }
+      ]
+    },
+    "quick": {
+      "name": "lexmx-demo-quick",
+      "description": "Quick homepage demo",
+      "scenes": [
+        {
+          "page": "/",
+          "duration": 3000,
+          "waitFor": "networkidle",
+          "actions": [
+            {
+              "type": "scroll",
+              "target": "smooth",
+              "to": 400,
+              "delay": 1000
+            },
+            {
+              "type": "scroll",
+              "target": "smooth",
+              "to": 0,
+              "delay": 1000
+            }
+          ]
+        }
+      ]
+    },
+    "chat": {
+      "name": "lexmx-demo-chat",
+      "description": "Chat interface demo",
+      "scenes": [
+        {
+          "page": "/chat",
+          "duration": 5000,
+          "waitFor": "networkidle",
+          "actions": [
+            {
+              "type": "type",
+              "selector": "textarea",
+              "text": "¿Qué dice el artículo 123 constitucional sobre los derechos laborales?",
+              "delay": 40
+            },
+            {
+              "type": "wait",
+              "duration": 2000
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "browser": {
+    "headless": true,
+    "args": ["--window-size=1280,800", "--force-device-scale-factor=2"]
+  },
+  "server": {
+    "url": "http://localhost:4321",
+    "startCommand": "npm run dev",
+    "waitTime": 5000
+  }
+}

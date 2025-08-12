@@ -1,24 +1,18 @@
 import { test, expect } from '@playwright/test';
+import { setupPage, navigateToPage, waitForPageReady, setupAllMockProviders, setupProviderScenario } from '../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('Basic Markdown Rendering', () => {
   test('should render markdown in chat messages', async ({ page }) => {
     // Go directly to chat page
-    await page.goto('/');
+    await page.goto('/chat');
     
     // Wait for the page to load
     await page.waitForLoadState('networkidle');
     
-    // Check if we have the "Empezar" button
-    const startButton = page.locator('text=Empezar');
-    const isStartButtonVisible = await startButton.isVisible().catch(() => false);
-    
-    if (isStartButtonVisible) {
-      await startButton.click();
-      await page.waitForSelector('.chat-interface', { timeout: 5000 });
-    }
-    
-    // Check that MessageContent component is being used
-    const chatInterface = await page.locator('.chat-interface').isVisible();
+    // Check that ChatInterface component is visible
+    const chatInterface = await page.locator('[data-testid="chat-container"]').isVisible();
     expect(chatInterface).toBe(true);
     
     // Look for any existing messages with markdown content
@@ -30,7 +24,7 @@ test.describe('Basic Markdown Rendering', () => {
   });
 
   test('should apply markdown styles', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/chat');
     
     // Check that markdown CSS is loaded
     const markdownStyles = await page.evaluate(() => {
@@ -51,16 +45,20 @@ test.describe('Basic Markdown Rendering', () => {
   });
 
   test('should handle dark mode', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/chat');
     
     // Wait for theme toggle to be available
-    await page.waitForSelector('[aria-label*="tema"]', { timeout: 5000 });
+    const themeToggle = page.locator('[data-testid="theme-toggle"]').first();
+    await themeToggle.waitFor({ state: 'visible', timeout: 10000 });
     
     // Click theme toggle
-    await page.click('[aria-label*="tema"]');
+    await themeToggle.click();
     
-    // Select dark mode
-    const darkOption = page.locator('text=Oscuro');
+    // Wait for dropdown
+    await page.waitForSelector('.theme-toggle div.absolute', { state: 'visible' });
+    
+    // Select dark mode - try both Spanish and English
+    const darkOption = page.locator('.theme-toggle button:has-text("Oscuro"), .theme-toggle button:has-text("Dark")').first();
     if (await darkOption.isVisible()) {
       await darkOption.click();
       

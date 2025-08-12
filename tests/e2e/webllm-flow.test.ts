@@ -4,6 +4,8 @@ import {
   navigateAndWaitForHydration,
   clearAllStorage
 } from '../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('WebLLM Integration Flow', () => {
   test.beforeEach(async ({ page }) => {
@@ -27,7 +29,7 @@ test.describe('WebLLM Integration Flow', () => {
     await navigateAndWaitForHydration(page, 'http://localhost:4321/setup');
     
     // 2. Click start configuration
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     
     // 3. Select custom configuration
     await page.click('text="Configuración Personalizada"');
@@ -88,7 +90,7 @@ test.describe('WebLLM Integration Flow', () => {
     await navigateAndWaitForHydration(page, 'http://localhost:4321/chat');
     
     // Try to send a message
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Test query');
+    await page.fill('[data-testid="chat-input"]', 'Test query');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should show appropriate error message
@@ -99,7 +101,7 @@ test.describe('WebLLM Integration Flow', () => {
     await navigateAndWaitForHydration(page, 'http://localhost:4321/setup');
     
     // Start configuration
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     await page.click('text="Configuración Personalizada"');
     
     // Select WebLLM
@@ -143,7 +145,7 @@ test.describe('WebLLM Integration Flow', () => {
     await navigateAndWaitForHydration(page, 'http://localhost:4321/chat');
     
     // Send a message to trigger initialization
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Test query');
+    await page.fill('[data-testid="chat-input"]', 'Test query');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Wait a bit for initialization
@@ -169,7 +171,7 @@ test.describe('WebLLM Integration Flow', () => {
     await navigateAndWaitForHydration(page, 'http://localhost:4321/chat');
     
     // Try to use it
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Test query');
+    await page.fill('[data-testid="chat-input"]', 'Test query');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should show a user-friendly error, not technical details

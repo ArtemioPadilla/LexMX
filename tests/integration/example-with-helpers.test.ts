@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import {
   setupPage,
   navigateAndWaitForHydration,
-  setupMockProviders,
+  setupAllMockProviders,
   waitForComponent,
   assertNoConsoleErrors,
   fillFormField,
@@ -14,7 +14,7 @@ import { waitForHydrationWrapper, waitForInteractive } from './utils/hydration-h
 test.describe('Example Tests with Helpers', () => {
   test.beforeEach(async ({ page }) => {
     await setupPage(page);
-    await setupMockProviders(page);
+    await setupAllMockProviders(page);
   });
 
   test('should load chat interface with proper hydration', async ({ page }) => {

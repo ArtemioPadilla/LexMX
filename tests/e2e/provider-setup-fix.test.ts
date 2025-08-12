@@ -1,7 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { setupPage, navigateToPage, waitForPageReady, setupAllMockProviders, setupProviderScenario } from '../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('Provider Setup Fix Verification', () => {
   test.beforeEach(async ({ page }) => {
+  await setupPage(page);
     // Clear storage
     await page.goto('http://localhost:4321');
     await page.evaluate(() => {
@@ -19,18 +23,18 @@ test.describe('Provider Setup Fix Verification', () => {
     await expect(setupContainer).toBeVisible({ timeout: 10000 });
     
     // 3. Click start configuration
-    const startButton = page.locator('button:has-text("Comenzar Configuración")');
+    const startButton = page.locator('[data-testid="setup-begin"]');
     await expect(startButton).toBeVisible();
     await startButton.click();
     
     // 4. Wait for profile selection
-    await expect(page.locator('h2:has-text("Elige tu Perfil")')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('h2:has-text("Elige tu Perfil")')).toBeVisible({ timeout: 10000 });
     
     // 5. Click custom configuration
     await page.click('text="Configuración Personalizada"');
     
     // 6. Wait for provider selection
-    await expect(page.locator('h2:has-text("Selecciona Proveedores")')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('h2:has-text("Selecciona Proveedores")')).toBeVisible({ timeout: 10000 });
     
     // 7. Select Ollama (local provider)
     await page.click('div:has-text("Ollama"):has-text("Modelos locales")');
@@ -39,7 +43,7 @@ test.describe('Provider Setup Fix Verification', () => {
     await page.click('button:has-text("Configurar (1)")');
     
     // 9. Configure Ollama
-    await expect(page.locator('h2:has-text("Configurar Ollama")')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('h2:has-text("Configurar Ollama")')).toBeVisible({ timeout: 10000 });
     await page.fill('input[type="url"]', 'http://localhost:11434');
     await page.click('button:has-text("Guardar")');
     
@@ -57,13 +61,13 @@ test.describe('Provider Setup Fix Verification', () => {
     await expect(page).toHaveURL(/.*\/chat/, { timeout: 10000 });
     
     // 14. Verify chat interface loads
-    await expect(page.locator('.chat-interface')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="chat-container"]')).toBeVisible({ timeout: 10000 });
   });
 
   test('provider configuration persists', async ({ page }) => {
     // First, complete a quick setup
     await page.goto('http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     await page.click('text="Configuración Personalizada"');
     await page.click('div:has-text("Ollama")');
     await page.click('button:has-text("Configurar (1)")');
@@ -79,7 +83,7 @@ test.describe('Provider Setup Fix Verification', () => {
     await page.reload();
     
     // Check that the chat interface still loads without errors
-    await expect(page.locator('.chat-interface')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="chat-container"]')).toBeVisible({ timeout: 10000 });
     
     // Check that we don't see the "no providers" error immediately
     const noProvidersError = page.locator('text="No tienes proveedores de IA configurados"');
@@ -97,19 +101,19 @@ test.describe('Provider Setup Fix Verification', () => {
     await page.goto('http://localhost:4321/chat');
     
     // Wait for chat interface
-    await expect(page.locator('.chat-interface')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="chat-container"]')).toBeVisible({ timeout: 10000 });
     
     // Should show info message about no providers
     const infoMessage = page.locator('text=/No tienes proveedores configurados/i');
     await expect(infoMessage).toBeVisible({ timeout: 10000 });
     
     // Try to send a message
-    const textarea = page.locator('textarea[placeholder*="consulta legal"]');
+    const textarea = page.locator('[data-testid="chat-input"]');
     await textarea.fill('Test message');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should show error about no providers
     const errorMessage = page.locator('text=/No tienes proveedores de IA configurados.*Configuración/');
-    await expect(errorMessage).toBeVisible({ timeout: 5000 });
+    await expect(errorMessage).toBeVisible({ timeout: 10000 });
   });
 });

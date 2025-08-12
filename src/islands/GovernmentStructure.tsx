@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS } from '../utils/test-ids';
 
 interface GovernmentLevel {
   id: string;
@@ -145,8 +147,14 @@ const powerBranches: PowerBranch[] = [
 ];
 
 export default function GovernmentStructure() {
+  const [isHydrated, setIsHydrated] = useState(false);
   const [activeView, setActiveView] = useState<'powers' | 'levels'>('powers');
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const getColorClasses = (color: string, selected: boolean = false) => {
     const colorMap = {
@@ -158,9 +166,19 @@ export default function GovernmentStructure() {
     };
     return colorMap[color as keyof typeof colorMap] || colorMap.blue;
   };
+  // Handle SSR/hydration
+  if (!isHydrated) {
+    return (
+      <HydrationBoundary 
+        fallback={<LoadingStates.GovernmentStructure />} 
+        testId="government-structure"
+      />
+    );
+  }
 
   return (
-    <div className="government-structure">
+    <div
+      data-testid="government-structure" className="government-structure">
       {/* View Toggle */}
       <div className="flex justify-center mb-8">
         <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">

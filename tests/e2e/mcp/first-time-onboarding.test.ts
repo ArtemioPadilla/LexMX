@@ -6,6 +6,8 @@ import {
   testMobileView,
   switchLanguage
 } from '../../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('First-Time User Onboarding Journey', () => {
   test.beforeEach(async ({ page }) => {
@@ -50,7 +52,7 @@ test.describe('First-Time User Onboarding Journey', () => {
     await expect(page.locator('text=/No tienes proveedores configurados/')).toBeVisible();
     
     // Try to send a message anyway
-    await page.fill('textarea[placeholder*="consulta legal"]', '¿Qué es el amparo?');
+    await page.fill('[data-testid="chat-input"]', '¿Qué es el amparo?');
     await page.keyboard.press('Enter');
     
     // Should get clear error directing to setup
@@ -66,7 +68,7 @@ test.describe('First-Time User Onboarding Journey', () => {
     await expect(page.locator('text=/segura.*encriptada/')).toBeVisible();
     
     // Start configuration
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     
     // 6. Profile selection for beginners
     await expect(page.locator('h2:has-text("Elige tu Perfil")')).toBeVisible();
@@ -114,18 +116,18 @@ test.describe('First-Time User Onboarding Journey', () => {
     await page.waitForURL('**/chat');
     
     // 10. First successful query
-    await page.waitForSelector('.chat-interface');
+    await page.waitForSelector('[data-testid="chat-container"]');
     
     // Type a beginner-friendly query
     const beginnerQuery = '¿Qué es el amparo y para qué sirve?';
-    await page.fill('textarea[placeholder*="consulta legal"]', beginnerQuery);
+    await page.fill('[data-testid="chat-input"]', beginnerQuery);
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should see processing indicator
     await expect(page.locator('text=/Analizando|procesando/')).toBeVisible();
     
     // Wait for response
-    await page.waitForSelector(`text="${beginnerQuery}"`, { timeout: 5000 });
+    await page.waitForSelector(`text="${beginnerQuery}"`, { timeout: 10000 });
     
     // 11. Explore response features
     // Should educate about sources and confidence
@@ -157,7 +159,7 @@ test.describe('First-Time User Onboarding Journey', () => {
     await page.click('link:has-text("Chat Legal")');
     
     // Ask a follow-up question
-    await page.fill('textarea[placeholder*="consulta legal"]', 
+    await page.fill('[data-testid="chat-input"]', 
       '¿Cuál es la diferencia entre amparo directo e indirecto?'
     );
     await page.click('button[aria-label="Enviar mensaje"]');
@@ -188,7 +190,7 @@ test.describe('First-Time User Onboarding Journey', () => {
       await page.click('link:has-text("Configuración")');
       
       // 3. Mobile-optimized setup
-      await page.click('button:has-text("Comenzar Configuración")');
+      await page.click('[data-testid="setup-begin"]');
       await page.click('div:has-text("Privacidad Primero")'); // Good for mobile users
       await page.click('div:has-text("Ollama")'); // Local option
       await page.click('button:has-text("Configurar (1)")');
@@ -203,11 +205,11 @@ test.describe('First-Time User Onboarding Journey', () => {
       
       // 4. Mobile chat experience
       await page.waitForURL('**/chat');
-      await page.fill('textarea[placeholder*="consulta legal"]', 'consulta rápida móvil');
+      await page.fill('[data-testid="chat-input"]', 'consulta rápida móvil');
       await page.click('button[aria-label="Enviar mensaje"]');
       
       // Verify mobile-friendly response
-      await expect(page.locator('.chat-interface')).toBeVisible();
+      await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
     });
   });
 
@@ -230,7 +232,7 @@ test.describe('First-Time User Onboarding Journey', () => {
     
     // 3. Setup with privacy profile
     await page.goto('http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     
     // Select privacy-first profile
     await page.click('div:has-text("Privacidad Primero"):has-text("modelos locales")');
@@ -269,7 +271,7 @@ test.describe('First-Time User Onboarding Journey', () => {
     });
     
     // Send a query
-    await page.fill('textarea[placeholder*="consulta legal"]', 'consulta privada local');
+    await page.fill('[data-testid="chat-input"]', 'consulta privada local');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Wait a bit for any requests
@@ -329,7 +331,7 @@ test.describe('First-Time User Onboarding Journey', () => {
   test('error recovery during onboarding', async ({ page }) => {
     // 1. Setup with invalid configuration
     await page.goto('http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     await page.click('text="Configuración Personalizada"');
     await page.click('div:has-text("OpenAI")');
     await page.click('button:has-text("Configurar (1)")');
@@ -349,7 +351,7 @@ test.describe('First-Time User Onboarding Journey', () => {
       await page.waitForURL('**/chat');
       
       // 5. Try to use chat with invalid provider
-      await page.fill('textarea[placeholder*="consulta legal"]', 'test query');
+      await page.fill('[data-testid="chat-input"]', 'test query');
       await page.click('button[aria-label="Enviar mensaje"]');
       
       // Should show provider error

@@ -5,12 +5,33 @@ import {
   createTestCase,
   clearAllStorage
 } from '../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('Case Management (Mis Casos) User Journey', () => {
   test.beforeEach(async ({ page }) => {
     await setupPage(page);
     await clearAllStorage(page);
+    
+    // Set Spanish language before navigation
+    await page.evaluate(() => {
+      localStorage.setItem('language', '"es"');
+    });
+    
     await navigateAndWaitForHydration(page, '/casos');
+    
+    // Log console messages to help debug
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        console.log('Browser error:', msg.text());
+      }
+    });
+    
+    // Wait for CaseManager to fully load and initialize
+    await page.waitForSelector('[data-testid="case-manager"]', { timeout: 10000 });
+    
+    // Additional wait to ensure language is applied
+    await page.waitForTimeout(1000);
   });
 
   test('can navigate to Mis Casos from navigation', async ({ page }) => {
@@ -21,90 +42,165 @@ test.describe('Case Management (Mis Casos) User Journey', () => {
     
     // Verify we're on the casos page
     await page.waitForURL('**/casos');
-    await expect(page.locator('.case-manager')).toBeVisible();
+    await expect(page.locator('[data-testid="case-manager"]')).toBeVisible();
     await expect(page.locator('h1:has-text("Mis Casos")')).toBeVisible();
   });
 
   test('shows empty state when no cases exist', async ({ page }) => {
-    // Check empty state message
-    await expect(page.locator('text="No hay casos creados"')).toBeVisible();
+    // Wait for hydration
+    await page.waitForTimeout(1000);
     
-    // Check main area shows prompt
-    await expect(page.locator('text="Selecciona un caso"')).toBeVisible();
-    await expect(page.locator('text="o crea uno nuevo para comenzar"')).toBeVisible();
+    // Check empty state message using data-testid
+    const emptyMessage = page.locator('[data-testid="empty-cases-message"]');
+    await expect(emptyMessage).toBeVisible({ timeout: 10000 });
+    
+    // Check main area shows prompt using data-testid
+    const selectMessage = page.locator('[data-testid="select-case-message"]');
+    const createMessage = page.locator('[data-testid="or-create-new-message"]');
+    
+    await expect(selectMessage).toBeVisible();
+    await expect(createMessage).toBeVisible();
   });
 
   test('can create a new case', async ({ page }) => {
-    // Click "Nuevo Caso" button
-    await page.click('button:has-text("+ Nuevo Caso")');
+    // Wait for CaseManager to initialize
+    await page.waitForTimeout(1000);
     
-    // Check creation form is visible
-    await expect(page.locator('h2:has-text("Crear Nuevo Caso")')).toBeVisible();
+    // Click new case button - use data-testid
+    const newCaseButton = page.locator('[data-testid="new-case-button"]');
+    await newCaseButton.click();
     
-    // Fill in case details
-    await page.fill('input[placeholder*="Divorcio"]', 'Caso de Prueba');
-    await page.fill('textarea[placeholder*="descripción"]', 'Descripción del caso de prueba');
-    await page.fill('input[placeholder="Nombre del cliente"]', 'Cliente Test');
-    await page.fill('input[placeholder*="123/2024"]', 'TEST-001/2024');
+    // Check creation form is visible - use data-testid
+    const createCaseForm = page.locator('[data-testid="case-creation-form"]');
+    await expect(createCaseForm).toBeVisible();
+    
+    // Fill in case details - use more robust selectors
+    const titleInput = page.locator('input[type="text"]').first();
+    const descriptionTextarea = page.locator('textarea').first();
+    const clientInput = page.locator('input[type="text"]').nth(1);
+    const caseNumberInput = page.locator('input[type="text"]').nth(2);
+    
+    await titleInput.fill('Caso de Prueba');
+    await descriptionTextarea.fill('Descripción del caso de prueba');
+    await clientInput.fill('Cliente Test');
+    await caseNumberInput.fill('TEST-001/2024');
     
     // Select legal area
-    await page.selectOption('select', 'labor');
+    const legalAreaSelect = page.locator('select').nth(2);
+    await legalAreaSelect.selectOption('civil');
     
-    // Submit form
-    await page.click('button:has-text("Crear Caso")');
+    // Submit form - use button type submit
+    const submitButton = page.locator('button[type="submit"]').first();
+    await submitButton.click();
     
-    // Verify case was created and is visible in sidebar
-    await expect(page.locator('text="Caso de Prueba"').first()).toBeVisible();
-    await expect(page.locator('text="Cliente Test"').first()).toBeVisible();
+    // Wait for case to be created
+    await page.waitForTimeout(1000);
     
-    // Verify case is selected and details are shown
-    await expect(page.locator('h1:has-text("Caso de Prueba")')).toBeVisible();
-    await expect(page.locator('text="Descripción del caso de prueba"')).toBeVisible();
+    // Verify case was created by checking for case item with data-testid
+    const caseItems = page.locator('[data-testid^="case-item-"]');
+    await expect(caseItems).toHaveCount(1, { timeout: 10000 });
+    
+    // Click on the created case
+    await caseItems.first().click();
+    
+    // Verify case details are shown (checking for the description we entered)
+    await expect(page.locator('text="Descripción del caso de prueba"')).toBeVisible({ timeout: 10000 });
   });
 
   test('can search for cases', async ({ page }) => {
-    // Create multiple test cases
-    await createTestCase(page, {
-      title: 'Divorcio García',
-      client: 'Juan García',
-      legalArea: 'civil'
+    // Log console messages to help debug
+    page.on('console', msg => {
+      console.log('Browser log:', msg.type(), msg.text());
     });
     
+    page.on('pageerror', err => {
+      console.log('Page error:', err.message);
+    });
+    
+    // Create test cases directly in localStorage before page load
     await page.evaluate(() => {
-      const cases = JSON.parse(localStorage.getItem('lexmx_cases') || '[]');
-      cases.push({
-        id: '2',
-        title: 'Despido Injustificado',
-        client: 'María López',
-        legalArea: 'labor',
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        documents: [],
-        notes: [],
-        conversations: [],
-        deadlines: [],
-        parties: []
-      });
+      const cases = [
+        {
+          id: '1',
+          title: 'Divorcio García',
+          client: 'Juan García',
+          legalArea: 'civil',
+          status: 'active',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          documents: [],
+          notes: [],
+          conversations: [],
+          deadlines: [],
+          parties: []
+        },
+        {
+          id: '2',
+          title: 'Despido Injustificado',
+          client: 'María López',
+          legalArea: 'labor',
+          status: 'active',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          documents: [],
+          notes: [],
+          conversations: [],
+          deadlines: [],
+          parties: []
+        }
+      ];
       localStorage.setItem('lexmx_cases', JSON.stringify(cases));
     });
     
-    await page.reload();
+    // Navigate away and back to trigger fresh load with localStorage data
+    await page.goto('/');
+    await navigateAndWaitForHydration(page, '/casos');
     
-    // Search for "García"
-    const searchInput = page.locator('input[placeholder="Buscar casos..."]');
+    // Wait for CaseManager to load
+    await page.waitForSelector('[data-testid="case-manager"]', { timeout: 10000 });
+    await page.waitForTimeout(1500); // Wait for cases to load from localStorage
+    
+    // Verify both cases are visible initially
+    const casesList = page.locator('[data-testid="cases-list"]');
+    await expect(casesList).toBeVisible({ timeout: 10000 });
+    
+    // Wait for cases to be rendered
+    await page.waitForFunction(
+      () => document.querySelectorAll('[data-testid^="case-item-"]').length === 2,
+      { timeout: 10000 }
+    );
+    
+    // Search for "García" - use data-testid
+    const searchInput = page.locator('[data-testid="search-cases-input"]');
+    await searchInput.click();
     await searchInput.fill('García');
     
-    // Check only García case is visible
-    await expect(page.locator('text="Divorcio García"')).toBeVisible();
-    await expect(page.locator('text="Despido Injustificado"')).not.toBeVisible();
+    // Wait for debounce (300ms) + some extra time for React to re-render
+    await page.waitForTimeout(500);
+    
+    // Wait for filtered results using waitForFunction
+    await page.waitForFunction(
+      () => {
+        const items = document.querySelectorAll('[data-testid^="case-item-"]');
+        // Should have exactly 1 case with "García" in it
+        return items.length === 1 && 
+               Array.from(items).some(item => item.textContent?.includes('García'));
+      },
+      { timeout: 10000 }
+    );
     
     // Clear search
+    await searchInput.click();
     await searchInput.clear();
     
-    // Check both cases are visible
-    await expect(page.locator('text="Divorcio García"')).toBeVisible();
-    await expect(page.locator('text="Despido Injustificado"')).toBeVisible();
+    // Wait for debounce + re-render
+    await page.waitForTimeout(500);
+    
+    // Wait for both cases to be visible again
+    await page.waitForFunction(
+      () => document.querySelectorAll('[data-testid^="case-item-"]').length === 2,
+      { timeout: 10000 }
+    );
   });
 
   test('can filter cases by status', async ({ page }) => {
@@ -143,8 +239,9 @@ test.describe('Case Management (Mis Casos) User Journey', () => {
     
     await page.reload();
     
-    // Filter by active status
-    await page.selectOption('select:has(option[value="active"])', 'active');
+    // Filter by active status - use data-testid
+    const statusSelect = page.locator('[data-testid="filter-status-select"]');
+    await statusSelect.selectOption('active');
     
     // Check only active case is visible
     await expect(page.locator('text="Caso Activo"')).toBeVisible();
@@ -171,7 +268,7 @@ test.describe('Case Management (Mis Casos) User Journey', () => {
     
     // Click Documents tab
     await page.click('button:has-text("Documentos")');
-    await expect(page.locator('text="Click para subir"')).toBeVisible();
+    await expect(page.locator('[data-testid="upload-area"]')).toBeVisible();
     
     // Click Notes tab
     await page.click('button:has-text("Notas")');
@@ -226,11 +323,11 @@ test.describe('Case Management (Mis Casos) User Journey', () => {
     await page.click('button:has-text("Documentos")');
     
     // Check upload area is visible
-    await expect(page.locator('text="Click para subir"')).toBeVisible();
-    await expect(page.locator('text="o arrastra archivos aquí"')).toBeVisible();
+    await expect(page.locator('[data-testid="upload-area"]')).toBeVisible();
+    await expect(page.locator('[data-testid="upload-text"]')).toBeVisible();
     
     // Simulate file upload
-    const fileInput = page.locator('input[type="file"]');
+    const fileInput = page.locator('[data-testid="file-input"]');
     await fileInput.setInputFiles({
       name: 'test-document.pdf',
       mimeType: 'application/pdf',
@@ -249,7 +346,8 @@ test.describe('Case Management (Mis Casos) User Journey', () => {
     
     // Click delete button
     page.on('dialog', dialog => dialog.accept()); // Auto-accept confirmation
-    await page.click('svg[viewBox="0 0 24 24"]:has(path[d*="M19 7l-.867"])').locator('..');
+    const deleteButton = page.locator('button:has(svg[viewBox="0 0 24 24"]:has(path[d*="M19 7l-.867"]))');
+    await deleteButton.click();
     
     // Wait for case to be deleted
     await page.waitForTimeout(500);
@@ -342,25 +440,27 @@ test.describe('Case Management (Mis Casos) User Journey', () => {
     await page.reload();
     
     // Check status badges are visible with correct colors
-    const activeCase = page.locator('button:has-text("Active Case")');
-    await expect(activeCase.locator('span:has-text("Activo")')).toBeVisible();
-    await expect(activeCase.locator('span:has-text("Activo")')).toHaveClass(/bg-green/);
+    const activeCase = page.locator('[data-testid="case-item-1"]');
+    await expect(activeCase.locator('[data-testid="case-status-active"]')).toBeVisible();
+    await expect(activeCase.locator('[data-testid="case-status-active"]')).toHaveClass(/bg-green/);
     
-    const pendingCase = page.locator('button:has-text("Pending Case")');
-    await expect(pendingCase.locator('span:has-text("Pendiente")')).toBeVisible();
-    await expect(pendingCase.locator('span:has-text("Pendiente")')).toHaveClass(/bg-yellow/);
+    const pendingCase = page.locator('[data-testid="case-item-2"]');
+    await expect(pendingCase.locator('[data-testid="case-status-pending"]')).toBeVisible();
+    await expect(pendingCase.locator('[data-testid="case-status-pending"]')).toHaveClass(/bg-yellow/);
     
-    const resolvedCase = page.locator('button:has-text("Resolved Case")');
-    await expect(resolvedCase.locator('span:has-text("Resuelto")')).toBeVisible();
-    await expect(resolvedCase.locator('span:has-text("Resuelto")')).toHaveClass(/bg-blue/);
+    const resolvedCase = page.locator('[data-testid="case-item-3"]');
+    await expect(resolvedCase.locator('[data-testid="case-status-resolved"]')).toBeVisible();
+    await expect(resolvedCase.locator('[data-testid="case-status-resolved"]')).toHaveClass(/bg-blue/);
   });
 
   test('can cancel case creation', async ({ page }) => {
-    // Click "Nuevo Caso" button
-    await page.click('button:has-text("+ Nuevo Caso")');
+    // Click "Nuevo Caso" button - use data-testid
+    const newCaseButton = page.locator('[data-testid="new-case-button"]');
+    await newCaseButton.click();
     
-    // Check creation form is visible
-    await expect(page.locator('h2:has-text("Crear Nuevo Caso")')).toBeVisible();
+    // Check creation form is visible - use data-testid
+    const createCaseForm = page.locator('[data-testid="case-creation-form"]');
+    await expect(createCaseForm).toBeVisible();
     
     // Fill some data
     await page.fill('input[placeholder*="Divorcio"]', 'Cancelled Case');

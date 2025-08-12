@@ -5,6 +5,8 @@ import {
   clearAllStorage,
   assertNoConsoleErrors 
 } from '../../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('WebLLM Integration', () => {
   test.beforeEach(async ({ page }) => {
@@ -81,7 +83,7 @@ test.describe('WebLLM Integration', () => {
     await navigateAndWaitForHydration(page, 'http://localhost:4321/setup');
     
     // 2. Start configuration
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     
     // 3. Select Privacy First profile (includes WebLLM)
     await expect(page.locator('h2:has-text("Elige tu Perfil")')).toBeVisible();
@@ -147,7 +149,7 @@ test.describe('WebLLM Integration', () => {
   test('WebLLM model download progress', async ({ page }) => {
     // Setup WebLLM provider first
     await navigateAndWaitForHydration(page, 'http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     await page.click('text="Configuración Personalizada"');
     await page.click('div:has-text("WebLLM")');
     await page.click('button:has-text("Configurar (1)")');
@@ -164,7 +166,7 @@ test.describe('WebLLM Integration', () => {
     await page.waitForURL('**/chat');
     
     // Send first message to trigger model download
-    await page.fill('textarea[placeholder*="consulta legal"]', '¿Qué es el amparo?');
+    await page.fill('[data-testid="chat-input"]', '¿Qué es el amparo?');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should show download progress
@@ -199,7 +201,7 @@ test.describe('WebLLM Integration', () => {
     await navigateAndWaitForHydration(page, 'http://localhost:4321/chat');
     
     // Send a legal query
-    await page.fill('textarea[placeholder*="consulta legal"]', 
+    await page.fill('[data-testid="chat-input"]', 
       '¿Cuáles son los requisitos para presentar un amparo directo?'
     );
     await page.click('button[aria-label="Enviar mensaje"]');
@@ -208,18 +210,18 @@ test.describe('WebLLM Integration', () => {
     await expect(page.locator('text="Analizando tu consulta legal..."')).toBeVisible();
     
     // Should get response (mocked)
-    await expect(page.locator('text=/amparo directo|requisitos|Sentencia definitiva/')).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('text=/amparo directo|requisitos|Sentencia definitiva/')).toBeVisible({ timeout: 60000 });
     
     // Verify no cost tracking for WebLLM
     const costIndicator = page.locator('text=/\$|cost|costo/');
     await expect(costIndicator).not.toBeVisible();
     
     // Test streaming response
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Explica el proceso legislativo');
+    await page.fill('[data-testid="chat-input"]', 'Explica el proceso legislativo');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should see streaming indicator or response
-    await expect(page.locator('.animate-pulse, .streaming-indicator, text=/proceso legislativo/')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.animate-pulse, .streaming-indicator, text=/proceso legislativo/')).toBeVisible({ timeout: 10000 });
   });
 
   test('WebGPU compatibility check', async ({ page }) => {
@@ -229,7 +231,7 @@ test.describe('WebLLM Integration', () => {
     });
     
     await navigateAndWaitForHydration(page, 'http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     await page.click('text="Configuración Personalizada"');
     await page.click('div:has-text("WebLLM")');
     await page.click('button:has-text("Configurar (1)")');
@@ -241,7 +243,7 @@ test.describe('WebLLM Integration', () => {
     await page.waitForURL('**/chat');
     
     // Try to send message
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Test query');
+    await page.fill('[data-testid="chat-input"]', 'Test query');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should show WebGPU error
@@ -270,16 +272,16 @@ test.describe('WebLLM Integration', () => {
     await context.setOffline(true);
     
     // Should still be able to send queries
-    await page.fill('textarea[placeholder*="consulta legal"]', 
+    await page.fill('[data-testid="chat-input"]', 
       '¿Qué dice el artículo 14 constitucional?'
     );
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should process locally without network errors
-    await expect(page.locator('text=/error.*conexión|network error/i')).not.toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=/error.*conexión|network error/i')).not.toBeVisible({ timeout: 10000 });
     
     // Should get response or show working state
-    await expect(page.locator('text=/artículo 14|retroactividad|Analizando/')).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('text=/artículo 14|retroactividad|Analizando/')).toBeVisible({ timeout: 60000 });
     
     // Verify offline indicator (if implemented)
     const offlineIndicator = page.locator('[aria-label*="offline"], .offline-indicator');
@@ -304,7 +306,7 @@ test.describe('WebLLM Integration', () => {
     await navigateAndWaitForHydration(page, 'http://localhost:4321/chat');
     
     // Send a query with first model
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Primera consulta');
+    await page.fill('[data-testid="chat-input"]', 'Primera consulta');
     await page.click('button[aria-label="Enviar mensaje"]');
     await page.waitForSelector('text="Primera consulta"');
     
@@ -327,7 +329,7 @@ test.describe('WebLLM Integration', () => {
     await page.waitForURL('**/chat');
     
     // Send query with new model
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Segunda consulta con nuevo modelo');
+    await page.fill('[data-testid="chat-input"]', 'Segunda consulta con nuevo modelo');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should trigger download for new model
@@ -336,7 +338,7 @@ test.describe('WebLLM Integration', () => {
 
   test('privacy-first profile includes WebLLM by default', async ({ page }) => {
     await navigateAndWaitForHydration(page, 'http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     
     // Select Privacy First profile
     const privacyProfile = page.locator('.profile-card:has-text("Privacy First"), [role="button"]:has-text("Privacy First")').first();

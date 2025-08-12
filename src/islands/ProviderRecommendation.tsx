@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS } from '../utils/test-ids';
 import { providerManager } from '../lib/llm/provider-manager';
 import { useTranslation } from '../i18n';
 
@@ -22,9 +24,15 @@ export default function ProviderRecommendation({
   onSelectProvider,
   className = '' 
 }: ProviderRecommendationProps) {
+  const [isHydrated, setIsHydrated] = useState(false);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -94,8 +102,19 @@ export default function ProviderRecommendation({
   }
 
   if (loading) {
+  // Handle SSR/hydration
+  if (!isHydrated) {
     return (
-      <div className={`bg-gray-50 dark:bg-gray-800 rounded-lg p-4 ${className}`}>
+      <HydrationBoundary 
+        fallback={<LoadingStates.ProviderRecommendation />} 
+        testId="provider-recommendation"
+      />
+    );
+  }
+
+  return (
+    <div
+      data-testid="provider-recommendation" className={`bg-gray-50 dark:bg-gray-800 rounded-lg p-4 ${className}`}>
         <div className="animate-pulse">
           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
           <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>

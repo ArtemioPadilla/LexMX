@@ -1,11 +1,13 @@
 ---
 // Cases management page
 import BaseLayout from '../components/layout/BaseLayout.astro';
-import HydrationWrapper from '../components/HydrationWrapper.astro';
-import CaseManager from '../islands/CaseManager';
+import CaseManager from '../islands/CaseManager.tsx';
+import { getTranslation } from '../i18n/utils';
 
-const title = 'Mis Casos - LexMX';
-const description = 'Gestiona tus casos legales con documentos, notas y consultas integradas';
+const t = getTranslation(Astro.url);
+
+const title = t('cases.pageTitle');
+const description = t('cases.description');
 ---
 
 <BaseLayout title={title} description={description}>
@@ -14,17 +16,17 @@ const description = 'Gestiona tus casos legales con documentos, notas y consulta
       <!-- Header -->
       <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Mis Casos
+          {t('cases.title')}
         </h1>
         <p class="text-gray-600 dark:text-gray-400">
-          Organiza tus casos legales con documentos, notas y consultas en un solo lugar
+          {t('cases.description')}
         </p>
       </div>
 
       <!-- Case Manager Interface -->
-      <HydrationWrapper name="case-manager" width="100%" height="600px">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg" style="min-height: 600px;">
         <CaseManager client:load />
-      </HydrationWrapper>
+      </div>
     </div>
   </div>
 </BaseLayout>

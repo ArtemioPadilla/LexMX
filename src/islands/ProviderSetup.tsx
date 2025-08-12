@@ -10,6 +10,8 @@ import WebLLMModelGrid from '../components/providers/WebLLMModelGrid';
 import ProviderModelGrid from '../components/providers/ProviderModelGrid';
 import TestConnectionStatus from '../components/providers/TestConnectionStatus';
 import ProviderConfigForm from '../components/providers/ProviderConfigForm';
+import { TEST_IDS } from '../utils/test-ids';
+import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
 // Import provider classes to get their models
 import { OpenAIProvider } from '../lib/llm/providers/openai-provider';
 import { ClaudeProvider } from '../lib/llm/providers/claude-provider';
@@ -23,6 +25,7 @@ interface ProviderSetupProps {
 type SetupStep = 'welcome' | 'profile' | 'providers' | 'configure' | 'test' | 'complete';
 
 export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
+  const [isHydrated, setIsHydrated] = useState(false);
   const [step, setStep] = useState<SetupStep>('welcome');
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
@@ -36,6 +39,11 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
   const [showPreloadConfirm, setShowPreloadConfirm] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<Record<string, 'untested' | 'testing' | 'success' | 'error'>>({});
   const [testingConnection, setTestingConnection] = useState(false);
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const supportedProviders = providerRegistry.getSupportedProviders();
   const userProfiles = providerRegistry.getRecommendedProfiles();
@@ -236,6 +244,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
 
       <div className="flex flex-col space-y-3">
         <button
+          data-testid="setup-webllm"
           onClick={() => {
             // Skip to WebLLM configuration
             setSelectedProviders(['webllm']);
@@ -243,14 +252,16 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
             setStep('configure');
           }}
           className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg"
+          data-testid={TEST_IDS.provider.webllmButton}
         >
           Usar WebLLM (Recomendado)
         </button>
         <button
+          data-testid="setup-begin"
           onClick={() => setStep('profile')}
           className="w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
         >
-          Ver Todas las Opciones
+          Comenzar Configuración
         </button>
       </div>
     </div>
@@ -271,6 +282,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
         {userProfiles.map((profile) => (
           <div
             key={profile.id}
+            data-testid={`profile-${profile.id}`}
             onClick={() => handleProfileSelect(profile)}
             className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer hover:border-legal-300 dark:hover:border-legal-600 hover:bg-legal-50 dark:hover:bg-gray-800 transition-all bg-white dark:bg-gray-900"
           >
@@ -300,6 +312,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
       </div>
 
       <button
+        data-testid="setup-custom"
         onClick={() => setStep('providers')}
         className="w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors bg-white dark:bg-gray-900"
       >
@@ -467,8 +480,20 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
     complete: renderComplete
   };
 
+  // Handle SSR/hydration
+  if (!isHydrated) {
+    return (
+      <HydrationBoundary 
+        fallback={<LoadingStates.ProviderSetup />} 
+        testId={TEST_IDS.provider.container}
+      />
+    );
+  }
+
   return (
-    <div className="provider-setup max-w-2xl mx-auto p-6 bg-white dark:bg-gray-900">
+    <div 
+      data-testid={TEST_IDS.provider.container}
+      className="provider-setup max-w-2xl mx-auto p-6 bg-white dark:bg-gray-900">
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex space-x-2">

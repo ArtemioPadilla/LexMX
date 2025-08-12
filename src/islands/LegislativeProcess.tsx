@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS } from '../utils/test-ids';
 
 interface ProcessStep {
   id: string;
@@ -145,8 +147,14 @@ const legislativeSteps: ProcessStep[] = [
 ];
 
 export default function LegislativeProcess() {
+  const [isHydrated, setIsHydrated] = useState(false);
   const [activeStep, setActiveStep] = useState<string | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const nextStep = () => {
     if (currentStepIndex < legislativeSteps.length - 1) {
@@ -166,9 +174,19 @@ export default function LegislativeProcess() {
     setCurrentStepIndex(0);
     setActiveStep(null);
   };
+  // Handle SSR/hydration
+  if (!isHydrated) {
+    return (
+      <HydrationBoundary 
+        fallback={<LoadingStates.LegislativeProcess />} 
+        testId="legislative-process"
+      />
+    );
+  }
 
   return (
-    <div className="legislative-process">
+    <div
+      data-testid="legislative-process" className="legislative-process">
       <div className="text-center mb-8">
         <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
           Proceso Legislativo Federal

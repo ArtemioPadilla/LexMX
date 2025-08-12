@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test';
+import { setupPage, navigateToPage, waitForPageReady, setupAllMockProviders, setupProviderScenario } from '../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test('verify hydration and service worker fixes', async ({ page }) => {
   // Capture console logs and errors
@@ -20,7 +23,7 @@ test('verify hydration and service worker fixes', async ({ page }) => {
   await page.goto('http://localhost:4321/chat');
   
   // Wait for hydration
-  await page.waitForSelector('.chat-interface', { state: 'visible', timeout: 10000 });
+  await page.waitForSelector('[data-testid="chat-container"]', { state: 'visible', timeout: 10000 });
   await page.waitForTimeout(2000); // Give time for all hydration to complete
   
   // Check that no critical errors occurred
@@ -37,7 +40,7 @@ test('verify hydration and service worker fixes', async ({ page }) => {
   expect(criticalErrors).toHaveLength(0);
   
   // Verify chat interface is functional
-  const textarea = page.locator('textarea[placeholder*="consulta legal"]');
+  const textarea = page.locator('[data-testid="chat-input"]');
   await expect(textarea).toBeVisible();
   await expect(textarea).toBeEnabled();
   
@@ -61,7 +64,7 @@ test('verify provider setup to chat flow works', async ({ page }) => {
   
   // Complete minimal setup
   await page.goto('http://localhost:4321/setup');
-  await page.click('button:has-text("Comenzar Configuración")');
+  await page.click('[data-testid="setup-begin"]');
   await page.click('text="Configuración Personalizada"');
   
   // Select Ollama (simplest setup)
@@ -75,8 +78,8 @@ test('verify provider setup to chat flow works', async ({ page }) => {
   
   // Click button and verify navigation
   await page.click('button:has-text("Comenzar a Usar LexMX")');
-  await expect(page).toHaveURL(/.*\/chat/, { timeout: 5000 });
+  await expect(page).toHaveURL(/.*\/chat/, { timeout: 10000 });
   
   // Verify chat loads without errors
-  await expect(page.locator('.chat-interface')).toBeVisible();
+  await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
 });

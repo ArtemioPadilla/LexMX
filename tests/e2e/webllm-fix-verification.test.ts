@@ -4,6 +4,8 @@ import {
   navigateAndWaitForHydration,
   clearAllStorage
 } from '../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('WebLLM Fix Verification', () => {
   test.beforeEach(async ({ page }) => {
@@ -72,7 +74,7 @@ test.describe('WebLLM Fix Verification', () => {
     await navigateAndWaitForHydration(page, 'http://localhost:4321/setup');
     
     // Configure WebLLM
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     await page.click('text="Configuración Personalizada"');
     await page.click('div:has-text("WebLLM")');
     await page.click('button:has-text("Configurar (1)")');
@@ -103,7 +105,7 @@ test.describe('WebLLM Fix Verification', () => {
     await navigateAndWaitForHydration(page, 'http://localhost:4321/setup');
     
     // Interact with the page
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     
     // Wait for any hydration errors
     await page.waitForTimeout(2000);
@@ -162,11 +164,11 @@ test.describe('WebLLM Fix Verification', () => {
     await navigateAndWaitForHydration(page, 'http://localhost:4321/chat');
     
     // Send a message to trigger model download
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Test query');
+    await page.fill('[data-testid="chat-input"]', 'Test query');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Check if progress modal appears (or loading state)
     const progressModal = page.locator('text=/Descargando modelo|Loading model|Analizando/');
-    await expect(progressModal).toBeVisible({ timeout: 5000 });
+    await expect(progressModal).toBeVisible({ timeout: 10000 });
   });
 });

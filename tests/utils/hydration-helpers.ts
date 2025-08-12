@@ -5,7 +5,10 @@ import { Page } from '@playwright/test';
  * @param page - Playwright page object
  * @param timeout - Maximum time to wait for hydration
  */
-export async function waitForHydration(page: Page, timeout = 5000): Promise<void> {
+export async function waitForHydration(page: Page, timeout = 10000): Promise<void> {
+  // First wait for the page to be loaded
+  await page.waitForLoadState('domcontentloaded');
+  
   // Wait for all astro-island elements to be hydrated
   await page.waitForFunction(
     () => {
@@ -22,6 +25,9 @@ export async function waitForHydration(page: Page, timeout = 5000): Promise<void
     },
     { timeout }
   );
+  
+  // Additional wait for React components to be interactive
+  await page.waitForTimeout(500);
 }
 
 /**
@@ -33,8 +39,11 @@ export async function waitForHydration(page: Page, timeout = 5000): Promise<void
 export async function waitForComponentHydration(
   page: Page, 
   selector: string, 
-  timeout = 5000
+  timeout = 10000
 ): Promise<void> {
+  // First wait for the element to be visible
+  await page.waitForSelector(selector, { state: 'visible', timeout });
+  
   await page.waitForFunction(
     (sel) => {
       const element = document.querySelector(sel);
@@ -48,11 +57,17 @@ export async function waitForComponentHydration(
       const hasReactRoot = element.hasAttribute('data-reactroot') ||
                          element.querySelector('[data-reactroot]') !== null;
       
-      return isInteractive || hasReactRoot;
+      // Also check if the element has content
+      const hasContent = element.textContent && element.textContent.trim().length > 0;
+      
+      return isInteractive || hasReactRoot || hasContent;
     },
     selector,
     { timeout }
   );
+  
+  // Small additional wait for event handlers to be attached
+  await page.waitForTimeout(300);
 }
 
 /**

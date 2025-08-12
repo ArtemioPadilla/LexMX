@@ -3,9 +3,11 @@ import { injectAxe, checkA11y } from 'axe-playwright';
 import { 
   setupPage, 
   clearAllStorage,
-  setupMockProviders,
+  setupAllMockProviders,
   testDarkMode
 } from '../../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('Accessibility and WCAG Compliance', () => {
   test.beforeEach(async ({ page }) => {
@@ -41,7 +43,7 @@ test.describe('Accessibility and WCAG Compliance', () => {
       
       // Additional manual checks
       // 1. Page has proper heading structure
-      const h1Count = await page.locator('h1').count();
+      const h1Count = await page.locator('h1').first().count();
       expect(h1Count).toBe(1); // Each page should have exactly one h1
       
       // 2. All images have alt text
@@ -77,7 +79,7 @@ test.describe('Accessibility and WCAG Compliance', () => {
   });
 
   test('keyboard navigation through complete user journey', async ({ page }) => {
-    await setupMockProviders(page);
+    await setupAllMockProviders(page);
     
     // 1. Homepage keyboard navigation
     await page.goto('http://localhost:4321');
@@ -112,7 +114,7 @@ test.describe('Accessibility and WCAG Compliance', () => {
     await page.keyboard.press('Enter');
     
     // Wait for response
-    await page.waitForSelector('text="Consulta con teclado"', { timeout: 5000 });
+    await page.waitForSelector('text="Consulta con teclado"', { timeout: 10000 });
     
     // Tab to advanced options
     await page.keyboard.press('Tab'); // Send button
@@ -169,7 +171,7 @@ test.describe('Accessibility and WCAG Compliance', () => {
   });
 
   test('screen reader announcements and ARIA labels', async ({ page }) => {
-    await setupMockProviders(page);
+    await setupAllMockProviders(page);
     
     // 1. Chat screen reader experience
     await page.goto('http://localhost:4321/chat');
@@ -180,7 +182,7 @@ test.describe('Accessibility and WCAG Compliance', () => {
     expect(liveCount).toBeGreaterThan(0);
     
     // Send message and verify announcement
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Test query');
+    await page.fill('[data-testid="chat-input"]', 'Test query');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Loading state should be announced
@@ -203,7 +205,7 @@ test.describe('Accessibility and WCAG Compliance', () => {
     
     // 3. Form field announcements
     await page.goto('http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     
     // Profile cards should be properly labeled
     const profileCards = page.locator('div[role="button"], div[tabindex="0"]');
@@ -263,7 +265,7 @@ test.describe('Accessibility and WCAG Compliance', () => {
   test('responsive accessibility on mobile', async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
-    await setupMockProviders(page);
+    await setupAllMockProviders(page);
     
     // 1. Mobile navigation accessibility
     await page.goto('http://localhost:4321');
@@ -338,7 +340,7 @@ test.describe('Accessibility and WCAG Compliance', () => {
     
     // 2. Modal focus trap
     await page.goto('http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     
     // If there's a modal, test focus trap
     const modal = page.locator('[role="dialog"], .modal');

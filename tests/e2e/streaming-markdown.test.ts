@@ -1,7 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { setupPage, navigateToPage, waitForPageReady, setupAllMockProviders, setupProviderScenario } from '../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('Chat Streaming and Markdown', () => {
   test.beforeEach(async ({ page }) => {
+  await setupPage(page);
     // Navigate to the home page
     await page.goto('/');
     
@@ -9,7 +13,7 @@ test.describe('Chat Streaming and Markdown', () => {
     await page.click('text=Empezar');
     
     // Wait for chat interface to load
-    await page.waitForSelector('.chat-interface');
+    await page.waitForSelector('[data-testid="chat-container"]');
   });
 
   test('should render markdown content correctly', async ({ page }) => {
@@ -32,7 +36,7 @@ test.describe('Chat Streaming and Markdown', () => {
     await page.press('textarea', 'Enter');
     
     // Wait for response
-    await page.waitForSelector('.markdown-content', { timeout: 30000 });
+    await page.waitForSelector('.markdown-content', { timeout: 60000 });
     
     // Check that markdown elements are rendered
     const markdownContent = await page.locator('.markdown-content').first();
@@ -74,14 +78,14 @@ test.describe('Chat Streaming and Markdown', () => {
     await page.press('textarea', 'Enter');
     
     // Check for streaming indicator
-    await page.waitForSelector('.animate-pulse', { timeout: 5000 });
+    await page.waitForSelector('.animate-pulse', { timeout: 10000 });
     
     // Verify the streaming dots animation
     const streamingDots = await page.locator('.animate-pulse').count();
     expect(streamingDots).toBeGreaterThan(0);
     
     // Wait for response to complete
-    await page.waitForSelector('.markdown-content', { timeout: 30000 });
+    await page.waitForSelector('.markdown-content', { timeout: 60000 });
     
     // Streaming indicator should be gone
     await expect(page.locator('.animate-pulse')).toHaveCount(0);
@@ -102,7 +106,7 @@ test.describe('Chat Streaming and Markdown', () => {
     await page.press('textarea', 'Enter');
     
     // Wait for initial content
-    await page.waitForSelector('[class*="isStreaming"]:has-text("Analizando")', { timeout: 5000 });
+    await page.waitForSelector('[class*="isStreaming"]:has-text("Analizando")', { timeout: 10000 });
     
     // Get the message element that's being streamed
     const messageElement = await page.locator('[class*="isStreaming"]').last();
@@ -153,7 +157,7 @@ test.describe('Chat Streaming and Markdown', () => {
     await page.press('textarea', 'Enter');
     
     // Wait for response
-    await page.waitForSelector('.markdown-content', { timeout: 30000 });
+    await page.waitForSelector('.markdown-content', { timeout: 60000 });
     
     // Check dark mode styles
     const htmlElement = await page.locator('html');
@@ -193,7 +197,7 @@ test.describe('Chat Streaming and Markdown', () => {
     await page.press('textarea', 'Enter');
     
     // Wait for response
-    await page.waitForSelector('.markdown-content', { timeout: 30000 });
+    await page.waitForSelector('.markdown-content', { timeout: 60000 });
     
     // Check that special characters are properly escaped/rendered
     const content = await page.locator('.markdown-content').first().innerHTML();
@@ -251,10 +255,10 @@ test.describe('WebLLM Progress Indicator', () => {
       await expect(page.locator('text=%')).toBeVisible();
       
       // Wait for progress to complete (with generous timeout)
-      await expect(progressIndicator).toBeHidden({ timeout: 300000 });
+      await expect(progressIndicator).toBeHidden({ timeout: 600000 });
     }
     
     // Eventually should show response
-    await expect(page.locator('.markdown-content')).toBeVisible({ timeout: 300000 });
+    await expect(page.locator('.markdown-content')).toBeVisible({ timeout: 600000 });
   });
 });

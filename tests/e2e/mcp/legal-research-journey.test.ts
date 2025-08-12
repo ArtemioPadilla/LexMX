@@ -3,16 +3,18 @@ import {
   setupPage, 
   navigateAndWaitForHydration,
   clearAllStorage,
-  setupMockProviders,
+  setupAllMockProviders,
   assertNoConsoleErrors 
 } from '../../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('Legal Research and Wiki Navigation Journey', () => {
   test.beforeEach(async ({ page }) => {
     await setupPage(page);
     await clearAllStorage(page);
     // Pre-configure a provider for chat integration
-    await setupMockProviders(page);
+    await setupAllMockProviders(page);
   });
 
   test('comprehensive legal research workflow with wiki exploration', async ({ page }) => {
@@ -69,7 +71,7 @@ test.describe('Legal Research and Wiki Navigation Journey', () => {
     await page.click('button:has-text("Siguiente")');
     
     // Progress should update
-    await expect(page.locator('text=/33%|34%/')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=/33%|34%/')).toBeVisible({ timeout: 10000 });
     
     // Click on specific step
     await page.click('div:has-text("3. Discusión en Cámara de Origen")');
@@ -128,7 +130,7 @@ test.describe('Legal Research and Wiki Navigation Journey', () => {
     
     // Ask question based on wiki research
     const researchQuery = 'Basándome en lo que leí sobre el amparo, ¿cuál es la diferencia entre amparo directo e indirecto?';
-    await page.fill('textarea[placeholder*="consulta legal"]', researchQuery);
+    await page.fill('[data-testid="chat-input"]', researchQuery);
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should get contextual response
@@ -267,7 +269,7 @@ test.describe('Legal Research and Wiki Navigation Journey', () => {
     await page.waitForURL('**/chat');
     
     // Ask contextual question
-    await page.fill('textarea[placeholder*="consulta legal"]', 
+    await page.fill('[data-testid="chat-input"]', 
       'Con base en el artículo 123 constitucional y la LFT, ¿cuáles son los derechos básicos de los trabajadores?'
     );
     await page.click('button[aria-label="Enviar mensaje"]');

@@ -1,7 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { setupPage, navigateToPage, waitForPageReady, setupAllMockProviders, setupProviderScenario } from '../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('Comprehensive User Journeys', () => {
   test.beforeEach(async ({ page }) => {
+  await setupPage(page);
     await page.goto('http://localhost:4321/');
     await page.evaluate(() => {
       localStorage.clear();
@@ -15,14 +19,14 @@ test.describe('Comprehensive User Journeys', () => {
       await page.goto('http://localhost:4321/');
       
       // 2. Click "Iniciar Consulta Gratis"
-      await page.click('text="Iniciar Consulta Gratis"');
+      await page.click('[data-testid="cta-chat"]');
       
       // 3. Should redirect to setup for first-time users
       await page.waitForURL('**/setup');
       
       // 4. Complete minimal setup (privacy-focused profile)
-      await page.click('button:has-text("Comenzar Configuración")');
-      await page.click('div:has-text("Privacidad Primero")');
+      await page.click('[data-testid="setup-begin"]');
+      await page.click('[data-testid="profile-privacy-first"]');
       await page.click('div:has-text("Ollama")');
       await page.click('button:has-text("Configurar (1)")');
       await page.fill('input[type="url"]', 'http://localhost:11434');
@@ -34,7 +38,7 @@ test.describe('Comprehensive User Journeys', () => {
       
       // 6. Verify chat is ready
       await page.waitForURL('**/chat');
-      await expect(page.locator('.chat-interface')).toBeVisible();
+      await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
     });
   });
 
@@ -196,7 +200,7 @@ test.describe('Comprehensive User Journeys', () => {
     test('handle network errors gracefully', async ({ page, context }) => {
       // Setup provider first
       await page.goto('http://localhost:4321/setup');
-      await page.click('button:has-text("Comenzar Configuración")');
+      await page.click('[data-testid="setup-begin"]');
       await page.click('text="Configuración Personalizada"');
       await page.click('div:has-text("OpenAI")');
       await page.click('button:has-text("Configurar (1)")');
@@ -209,7 +213,7 @@ test.describe('Comprehensive User Journeys', () => {
       await context.setOffline(true);
       
       // Try to send a message
-      await page.fill('textarea[placeholder*="consulta legal"]', 'Test query');
+      await page.fill('[data-testid="chat-input"]', 'Test query');
       await page.click('button[aria-label="Enviar mensaje"]');
       
       // Should show error message
@@ -224,7 +228,7 @@ test.describe('Comprehensive User Journeys', () => {
     test('use advanced search options in chat', async ({ page }) => {
       // Setup provider
       await page.goto('http://localhost:4321/setup');
-      await page.click('button:has-text("Comenzar Configuración")');
+      await page.click('[data-testid="setup-begin"]');
       await page.click('div:has-text("Balanceado")');
       await page.click('div:has-text("OpenAI")');
       await page.click('button:has-text("Configurar (1)")');
@@ -240,7 +244,7 @@ test.describe('Comprehensive User Journeys', () => {
       await page.selectOption('select#legal-area', 'labor');
       
       // Send a query
-      await page.fill('textarea[placeholder*="consulta legal"]', '¿Cuáles son los derechos de maternidad?');
+      await page.fill('[data-testid="chat-input"]', '¿Cuáles son los derechos de maternidad?');
       await page.click('button[aria-label="Enviar mensaje"]');
       
       // Verify response includes labor law context
@@ -253,7 +257,7 @@ test.describe('Comprehensive User Journeys', () => {
     test('see provider recommendations while typing', async ({ page }) => {
       // Setup multiple providers
       await page.goto('http://localhost:4321/setup');
-      await page.click('button:has-text("Comenzar Configuración")');
+      await page.click('[data-testid="setup-begin"]');
       await page.click('text="Configuración Personalizada"');
       await page.click('div:has-text("OpenAI")');
       await page.click('div:has-text("Claude")');
@@ -271,10 +275,10 @@ test.describe('Comprehensive User Journeys', () => {
       await page.click('button:has-text("Comenzar a Usar LexMX")');
       
       // Type a complex query
-      await page.fill('textarea[placeholder*="consulta legal"]', 'Necesito analizar un contrato complejo de compraventa internacional');
+      await page.fill('[data-testid="chat-input"]', 'Necesito analizar un contrato complejo de compraventa internacional');
       
       // Wait for recommendations to appear
-      await expect(page.locator('text="Proveedores Recomendados"')).toBeVisible({ timeout: 5000 });
+      await expect(page.locator('text="Proveedores Recomendados"')).toBeVisible({ timeout: 10000 });
       await expect(page.locator('.provider-recommendation')).toBeVisible();
     });
   });

@@ -20,9 +20,14 @@ const { name, width = 'auto', height = '40px', class: className = '' } = Astro.p
 
 <style>
   .hydration-wrapper {
+    display: flex;
+    flex-direction: column;
+    contain: layout;
+  }
+  
+  .hydration-wrapper.inline {
     display: inline-flex;
     align-items: center;
-    contain: layout;
   }
 </style>
 

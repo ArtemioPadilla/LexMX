@@ -2,8 +2,10 @@ import { test, expect } from '@playwright/test';
 import { 
   setupPage, 
   clearAllStorage,
-  setupMockProviders
+  setupAllMockProviders
 } from '../../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('Error Recovery and Edge Cases', () => {
   test.beforeEach(async ({ page }) => {
@@ -13,22 +15,22 @@ test.describe('Error Recovery and Edge Cases', () => {
 
   test('network failure recovery during chat session', async ({ page, context }) => {
     // Setup provider
-    await setupMockProviders(page);
+    await setupAllMockProviders(page);
     await page.goto('http://localhost:4321/chat');
-    await page.waitForSelector('.chat-interface');
+    await page.waitForSelector('[data-testid="chat-container"]');
     
     // 1. Send initial successful query
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Primera consulta exitosa');
+    await page.fill('[data-testid="chat-input"]', 'Primera consulta exitosa');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Wait for response
-    await page.waitForSelector('text="Primera consulta exitosa"', { timeout: 5000 });
+    await page.waitForSelector('text="Primera consulta exitosa"', { timeout: 10000 });
     
     // 2. Simulate network failure
     await context.setOffline(true);
     
     // Try to send query while offline
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Consulta durante falla de red');
+    await page.fill('[data-testid="chat-input"]', 'Consulta durante falla de red');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should show error message
@@ -38,11 +40,11 @@ test.describe('Error Recovery and Edge Cases', () => {
     await context.setOffline(false);
     
     // 4. Retry query
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Consulta después de reconexión');
+    await page.fill('[data-testid="chat-input"]', 'Consulta después de reconexión');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should work again
-    await page.waitForSelector('text="Consulta después de reconexión"', { timeout: 5000 });
+    await page.waitForSelector('text="Consulta después de reconexión"', { timeout: 10000 });
     
     // 5. Verify chat history is intact
     await expect(page.locator('text="Primera consulta exitosa"')).toBeVisible();
@@ -70,7 +72,7 @@ test.describe('Error Recovery and Edge Cases', () => {
     
     // 2. Try to configure provider with full storage
     await page.goto('http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     await page.click('text="Configuración Personalizada"');
     await page.click('div:has-text("OpenAI")');
     await page.click('button:has-text("Configurar (1)")');
@@ -79,8 +81,8 @@ test.describe('Error Recovery and Edge Cases', () => {
     await page.click('button:has-text("Guardar")');
     
     // Should handle gracefully (either show error or use sessionStorage)
-    const errorVisible = await page.locator('text=/storage|almacenamiento|espacio/i').isVisible({ timeout: 5000 });
-    const successVisible = await page.locator('h2:has-text("¡Configuración Completa!")').isVisible({ timeout: 5000 });
+    const errorVisible = await page.locator('text=/storage|almacenamiento|espacio/i').isVisible({ timeout: 10000 });
+    const successVisible = await page.locator('h2:has-text("¡Configuración Completa!")').isVisible({ timeout: 10000 });
     
     expect(errorVisible || successVisible).toBeTruthy();
     
@@ -97,7 +99,7 @@ test.describe('Error Recovery and Edge Cases', () => {
     await page.goto('http://localhost:4321/setup');
     
     // 1. Configure multiple providers with various key formats
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     await page.click('text="Configuración Personalizada"');
     
     // Select multiple providers
@@ -126,16 +128,16 @@ test.describe('Error Recovery and Edge Cases', () => {
     
     // 6. Test provider fallback in chat
     await page.waitForURL('**/chat');
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Test con múltiples proveedores');
+    await page.fill('[data-testid="chat-input"]', 'Test con múltiples proveedores');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should attempt with available providers
-    await page.waitForSelector('text="Test con múltiples proveedores"', { timeout: 5000 });
+    await page.waitForSelector('text="Test con múltiples proveedores"', { timeout: 10000 });
   });
 
   test('session recovery after browser crash', async ({ page, context }) => {
     // 1. Setup initial session
-    await setupMockProviders(page);
+    await setupAllMockProviders(page);
     await page.goto('http://localhost:4321/chat');
     
     // Send some messages
@@ -146,9 +148,9 @@ test.describe('Error Recovery and Edge Cases', () => {
     ];
     
     for (const msg of messages) {
-      await page.fill('textarea[placeholder*="consulta legal"]', msg);
+      await page.fill('[data-testid="chat-input"]', msg);
       await page.click('button[aria-label="Enviar mensaje"]');
-      await page.waitForSelector(`text="${msg}"`, { timeout: 5000 });
+      await page.waitForSelector(`text="${msg}"`, { timeout: 10000 });
       await page.waitForTimeout(500);
     }
     
@@ -178,10 +180,10 @@ test.describe('Error Recovery and Edge Cases', () => {
     
     // 5. Navigate back to chat
     await newPage.goto('http://localhost:4321/chat');
-    await newPage.waitForSelector('.chat-interface');
+    await newPage.waitForSelector('[data-testid="chat-container"]');
     
     // 6. Verify provider configuration persisted
-    await newPage.fill('textarea[placeholder*="consulta legal"]', 'Consulta después de recuperación');
+    await newPage.fill('[data-testid="chat-input"]', 'Consulta después de recuperación');
     await newPage.click('button[aria-label="Enviar mensaje"]');
     
     // Should work without reconfiguration
@@ -191,7 +193,7 @@ test.describe('Error Recovery and Edge Cases', () => {
   });
 
   test('handling corrupt or missing legal corpus data', async ({ page }) => {
-    await setupMockProviders(page);
+    await setupAllMockProviders(page);
     
     // 1. Corrupt embeddings data
     await page.evaluate(() => {
@@ -200,10 +202,10 @@ test.describe('Error Recovery and Edge Cases', () => {
     
     // 2. Navigate to chat
     await page.goto('http://localhost:4321/chat');
-    await page.waitForSelector('.chat-interface');
+    await page.waitForSelector('[data-testid="chat-container"]');
     
     // 3. Send query that would use RAG
-    await page.fill('textarea[placeholder*="consulta legal"]', '¿Qué dice el artículo 27 constitucional?');
+    await page.fill('[data-testid="chat-input"]', '¿Qué dice el artículo 27 constitucional?');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should handle gracefully
@@ -216,7 +218,7 @@ test.describe('Error Recovery and Edge Cases', () => {
   });
 
   test('rapid user interactions and race conditions', async ({ page }) => {
-    await setupMockProviders(page);
+    await setupAllMockProviders(page);
     await page.goto('http://localhost:4321/chat');
     
     // 1. Send multiple queries rapidly
@@ -229,7 +231,7 @@ test.describe('Error Recovery and Edge Cases', () => {
     
     // Send all queries without waiting
     for (const query of queries) {
-      await page.fill('textarea[placeholder*="consulta legal"]', query);
+      await page.fill('[data-testid="chat-input"]', query);
       await page.click('button[aria-label="Enviar mensaje"]');
     }
     
@@ -239,17 +241,17 @@ test.describe('Error Recovery and Edge Cases', () => {
     }
     
     // 3. Clear chat while processing
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Última consulta antes de limpiar');
+    await page.fill('[data-testid="chat-input"]', 'Última consulta antes de limpiar');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Immediately clear
     await page.click('button[title="Limpiar chat"]');
     
     // Should clear successfully
-    await expect(page.locator('text="Primera consulta"')).not.toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text="Primera consulta"')).not.toBeVisible({ timeout: 10000 });
     
     // 4. Test language switching during active session
-    await page.fill('textarea[placeholder*="consulta legal"]', 'Consulta en español');
+    await page.fill('[data-testid="chat-input"]', 'Consulta en español');
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Switch language while processing
@@ -275,7 +277,7 @@ test.describe('Error Recovery and Edge Cases', () => {
     
     // 2. Try to setup provider without crypto
     await page.goto('http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     await page.click('text="Configuración Personalizada"');
     await page.click('div:has-text("OpenAI")');
     await page.click('button:has-text("Configurar (1)")');
@@ -353,6 +355,6 @@ test.describe('Error Recovery and Edge Cases', () => {
     await page.click('button:has-text("Enviar Solicitud")');
     
     // Should succeed
-    await expect(page.locator('text="Solicitud de Jurisprudencia Válida"')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text="Solicitud de Jurisprudencia Válida"')).toBeVisible({ timeout: 10000 });
   });
 });

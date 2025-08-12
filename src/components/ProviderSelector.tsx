@@ -5,6 +5,7 @@ import WebLLMSelector from './WebLLMSelector';
 import WebLLMProgress from './WebLLMProgress';
 import { useTranslation } from '../i18n';
 import type { ProviderConfig } from '../types/llm';
+import { TEST_IDS } from '../utils/test-ids';
 
 interface ProviderSelectorProps {
   onProviderChange?: (providerId: string, model?: string) => void;
@@ -14,12 +15,13 @@ interface ProviderSelectorProps {
 export default function ProviderSelector({ onProviderChange, className = '' }: ProviderSelectorProps) {
   const { t } = useTranslation();
   const [providers, setProviders] = useState<ProviderConfig[]>([]);
-  const [currentProvider, setCurrentProvider] = useState<string>('');
+  const [currentProvider, setCurrentProvider] = useState<string>('webllm'); // Default to WebLLM
   const [currentModel, setCurrentModel] = useState<string>('');
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showWebLLMSelector, setShowWebLLMSelector] = useState(false);
   const [webllmProgress, setWebllmProgress] = useState<{ progress: number; message: string } | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -28,26 +30,53 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
 
   const loadProviders = async () => {
     try {
-      await providerManager.initialize();
-      const configs = await providerManager.getEnabledProviders();
+      // Initialize with timeout
+      const initPromise = providerManager.initialize();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Provider initialization timeout')), 3000)
+      );
+      
+      await Promise.race([initPromise, timeoutPromise]).catch(err => {
+        console.warn('Provider initialization warning:', err);
+      });
+      
+      const configs = await providerManager.getEnabledProviders().catch(() => []);
+      
+      // Always include WebLLM as a fallback
+      if (configs.length === 0 || !configs.find(p => p.id === 'webllm')) {
+        configs.push({
+          id: 'webllm',
+          name: 'WebLLM',
+          type: 'webllm',
+          enabled: true,
+          apiKey: '',
+          model: 'Llama-3.2-3B-Instruct-q4f16_1-MLC'
+        });
+      }
+      
       setProviders(configs);
       
       // Get current provider
-      const current = await providerManager.getCurrentProvider();
+      const current = await providerManager.getCurrentProvider().catch(() => null);
       if (current) {
         setCurrentProvider(current.id);
         if (current.model) {
           setCurrentModel(current.model);
         }
       } else if (configs.length > 0) {
-        // Default to first provider
-        setCurrentProvider(configs[0].id);
-        if (configs[0].model) {
-          setCurrentModel(configs[0].model);
+        // Default to WebLLM or first provider
+        const defaultProvider = configs.find(p => p.id === 'webllm') || configs[0];
+        setCurrentProvider(defaultProvider.id);
+        if (defaultProvider.model) {
+          setCurrentModel(defaultProvider.model);
         }
       }
+      
+      setIsInitialized(true);
     } catch (error) {
       console.error('Error loading providers:', error);
+      // Still mark as initialized to prevent blocking
+      setIsInitialized(true);
     }
   };
 
@@ -99,8 +128,14 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
     }
   }, [isOpen, mounted]);
 
-  if (!mounted) {
-    return null;
+  if (!mounted || !isInitialized) {
+    return (
+      <div className={`relative provider-selector ${className}`}>
+        <button className="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm">
+          <span className="text-gray-500">Loading...</span>
+        </button>
+      </div>
+    );
   }
 
   // If no providers configured, show WebLLM as default with warning
@@ -111,7 +146,12 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
     }
   }
 
-  const currentProviderConfig = providers.find(p => p.id === currentProvider);
+  const currentProviderConfig = providers.find(p => p.id === currentProvider) || {
+    id: 'webllm',
+    name: 'WebLLM',
+    type: 'webllm',
+    enabled: true
+  };
   const metadata = currentProviderConfig ? providerRegistry.getProviderMetadata(currentProviderConfig.id) : 
                    currentProvider === 'webllm' ? providerRegistry.getProviderMetadata('webllm') : null;
 
@@ -119,6 +159,7 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
     <div className={`relative provider-selector ${className}`}>
       <button
         type="button"
+        data-testid={TEST_IDS.provider.selectorToggle}
         onClick={(e) => {
           e.stopPropagation();
           setIsOpen(!isOpen);
@@ -166,6 +207,7 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
             <div className="mt-1">
               <button
                 type="button"
+                data-testid={TEST_IDS.provider.webllmButton}
                 onClick={() => {
                   setCurrentProvider('webllm');
                   setShowWebLLMSelector(true);
@@ -181,10 +223,10 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
                 </svg>
                 <div className="flex-1">
                   <div className="font-medium text-gray-900 dark:text-gray-100">
-                    {t('provider.webllm.name')}
+                    {t('providers.webllm.name')}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {t('provider.cost.free')} • {t('provider.webllm.description')}
+                    {t('providers.cost.free')} • {t('providers.webllm.description')}
                   </div>
                 </div>
                 {currentProvider === 'webllm' && (
@@ -245,7 +287,7 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
                         {meta.name}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {meta.costLevel === 'free' ? 'Gratis' : meta.costLevel}
+                        {meta.costLevel === 'free' ? t('providers.cost.free') : t(`providers.cost.${meta.costLevel}`)}
                       </div>
                     </div>
                     {isSelected && (
@@ -264,7 +306,7 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
               href="/setup"
               className="block w-full text-center px-3 py-2 text-sm text-legal-600 dark:text-legal-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
             >
-              Configurar Proveedores
+              {t('providers.configure')}
             </a>
           </div>
         </div>

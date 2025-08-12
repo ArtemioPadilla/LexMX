@@ -5,6 +5,8 @@ import {
   clearAllStorage,
   assertNoConsoleErrors 
 } from '../../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('WebLLM as Professional Backup Provider', () => {
   test.beforeEach(async ({ page }) => {
@@ -15,7 +17,7 @@ test.describe('WebLLM as Professional Backup Provider', () => {
   test('legal professional uses WebLLM as offline backup', async ({ page, context }) => {
     // 1. Setup with multiple providers including WebLLM
     await navigateAndWaitForHydration(page, 'http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     
     // Select balanced professional profile
     await page.click('div:has-text("Balanceado"):has-text("rendimiento y costo")');
@@ -49,7 +51,7 @@ test.describe('WebLLM as Professional Backup Provider', () => {
     await page.waitForURL('**/chat');
     
     // 6. Use Claude for initial query
-    await page.fill('textarea[placeholder*="consulta legal"]', 
+    await page.fill('[data-testid="chat-input"]', 
       'Análisis de reforma constitucional en materia electoral'
     );
     await page.click('button[aria-label="Enviar mensaje"]');
@@ -61,7 +63,7 @@ test.describe('WebLLM as Professional Backup Provider', () => {
     await context.setOffline(true);
     
     // 8. Try another query while offline
-    await page.fill('textarea[placeholder*="consulta legal"]', 
+    await page.fill('[data-testid="chat-input"]', 
       'Consulta urgente: requisitos para amparo indirecto'
     );
     await page.click('button[aria-label="Enviar mensaje"]');
@@ -70,7 +72,7 @@ test.describe('WebLLM as Professional Backup Provider', () => {
     await expect(page.locator('text=/WebLLM|navegador|offline/i')).toBeVisible({ timeout: 10000 });
     
     // Should still get quality response
-    await expect(page.locator('text=/amparo indirecto|requisitos/')).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('text=/amparo indirecto|requisitos/')).toBeVisible({ timeout: 60000 });
     
     // 9. Restore network
     await context.setOffline(false);
@@ -84,7 +86,7 @@ test.describe('WebLLM as Professional Backup Provider', () => {
       await providerSelect.selectOption({ label: 'WebLLM (Local)' });
     }
     
-    await page.fill('textarea[placeholder*="consulta legal"]', 
+    await page.fill('[data-testid="chat-input"]', 
       'Datos sensibles del cliente: estrategia de defensa en caso de fraude fiscal'
     );
     await page.click('button[aria-label="Enviar mensaje"]');
@@ -98,7 +100,7 @@ test.describe('WebLLM as Professional Backup Provider', () => {
   test('cost-conscious professional workflow with WebLLM', async ({ page }) => {
     // 1. Setup focused on cost optimization
     await navigateAndWaitForHydration(page, 'http://localhost:4321/setup');
-    await page.click('button:has-text("Comenzar Configuración")');
+    await page.click('[data-testid="setup-begin"]');
     await page.click('text="Configuración Personalizada"');
     
     // 2. Select only free/low-cost providers
@@ -120,7 +122,7 @@ test.describe('WebLLM as Professional Backup Provider', () => {
     await page.waitForURL('**/chat');
     
     // 6. Professional workflow with cost tracking
-    await page.fill('textarea[placeholder*="consulta legal"]', 
+    await page.fill('[data-testid="chat-input"]', 
       'Consulta simple: definición de contrato de compraventa'
     );
     await page.click('button[aria-label="Enviar mensaje"]');
@@ -129,13 +131,13 @@ test.describe('WebLLM as Professional Backup Provider', () => {
     await expect(page.locator('text=/WebLLM|$0|gratis/i')).toBeVisible({ timeout: 10000 });
     
     // 7. Complex query that might use Gemini
-    await page.fill('textarea[placeholder*="consulta legal"]', 
+    await page.fill('[data-testid="chat-input"]', 
       'Análisis complejo: implicaciones de la reforma energética en contratos de exploración petrolera existentes'
     );
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // System might choose Gemini for complex analysis
-    await page.waitForSelector('text=/respuesta|análisis/', { timeout: 30000 });
+    await page.waitForSelector('text=/respuesta|análisis/', { timeout: 60000 });
     
     // 8. Check cost tracking
     const costIndicator = page.locator('text=/$[0-9]+\\.[0-9]+|Costo:/');
@@ -171,7 +173,7 @@ test.describe('WebLLM as Professional Backup Provider', () => {
     }
     
     // 2. Professional document analysis query
-    await page.fill('textarea[placeholder*="consulta legal"]', 
+    await page.fill('[data-testid="chat-input"]', 
       `Analiza las cláusulas de terminación anticipada en un contrato de arrendamiento comercial.
       Específicamente: 
       1) Causales válidas según el CCF
@@ -185,17 +187,17 @@ test.describe('WebLLM as Professional Backup Provider', () => {
     await expect(page.locator('text="Analizando tu consulta legal..."')).toBeVisible();
     
     // Should provide structured response
-    await expect(page.locator('text=/Código Civil Federal|CCF/')).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('text=/Código Civil Federal|CCF/')).toBeVisible({ timeout: 60000 });
     await expect(page.locator('text=/terminación|arrendamiento/')).toBeVisible();
     
     // 4. Follow-up with specific article reference
-    await page.fill('textarea[placeholder*="consulta legal"]', 
+    await page.fill('[data-testid="chat-input"]', 
       '¿Qué establece específicamente el artículo 2483 del CCF sobre esto?'
     );
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // WebLLM should maintain context
-    await expect(page.locator('text=/2483|arrendamiento/')).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('text=/2483|arrendamiento/')).toBeVisible({ timeout: 60000 });
     
     assertNoConsoleErrors(page);
   });

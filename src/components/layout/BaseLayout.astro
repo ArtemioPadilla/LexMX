@@ -5,6 +5,7 @@ import { LanguageSelector } from '../LanguageSelector';
 import MobileMenu from '../../islands/MobileMenu';
 import ClientTranslations from '../ClientTranslations.astro';
 import HydrationWrapper from '../HydrationWrapper.astro';
+import { getTranslation } from '../../i18n/utils';
 
 export interface Props {
   title: string;
@@ -12,9 +13,11 @@ export interface Props {
   image?: string;
 }
 
+const t = getTranslation(Astro.url);
+
 const { 
   title, 
-  description = "Asistente legal mexicano con IA - Consultas legales precisas basadas en legislación mexicana actualizada",
+  description = t('hero.subtitle'),
   image = "/og-image.png"
 } = Astro.props;
 
@@ -82,9 +85,10 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     @import '/src/styles/hydration.css';
   </style>
   
-  <!-- Theme initialization (prevent flash) -->
+  <!-- Theme and Language initialization (prevent flash) -->
   <script is:inline>
     (function() {
+      // Initialize theme
       const stored = localStorage.getItem('theme');
       const theme = stored ? JSON.parse(stored) : 'system';
       let actualTheme;
@@ -96,6 +100,32 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
       if (actualTheme === 'dark') {
         document.documentElement.classList.add('dark');
       }
+      
+      // Initialize language to prevent hydration mismatches
+      let lang = 'es'; // Default to Spanish
+      try {
+        const langStored = localStorage.getItem('language');
+        if (langStored) {
+          // Handle both JSON and plain string formats
+          lang = langStored.startsWith('"') ? JSON.parse(langStored) : langStored;
+        }
+      } catch (e) {
+        console.warn('Error reading language:', e);
+        lang = 'es';
+      }
+      
+      // Store normalized language for consistent access
+      try {
+        localStorage.setItem('language', JSON.stringify(lang));
+      } catch (e) {
+        console.warn('Error saving language:', e);
+      }
+      
+      document.documentElement.setAttribute('data-language', lang);
+      document.documentElement.lang = lang;
+      
+      // Make language immediately available globally
+      window.__INITIAL_LANGUAGE__ = lang;
     })();
   </script>
 </head>
@@ -107,7 +137,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     href="#main-content" 
     class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-legal-500 text-white px-4 py-2 rounded-md z-50"
   >
-    Saltar al contenido principal
+    {t('accessibility.skipToContent')}
   </a>
 
   <!-- Header -->
@@ -129,25 +159,25 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         <!-- Navigation -->
         <nav class="hidden lg:flex items-center space-x-8">
           <a href="/chat" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.chat">
-            Chat Legal
+            {t('nav.chat')}
           </a>
           <a href="/casos" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.cases">
-            Mis Casos
+            {t('nav.cases')}
           </a>
           <a href="/wiki" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.wiki">
-            Wiki Legal
+            {t('nav.wiki')}
           </a>
           <a href="/legal" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.codes">
-            Códigos
+            {t('nav.codes')}
           </a>
           <a href="/requests" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.requests">
-            Solicitudes
+            {t('nav.requests')}
           </a>
           <a href="/setup" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.setup">
-            Configuración
+            {t('nav.setup')}
           </a>
           <a href="/about" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.about">
-            Acerca de
+            {t('nav.about')}
           </a>
         </nav>
         
@@ -192,12 +222,11 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
             <span class="text-xl font-bold text-gray-900 dark:text-white">LexMX</span>
           </div>
           <p class="text-gray-600 dark:text-gray-400 mb-4 max-w-md">
-            Asistente legal mexicano impulsado por IA. Consultas legales precisas basadas en legislación mexicana actualizada.
+            {t('hero.subtitle')}
           </p>
           <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p class="text-sm text-yellow-800">
-              <strong>Aviso Legal:</strong> LexMX proporciona información legal general con fines educativos. 
-              No constituye asesoría legal profesional. Siempre consulte con un abogado certificado para casos específicos.
+              {t('legal.disclaimer')}
             </p>
           </div>
         </div>
@@ -205,20 +234,20 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         <!-- Quick Links -->
         <div>
           <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 tracking-wider uppercase mb-4">
-            Enlaces Rápidos
+            {t('footer.quickLinks')}
           </h3>
           <ul class="space-y-2">
-            <li><a href="/chat" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors">Chat Legal</a></li>
-            <li><a href="/legal" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors">Códigos Legales</a></li>
-            <li><a href="/setup" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors">Configuración</a></li>
-            <li><a href="/privacy" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors">Privacidad</a></li>
+            <li><a href="/chat" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors">{t('nav.chat')}</a></li>
+            <li><a href="/legal" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors">{t('nav.codes')}</a></li>
+            <li><a href="/setup" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors">{t('nav.setup')}</a></li>
+            <li><a href="/privacy" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors">{t('footer.privacyPolicy')}</a></li>
           </ul>
         </div>
 
         <!-- Legal Resources -->
         <div>
           <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 tracking-wider uppercase mb-4">
-            Recursos Legales
+            {t('footer.legalResources')}
           </h3>
           <ul class="space-y-2">
             <li>
@@ -228,7 +257,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
                 rel="noopener noreferrer"
                 class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors"
               >
-                Cámara de Diputados
+                {t('footer.resources.deputies')}
               </a>
             </li>
             <li>
@@ -248,7 +277,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
                 rel="noopener noreferrer"
                 class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors"
               >
-                Diario Oficial
+                {t('footer.resources.gazette')}
               </a>
             </li>
           </ul>
@@ -256,10 +285,10 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
       </div>
 
       <!-- Bottom Bar -->
-      <div class="mt-8 pt-8 border-t border-gray-200">
+      <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
         <div class="flex flex-col md:flex-row justify-between items-center">
           <p class="text-gray-500 text-sm">
-            © 2024 LexMX. Código abierto bajo licencia MIT.
+            {t('legal.copyright')}
           </p>
           <div class="flex items-center space-x-4 mt-4 md:mt-0">
             <a 
@@ -298,13 +327,26 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     background: #f1f1f1;
   }
   
+  .dark ::-webkit-scrollbar-track {
+    background: #374151;
+  }
+  
   ::-webkit-scrollbar-thumb {
     background: #c1c1c1;
     border-radius: 4px;
   }
   
+  .dark ::-webkit-scrollbar-thumb {
+    background: #6b7280;
+    border-radius: 4px;
+  }
+  
   ::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
+  }
+  
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
   }
   
   /* Focus styles for accessibility */

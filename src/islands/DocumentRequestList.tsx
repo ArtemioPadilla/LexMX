@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS } from '../utils/test-ids';
 import type { 
   DocumentRequest, 
   RequestFilter, 
@@ -24,18 +26,24 @@ interface DocumentRequestListProps {
 }
 
 export default function DocumentRequestList({ 
-  requests, 
+  requests = [], 
   currentUserId, 
   onVote, 
   onComment, 
   onStatusChange,
   isModeratorView = false 
 }: DocumentRequestListProps) {
+  const [isHydrated, setIsHydrated] = useState(false);
   const [filter, setFilter] = useState<RequestFilter>({});
   const [sortBy, setSortBy] = useState<'votes' | 'date' | 'priority'>('votes');
   const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
   const [commentText, setCommentText] = useState<Record<string, string>>({});
   const [votingStates, setVotingStates] = useState<Record<string, boolean>>({});
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const filteredAndSortedRequests = (requests || [])
     .filter(request => {
@@ -46,8 +54,8 @@ export default function DocumentRequestList({
       if (filter.minVotes && request.votes < filter.minVotes) return false;
       if (filter.search) {
         const searchLower = filter.search.toLowerCase();
-        return request.title.toLowerCase().includes(searchLower) ||
-               request.description.toLowerCase().includes(searchLower);
+        return request.title?.toLowerCase().includes(searchLower) ||
+               request.description?.toLowerCase().includes(searchLower);
       }
       return true;
     })
@@ -114,7 +122,17 @@ export default function DocumentRequestList({
   const getVoteThresholdProgress = (votes: number) => {
     const thresholds = Object.values(REQUEST_VOTE_THRESHOLDS);
     const nextThreshold = thresholds.find(t => votes < t) || thresholds[thresholds.length - 1];
-    return (votes / nextThreshold) * 100;
+  // Handle SSR/hydration
+  if (!isHydrated) {
+    return (
+      <HydrationBoundary 
+        fallback={<LoadingStates.DocumentRequestList />} 
+        testId="document-request-list"
+      />
+    );
+  }
+
+  return (votes / nextThreshold) * 100;
   };
 
   const hasUserVoted = (request: DocumentRequest) => {
@@ -122,7 +140,8 @@ export default function DocumentRequestList({
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div
+      data-testid="document-request-list" className="max-w-6xl mx-auto p-6">
       {/* Header */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">

@@ -12,11 +12,19 @@
     "type-check": "astro check && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:unit": "vitest run",
     "test:e2e": "playwright test --config=playwright.e2e.config.ts",
-    "test:e2e:all": "playwright test",
+    "test:integration": "playwright test --config=playwright.config.ts",
+    "test:all": "npm run test:unit && npm run test:e2e",
     "build:corpus": "node scripts/build-corpus.js",
     "build:embeddings": "node scripts/generate-embeddings.js",
-    "download:embeddings": "node scripts/download-embeddings.js"
+    "download:embeddings": "node scripts/download-embeddings.js",
+    "demo:record": "npx tsx scripts/generate-demo.ts full",
+    "demo:quick": "npx tsx scripts/generate-demo.ts quick",
+    "demo:chat": "npx tsx scripts/generate-demo.ts chat",
+    "demo:screenshots": "npx tsx scripts/generate-demo.ts --screenshots",
+    "demo:update": "npm run demo:record && npm run demo:screenshots",
+    "demo:headed": "npx tsx scripts/generate-demo.ts full --headed"
   },
   "dependencies": {
     "@astrojs/react": "^3.6.2",

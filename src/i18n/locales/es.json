@@ -20,7 +20,28 @@
     "confirm": "Confirmar",
     "yes": "Sí",
     "no": "No",
-    "changeLanguage": "Cambiar idioma"
+    "changeLanguage": "Cambiar idioma",
+    "selectAll": "Seleccionar todo",
+    "clear": "Limpiar",
+    "upload": "Subir",
+    "download": "Descargar",
+    "new": "Nuevo",
+    "create": "Crear",
+    "update": "Actualizar",
+    "status": "Estado",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "pending": "Pendiente",
+    "completed": "Completado",
+    "optional": "Opcional",
+    "required": "Requerido",
+    "none": "Ninguno",
+    "all": "Todos",
+    "searchPlaceholder": "Buscar...",
+    "noResults": "No se encontraron resultados",
+    "skipToContent": "Saltar al contenido principal",
+    "configure": "Configurar",
+    "free": "Gratis"
   },
   "nav": {
     "home": "Inicio",
@@ -383,16 +404,159 @@
       "title": "Sin Conexión",
       "message": "Por favor revisa tu conexión a internet.",
       "action": "Reintentar"
-    }
+    },
+    "languageError": "Error en idioma"
   },
   "theme": {
     "light": "Claro",
     "dark": "Oscuro",
-    "system": "Sistema"
+    "system": "Sistema",
+    "toggle": "Cambiar tema",
+    "changeTheme": "Cambiar tema",
+    "error": "Error en tema"
   },
   "language": {
     "es": "Español",
-    "en": "English"
+    "en": "English",
+    "change": "Cambiar idioma"
+  },
+  "cases": {
+    "title": "Mis Casos",
+    "description": "Organiza tus casos legales, documentos y notas en un solo lugar",
+    "pageTitle": "Mis Casos - LexMX",
+    "newCase": "Nuevo Caso",
+    "createNewCase": "Crear Nuevo Caso",
+    "searchCases": "Buscar casos...",
+    "noCases": "No hay casos creados",
+    "noCasesDescription": "Crea tu primer caso para comenzar a organizar tus documentos legales",
+    "noResults": "No se encontraron casos",
+    "caseTitle": "Título del Caso",
+    "caseDescription": "Descripción del Caso",
+    "client": "Cliente",
+    "caseNumber": "Número de Expediente",
+    "court": "Juzgado",
+    "status": "Estado",
+    "createdDate": "Fecha de Creación",
+    "lastModified": "Última Modificación",
+    "titleRequired": "El título es requerido",
+    "createCase": "Crear Caso",
+    "editCase": "Editar Caso",
+    "deleteCase": "Eliminar Caso",
+    "confirmDelete": "¿Estás seguro de que deseas eliminar este caso?",
+    "exampleTitle": "Ej: Divorcio García vs. Martínez",
+    "briefDescription": "Breve descripción del caso...",
+    "clientName": "Nombre del cliente",
+    "caseNumberExample": "Ej: 123/2024",
+    "legalArea": "Área Legal",
+    "selectCase": "Selecciona un caso",
+    "orCreateNew": "o crea uno nuevo para comenzar",
+    "partiesInvolved": "Partes Involucradas",
+    "noParties": "No hay partes registradas",
+    "upcomingDeadlines": "Próximos Plazos",
+    "noPendingDeadlines": "No hay plazos pendientes",
+    "noDocuments": "No hay documentos",
+    "addNote": "Agregar una nota...",
+    "noNotes": "No hay notas",
+    "chatComingSoon": "Chat integrado próximamente",
+    "chatDescription": "Podrás hacer consultas específicas sobre este caso",
+    "timelineComingSoon": "Cronología próximamente",
+    "timelineDescription": "Vista temporal de todos los eventos del caso",
+    "deadlineTypes": {
+      "court": "Audiencia",
+      "filing": "Presentación",
+      "meeting": "Reunión",
+      "other": "Otro"
+    },
+    "tabs": {
+      "summary": "Resumen",
+      "documents": "Documentos",
+      "notes": "Notas",
+      "chat": "Chat",
+      "timeline": "Cronología"
+    },
+    "statuses": {
+      "active": "Activo",
+      "pending": "Pendiente",
+      "closed": "Cerrado",
+      "archived": "Archivado",
+      "review": "En Revisión"
+    },
+    "upload": {
+      "title": "Subir Documentos",
+      "dragDrop": "Click para subir o arrastra archivos aquí",
+      "supportedFormats": "PDF, DOC, DOCX, TXT (Máx. 10MB)",
+      "uploading": "Subiendo...",
+      "uploadSuccess": "Carga exitosa",
+      "uploadError": "Error al cargar"
+    }
+  },
+  "corpus": {
+    "title": "Seleccionar Corpus",
+    "selectTitle": "Seleccionar Corpus Legal",
+    "all": "Todo el corpus",
+    "selected": "{{count}} seleccionados",
+    "byArea": "Por Área",
+    "byDocument": "Por Documento",
+    "selectAll": "Seleccionar todo",
+    "clear": "Limpiar",
+    "searchDocument": "Buscar documento...",
+    "close": "Cerrar",
+    "areas": {
+      "constitutional": "Constitucional",
+      "labor": "Laboral",
+      "civil": "Civil",
+      "criminal": "Penal",
+      "tax": "Fiscal",
+      "commercial": "Mercantil",
+      "administrative": "Administrativo",
+      "family": "Familiar",
+      "environmental": "Ambiental",
+      "intellectual": "Propiedad Intelectual"
+    },
+    "documents": {
+      "constitution": "Constitución Política",
+      "federalLaborLaw": "Ley Federal del Trabajo",
+      "civilCode": "Código Civil Federal",
+      "criminalCode": "Código Penal Federal",
+      "taxCode": "Código Fiscal",
+      "commercialCode": "Código de Comercio"
+    }
+  },
+  "providers": {
+    "configure": "Configurar Proveedores",
+    "selectProvider": "Seleccionar Proveedor",
+    "configureProvider": "Configurar {{provider}}",
+    "notConfigured": "No configurado",
+    "costLevel": "Nivel de Costo",
+    "performance": "Rendimiento",
+    "privacy": "Privacidad",
+    "availability": "Disponibilidad"
+  },
+  "footer": {
+    "quickLinks": "Enlaces Rápidos",
+    "legalResources": "Recursos Legales",
+    "legalNotice": "Aviso Legal",
+    "privacyPolicy": "Política de Privacidad",
+    "termsOfService": "Términos de Servicio",
+    "contact": "Contacto",
+    "openSource": "Proyecto Open Source",
+    "viewOnGithub": "Ver en GitHub",
+    "reportIssue": "Reportar un Problema",
+    "contribute": "Contribuir",
+    "resources": {
+      "deputies": "Cámara de Diputados",
+      "gazette": "Diario Oficial"
+    }
+  },
+  "accessibility": {
+    "skipToContent": "Saltar al contenido principal",
+    "mainNavigation": "Navegación principal",
+    "closeDialog": "Cerrar diálogo",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "toggleTheme": "Cambiar tema",
+    "selectLanguage": "Seleccionar idioma",
+    "changeLanguage": "Cambiar idioma"
   },
   "systemPrompts": {
     "base": {

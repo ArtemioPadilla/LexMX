@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS } from '../utils/test-ids';
 import DocumentViewer from './DocumentViewer';
 import { DocumentLoader } from '../lib/legal/document-loader';
 import type { LegalDocument } from '../types/legal';
@@ -9,9 +11,15 @@ interface DocumentViewerWrapperProps {
 }
 
 export default function DocumentViewerWrapper({ documentId, documentTitle }: DocumentViewerWrapperProps) {
+  const [isHydrated, setIsHydrated] = useState(false);
   const [document, setDocument] = useState<LegalDocument | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
     const loadDocument = async () => {
@@ -35,8 +43,19 @@ export default function DocumentViewerWrapper({ documentId, documentTitle }: Doc
   }, [documentId]);
 
   if (loading) {
+  // Handle SSR/hydration
+  if (!isHydrated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <HydrationBoundary 
+        fallback={<LoadingStates.DocumentViewerWrapper />} 
+        testId="document-viewer-wrapper"
+      />
+    );
+  }
+
+  return (
+    <div
+      data-testid="document-viewer-wrapper" className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-legal-500 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Cargando documento...</p>

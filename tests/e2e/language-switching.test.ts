@@ -5,6 +5,8 @@ import {
   clearAllStorage,
   setupWebLLMProvider
 } from '../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('Language Switching', () => {
   test.beforeEach(async ({ page }) => {
@@ -41,8 +43,8 @@ test.describe('Language Switching', () => {
     await page.goto('/');
     
     // Verify Spanish content is displayed by default
-    await expect(page.locator('h1')).toContainText('Tu Asistente Legal');
-    await expect(page.locator('text="Iniciar Consulta Gratis"')).toBeVisible();
+    await expect(page.locator('h1').first().first()).toContainText('Tu Asistente Legal');
+    await expect(page.locator('[data-testid="cta-chat"]')).toBeVisible();
     
     // Switch to English
     const langSelector = page.locator('.language-selector button').first();
@@ -53,7 +55,7 @@ test.describe('Language Switching', () => {
     await page.waitForTimeout(500);
     
     // Verify English content is displayed
-    await expect(page.locator('h1')).toContainText('Your Mexican Legal AI Assistant');
+    await expect(page.locator('h1').first().first()).toContainText('Your Mexican Legal AI Assistant');
     await expect(page.locator('text="Start Free Consultation"')).toBeVisible();
   });
 
@@ -63,12 +65,12 @@ test.describe('Language Switching', () => {
     await page.reload();
     
     // Verify Spanish content
-    await expect(page.locator('h1')).toContainText('Chat Legal');
-    const welcomeMessage = page.locator('.chat-interface').locator('text=/Bienvenido a LexMX/i');
+    await expect(page.locator('h1').first().first()).toContainText('Chat Legal');
+    const welcomeMessage = page.locator('[data-testid="chat-container"]').locator('text=/Bienvenido a LexMX/i');
     await expect(welcomeMessage).toBeVisible();
     
     // Check placeholder text
-    const input = page.locator('textarea[placeholder*="consulta legal"]');
+    const input = page.locator('[data-testid="chat-input"]');
     await expect(input).toBeVisible();
     
     // Switch to English
@@ -80,8 +82,8 @@ test.describe('Language Switching', () => {
     await page.waitForTimeout(500);
     
     // Verify English content
-    await expect(page.locator('h1')).toContainText('Legal Chat');
-    const welcomeMessageEn = page.locator('.chat-interface').locator('text=/Welcome to LexMX/i');
+    await expect(page.locator('h1').first().first()).toContainText('Legal Chat');
+    const welcomeMessageEn = page.locator('[data-testid="chat-container"]').locator('text=/Welcome to LexMX/i');
     await expect(welcomeMessageEn).toBeVisible();
     
     // Check placeholder text changed
@@ -123,7 +125,7 @@ test.describe('Language Switching', () => {
     // Navigate to chat
     await page.goto('/chat');
     await expect(page.locator('.language-selector button').first()).toContainText('EN');
-    await expect(page.locator('h1')).toContainText('Legal Chat');
+    await expect(page.locator('h1').first().first()).toContainText('Legal Chat');
     
     // Navigate to casos
     await page.goto('/casos');
@@ -136,15 +138,15 @@ test.describe('Language Switching', () => {
     // Go back to home
     await page.goto('/');
     await expect(page.locator('.language-selector button').first()).toContainText('EN');
-    await expect(page.locator('h1')).toContainText('Your Mexican Legal AI Assistant');
+    await expect(page.locator('h1').first().first()).toContainText('Your Mexican Legal AI Assistant');
   });
 
   test('setup wizard translates correctly', async ({ page }) => {
     await navigateAndWaitForHydration(page, '/setup');
     
     // Verify Spanish content
-    await expect(page.locator('h2')).toContainText('Configura tu Asistente Legal IA');
-    await expect(page.locator('button:has-text("Usar WebLLM")')).toBeVisible();
+    await expect(page.locator('h2').first().first()).toContainText('Configura tu Asistente Legal IA');
+    await expect(page.locator('[data-testid="provider-webllm"]')).toBeVisible();
     
     // Switch to English
     const langSelector = page.locator('.language-selector button').first();
@@ -155,7 +157,7 @@ test.describe('Language Switching', () => {
     await page.waitForTimeout(500);
     
     // Verify English content
-    await expect(page.locator('h2')).toContainText('Configure your Legal AI Assistant');
+    await expect(page.locator('h2').first().first()).toContainText('Configure your Legal AI Assistant');
     await expect(page.locator('button:has-text("Use WebLLM")')).toBeVisible();
   });
 
@@ -255,7 +257,7 @@ test.describe('Language Switching', () => {
     // Verify both preferences persisted
     await expect(page.locator('html')).toHaveClass(/dark/);
     await expect(page.locator('.language-selector button').first()).toContainText('EN');
-    await expect(page.locator('h1')).toContainText('Your Mexican Legal AI Assistant');
+    await expect(page.locator('h1').first().first()).toContainText('Your Mexican Legal AI Assistant');
   });
 
   test('language selector closes when clicking outside', async ({ page }) => {

@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test';
+import { setupPage, navigateToPage, waitForPageReady, setupAllMockProviders, setupProviderScenario } from '../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test('debug provider setup', async ({ page }) => {
   // Enable console logging
@@ -29,7 +32,7 @@ test('debug provider setup', async ({ page }) => {
   console.log('Welcome text visible:', welcomeText);
   
   // 5. Click start button if visible
-  const startButton = page.locator('button:has-text("Comenzar Configuración")');
+  const startButton = page.locator('[data-testid="setup-begin"]');
   if (await startButton.isVisible()) {
     console.log('Clicking start button...');
     await startButton.click();
@@ -57,7 +60,7 @@ test('debug provider setup', async ({ page }) => {
   // 9. Complete a simple setup to test navigation
   console.log('Setting up Ollama provider...');
   await page.goto('http://localhost:4321/setup');
-  await page.click('button:has-text("Comenzar Configuración")');
+  await page.click('[data-testid="setup-begin"]');
   await page.click('text="Configuración Personalizada"');
   
   // Select Ollama
@@ -85,6 +88,6 @@ test('debug provider setup', async ({ page }) => {
   console.log('Current URL after clicking:', currentUrl);
   
   // Check if chat page loaded
-  const chatInterface = await page.locator('.chat-interface').isVisible();
+  const chatInterface = await page.locator('[data-testid="chat-container"]').isVisible();
   console.log('Chat interface visible:', chatInterface);
 });

@@ -11,6 +11,8 @@ import ProviderSelector from '../components/ProviderSelector';
 import CorpusSelector from '../components/CorpusSelector';
 import ModelSelectorModal from '../components/ModelSelectorModal';
 import { useTranslation } from '../i18n';
+import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS } from '../utils/test-ids';
 
 export interface ChatMessage {
   id: string;
@@ -93,23 +95,41 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
 
     const initializeEngine = async () => {
       try {
+        // Check if we're in browser environment
+        if (typeof window === 'undefined') {
+          console.warn('ChatInterface: Not in browser environment');
+          return;
+        }
+        
         // Register WebLLM progress listener
         providerManager.addWebLLMProgressListener(progressListener);
         
-        // Initialize provider manager first
-        await providerManager.initialize();
+        // Initialize provider manager first with timeout
+        const initPromise = providerManager.initialize();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Initialization timeout')), 5000)
+        );
+        
+        await Promise.race([initPromise, timeoutPromise]).catch(err => {
+          console.warn('Provider manager initialization warning:', err);
+        });
         
         // Then initialize RAG engine
-        await ragEngine.initialize();
+        await ragEngine.initialize().catch(err => {
+          console.warn('RAG engine initialization warning:', err);
+        });
+        
         setIsInitialized(true);
         
         // Check if providers are configured
-        const hasProviders = await providerManager.hasConfiguredProviders();
+        const hasProviders = await providerManager.hasConfiguredProviders().catch(() => false);
         if (!hasProviders) {
           addSystemMessage('ℹ️ ' + t('chat.errors.noProviders'));
         }
       } catch (error) {
         console.error('Failed to initialize system:', error);
+        // Mark as initialized anyway to prevent blocking
+        setIsInitialized(true);
         addSystemMessage('⚠️ ' + t('common.error') + '. ' + t('chat.errors.providerError'));
       }
     };
@@ -325,8 +345,24 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
     t('chat.examples.q5')
   ];
 
+  // Handle SSR/hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  if (!isHydrated) {
+    return (
+      <HydrationBoundary 
+        fallback={<LoadingStates.ChatInterface />} 
+        testId={TEST_IDS.chat.container}
+      />
+    );
+  }
+
   return (
-    <div className={`chat-interface flex flex-col h-full bg-white dark:bg-gray-900 ${className}`}>
+    <div 
+      data-testid={TEST_IDS.chat.container}
+      className={`chat-interface flex flex-col h-full bg-white dark:bg-gray-900 ${className}`}>
       {/* Header */}
       <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
         <div className="flex items-center justify-between">
@@ -585,6 +621,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
           <div className="flex-1">
             <textarea
               ref={inputRef}
+              data-testid={TEST_IDS.chat.input}
               value={currentInput}
               onChange={(e) => setCurrentInput(e.target.value)}
               onKeyDown={handleKeyDown}

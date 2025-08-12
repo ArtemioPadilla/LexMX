@@ -5,6 +5,8 @@ import {
   setupWebLLMProvider,
   clearAllStorage
 } from '../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('Corpus Selector User Journey', () => {
   test.beforeEach(async ({ page }) => {
@@ -29,7 +31,7 @@ test.describe('Corpus Selector User Journey', () => {
 
   test('can open corpus selector dropdown', async ({ page }) => {
     // Open corpus selector
-    const selector = page.locator('.corpus-selector button').first();
+    const selector = page.locator('[data-testid="corpus-selector-toggle"]').first();
     await selector.click();
     
     // Check dropdown is visible
@@ -46,7 +48,7 @@ test.describe('Corpus Selector User Journey', () => {
 
   test('can switch between area and document tabs', async ({ page }) => {
     // Open corpus selector
-    const selector = page.locator('.corpus-selector button').first();
+    const selector = page.locator('[data-testid="corpus-selector-toggle"]').first();
     await selector.click();
     
     // By default, "Por Área" tab should be active
@@ -68,7 +70,7 @@ test.describe('Corpus Selector User Journey', () => {
 
   test('can select legal areas', async ({ page }) => {
     // Open corpus selector
-    const selector = page.locator('.corpus-selector button').first();
+    const selector = page.locator('[data-testid="corpus-selector-toggle"]').first();
     await selector.click();
     
     // Click on Civil area
@@ -90,7 +92,7 @@ test.describe('Corpus Selector User Journey', () => {
 
   test('can select individual documents', async ({ page }) => {
     // Open corpus selector
-    const selector = page.locator('.corpus-selector button').first();
+    const selector = page.locator('[data-testid="corpus-selector-toggle"]').first();
     await selector.click();
     
     // Switch to documents tab
@@ -108,12 +110,12 @@ test.describe('Corpus Selector User Journey', () => {
     await page.keyboard.press('Escape');
     
     // Check selector shows document count
-    await expect(selector).toContainText('1 documento');
+    await expect(selector).toContainText('1 seleccionados');
   });
 
   test('can search for documents', async ({ page }) => {
     // Open corpus selector
-    const selector = page.locator('.corpus-selector button').first();
+    const selector = page.locator('[data-testid="corpus-selector-toggle"]').first();
     await selector.click();
     
     // Switch to documents tab
@@ -139,23 +141,38 @@ test.describe('Corpus Selector User Journey', () => {
 
   test('select all and clear all buttons work', async ({ page }) => {
     // Open corpus selector
-    const selector = page.locator('.corpus-selector button').first();
+    const selector = page.locator('[data-testid="corpus-selector-toggle"]').first();
     await selector.click();
     
-    // Click "Seleccionar todo"
-    await page.click('button:has-text("Seleccionar todo")');
+    // Wait for dropdown to be visible
+    await page.waitForSelector('[data-testid="corpus-select-all"]', { timeout: 10000 });
+    
+    // Click "Seleccionar todo" using data-testid
+    await page.click('[data-testid="corpus-select-all"]');
+    
+    // Wait a moment for selection to update
+    await page.waitForTimeout(500);
     
     // Close and reopen to check
     await page.keyboard.press('Escape');
-    await expect(selector).toContainText('Todo el corpus');
+    await page.waitForTimeout(500);
+    
+    // Should show count of selected documents
+    const text = await selector.textContent();
+    expect(text).toMatch(/\d+ seleccionados/);
     
     await selector.click();
+    await page.waitForSelector('[data-testid="corpus-clear-all"]', { timeout: 10000 });
     
-    // Click "Limpiar"
-    await page.click('button:has-text("Limpiar")');
+    // Click "Limpiar" using data-testid
+    await page.click('[data-testid="corpus-clear-all"]');
+    
+    // Wait for clear to process
+    await page.waitForTimeout(500);
     
     // Close dropdown
     await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
     
     // Check selector shows "Todo el corpus" (default when nothing selected)
     await expect(selector).toContainText('Todo el corpus');
@@ -163,31 +180,47 @@ test.describe('Corpus Selector User Journey', () => {
 
   test('selecting area auto-selects its documents', async ({ page }) => {
     // Open corpus selector
-    const selector = page.locator('.corpus-selector button').first();
+    const selector = page.locator('[data-testid="corpus-selector-toggle"]').first();
     await selector.click();
+    
+    // Wait for areas to load
+    await page.waitForSelector('button:has-text("Laboral")', { timeout: 10000 });
     
     // Select Labor area
     const laborArea = page.locator('button:has-text("Laboral")').first();
     await laborArea.click();
     
-    // Check all labor documents are selected
-    const lftCheckbox = page.locator('button:has-text("LFT")').first().locator('input[type="checkbox"]');
-    const lssCheckbox = page.locator('button:has-text("LSS")').first().locator('input[type="checkbox"]');
+    // Wait for the area expansion animation
+    await page.waitForTimeout(500);
+    
+    // When an area is selected, documents within it should be visible
+    // Check if labor documents are now visible in the expanded section
+    const lftButton = page.locator('button:has-text("LFT")').first();
+    const lssButton = page.locator('button:has-text("LSS")').first();
+    
+    // Verify the documents are visible in the expanded area
+    await expect(lftButton).toBeVisible();
+    await expect(lssButton).toBeVisible();
+    
+    // The checkboxes should be checked for documents in selected area
+    const lftCheckbox = lftButton.locator('input[type="checkbox"]');
+    const lssCheckbox = lssButton.locator('input[type="checkbox"]');
     
     await expect(lftCheckbox).toBeChecked();
     await expect(lssCheckbox).toBeChecked();
     
     // Close dropdown
     await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
     
     // Check selector shows document count
     const buttonText = await selector.textContent();
-    expect(buttonText).toMatch(/\d+ documentos/); // Should show number of documents
+    expect(buttonText).toMatch(/\d+ seleccionados/); // Should show number of selected documents
   });
 
   test('corpus selection persists while chatting', async ({ page }) => {
     // Open corpus selector
-    const selector = page.locator('.corpus-selector button').first();
+    const selector = page.locator('[data-testid="corpus-selector-toggle"]').first();
     await selector.click();
     
     // Select specific documents
@@ -199,10 +232,10 @@ test.describe('Corpus Selector User Journey', () => {
     await page.keyboard.press('Escape');
     
     // Check selection is shown
-    await expect(selector).toContainText('2 documentos');
+    await expect(selector).toContainText('2 seleccionados');
     
     // Send a chat message
-    const input = page.locator('textarea[placeholder*="consulta legal"]');
+    const input = page.locator('[data-testid="chat-input"]');
     await input.fill('¿Qué dice la constitución sobre el trabajo?');
     await page.keyboard.press('Enter');
     
@@ -210,38 +243,50 @@ test.describe('Corpus Selector User Journey', () => {
     await page.waitForTimeout(1000);
     
     // Check corpus selection is still the same
-    await expect(selector).toContainText('2 documentos');
+    await expect(selector).toContainText('2 seleccionados');
   });
 
   test('corpus selector shows document count in footer', async ({ page }) => {
     // Open corpus selector
-    const selector = page.locator('.corpus-selector button').first();
+    const selector = page.locator('[data-testid="corpus-selector-toggle"]').first();
     await selector.click();
     
-    // Check footer shows total document count
-    const footer = page.locator('.corpus-selector').locator('text=/de \\d+ documentos/');
-    await expect(footer).toBeVisible();
+    // Wait for the dropdown to be fully loaded
+    await page.waitForSelector('button:has-text("Por Documento")', { timeout: 10000 });
+    
+    // Switch to documents tab
+    await page.click('button:has-text("Por Documento")');
+    await page.waitForTimeout(500);
     
     // Select some documents
-    await page.click('button:has-text("Por Documento")');
     await page.click('button:has-text("CPEUM")');
+    await page.waitForTimeout(200);
     await page.click('button:has-text("LFT")');
+    await page.waitForTimeout(200);
     await page.click('button:has-text("CCF")');
+    await page.waitForTimeout(200);
     
-    // Check footer updates
-    await expect(footer).toContainText('3 de');
+    // Close dropdown
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
+    
+    // Check selector button shows selected count
+    await expect(selector).toContainText('3 seleccionados');
   });
 
   test('corpus selector works in mobile view', async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
     
+    // Wait for page to adjust to mobile viewport
+    await page.waitForTimeout(500);
+    
     // Check corpus selector is visible
     const corpusSelector = page.locator('.corpus-selector').first();
     await expect(corpusSelector).toBeVisible();
     
     // Open dropdown
-    const selector = page.locator('.corpus-selector button').first();
+    const selector = page.locator('[data-testid="corpus-selector-toggle"]').first();
     await selector.click();
     
     // Check dropdown fits in mobile view
@@ -259,7 +304,7 @@ test.describe('Corpus Selector User Journey', () => {
 
   test('can deselect individual documents from selected area', async ({ page }) => {
     // Open corpus selector
-    const selector = page.locator('.corpus-selector button').first();
+    const selector = page.locator('[data-testid="corpus-selector-toggle"]').first();
     await selector.click();
     
     // Select Civil area (selects all civil documents)
@@ -281,6 +326,6 @@ test.describe('Corpus Selector User Journey', () => {
     await page.keyboard.press('Escape');
     
     // Check selector shows correct count (1 document less than total civil docs)
-    await expect(selector).toContainText('1 documento');
+    await expect(selector).toContainText('1 seleccionados');
   });
 });

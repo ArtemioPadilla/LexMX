@@ -1,11 +1,15 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from '../i18n';
+import { HydrationBoundary, LoadingStates } from './HydrationBoundary';
+import { TEST_IDS } from '../utils/test-ids';
 
 type Theme = 'light' | 'dark' | 'system';
 
 export function ThemeToggle() {
+  const { t } = useTranslation();
   const [theme, setTheme] = useState<Theme>('system');
   const [isOpen, setIsOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Apply theme to document
@@ -30,7 +34,7 @@ export function ThemeToggle() {
   // Initialize theme on mount
   useEffect(() => {
     try {
-      setMounted(true);
+      setIsHydrated(true);
       
       // Only access browser APIs on client
       if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
@@ -104,24 +108,20 @@ export function ThemeToggle() {
   }, [isOpen]);
   
   const themes: { value: Theme; label: string; icon: string }[] = [
-    { value: 'light', label: 'Claro', icon: '☀️' },
-    { value: 'dark', label: 'Oscuro', icon: '🌙' },
-    { value: 'system', label: 'Sistema', icon: '💻' },
+    { value: 'light', label: t('theme.light'), icon: '☀️' },
+    { value: 'dark', label: t('theme.dark'), icon: '🌙' },
+    { value: 'system', label: t('theme.system'), icon: '💻' },
   ];
   
   const currentTheme = themes.find(t => t.value === theme) || themes[2];
   
-  if (!mounted) {
+  // Handle SSR/hydration
+  if (!isHydrated) {
     return (
-      <div className="relative theme-toggle">
-        <button 
-          className="p-2 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600" 
-          aria-label="Cambiar tema"
-          disabled
-        >
-          <span className="text-xl">💻</span>
-        </button>
-      </div>
+      <HydrationBoundary 
+        fallback={<LoadingStates.ThemeToggle />}
+        testId="theme-toggle"
+      />
     );
   }
   
@@ -130,7 +130,7 @@ export function ThemeToggle() {
       <div className="relative theme-toggle">
         <button 
           className="p-2 rounded-lg bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700" 
-          aria-label="Error en tema"
+          aria-label={t('theme.error')}
           disabled
         >
           <span className="text-xl">⚠️</span>
@@ -142,12 +142,13 @@ export function ThemeToggle() {
   return (
     <div className="relative theme-toggle">
       <button
+        data-testid="theme-toggle"
         onClick={(e) => {
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
         className="p-2 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600"
-        aria-label="Cambiar tema"
+        aria-label={t('theme.changeTheme')}
         aria-expanded={isOpen}
       >
         <span className="text-xl">{currentTheme.icon}</span>
@@ -158,6 +159,7 @@ export function ThemeToggle() {
           {themes.map((t) => (
             <button
               key={t.value}
+              data-testid={`theme-option-${t.value}`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleThemeChange(t.value);

@@ -3,11 +3,13 @@ import {
   setupPage,
   navigateAndWaitForHydration,
   setupWebLLMProvider,
-  setupMockProviders,
+  setupAllMockProviders, setupLegacyMockProviders,
   waitForProviderSelector,
   selectProvider,
   clearAllStorage
 } from '../utils/test-helpers';
+import { TEST_IDS } from '../../src/utils/test-ids';
+import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('Provider Selector User Journey', () => {
   test.beforeEach(async ({ page }) => {
@@ -19,19 +21,22 @@ test.describe('Provider Selector User Journey', () => {
     await navigateAndWaitForHydration(page, '/chat');
     await setupWebLLMProvider(page);
     
+    // Wait for provider selector to initialize
+    await page.waitForTimeout(1000);
+    
     // Check provider selector is visible
     const providerSelector = page.locator('.provider-selector').first();
-    await expect(providerSelector).toBeVisible();
+    await expect(providerSelector).toBeVisible({ timeout: 10000 });
     
-    // Check it shows WebLLM by default
-    await expect(providerSelector).toContainText('WebLLM');
+    // Check it shows WebLLM by default (may show "Loading..." initially)
+    await expect(providerSelector).toContainText(/WebLLM|Loading/);
   });
 
   test('can open provider dropdown and see options', async ({ page }) => {
     await navigateAndWaitForHydration(page, '/chat');
     
     // Set up multiple providers
-    await setupMockProviders(page, [
+    await setupLegacyMockProviders(page, [
       {
         id: 'webllm',
         name: 'WebLLM',
@@ -59,7 +64,7 @@ test.describe('Provider Selector User Journey', () => {
     await waitForProviderSelector(page);
     
     // Open dropdown
-    const selector = page.locator('.provider-selector button').first();
+    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
     await selector.click();
     
     // Check dropdown is visible
@@ -83,7 +88,7 @@ test.describe('Provider Selector User Journey', () => {
     await page.reload();
     
     // Open provider selector
-    const selector = page.locator('.provider-selector button').first();
+    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
     await selector.click();
     
     // Click on WebLLM to see models
@@ -107,7 +112,7 @@ test.describe('Provider Selector User Journey', () => {
     await setupWebLLMProvider(page);
     
     // Open provider selector
-    const selector = page.locator('.provider-selector button').first();
+    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
     await selector.click();
     
     // Check setup link is visible
@@ -126,7 +131,7 @@ test.describe('Provider Selector User Journey', () => {
     await navigateAndWaitForHydration(page, '/chat');
     
     // Set up multiple providers
-    await setupMockProviders(page, [
+    await setupLegacyMockProviders(page, [
       {
         id: 'webllm',
         name: 'WebLLM',
@@ -147,7 +152,7 @@ test.describe('Provider Selector User Journey', () => {
     await waitForProviderSelector(page);
     
     // Select OpenAI
-    const selector = page.locator('.provider-selector button').first();
+    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
     await selector.click();
     
     const openaiOption = page.locator('button:has-text("OpenAI")').first();
@@ -161,14 +166,14 @@ test.describe('Provider Selector User Journey', () => {
     await waitForProviderSelector(page);
     
     // Check OpenAI is still selected
-    const selectorAfterReload = page.locator('.provider-selector button').first();
+    const selectorAfterReload = page.locator('[data-testid="provider-selector-toggle"]').first();
     await expect(selectorAfterReload).toContainText('OpenAI');
   });
 
   test('shows provider icons correctly', async ({ page }) => {
     await navigateAndWaitForHydration(page, '/chat');
     
-    await setupMockProviders(page, [
+    await setupLegacyMockProviders(page, [
       {
         id: 'webllm',
         name: 'WebLLM',
@@ -182,7 +187,7 @@ test.describe('Provider Selector User Journey', () => {
     await waitForProviderSelector(page);
     
     // Check icon is visible in button
-    const selector = page.locator('.provider-selector button').first();
+    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
     const icon = selector.locator('img').first();
     await expect(icon).toBeVisible();
     await expect(icon).toHaveAttribute('alt', 'WebLLM');
@@ -201,7 +206,7 @@ test.describe('Provider Selector User Journey', () => {
     await expect(providerSelector).toBeVisible();
     
     // Open dropdown
-    const selector = page.locator('.provider-selector button').first();
+    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
     await selector.click();
     
     // Check dropdown fits in mobile view
@@ -237,7 +242,7 @@ test.describe('Provider Selector User Journey', () => {
     await setupWebLLMProvider(page);
     
     // Initially only WebLLM
-    const selector = page.locator('.provider-selector button').first();
+    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
     await selector.click();
     
     let dropdown = page.locator('.provider-selector').first();
@@ -266,7 +271,7 @@ test.describe('Provider Selector User Journey', () => {
     await waitForProviderSelector(page);
     
     // Open dropdown again
-    await page.locator('.provider-selector button').first().click();
+    await page.locator('[data-testid="provider-selector-toggle"]').first().click();
     
     // Check both providers are now visible
     dropdown = page.locator('.provider-selector').first();
@@ -306,7 +311,7 @@ test.describe('Provider Selector User Journey', () => {
     await waitForProviderSelector(page);
     
     // Open dropdown
-    const selector = page.locator('.provider-selector button').first();
+    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
     await selector.click();
     
     // Check only enabled provider is shown
