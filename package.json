@@ -27,8 +27,8 @@
     "demo:headed": "npx tsx scripts/generate-demo.ts full --headed"
   },
   "dependencies": {
-    "@astrojs/react": "^3.6.2",
-    "@astrojs/tailwind": "^5.1.0",
+    "@astrojs/react": "^4.3.0",
+    "@astrojs/tailwind": "^6.0.2",
     "@mlc-ai/web-llm": "^0.2.79",
     "@nanostores/persistent": "^1.1.0",
     "@types/react": "^18.3.3",
