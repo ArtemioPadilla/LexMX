@@ -252,6 +252,165 @@ interface ChunkingStrategy {
 4. Update chunking strategy for specific legal areas
 5. Test against known legal precedents
 
+## Internationalization (i18n) Guide
+
+### Overview
+LexMX uses a **dual translation system** to support both static and dynamic content:
+1. **Client-side translations** for interactive components (React islands)
+2. **Data attributes** for static Astro pages
+
+### Translation Systems
+
+#### 1. Client-Side Translations (React Components)
+For React components and islands, use the `useTranslation` hook:
+
+```typescript
+import { useTranslation } from '../i18n/index';
+
+export default function MyComponent() {
+  const { t } = useTranslation();
+  
+  return (
+    <div>
+      <h1>{t('myComponent.title')}</h1>
+      <p>{t('myComponent.description', { count: 5 })}</p>
+    </div>
+  );
+}
+```
+
+**When to use**: 
+- React components (`.tsx` files)
+- Interactive islands
+- Dynamic content that changes based on user interaction
+
+#### 2. Data Attributes (Astro Pages)
+For static Astro pages, use `data-i18n` attributes:
+
+```astro
+<h1 data-i18n="page.title">Título en Español</h1>
+<p data-i18n="page.description">Descripción en español</p>
+```
+
+The `ClientTranslations.astro` script automatically replaces content based on selected language.
+
+**When to use**:
+- Static Astro pages (`.astro` files)
+- Server-rendered content
+- SEO-critical content that needs to be in the HTML
+
+### Adding New Translations
+
+#### Step 1: Add Translation Keys
+Edit both language files:
+- `src/i18n/locales/en.json` (English)
+- `src/i18n/locales/es.json` (Spanish)
+
+```json
+{
+  "myFeature": {
+    "title": "My Feature Title",
+    "description": "Feature description",
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel"
+    }
+  }
+}
+```
+
+#### Step 2: Use in Components
+
+**React Component**:
+```typescript
+const { t } = useTranslation();
+return <h1>{t('myFeature.title')}</h1>;
+```
+
+**Astro Page**:
+```astro
+<h1 data-i18n="myFeature.title">Mi Característica</h1>
+```
+
+### Common Pitfalls & Solutions
+
+#### 1. Hydration Mismatches
+**Problem**: Server renders Spanish, client renders English, causing hydration errors.
+
+**Solution**: Remove internal hydration boundaries in components:
+```typescript
+// ❌ Don't do this
+if (!isHydrated) {
+  return <LoadingState />;
+}
+
+// ✅ Do this
+const { t } = useTranslation();
+return <div>{t('key')}</div>;
+```
+
+#### 2. Missing Translation Keys
+**Problem**: Console shows "Translation key not found" errors.
+
+**Solution**: 
+1. Ensure keys exist in both `en.json` and `es.json`
+2. Use consistent key paths
+3. Fallback to Spanish if English key missing
+
+#### 3. HTML Content in Translations
+**Problem**: HTML tags show as text instead of rendering.
+
+**Solution**: The `ClientTranslations` script detects HTML and uses `innerHTML`:
+```javascript
+if (value.includes('<') && value.includes('>')) {
+  element.innerHTML = value;
+} else {
+  element.textContent = value;
+}
+```
+
+#### 4. Dynamic Parameters
+Use placeholders for dynamic content:
+```json
+{
+  "welcome": "Welcome, {{name}}!",
+  "items": "You have {{count}} items"
+}
+```
+
+```typescript
+t('welcome', { name: 'Juan' })
+t('items', { count: 5 })
+```
+
+### Testing Translation Coverage
+
+1. **Visual Testing**: Switch languages and verify all text updates
+2. **Console Check**: Look for "Translation key not found" warnings
+3. **Automated Tests**: Run `npm test src/i18n/__tests__/i18n-validation.test.ts`
+
+### Best Practices
+
+1. **Consistent Key Naming**:
+   - Use dot notation: `section.subsection.key`
+   - Group related translations
+   - Use descriptive key names
+
+2. **Fallback Strategy**:
+   - Spanish as primary language
+   - English falls back to Spanish if key missing
+   - Show key name as last resort
+
+3. **Performance**:
+   - Translations load once on initialization
+   - Language changes trigger re-render only where needed
+   - Use localStorage for persistence
+
+4. **Maintenance**:
+   - Keep both language files in sync
+   - Document new translation keys
+   - Test both languages when adding features
+
 ### System Prompts with i18n
 
 #### Architecture

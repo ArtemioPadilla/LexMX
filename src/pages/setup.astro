@@ -15,10 +15,10 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </div>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="setup.title">
           Configuración de Proveedores IA
         </h1>
-        <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+        <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto" data-i18n="setup.subtitle">
           Configura tus proveedores de inteligencia artificial para obtener las mejores respuestas legales. 
           Tus configuraciones se almacenan de forma segura y encriptada localmente.
         </p>
@@ -37,23 +37,23 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
-              <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-2">
+              <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-2" data-i18n="setup.help.title">
                 ¿Necesitas Ayuda?
               </h3>
-              <p class="text-blue-800 dark:text-blue-300 mb-3">
+              <p class="text-blue-800 dark:text-blue-300 mb-3" data-i18n="setup.help.description">
                 Consulta nuestra guía completa para configurar cada proveedor de IA.
               </p>
               <ul class="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-                <li>• Cómo obtener claves API</li>
-                <li>• Configuración de modelos locales</li>
-                <li>• Optimización de costos</li>
-                <li>• Resolución de problemas</li>
+                <li data-i18n="setup.help.items.getApiKeys">• Cómo obtener claves API</li>
+                <li data-i18n="setup.help.items.localModels">• Configuración de modelos locales</li>
+                <li data-i18n="setup.help.items.costOptimization">• Optimización de costos</li>
+                <li data-i18n="setup.help.items.troubleshooting">• Resolución de problemas</li>
               </ul>
               <a 
                 href="/docs/setup" 
                 class="inline-flex items-center mt-3 text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-medium"
               >
-                Ver Documentación
+                <span data-i18n="setup.help.viewDocs">Ver Documentación</span>
                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
@@ -68,23 +68,23 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
             <div>
-              <h3 class="text-lg font-semibold text-green-900 dark:text-green-200 mb-2">
+              <h3 class="text-lg font-semibold text-green-900 dark:text-green-200 mb-2" data-i18n="setup.privacy.title">
                 Privacidad Garantizada
               </h3>
-              <p class="text-green-800 dark:text-green-300 mb-3">
+              <p class="text-green-800 dark:text-green-300 mb-3" data-i18n="setup.privacy.description">
                 Tus datos están completamente seguros y nunca salen de tu navegador.
               </p>
               <ul class="text-sm text-green-700 dark:text-green-300 space-y-1">
-                <li>• Encriptación AES-256 local</li>
-                <li>• Sin envío de datos a servidores</li>
-                <li>• Cumplimiento GDPR/LFPDPPP</li>
-                <li>• Control total sobre tus datos</li>
+                <li data-i18n="setup.privacy.items.encryption">• Encriptación AES-256 local</li>
+                <li data-i18n="setup.privacy.items.noData">• Sin envío de datos a servidores</li>
+                <li data-i18n="setup.privacy.items.compliance">• Cumplimiento GDPR/LFPDPPP</li>
+                <li data-i18n="setup.privacy.items.control">• Control total sobre tus datos</li>
               </ul>
               <a 
                 href="/privacy" 
                 class="inline-flex items-center mt-3 text-green-600 dark:text-green-400 hover:text-green-500 dark:hover:text-green-300 font-medium"
               >
-                Política de Privacidad
+                <span data-i18n="setup.privacy.privacyPolicy">Política de Privacidad</span>
                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
@@ -96,7 +96,7 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
 
       <!-- Provider Comparison -->
       <div class="mt-12">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6 text-center" data-i18n="setup.comparison.title">
           Comparación de Proveedores
         </h2>
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -104,19 +104,19 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" data-i18n="setup.comparison.headers.provider">
                     Proveedor
                   </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" data-i18n="setup.comparison.headers.type">
                     Tipo
                   </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" data-i18n="setup.comparison.headers.cost">
                     Costo
                   </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" data-i18n="setup.comparison.headers.bestFor">
                     Mejor Para
                   </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider" data-i18n="setup.comparison.headers.configuration">
                     Configuración
                   </th>
                 </tr>
@@ -146,21 +146,21 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200" data-i18n="setup.comparison.costs.free">
                       Gratis
                     </span>
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100" data-i18n="setup.comparison.webllm.bestFor">
                     100% privado, sin costos, funciona offline
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400" data-i18n="setup.comparison.webllm.configuration">
                     Sin configuración
                   </td>
                 </tr>
                 
                 <!-- Standard Cloud Providers -->
                 <tr class="bg-gradient-to-r from-blue-50 to-transparent dark:from-blue-900/10">
-                  <td colspan="5" class="px-6 py-2 text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider">
+                  <td colspan="5" class="px-6 py-2 text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider" data-i18n="setup.comparison.sections.cloud">
                     ☁️ Proveedores de Nube Estándar
                   </td>
                 </tr>
@@ -174,19 +174,19 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200" data-i18n="setup.comparison.types.cloud">
                       Nube
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200" data-i18n="setup.comparison.costs.high">
                       Alto
                     </span>
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100" data-i18n="setup.comparison.openai.bestFor">
                     Análisis legal complejo, redacción
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400" data-i18n="setup.comparison.configurations.apiKey">
                     API Key requerida
                   </td>
                 </tr>
@@ -201,19 +201,19 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200" data-i18n="setup.comparison.types.cloud">
                       Nube
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200" data-i18n="setup.comparison.costs.medium">
                       Medio
                     </span>
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100" data-i18n="setup.comparison.claude.bestFor">
                     Razonamiento legal, ética
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400" data-i18n="setup.comparison.configurations.apiKey">
                     API Key requerida
                   </td>
                 </tr>
@@ -228,26 +228,26 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200" data-i18n="setup.comparison.types.cloud">
                       Nube
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200" data-i18n="setup.comparison.costs.low">
                       Bajo
                     </span>
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100" data-i18n="setup.comparison.gemini.bestFor">
                     Consultas generales, multiidioma
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400" data-i18n="setup.comparison.configurations.apiKey">
                     API Key requerida
                   </td>
                 </tr>
 
                 <!-- Enterprise Cloud Platforms -->
                 <tr class="bg-gradient-to-r from-purple-50 to-transparent dark:from-purple-900/10">
-                  <td colspan="5" class="px-6 py-2 text-xs font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                  <td colspan="5" class="px-6 py-2 text-xs font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wider" data-i18n="setup.comparison.sections.enterprise">
                     🏢 Plataformas Empresariales
                   </td>
                 </tr>
@@ -264,19 +264,19 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200" data-i18n="setup.comparison.types.cloud">
                       Nube
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200" data-i18n="setup.comparison.costs.medium">
                       Medio
                     </span>
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100" data-i18n="setup.comparison.bedrock.bestFor">
                     Empresas, múltiples modelos, integración AWS
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400" data-i18n="setup.comparison.configurations.apiKeyOrIam">
                     API Key o credenciales IAM
                   </td>
                 </tr>
@@ -294,19 +294,19 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200" data-i18n="setup.comparison.types.cloud">
                       Nube
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200" data-i18n="setup.comparison.costs.medium">
                       Medio
                     </span>
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100" data-i18n="setup.comparison.azure.bestFor">
                     Empresas, integración Microsoft, compliance
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400" data-i18n="setup.comparison.configurations.apiKeyOrAzure">
                     API Key o Azure AD + recurso
                   </td>
                 </tr>
@@ -324,26 +324,26 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200" data-i18n="setup.comparison.types.cloud">
                       Nube
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200" data-i18n="setup.comparison.costs.medium">
                       Medio
                     </span>
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100" data-i18n="setup.comparison.vertex.bestFor">
                     Contexto largo (1M tokens), integración GCP
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400" data-i18n="setup.comparison.configurations.apiKeyOrService">
                     API Key o cuenta de servicio
                   </td>
                 </tr>
                 
                 <!-- Local/Self-Hosted Options -->
                 <tr class="bg-gradient-to-r from-green-50 to-transparent dark:from-green-900/10">
-                  <td colspan="5" class="px-6 py-2 text-xs font-semibold text-green-700 dark:text-green-300 uppercase tracking-wider">
+                  <td colspan="5" class="px-6 py-2 text-xs font-semibold text-green-700 dark:text-green-300 uppercase tracking-wider" data-i18n="setup.comparison.sections.local">
                     💻 Opciones Locales/Auto-Hospedadas
                   </td>
                 </tr>
@@ -357,19 +357,19 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200" data-i18n="setup.comparison.types.local">
                       Local
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200" data-i18n="setup.comparison.costs.free">
                       Gratis
                     </span>
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100" data-i18n="setup.comparison.ollama.bestFor">
                     Máxima privacidad, sin costos
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400" data-i18n="setup.comparison.configurations.localInstall">
                     Instalación local + URL
                   </td>
                 </tr>
@@ -384,19 +384,19 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200" data-i18n="setup.comparison.types.local">
                       Local
                     </span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200" data-i18n="setup.comparison.costs.free">
                       Gratis
                     </span>
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
+                  <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100" data-i18n="setup.comparison.openaiCompatible.bestFor">
                     LM Studio, vLLM, FastChat, custom
                   </td>
-                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400" data-i18n="setup.comparison.configurations.urlEndpoint">
                     URL endpoint + API key opcional
                   </td>
                 </tr>

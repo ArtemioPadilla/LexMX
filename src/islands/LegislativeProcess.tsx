@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
 import { TEST_IDS } from '../utils/test-ids';
+import { useTranslation } from '../i18n/index';
 
 interface ProcessStep {
   id: string;
@@ -147,6 +148,7 @@ const legislativeSteps: ProcessStep[] = [
 ];
 
 export default function LegislativeProcess() {
+  const { t } = useTranslation();
   const [isHydrated, setIsHydrated] = useState(false);
   const [activeStep, setActiveStep] = useState<string | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);

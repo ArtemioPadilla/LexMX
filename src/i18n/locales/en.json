@@ -1,6 +1,12 @@
 {
   "common": {
     "loading": "Loading...",
+    "private": "Private",
+    "noServers": "No servers",
+    "alwaysUpdated": "Always Updated",
+    "currentLegislation": "Current legislation",
+    "multipleProviders": "Multiple providers",
+    "requestDocuments": "Request Documents",
     "error": "Error",
     "success": "Success",
     "cancel": "Cancel",
@@ -37,11 +43,13 @@
     "required": "Required",
     "none": "None",
     "all": "All",
+    "add": "Add",
     "searchPlaceholder": "Search...",
     "noResults": "No results found",
     "skipToContent": "Skip to main content",
     "configure": "Configure",
-    "free": "Free"
+    "free": "Free",
+    "viewDocuments": "View documents"
   },
   "nav": {
     "home": "Home",
@@ -71,18 +79,66 @@
     "subtitle": "LexMX combines cutting-edge technology with the most complete Mexican legal knowledge",
     "multiLLM": {
       "title": "Multiple AI Providers",
-      "description": "Integrates OpenAI, Claude, Gemini and local models. Automatic cost and quality optimization."
+      "description": "Integrates OpenAI, Claude, Gemini and local models. Automatic cost and quality optimization.",
+      "items": {
+        "routing": "Smart routing by complexity",
+        "fallback": "Automatic fallback",
+        "costControl": "Full cost control"
+      }
     },
     "corpus": {
       "title": "Complete Legal Corpus",
-      "description": "+500MB of Mexican legislation processed and vectorized for precise searches."
+      "description": "+500MB of Mexican legislation processed and vectorized for precise searches.",
+      "items": {
+        "constitution": "Constitution and federal codes",
+        "jurisprudence": "Updated SCJN jurisprudence",
+        "regulations": "Current regulations and NOMs"
+      }
     },
     "privacy": {
       "title": "Maximum Privacy",
-      "description": "All processing happens in your browser. No servers, no tracking, no data sent."
+      "description": "All processing happens in your browser. No servers, no tracking, no data sent.",
+      "items": {
+        "encryption": "Local AES-256 encryption",
+        "compliance": "GDPR/LFPDPPP compliance",
+        "localModels": "Local models supported"
+      }
+    },
+    "rag": {
+      "title": "Hybrid RAG Search",
+      "description": "Combines semantic and keyword search to find the most relevant legal information.",
+      "items": {
+        "hybrid": "Vector search + BM25",
+        "cache": "Smart semantic cache",
+        "ranking": "Legal relevance ranking"
+      }
+    },
+    "performance": {
+      "title": "Optimized for Speed",
+      "description": "Islands Architecture and global CDN for instant loads and fast responses.",
+      "items": {
+        "fastLoad": "Initial load <1 second",
+        "pwa": "PWA with offline support",
+        "compression": "Advanced asset compression"
+      }
+    },
+    "costControl": {
+      "title": "Smart Cost Control",
+      "description": "Automatic token optimization and most efficient provider selection for each query.",
+      "items": {
+        "prediction": "Real-time cost prediction",
+        "limits": "Per-provider limits",
+        "compression": "Legal contextual compression"
+      }
     }
   },
   "home": {
+    "cta": {
+      "title": "Ready to transform your legal practice?",
+      "subtitle": "Join thousands of professionals already using LexMX for more efficient and accurate legal consultations.",
+      "startChat": "Start Legal Chat - Free",
+      "configureProviders": "Configure Providers"
+    },
     "hero": {
       "title": "Your Mexican Legal AI Assistant",
       "subtitle": "Get accurate legal answers based on updated Mexican legislation",
@@ -113,6 +169,7 @@
     "welcome": "Welcome to LexMX! I'm your AI assistant specialized in Mexican law. How can I help you today?",
     "placeholder": "Type your legal question here... (Shift+Enter for new line)",
     "send": "Send message",
+    "stop": "Stop",
     "clear": "Clear chat",
     "newConversation": "New conversation",
     "advancedOptions": "Advanced options",
@@ -156,13 +213,27 @@
     "subtitle": "Configure your artificial intelligence providers for the best legal answers. Your settings are stored securely and encrypted locally.",
     "wizard": {
       "welcome": {
-        "title": "Welcome to LexMX",
-        "description": "Let's configure your AI providers for accurate legal consultations. This will only take a few minutes.",
-        "start": "Get Started"
+        "title": "Configure Your Legal AI Assistant",
+        "subtitle": "LexMX works with WebLLM by default - 100% private AI in your browser. You can also add other providers to improve responses.",
+        "useWebLLM": "Use WebLLM (Recommended)",
+        "startConfig": "Start Configuration"
+      },
+      "webllm": {
+        "title": "WebLLM - AI in Your Browser",
+        "features": {
+          "noConfig": "No setup - works instantly",
+          "private": "100% private - nothing leaves your device",
+          "free": "Completely free - no hidden costs",
+          "offline": "Works offline once downloaded"
+        },
+        "downloading": "Starting download...",
+        "downloadSuccess": "Model downloaded successfully!",
+        "downloadError": "Error downloading model. Please try again."
       },
       "profile": {
-        "title": "Select Your Profile",
-        "description": "Choose a configuration profile that matches your needs",
+        "title": "Choose Your Usage Profile",
+        "subtitle": "Select the profile that best fits your needs",
+        "customConfig": "Custom Configuration",
         "privacy": {
           "title": "Privacy First",
           "description": "Use local models like Ollama. No data sent to external servers."
@@ -177,13 +248,30 @@
         }
       },
       "providers": {
-        "title": "Choose Your Providers",
-        "description": "Select and configure the AI providers you want to use"
+        "title": "Select AI Providers",
+        "subtitle": "Choose the providers you want to configure",
+        "configure": "Configure ({{count}})"
+      },
+      "configure": {
+        "title": "Configure {{provider}}"
+      },
+      "test": {
+        "testing": "Testing Connections...",
+        "success": "Connections Successful",
+        "verifying": "Verifying all providers are working correctly",
+        "ready": "All providers are ready to use",
+        "finish": "Finish Configuration"
       },
       "complete": {
-        "title": "Setup Complete!",
-        "description": "Your AI providers are configured and ready to use.",
-        "startChat": "Start Legal Chat"
+        "title": "Configuration Complete!",
+        "subtitle": "Your legal assistant is ready. You configured {{count}} AI provider(s).",
+        "nextSteps": "Next steps:",
+        "steps": {
+          "firstQuery": "Make your first legal query",
+          "explore": "Explore different areas of Mexican law",
+          "changeProviders": "You can change providers at any time"
+        },
+        "startUsing": "Start Using LexMX"
       }
     },
     "providers": {
@@ -206,6 +294,10 @@
         "name": "Ollama",
         "description": "Local models for maximum privacy",
         "endpointPlaceholder": "http://localhost:11434"
+      },
+      "webllm": {
+        "name": "WebLLM",
+        "description": "Runs in your browser"
       }
     },
     "validation": {
@@ -215,16 +307,538 @@
       "testConnection": "Test Connection",
       "testing": "Testing...",
       "success": "Connection successful!"
+    },
+    "help": {
+      "title": "Need Help?",
+      "description": "Check our complete guide to configure each AI provider.",
+      "items": {
+        "getApiKeys": "How to get API keys",
+        "localModels": "Local model configuration",
+        "costOptimization": "Cost optimization",
+        "troubleshooting": "Troubleshooting"
+      },
+      "viewDocs": "View Documentation"
+    },
+    "privacy": {
+      "title": "Privacy Guaranteed",
+      "description": "Your data is completely secure and never leaves your browser.",
+      "items": {
+        "encryption": "Local AES-256 encryption",
+        "noData": "No data sent to servers",
+        "compliance": "GDPR/LFPDPPP compliance",
+        "control": "Full control over your data"
+      },
+      "privacyPolicy": "Privacy Policy"
+    },
+    "comparison": {
+      "title": "Provider Comparison",
+      "headers": {
+        "provider": "Provider",
+        "type": "Type",
+        "cost": "Cost",
+        "bestFor": "Best For",
+        "configuration": "Configuration"
+      },
+      "sections": {
+        "browser": "🌐 Browser - No Configuration",
+        "cloud": "☁️ Standard Cloud Providers",
+        "enterprise": "🏢 Enterprise Platforms",
+        "local": "💻 Local/Self-Hosted Options"
+      },
+      "recommended": "⭐ Recommended",
+      "types": {
+        "browser": "Browser",
+        "cloud": "Cloud",
+        "local": "Local"
+      },
+      "costs": {
+        "free": "Free",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "configurations": {
+        "apiKey": "API Key required",
+        "apiKeyOrIam": "API Key or IAM credentials",
+        "apiKeyOrAzure": "API Key or Azure AD + resource",
+        "apiKeyOrService": "API Key or service account",
+        "localInstall": "Local installation + URL",
+        "urlEndpoint": "URL endpoint + optional API key"
+      },
+      "webllm": {
+        "bestFor": "100% private, no costs, works offline",
+        "configuration": "No configuration"
+      },
+      "openai": {
+        "bestFor": "Complex legal analysis, writing",
+        "configuration": "API Key required"
+      },
+      "claude": {
+        "bestFor": "Legal reasoning, ethics",
+        "configuration": "API Key required"
+      },
+      "gemini": {
+        "bestFor": "General queries, multilingual",
+        "configuration": "API Key required"
+      },
+      "bedrock": {
+        "bestFor": "Enterprise, multiple models, AWS integration",
+        "configuration": "API Key or IAM credentials"
+      },
+      "azure": {
+        "bestFor": "Enterprise, Microsoft integration, compliance",
+        "configuration": "API Key or Azure AD + resource"
+      },
+      "vertex": {
+        "bestFor": "Long context (1M tokens), GCP integration",
+        "configuration": "API Key or service account"
+      },
+      "ollama": {
+        "bestFor": "Maximum privacy, no costs",
+        "configuration": "Local installation + URL"
+      },
+      "openaiCompatible": {
+        "bestFor": "LM Studio, vLLM, FastChat, custom",
+        "configuration": "URL endpoint + optional API key"
+      }
     }
   },
   "wiki": {
     "title": "Mexican Law Wiki",
+    "subtitle": "Learn about the Mexican legal system, from basic concepts to complex processes.",
+    "introduction": {
+      "title": "Introduction to Mexican Law",
+      "paragraph1": "The Mexican legal system is a civil law system based on written codes, with influence from Roman-Germanic law. The Political Constitution of the United Mexican States is the supreme law that establishes the fundamental principles of the State and citizens' rights.",
+      "paragraph2": "This wiki will guide you through fundamental concepts, government structure, legislative and judicial processes, and provide resources to better understand Mexico's legal framework."
+    },
+    "legalSystem": {
+      "title": "The Mexican Legal System",
+      "civilLaw": {
+        "title": "Civil Law",
+        "description": "System based on written codes that regulate relationships between individuals."
+      },
+      "commonVsCivil": {
+        "title": "Common Law vs Civil Law",
+        "description": "Unlike common law, Mexican law is based on codified laws."
+      },
+      "hierarchy": {
+        "title": "Normative Hierarchy",
+        "item1": "Political Constitution of the United Mexican States",
+        "item2": "International Treaties",
+        "item3": "Federal and General Laws",
+        "item4": "State Constitutions",
+        "item5": "State Laws",
+        "item6": "Regulations",
+        "item7": "Official Mexican Standards (NOM)"
+      }
+    },
+    "glossary": {
+      "title": "Legal Glossary",
+      "searchPlaceholder": "Search legal terms...",
+      "termsFound": "Terms found",
+      "clearFilters": "Clear filters",
+      "legalSource": "Legal source",
+      "examples": "Examples",
+      "relatedTerms": "Related terms",
+      "noTermsFound": "No terms found matching your search.",
+      "viewAllTerms": "View all terms",
+      "categories": {
+        "all": "All",
+        "constitutional": "Constitutional",
+        "civil": "Civil",
+        "criminal": "Criminal",
+        "labor": "Labor",
+        "tax": "Tax",
+        "commercial": "Commercial",
+        "procedural": "Procedural"
+      },
+      "terms": {
+        "amparo": {
+          "term": "Amparo",
+          "definition": "Constitutional trial that protects people's fundamental rights against acts of authority that violate them."
+        },
+        "jurisprudencia": {
+          "term": "Jurisprudence",
+          "definition": "Court interpretation of law established through five uninterrupted enforceable judgments without any contrary ruling."
+        },
+        "personaMoral": {
+          "term": "Legal Entity",
+          "definition": "Legal entity distinct from natural persons, capable of acquiring rights and contracting obligations."
+        },
+        "debidoProceso": {
+          "term": "Due Process",
+          "definition": "Fundamental right that guarantees every person access to a fair, impartial procedure with all legal guarantees."
+        },
+        "contratoTrabajo": {
+          "term": "Employment Contract",
+          "definition": "Agreement whereby a person undertakes to provide subordinate personal work to another in exchange for salary payment."
+        },
+        "delito": {
+          "term": "Crime",
+          "definition": "Act or omission sanctioned by criminal laws, which must be typical, unlawful, and culpable."
+        },
+        "obligacionTributaria": {
+          "term": "Tax Obligation",
+          "definition": "Legal bond whereby the taxpayer must pay the State a sum of money as a tax."
+        },
+        "sociedadMercantil": {
+          "term": "Commercial Company",
+          "definition": "Legal entity established in accordance with the General Law of Commercial Companies, for profit purposes."
+        }
+      }
+    },
+    "legislativeProcess": {
+      "title": "Legislative Process",
+      "steps": {
+        "initiative": {
+          "title": "1. Initiative",
+          "description": "Presentation of the bill by authorized parties",
+          "duration": "1-7 days",
+          "details": [
+            "The project is presented in writing to one of the chambers",
+            "Must include statement of reasons and articles",
+            "Sent to committees for analysis",
+            "Published in the parliamentary gazette"
+          ],
+          "actors": [
+            "President of the Republic",
+            "Deputies and Senators",
+            "State Legislatures",
+            "Citizens (citizen initiative)"
+          ],
+          "requirements": [
+            "Statement of reasons",
+            "Proposed articles",
+            "Transitional regime (if applicable)"
+          ]
+        },
+        "committee": {
+          "title": "2. Committee Review",
+          "description": "Analysis and modification of the project by committees",
+          "duration": "30-90 days"
+        },
+        "discussion": {
+          "title": "3. Discussion",
+          "description": "Debate in plenary session of the Chamber of Origin",
+          "duration": "1-30 days"
+        },
+        "approval": {
+          "title": "4. Approval",
+          "description": "Voting and approval by the Chamber of Origin",
+          "duration": "1 day"
+        },
+        "revision": {
+          "title": "5. Revision",
+          "description": "Review and voting by the Reviewing Chamber",
+          "duration": "15-60 days"
+        },
+        "promulgation": {
+          "title": "6. Promulgation",
+          "description": "Publication and entry into force of the law",
+          "duration": "10-30 days"
+        }
+      },
+      "labels": {
+        "duration": "Duration",
+        "actors": "Participants",
+        "requirements": "Requirements",
+        "details": "Details",
+        "currentStep": "Current Step",
+        "nextStep": "Next",
+        "prevStep": "Previous"
+      }
+    },
+    "governmentStructure": {
+      "title": "Government Structure",
+      "views": {
+        "powers": "Division of Powers",
+        "levels": "Government Levels"
+      },
+      "powers": {
+        "executive": {
+          "name": "Executive Branch",
+          "description": "Administration and execution of laws",
+          "institutions": [
+            "Presidency of the Republic",
+            "Cabinet Secretaries",
+            "Attorney General's Office",
+            "Decentralized Agencies"
+          ],
+          "functions": [
+            "Execute laws",
+            "Public administration",
+            "National security",
+            "Foreign relations",
+            "Legislative initiative",
+            "Regulatory power"
+          ]
+        },
+        "legislative": {
+          "name": "Legislative Branch",
+          "description": "Creation of laws and oversight of government",
+          "institutions": [
+            "Chamber of Deputies (500 members)",
+            "Senate (128 members)",
+            "Permanent Commission",
+            "Support bodies"
+          ],
+          "functions": [
+            "Create laws",
+            "Approve budget",
+            "Ratify treaties",
+            "Government oversight",
+            "Constitutional amendments",
+            "Account review"
+          ]
+        },
+        "judicial": {
+          "name": "Judicial Branch",
+          "description": "Administration of justice and interpretation of laws",
+          "institutions": [
+            "Supreme Court of Justice",
+            "Federal Judicial Council",
+            "Electoral Tribunal",
+            "Federal Courts and Tribunals"
+          ],
+          "functions": [
+            "Administer justice",
+            "Interpret the Constitution",
+            "Resolve disputes",
+            "Protect fundamental rights",
+            "Constitutional control",
+            "Judicial administration"
+          ]
+        }
+      },
+      "levels": {
+        "federal": {
+          "name": "Federal Government",
+          "description": "National government with specific constitutional powers",
+          "institutions": [
+            "Presidency of the Republic",
+            "Secretaries of State",
+            "Autonomous Agencies",
+            "State Productive Enterprises"
+          ],
+          "competences": [
+            "Foreign relations",
+            "National defense",
+            "Monetary policy",
+            "International trade",
+            "Migration",
+            "Telecommunications"
+          ]
+        },
+        "state": {
+          "name": "State Government",
+          "description": "32 federal entities with autonomy in their powers",
+          "institutions": [
+            "Governor",
+            "State Congress",
+            "Superior Court of Justice",
+            "State Secretaries"
+          ],
+          "competences": [
+            "Public education",
+            "Public health",
+            "Local security",
+            "Urban development",
+            "Civil registry",
+            "Local transportation"
+          ]
+        },
+        "municipal": {
+          "name": "Municipal Government",
+          "description": "2,469 municipalities as the basic unit of government",
+          "institutions": [
+            "Municipal President",
+            "City Council",
+            "Trustees and Councilors",
+            "Municipal Secretaries"
+          ],
+          "competences": [
+            "Public services",
+            "Drinking water and sewerage",
+            "Public lighting",
+            "Waste collection",
+            "Markets and supply centers",
+            "Municipal public safety"
+          ]
+        }
+      },
+      "labels": {
+        "institutions": "Institutions",
+        "functions": "Functions",
+        "competences": "Competences",
+        "selectItem": "Select an item for more details"
+      }
+    },
+    "lawAreas": {
+      "title": "Areas of Law",
+      "constitutional": {
+        "title": "Constitutional Law",
+        "description": "Studies the organization of the State and fundamental rights."
+      },
+      "civil": {
+        "title": "Civil Law",
+        "description": "Regulates relationships between individuals, family, and property."
+      },
+      "criminal": {
+        "title": "Criminal Law",
+        "description": "Defines crimes and establishes corresponding penalties."
+      },
+      "labor": {
+        "title": "Labor Law",
+        "description": "Regulates relationships between workers and employers."
+      },
+      "tax": {
+        "title": "Tax Law",
+        "description": "Rules on taxes and tax obligations."
+      },
+      "commercial": {
+        "title": "Commercial Law",
+        "description": "Regulates commercial and business activities."
+      },
+      "viewDocuments": "View documents"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "amparo": {
+        "question": "What is amparo?",
+        "answer": "Amparo is a constitutional trial that protects fundamental rights against acts of authority."
+      },
+      "federalVsState": {
+        "question": "What is the difference between federal and state law?",
+        "answer": "Federal laws apply throughout the country, while state laws only apply in the state that issues them."
+      },
+      "jurisprudence": {
+        "question": "What is jurisprudence?",
+        "answer": "These are mandatory criteria established by courts when resolving similar cases repeatedly."
+      }
+    },
+    "resources": {
+      "title": "Educational Resources",
+      "official": {
+        "title": "Official Resources",
+        "deputiesLibrary": "Chamber of Deputies Library",
+        "officialGazette": "Official Gazette of the Federation",
+        "supremeCourt": "Supreme Court of Justice of the Nation"
+      },
+      "guides": {
+        "title": "Study Guides",
+        "constitutionalStudy": "Constitutional law study guide",
+        "legalProcedures": "Basic legal procedures manual",
+        "jurisprudence": "Introduction to Mexican jurisprudence"
+      },
+      "tools": {
+        "title": "Useful Tools",
+        "caseSearch": "Jurisprudence and thesis search engine",
+        "legalCalendar": "Judicial terms calendar",
+        "templates": "Legal document templates"
+      },
+      "learning": {
+        "title": "Learning Path",
+        "step1": "Fundamentals of the Mexican legal system",
+        "step2": "Constitutional structure and rights",
+        "step3": "Legal and judicial procedures",
+        "step4": "Specialization by area of law"
+      }
+    },
+    "normativeHierarchy": {
+      "level": "Level",
+      "clickToExpand": "Click to expand details",
+      "characteristics": "Characteristics",
+      "examples": "Examples",
+      "subordinationNote": "Important",
+      "subordinationExplanation": "This level must respect all provisions from levels 1 to {level}",
+      "principleTitle": "Principle of Normative Hierarchy",
+      "principleDescription": "In the Mexican legal system, lower-level norms cannot contradict higher-level ones. Each level must respect and be aligned with all levels above it in the hierarchy.",
+      "constitution": {
+        "description": "Supreme law of the nation",
+        "example1": "Article 1 - Human Rights",
+        "example2": "Article 123 - Labor Rights",
+        "characteristics": "The Constitution is the supreme law that establishes the fundamental principles of the Mexican State, human rights, and the organization of public powers."
+      },
+      "treaties": {
+        "description": "International agreements signed by Mexico",
+        "example1": "American Convention on Human Rights",
+        "example2": "USMCA Trade Agreement",
+        "characteristics": "International treaties signed and ratified by Mexico have constitutional rank in human rights matters and are hierarchically below the Constitution in other matters."
+      },
+      "federalLaws": {
+        "description": "Laws enacted by the Federal Congress",
+        "example1": "Federal Labor Law",
+        "example2": "Federal Criminal Code",
+        "characteristics": "Laws issued by the Congress of the Union that apply throughout the national territory and regulate matters of federal competence."
+      },
+      "stateConstitutions": {
+        "description": "Supreme laws of each state",
+        "example1": "Constitution of Mexico City",
+        "example2": "Constitution of Jalisco",
+        "characteristics": "Each state has its own constitution that organizes local government and establishes rights, always respecting the Federal Constitution."
+      },
+      "stateLaws": {
+        "description": "Laws enacted by state legislatures",
+        "example1": "Civil Code of Mexico City",
+        "example2": "Family Code of the State of Mexico",
+        "characteristics": "Laws issued by state congresses that only apply within their territorial jurisdiction and regulate local matters."
+      },
+      "regulations": {
+        "description": "Administrative provisions that detail laws",
+        "example1": "Regulation of the Federal Labor Law",
+        "example2": "Regulation of the Income Tax Law",
+        "characteristics": "Administrative norms issued by the Executive Branch that detail and specify how to apply laws, without exceeding or contradicting them."
+      },
+      "norms": {
+        "description": "Technical standards and administrative provisions",
+        "example1": "NOM-035 Psychosocial Risk Factors",
+        "example2": "NOM-001 Electrical Installations",
+        "characteristics": "Official Mexican Standards that establish technical specifications, procedures, and mandatory requirements in various matters."
+      }
+    },
     "navigation": {
       "title": "Section Navigation",
+      "mobileMenuTitle": "Section Navigation",
+      "sectionCounter": "Section {{current}} of {{total}}",
+      "defaultText": "Section navigation",
       "government": "Government Structure",
       "legal": "Legal System",
       "areas": "Areas of Law",
-      "resources": "Educational Resources"
+      "resources": "Educational Resources",
+      "sections": {
+        "introduction": {
+          "title": "Introduction",
+          "description": "Basics of Mexican law"
+        },
+        "government": {
+          "title": "Government Structure",
+          "description": "Division of powers and levels"
+        },
+        "legal": {
+          "title": "Legal System",
+          "description": "Hierarchy and processes"
+        },
+        "legislative": {
+          "title": "Legislative Process",
+          "description": "How laws are created"
+        },
+        "areas": {
+          "title": "Areas of Law",
+          "description": "Main legal branches"
+        },
+        "glossary": {
+          "title": "Legal Glossary",
+          "description": "Key legal terms"
+        },
+        "resources": {
+          "title": "Resources",
+          "description": "Guides and tools"
+        },
+        "faq": {
+          "title": "FAQ",
+          "description": "Common questions"
+        }
+      }
     },
     "sections": {
       "government": {
@@ -263,7 +877,56 @@
   },
   "requests": {
     "title": "Document Requests",
+    "subtitle": "Request legal documents not yet in our corpus and vote for other users' requests.",
     "new": "New Request",
+    "listTitle": "Legal Document Requests",
+    "listSubtitle": "Vote for the most important requests to prioritize their inclusion in LexMX",
+    "filters": {
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "type": "Type",
+      "allTypes": "All types",
+      "legalArea": "Legal Area",
+      "allAreas": "All areas",
+      "sortBy": "Sort by",
+      "mostVoted": "Most Voted",
+      "mostRecent": "Most Recent",
+      "priority": "Priority",
+      "searchPlaceholder": "Search requests..."
+    },
+    "noResults": "No requests found",
+    "noResultsDescription": "Try adjusting filters or create a new request",
+    "votes": "votes",
+    "comments": "comments",
+    "by": "By",
+    "user": "user",
+    "showDetails": "Show details",
+    "hideDetails": "Hide details",
+    "viewSource": "View source",
+    "sources": "Sources",
+    "official": "Official",
+    "addComment": "Add a comment...",
+    "comment": "Comment",
+    "moderator": "Moderator",
+    "stats": {
+      "totalRequests": "Total Requests",
+      "completed": "Completed",
+      "inProgress": "In Progress",
+      "totalVotes": "Total Votes"
+    },
+    "documentTypes": {
+      "law": "Law",
+      "regulation": "Regulation",
+      "code": "Code",
+      "norm": "Standard"
+    },
+    "legalAreas": {
+      "civil": "Civil",
+      "criminal": "Criminal",
+      "labor": "Labor",
+      "tax": "Tax",
+      "commercial": "Commercial"
+    },
     "list": {
       "empty": "No requests found",
       "filter": {
@@ -299,7 +962,14 @@
       "approved": "Approved",
       "inProgress": "In Progress",
       "completed": "Completed",
-      "rejected": "Rejected"
+      "rejected": "Rejected",
+      "duplicate": "Duplicate"
+    },
+    "priority": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
     },
     "actions": {
       "vote": "Vote",
@@ -310,26 +980,112 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: January 2024",
+    "lastUpdated": "Last updated",
     "sections": {
       "commitment": {
-        "title": "Our Privacy Commitment",
-        "content": "At LexMX, your privacy is our top priority. All data processing happens locally in your browser."
+        "title": "Your privacy is our priority",
+        "content": "LexMX operates completely in your browser. <strong>We do not collect, store, or process any personal data on external servers.</strong> Your legal queries, API tokens, and preferences remain exclusively on your device."
       },
       "dataCollection": {
-        "title": "Data We Collect",
-        "content": "LexMX operates entirely in your browser. We do not collect, store, or transmit any personal data."
+        "title": "1. Information we DO NOT collect",
+        "content": "Unlike most online services, LexMX does not collect:",
+        "items": {
+          "personal": "Personally identifiable information (name, email, phone)",
+          "ip": "IP addresses or location information",
+          "history": "Query or search history",
+          "cookies": "Tracking cookies or analytics",
+          "usage": "Usage or behavior data",
+          "tokens": "API tokens or credentials"
+        }
       },
       "localStorage": {
-        "title": "Local Storage",
-        "content": "Your preferences and encrypted API keys are stored locally in your browser."
-      }
+        "title": "2. Local Storage",
+        "content": "LexMX uses browser local storage to improve your experience:",
+        "local": "Saves your preferences (theme, language) and AI provider settings.",
+        "session": "Temporarily stores encrypted API tokens during your session.",
+        "indexed": "Contains the legal corpus and vectors for offline search.",
+        "clear": "You can clear all this data at any time from your browser settings."
+      },
+      "security": {
+        "title": "3. Security",
+        "content": "We implement multiple layers of security:",
+        "encryption": "AES-256 Encryption",
+        "encryptionDesc": "All API tokens are encrypted before storage",
+        "fingerprinting": "Browser Fingerprinting",
+        "fingerprintingDesc": "Tokens are linked to your specific device",
+        "noTransmission": "No transmission",
+        "noTransmissionDesc": "Sensitive data never leaves your browser",
+        "openSource": "Open source",
+        "openSourceDesc": "You can audit our code on GitHub"
+      },
+      "thirdParty": {
+        "title": "4. Third-party AI Providers",
+        "content": "When using LexMX with AI providers (OpenAI, Claude, Gemini), your queries are sent directly from your browser to these services. LexMX never acts as an intermediary.",
+        "important": "Important",
+        "recommendation": "Each provider has its own privacy policy. We recommend reviewing them before using their services."
+      },
+      "hosting": {
+        "title": "5. GitHub Pages",
+        "content": "LexMX is hosted on GitHub Pages, which may collect basic technical information like IP addresses and user agents to prevent abuse. This information is not accessible to us. See ",
+        "link": "GitHub's privacy policy",
+        "details": " for more details."
+      },
+      "compliance": {
+        "title": "6. Legal Compliance",
+        "content": "LexMX complies with:",
+        "lfpdppp": "Federal Law on Protection of Personal Data Held by Private Parties (Mexico)",
+        "gdpr": "General Data Protection Regulation (European Union)",
+        "ccpa": "California Consumer Privacy Act"
+      },
+      "rights": {
+        "title": "7. Your Rights",
+        "content": "Although we don't collect personal data, you have the right to:",
+        "clear": "Clear all local storage at any time",
+        "use": "Use LexMX without providing any personal information",
+        "review": "Review our source code to verify our practices",
+        "request": "Request clarifications about this policy"
+      },
+      "changes": {
+        "title": "8. Changes to this Policy",
+        "content": "We may update this policy occasionally. Changes will be posted on this page with the update date. Since we don't collect contact information, we recommend checking this page periodically."
+      },
+      "contact": {
+        "title": "9. Contact",
+        "content": "If you have questions about this privacy policy:"
+      },
+      "footer": "This privacy policy is part of LexMX's commitment to transparency and protecting our users' privacy."
     }
   },
   "legal": {
+    "title": "Mexican Legal Codes",
+    "subtitle": "Access the complete corpus of updated Mexican legislation.",
     "disclaimer": "Legal Notice: LexMX provides general legal information for educational purposes. It does not constitute professional legal advice. Always consult with a certified lawyer for specific cases.",
     "terms": "By using this service, you accept our terms and conditions.",
-    "copyright": "© 2024 LexMX. Open source under MIT license."
+    "copyright": "© 2024 LexMX. Open source under MIT license.",
+    "constitutional": {
+      "title": "Constitutional",
+      "description": "Political Constitution, Amparo Law, and constitutional jurisprudence."
+    },
+    "civil": {
+      "title": "Civil",
+      "description": "Federal Civil Code, state codes, and family legislation."
+    },
+    "criminal": {
+      "title": "Criminal",
+      "description": "Federal Criminal Code, CNPP, and criminal legislation."
+    },
+    "labor": {
+      "title": "Labor",
+      "description": "Federal Labor Law, LSS, INFONAVIT, and labor regulations."
+    },
+    "tax": {
+      "title": "Tax",
+      "description": "CFF, LISR, LIVA, and all federal tax legislation."
+    },
+    "commercial": {
+      "title": "Commercial",
+      "description": "Commercial Code, LGSM, LGTOC, and commercial legislation."
+    }
   },
   "provider": {
     "recommendations": "Recommended Providers",
@@ -346,47 +1102,6 @@
     "recommendationNote": "Recommendations based on query type, complexity, and required resources.",
     "availableProviders": "Available Providers",
     "selectProvider": "Select AI",
-    "webllm": {
-      "name": "WebLLM (Local)",
-      "description": "Runs in your browser",
-      "selectModel": "Select a model",
-      "searchModel": "Search model...",
-      "allFamilies": "All",
-      "recommended": "Recommended",
-      "noModelsFound": "No models found",
-      "dataWarning": "⚠️ Data Usage Warning",
-      "dataWarningMessage": "Models require a one-time download that may use significant amounts of data.",
-      "mobileWarning": "Not recommended on mobile connections. Use WiFi to avoid excessive charges.",
-      "downloadSize": "Download size",
-      "confirmDownload": "Download model {{name}}?",
-      "confirmDownloadMessage": "This will download {{size}} of data. Make sure you're connected to WiFi to avoid mobile data charges.",
-      "downloadConfirm": "Download",
-      "downloadCancel": "Cancel",
-      "modelDescriptions": {
-        "fast": "Fast and efficient for basic queries",
-        "balanced": "Ideal balance between speed and capability",
-        "complex": "Complex and detailed legal analysis",
-        "instructions": "Optimized for following instructions",
-        "compact": "Compact and efficient model",
-        "reasoning": "Excellent for reasoning",
-        "multilingual": "Good multilingual performance",
-        "versatile": "Powerful and versatile for legal analysis",
-        "light": "Lightweight and efficient"
-      },
-      "cached": "Cached",
-      "modelCached": "Model stored locally",
-      "removeFromCache": "Remove from cache",
-      "confirmRemove": "Remove {{name}} from cache?",
-      "confirmRemoveMessage": "This will free up {{size}} of space. The model will be downloaded again next time you use it.",
-      "removeConfirm": "Remove",
-      "removeCancel": "Cancel",
-      "cacheRemoved": "Cache removed successfully",
-      "downloadingModel": "Downloading AI model",
-      "firstTimeDownload": "First time using this model. It will be stored locally.",
-      "modelLoaded": "Model loaded ✓",
-      "preloadModel": "Preload model",
-      "downloadProgress": "Download progress"
-    },
     "otherProviders": "Other Providers"
   },
   "errors": {
@@ -457,6 +1172,50 @@
     "noDocuments": "No documents",
     "addNote": "Add a note...",
     "noNotes": "No notes",
+    "summary": "Case Summary",
+    "generateSummary": "Generate Summary",
+    "regenerateSummary": "Regenerate Summary",
+    "generatingSummary": "Generating summary...",
+    "summaryGenerated": "Summary generated successfully",
+    "summaryError": "Error generating summary",
+    "noSummary": "No summary available. Click 'Generate Summary' to create one.",
+    "chat": {
+      "title": "Case Chat",
+      "welcome": "Welcome to case chat: {{caseTitle}}",
+      "placeholder": "Type your query about this case...",
+      "export": "Export conversation",
+      "clear": "Clear conversation",
+      "confirmClear": "Are you sure you want to clear this conversation?",
+      "contextInfo": "This chat includes {{documents}} documents and {{notes}} notes from the case"
+    },
+    "timeline": {
+      "title": "Case Timeline",
+      "filterAll": "All",
+      "filterDocuments": "Documents",
+      "filterNotes": "Notes",
+      "filterDeadlines": "Deadlines",
+      "filterChats": "Conversations",
+      "filterCustom": "Custom",
+      "addEvent": "Add event",
+      "eventTitle": "Event title",
+      "eventDescription": "Event description (optional)",
+      "noEvents": "No events in timeline",
+      "totalEvents": "{{count}} total events",
+      "lastUpdated": "Last updated: {{date}} at {{time}}",
+      "caseCreated": "Case created",
+      "documentAdded": "Document added",
+      "noteAdded": "Note added",
+      "statusChanged": "Status changed",
+      "chatStarted": "Conversation started",
+      "messagesCount": "{{count}} messages",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "tomorrow": "Tomorrow",
+      "daysAgo": "{{days}} days ago",
+      "inDays": "In {{days}} days",
+      "upcomingDeadline": "Upcoming deadline",
+      "overdueDeadline": "Overdue deadline"
+    },
     "chatComingSoon": "Integrated chat coming soon",
     "chatDescription": "You'll be able to make specific queries about this case",
     "timelineComingSoon": "Timeline coming soon",
@@ -500,6 +1259,8 @@
     "selectAll": "Select all",
     "clear": "Clear",
     "searchDocument": "Search document...",
+    "searchTitle": "Search Legal Corpus",
+    "searchPlaceholder": "Search laws, codes, articles...",
     "close": "Close",
     "areas": {
       "constitutional": "Constitutional",
@@ -530,7 +1291,56 @@
     "costLevel": "Cost Level",
     "performance": "Performance",
     "privacy": "Privacy",
-    "availability": "Availability"
+    "availability": "Availability",
+    "availableProviders": "Available Providers",
+    "cost": {
+      "free": "Free",
+      "veryLow": "Very Low",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    },
+    "webllm": {
+      "name": "WebLLM",
+      "description": "Runs in your browser",
+      "selectModel": "Select a model",
+      "searchModel": "Search model...",
+      "allFamilies": "All",
+      "recommended": "Recommended",
+      "noModelsFound": "No models found",
+      "dataWarning": "⚠️ Data Usage Warning",
+      "dataWarningMessage": "Models require a one-time download that may use significant amounts of data.",
+      "mobileWarning": "Not recommended on mobile connections. Use WiFi to avoid excessive charges.",
+      "downloadSize": "Download size",
+      "confirmDownload": "Download model {{name}}?",
+      "confirmDownloadMessage": "This will download {{size}} of data. Make sure you're connected to WiFi to avoid mobile data charges.",
+      "downloadConfirm": "Download",
+      "downloadCancel": "Cancel",
+      "modelDescriptions": {
+        "fast": "Fast and efficient for basic queries",
+        "balanced": "Ideal balance between speed and capability",
+        "complex": "Complex and detailed legal analysis",
+        "instructions": "Optimized for following instructions",
+        "compact": "Compact and efficient model",
+        "reasoning": "Excellent for reasoning",
+        "multilingual": "Good multilingual performance",
+        "versatile": "Powerful and versatile for legal analysis",
+        "light": "Lightweight and efficient"
+      },
+      "cached": "Cached",
+      "modelCached": "Model stored locally",
+      "removeFromCache": "Remove from cache",
+      "confirmRemove": "Remove {{name}} from cache?",
+      "confirmRemoveMessage": "This will free up {{size}} of space. The model will be downloaded again next time you use it.",
+      "removeConfirm": "Remove",
+      "removeCancel": "Cancel",
+      "cacheRemoved": "Cache removed successfully",
+      "downloadingModel": "Downloading AI model",
+      "firstTimeDownload": "First time using this model. It will be stored locally.",
+      "modelLoaded": "Model loaded ✓",
+      "preloadModel": "Preload model",
+      "downloadProgress": "Download progress"
+    }
   },
   "footer": {
     "quickLinks": "Quick Links",
@@ -590,6 +1400,7 @@
       "commercial": "SPECIALIZE in Mexican commercial law, corporations, commerce and negotiable instruments.",
       "administrative": "SPECIALIZE in Mexican administrative law, administrative acts and state patrimonial liability.",
       "family": "SPECIALIZE in Mexican family law, marriage, divorce and parental authority.",
+      "familiar": "SPECIALIZE in Mexican family law, marriage, divorce and parental authority.",
       "property": "SPECIALIZE in Mexican property law, real estate, possession and public registry."
     },
     "queryTemplates": {
@@ -597,7 +1408,8 @@
       "contextWithQuery": "{{context}}\n\nUser query: {{query}}\n\nQuery type: {{queryType}}\nLegal area: {{legalArea}}\n\nPlease provide an accurate and complete legal response, citing relevant sources from the provided context.",
       "analysisRequest": "Analyze the following legal aspect: {{query}}",
       "documentSearch": "Search for information about: {{query}}",
-      "precedentLookup": "Find precedents related to: {{query}}"
+      "precedentLookup": "Find precedents related to: {{query}}",
+      "caseSummary": "Generate an executive summary of the following legal case.\n\nSTRICT INSTRUCTIONS:\n- Provide ONLY the summary content\n- DO NOT include greetings, farewells, or personal comments\n- DO NOT add phrases like \"I hope this helps\" or similar\n- DO NOT use first person\n- Be direct and professional\n\nThe summary must include:\n1. **Current Status**: Concise description of the case and its state\n2. **Involved Parties**: Who participates and their roles\n3. **Key Documentation and Events**: Most important in chronological order\n4. **Critical Deadlines**: Especially overdue or upcoming (mark with ⚠️ if overdue)\n5. **Next Steps**: Recommended actions in order of priority\n6. **Risks and Attention Points**: Aspects requiring immediate attention\n\n{{query}}\n\nFormat: Use markdown with headers, lists, and bold text. Be concise and professional."
     },
     "legalWarning": "⚠️ This information is for educational purposes only and does not constitute professional legal advice. For specific cases, always consult with a certified lawyer.",
     "recommendedActions": {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
 import { TEST_IDS } from '../utils/test-ids';
 import { useTranslation } from '../i18n/index';
@@ -13,14 +14,11 @@ export default function MobileMenu() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { t } = useTranslation();
 
   // Handle hydration
   useEffect(() => {
     setIsHydrated(true);
-  }, []);
-  const { t } = useTranslation();
-
-  useEffect(() => {
     setMounted(true);
   }, []);
 
@@ -45,6 +43,15 @@ export default function MobileMenu() {
 
       // Prevent body scroll when menu is open
       document.body.style.overflow = 'hidden';
+
+      return () => {
+        document.removeEventListener('click', handleClickOutside);
+        document.removeEventListener('keydown', handleEscape);
+        document.body.style.overflow = '';
+      };
+    }
+  }, [isOpen, mounted]);
+
   // Handle SSR/hydration
   if (!isHydrated) {
     return (
@@ -55,21 +62,12 @@ export default function MobileMenu() {
     );
   }
 
-  return () => {
-        document.removeEventListener('click', handleClickOutside);
-        document.removeEventListener('keydown', handleEscape);
-        document.body.style.overflow = '';
-      };
-    }
-  }, [isOpen, mounted]);
-
   if (!mounted) {
     return (
-    <div
-      data-testid="mobile-menu" className="lg:hidden">
+      <div data-testid="mobile-menu" className="lg:hidden">
         <button
           className="text-gray-600 hover:text-gray-900 focus:outline-none focus:text-gray-900 p-2"
-          aria-label={t('nav.openMenu') || 'Abrir menú principal'}
+          aria-label="Open main menu"
           disabled
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,54 +89,67 @@ export default function MobileMenu() {
   ];
 
   return (
-    <div className="lg:hidden mobile-menu-container">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsOpen(!isOpen);
-        }}
-        className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white focus:outline-none focus:text-gray-900 dark:focus:text-white p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-        aria-label={isOpen ? t('nav.closeMenu') || 'Cerrar menú' : t('nav.openMenu') || 'Abrir menú principal'}
-        aria-expanded={isOpen}
-      >
-        {isOpen ? (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        ) : (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        )}
-      </button>
+    <>
+      {/* Menu Button */}
+      <div className="lg:hidden mobile-menu-container relative">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsOpen(!isOpen);
+          }}
+          className="relative flex items-center justify-center w-10 h-10 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all"
+          aria-label={isOpen ? t('nav.closeMenu') || 'Cerrar menú' : t('nav.openMenu') || 'Abrir menú principal'}
+          aria-expanded={isOpen}
+        >
+          {isOpen ? (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
+      </div>
 
-      {/* Mobile Menu Overlay */}
-      {isOpen && (
+      {/* Mobile Menu Overlay - Rendered via Portal */}
+      {mounted && isOpen && createPortal(
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/50 z-[99998] lg:hidden"
             aria-hidden="true"
+            onClick={() => setIsOpen(false)}
           />
 
-          {/* Menu Panel */}
-          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-sm bg-white dark:bg-gray-800 shadow-xl lg:hidden transform transition-transform duration-300 ease-in-out">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          {/* Menu Panel with isolation */}
+          <div className={`fixed inset-y-0 right-0 z-[99999] w-[280px] sm:w-[320px] isolate lg:hidden transform transition-transform duration-300 ease-in-out transform-gpu will-change-transform ${
+            isOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}>
+            {/* Solid Background Layer */}
+            <div className="absolute inset-0 bg-white dark:bg-gray-900 opacity-100" />
+            
+            {/* Content Layer */}
+            <div className="relative h-full bg-white dark:bg-gray-900 shadow-2xl">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {t('nav.menu') || 'Menú'}
               </h2>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-legal-500 rounded-md"
-                aria-label={t('nav.closeMenu') || 'Cerrar menú'}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-legal-500 rounded-md"
+                  aria-label={t('nav.closeMenu') || 'Cerrar menú'}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
-            <nav className="px-4 py-6">
+              {/* Scrollable Navigation */}
+              <nav className="px-4 py-6 overflow-y-auto max-h-[calc(100vh-80px)] bg-white dark:bg-gray-900">
               <ul className="space-y-1">
                 {navItems.map((item) => (
                   <li key={item.href}>
@@ -155,7 +166,7 @@ export default function MobileMenu() {
               </ul>
 
               {/* Additional Actions */}
-              <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+              <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
                 <div className="space-y-4">
                   {/* Quick Actions */}
                   <div>
@@ -213,9 +224,11 @@ export default function MobileMenu() {
                 </div>
               </div>
             </nav>
+            </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
-    </div>
+    </>
   );
 }

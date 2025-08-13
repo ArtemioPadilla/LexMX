@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
 import { TEST_IDS } from '../utils/test-ids';
+import { useTranslation } from '../i18n/index';
 
 interface GovernmentLevel {
   id: string;
@@ -147,6 +148,7 @@ const powerBranches: PowerBranch[] = [
 ];
 
 export default function GovernmentStructure() {
+  const { t } = useTranslation();
   const [isHydrated, setIsHydrated] = useState(false);
   const [activeView, setActiveView] = useState<'powers' | 'levels'>('powers');
   const [selectedItem, setSelectedItem] = useState<string | null>(null);

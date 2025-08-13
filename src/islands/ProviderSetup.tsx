@@ -12,6 +12,7 @@ import TestConnectionStatus from '../components/providers/TestConnectionStatus';
 import ProviderConfigForm from '../components/providers/ProviderConfigForm';
 import { TEST_IDS } from '../utils/test-ids';
 import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { useTranslation } from '../i18n/index';
 // Import provider classes to get their models
 import { OpenAIProvider } from '../lib/llm/providers/openai-provider';
 import { ClaudeProvider } from '../lib/llm/providers/claude-provider';
@@ -39,6 +40,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
   const [showPreloadConfirm, setShowPreloadConfirm] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<Record<string, 'untested' | 'testing' | 'success' | 'error'>>({});
   const [testingConnection, setTestingConnection] = useState(false);
+  const { t } = useTranslation();
 
   // Handle hydration
   useEffect(() => {
@@ -162,7 +164,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
     
     try {
       setIsPreloading(true);
-      setPreloadProgress({ progress: 0, message: 'Iniciando descarga...' });
+      setPreloadProgress({ progress: 0, message: t('setup.wizard.webllm.downloading') });
       
       // Create a temporary WebLLM provider to trigger download
       const webllmConfig = providerConfigs.get('webllm') || {
@@ -181,7 +183,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
       const provider = new WebLLMProvider(webllmConfig);
       await provider.initialize();
       
-      setPreloadProgress({ progress: 100, message: '¡Modelo descargado exitosamente!' });
+      setPreloadProgress({ progress: 100, message: t('setup.wizard.webllm.downloadSuccess') });
       setTimeout(() => {
         setPreloadProgress(null);
         setIsPreloading(false);
@@ -189,7 +191,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
       
     } catch (error) {
       console.error('Error preloading WebLLM:', error);
-      setError('Error al descargar el modelo. Por favor, intenta de nuevo.');
+      setError(t('setup.wizard.webllm.downloadError'));
       setIsPreloading(false);
       setPreloadProgress(null);
     }
@@ -219,11 +221,10 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
       
       <div>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          Configura tu Asistente Legal IA
+          {t('setup.wizard.welcome.title')}
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          LexMX funciona con WebLLM por defecto - IA 100% privada en tu navegador.
-          También puedes agregar otros proveedores para mejorar las respuestas.
+          {t('setup.wizard.welcome.subtitle')}
         </p>
       </div>
 
@@ -231,12 +232,12 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
         <div className="flex items-start">
           <span className="text-2xl mr-3">🚀</span>
           <div className="text-left">
-            <p className="font-medium text-purple-900 dark:text-purple-200 mb-2">WebLLM - IA en tu Navegador</p>
+            <p className="font-medium text-purple-900 dark:text-purple-200 mb-2">{t('setup.wizard.webllm.title')}</p>
             <ul className="text-sm text-purple-700 dark:text-purple-300 space-y-1">
-              <li>✓ Sin configuración - funciona al instante</li>
-              <li>✓ 100% privado - nada sale de tu dispositivo</li>
-              <li>✓ Completamente gratis - sin costos ocultos</li>
-              <li>✓ Funciona offline una vez descargado</li>
+              <li>✓ {t('setup.wizard.webllm.features.noConfig')}</li>
+              <li>✓ {t('setup.wizard.webllm.features.private')}</li>
+              <li>✓ {t('setup.wizard.webllm.features.free')}</li>
+              <li>✓ {t('setup.wizard.webllm.features.offline')}</li>
             </ul>
           </div>
         </div>
@@ -254,14 +255,14 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
           className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg"
           data-testid={TEST_IDS.provider.webllmButton}
         >
-          Usar WebLLM (Recomendado)
+          {t('setup.wizard.welcome.useWebLLM')}
         </button>
         <button
           data-testid="setup-begin"
           onClick={() => setStep('profile')}
           className="w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
         >
-          Comenzar Configuración
+          {t('setup.wizard.welcome.startConfig')}
         </button>
       </div>
     </div>
@@ -271,10 +272,10 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          Elige tu Perfil de Uso
+          {t('setup.wizard.profile.title')}
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          Selecciona el perfil que mejor se adapte a tus necesidades
+          {t('setup.wizard.profile.subtitle')}
         </p>
       </div>
 
@@ -316,7 +317,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
         onClick={() => setStep('providers')}
         className="w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors bg-white dark:bg-gray-900"
       >
-        Configuración Personalizada
+        {t('setup.wizard.profile.customConfig')}
       </button>
     </div>
   );
@@ -325,10 +326,10 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          Selecciona Proveedores de IA
+          {t('setup.wizard.providers.title')}
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          Elige los proveedores que quieres configurar
+          {t('setup.wizard.providers.subtitle')}
         </p>
       </div>
 
@@ -348,7 +349,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
           onClick={() => setStep('profile')}
           className="flex-1 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors"
         >
-          Atrás
+          {t('common.back')}
         </button>
         <button
           onClick={() => {
@@ -360,7 +361,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
           disabled={selectedProviders.length === 0}
           className="flex-1 bg-legal-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-legal-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
         >
-          Configurar ({selectedProviders.length})
+          {t('setup.wizard.providers.configure', { count: selectedProviders.length })}
         </button>
       </div>
     </div>
@@ -376,7 +377,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
       <div className="space-y-6">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            Configurar {metadata.name}
+            {t('setup.wizard.configure.title', { provider: metadata.name })}
           </h2>
           <p className="text-gray-600 dark:text-gray-400">{metadata.description}</p>
         </div>
@@ -411,12 +412,12 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
       
       <div>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          {isLoading ? 'Probando Conexiones...' : 'Conexiones Exitosas'}
+          {isLoading ? t('setup.wizard.test.testing') : t('setup.wizard.test.success')}
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
           {isLoading 
-            ? 'Verificando que todos los proveedores funcionen correctamente'
-            : 'Todos los proveedores están listos para usar'
+            ? t('setup.wizard.test.verifying')
+            : t('setup.wizard.test.ready')
           }
         </p>
       </div>
@@ -426,7 +427,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
           onClick={() => setStep('complete')}
           className="w-full bg-legal-500 dark:bg-legal-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-legal-600 dark:hover:bg-legal-700 transition-colors"
         >
-          Finalizar Configuración
+          {t('setup.wizard.test.finish')}
         </button>
       )}
     </div>
@@ -442,19 +443,19 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
       
       <div>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          ¡Configuración Completa!
+          {t('setup.wizard.complete.title')}
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          Tu asistente legal está listo. Configuraste {selectedProviders.length} proveedor(es) de IA.
+          {t('setup.wizard.complete.subtitle', { count: selectedProviders.length })}
         </p>
       </div>
 
       <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-        <h3 className="font-medium text-green-800 dark:text-green-200 mb-2">Siguientes pasos:</h3>
+        <h3 className="font-medium text-green-800 dark:text-green-200 mb-2">{t('setup.wizard.complete.nextSteps')}</h3>
         <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
-          <li>• Haz tu primera consulta legal</li>
-          <li>• Explora diferentes áreas del derecho mexicano</li>
-          <li>• Puedes cambiar proveedores en cualquier momento</li>
+          <li>• {t('setup.wizard.complete.steps.firstQuery')}</li>
+          <li>• {t('setup.wizard.complete.steps.explore')}</li>
+          <li>• {t('setup.wizard.complete.steps.changeProviders')}</li>
         </ul>
       </div>
 
@@ -466,7 +467,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
         }}
         className="w-full bg-legal-500 dark:bg-legal-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-legal-600 dark:hover:bg-legal-700 transition-colors"
       >
-        Comenzar a Usar LexMX
+        {t('setup.wizard.complete.startUsing')}
       </button>
     </div>
   );

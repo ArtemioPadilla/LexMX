@@ -15,7 +15,7 @@ export interface QueryPromptOptions {
   query: string;
   context?: string;
   language?: Language;
-  template?: 'default' | 'analysis' | 'search' | 'precedent' | 'contextWithQuery';
+  template?: 'default' | 'analysis' | 'search' | 'precedent' | 'contextWithQuery' | 'caseSummary';
   queryType?: QueryType;
   legalArea?: LegalArea;
 }
@@ -140,6 +140,9 @@ ${format.map(f => `- ${f}`).join('\n')}`;
 
       case 'precedent':
         return i18n.t('systemPrompts.queryTemplates.precedentLookup', { query }, language);
+
+      case 'caseSummary':
+        return i18n.t('systemPrompts.queryTemplates.caseSummary', { query }, language);
 
       default:
         return i18n.t('systemPrompts.queryTemplates.userQuery', { query }, language);

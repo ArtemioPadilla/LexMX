@@ -5,6 +5,7 @@ import WikiNavigation from '../islands/WikiNavigation.tsx';
 import LegalGlossary from '../islands/LegalGlossary.tsx';
 import LegislativeProcess from '../islands/LegislativeProcess.tsx';
 import GovernmentStructure from '../islands/GovernmentStructure.tsx';
+import NormativeHierarchy from '../islands/NormativeHierarchy.tsx';
 ---
 
 <BaseLayout title="Wiki Legal - LexMX">
@@ -12,37 +13,39 @@ import GovernmentStructure from '../islands/GovernmentStructure.tsx';
     <div class="max-w-7xl mx-auto">
       <div class="flex">
         <!-- Wiki Navigation -->
-        <aside class="hidden lg:block w-64 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto border-r border-gray-200 dark:border-gray-700">
-          <HydrationWrapper name="wiki-navigation" width="256px" height="100%">
-            <WikiNavigation client:load />
-          </HydrationWrapper>
+        <aside class="hidden lg:block w-64 flex-shrink-0">
+          <div class="sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto border-r border-gray-200 dark:border-gray-700 pr-4">
+            <HydrationWrapper name="wiki-navigation" width="100%" height="auto">
+              <WikiNavigation client:load />
+            </HydrationWrapper>
+          </div>
         </aside>
 
         <!-- Main Content -->
         <main class="flex-1 px-6 py-8">
           <!-- Header -->
           <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="wiki.title">
               Wiki Legal Mexicano
             </h1>
-            <p class="text-lg text-gray-600 dark:text-gray-300">
+            <p class="text-lg text-gray-600 dark:text-gray-300" data-i18n="wiki.subtitle">
               Aprende sobre el sistema legal mexicano, desde conceptos básicos hasta procesos complejos.
             </p>
           </div>
 
           <!-- Introduction Section -->
           <section id="introduccion" class="mb-12 scroll-mt-20">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="wiki.introduction.title">
               Introducción al Derecho Mexicano
             </h2>
             <div class="prose prose-lg dark:prose-invert max-w-none">
-              <p>
+              <p data-i18n="wiki.introduction.paragraph1">
                 El sistema jurídico mexicano es un sistema de derecho civil basado en códigos escritos, 
                 con influencia del derecho romano-germánico. La Constitución Política de los Estados 
                 Unidos Mexicanos es la ley suprema que establece los principios fundamentales del Estado 
                 y los derechos de los ciudadanos.
               </p>
-              <p>
+              <p data-i18n="wiki.introduction.paragraph2">
                 Este wiki te guiará a través de los conceptos fundamentales, la estructura del gobierno, 
                 los procesos legislativos y judiciales, y te proporcionará recursos para entender mejor 
                 el marco legal de México.
@@ -50,69 +53,9 @@ import GovernmentStructure from '../islands/GovernmentStructure.tsx';
             </div>
           </section>
 
-          <!-- Legal System Overview -->
-          <section id="sistema-legal" class="mb-12 scroll-mt-20">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              El Sistema Legal Mexicano
-            </h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  Derecho Civil
-                </h3>
-                <p class="text-gray-600 dark:text-gray-300">
-                  Sistema basado en códigos escritos que regulan las relaciones entre particulares.
-                </p>
-              </div>
-              
-              <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  Common Law vs Civil Law
-                </h3>
-                <p class="text-gray-600 dark:text-gray-300">
-                  A diferencia del common law, el derecho mexicano se basa en leyes codificadas.
-                </p>
-              </div>
-            </div>
-
-            <div class="prose prose-lg dark:prose-invert max-w-none">
-              <h3>Jerarquía Normativa</h3>
-              <ol>
-                <li>Constitución Política de los Estados Unidos Mexicanos</li>
-                <li>Tratados Internacionales</li>
-                <li>Leyes Federales y Generales</li>
-                <li>Constituciones Estatales</li>
-                <li>Leyes Estatales</li>
-                <li>Reglamentos</li>
-                <li>Normas Oficiales Mexicanas (NOM)</li>
-              </ol>
-            </div>
-          </section>
-
-          <!-- Legal Glossary -->
-          <section id="glosario" class="mb-12 scroll-mt-20">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Glosario Legal
-            </h2>
-            <HydrationWrapper name="legal-glossary">
-              <LegalGlossary client:visible />
-            </HydrationWrapper>
-          </section>
-
-          <!-- Legislative Process -->
-          <section id="proceso-legislativo" class="mb-12 scroll-mt-20">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              Proceso Legislativo
-            </h2>
-            <HydrationWrapper name="legislative-process">
-              <LegislativeProcess client:visible />
-            </HydrationWrapper>
-          </section>
-
           <!-- Government Structure -->
           <section id="estructura-gobierno" class="mb-12 scroll-mt-20">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="wiki.governmentStructure.title">
               Estructura del Gobierno
             </h2>
             <HydrationWrapper name="government-structure">
@@ -120,121 +63,286 @@ import GovernmentStructure from '../islands/GovernmentStructure.tsx';
             </HydrationWrapper>
           </section>
 
+          <!-- Legal System Overview -->
+          <section id="sistema-legal" class="mb-12 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="wiki.legalSystem.title">
+              El Sistema Legal Mexicano
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3" data-i18n="wiki.legalSystem.civilLaw.title">
+                  Derecho Civil
+                </h3>
+                <p class="text-gray-600 dark:text-gray-300" data-i18n="wiki.legalSystem.civilLaw.description">
+                  Sistema basado en códigos escritos que regulan las relaciones entre particulares.
+                </p>
+              </div>
+              
+              <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3" data-i18n="wiki.legalSystem.commonVsCivil.title">
+                  Common Law vs Civil Law
+                </h3>
+                <p class="text-gray-600 dark:text-gray-300" data-i18n="wiki.legalSystem.commonVsCivil.description">
+                  A diferencia del common law, el derecho mexicano se basa en leyes codificadas.
+                </p>
+              </div>
+            </div>
+
+            <div class="mt-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4" data-i18n="wiki.legalSystem.hierarchy.title">
+                Jerarquía Normativa
+              </h3>
+              <HydrationWrapper name="normative-hierarchy">
+                <NormativeHierarchy client:visible />
+              </HydrationWrapper>
+            </div>
+          </section>
+
+          <!-- Legislative Process -->
+          <section id="proceso-legislativo" class="mb-12 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="wiki.legislativeProcess.title">
+              Proceso Legislativo
+            </h2>
+            <HydrationWrapper name="legislative-process">
+              <LegislativeProcess client:visible />
+            </HydrationWrapper>
+          </section>
+
           <!-- Law Areas -->
           <section id="areas-derecho" class="mb-12 scroll-mt-20">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="wiki.lawAreas.title">
               Áreas del Derecho
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <!-- Constitutional Law -->
               <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2" data-i18n="wiki.lawAreas.constitutional.title">
                   Derecho Constitucional
                 </h3>
-                <p class="text-gray-600 dark:text-gray-300 mb-4">
+                <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="wiki.lawAreas.constitutional.description">
                   Estudia la organización del Estado y los derechos fundamentales.
                 </p>
                 <a href="/legal#constitutional" class="text-legal-600 hover:text-legal-700 font-medium">
-                  Ver documentos →
+                  <span data-i18n="wiki.lawAreas.viewDocuments">Ver documentos</span> →
                 </a>
               </div>
 
               <!-- Civil Law -->
               <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2" data-i18n="wiki.lawAreas.civil.title">
                   Derecho Civil
                 </h3>
-                <p class="text-gray-600 dark:text-gray-300 mb-4">
+                <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="wiki.lawAreas.civil.description">
                   Regula las relaciones entre particulares, familia y propiedad.
                 </p>
                 <a href="/legal#civil" class="text-legal-600 hover:text-legal-700 font-medium">
-                  Ver documentos →
+                  <span data-i18n="wiki.lawAreas.viewDocuments">Ver documentos</span> →
                 </a>
               </div>
 
               <!-- Criminal Law -->
               <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2" data-i18n="wiki.lawAreas.criminal.title">
                   Derecho Penal
                 </h3>
-                <p class="text-gray-600 dark:text-gray-300 mb-4">
+                <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="wiki.lawAreas.criminal.description">
                   Define los delitos y establece las penas correspondientes.
                 </p>
                 <a href="/legal#criminal" class="text-legal-600 hover:text-legal-700 font-medium">
-                  Ver documentos →
+                  <span data-i18n="wiki.lawAreas.viewDocuments">Ver documentos</span> →
                 </a>
               </div>
 
               <!-- Labor Law -->
               <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2" data-i18n="wiki.lawAreas.labor.title">
                   Derecho Laboral
                 </h3>
-                <p class="text-gray-600 dark:text-gray-300 mb-4">
+                <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="wiki.lawAreas.labor.description">
                   Regula las relaciones entre trabajadores y empleadores.
                 </p>
                 <a href="/legal#labor" class="text-legal-600 hover:text-legal-700 font-medium">
-                  Ver documentos →
+                  <span data-i18n="wiki.lawAreas.viewDocuments">Ver documentos</span> →
                 </a>
               </div>
 
               <!-- Tax Law -->
               <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2" data-i18n="wiki.lawAreas.tax.title">
                   Derecho Fiscal
                 </h3>
-                <p class="text-gray-600 dark:text-gray-300 mb-4">
+                <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="wiki.lawAreas.tax.description">
                   Normas sobre impuestos y obligaciones tributarias.
                 </p>
                 <a href="/legal#tax" class="text-legal-600 hover:text-legal-700 font-medium">
-                  Ver documentos →
+                  <span data-i18n="wiki.lawAreas.viewDocuments">Ver documentos</span> →
                 </a>
               </div>
 
               <!-- Commercial Law -->
               <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2" data-i18n="wiki.lawAreas.commercial.title">
                   Derecho Mercantil
                 </h3>
-                <p class="text-gray-600 dark:text-gray-300 mb-4">
+                <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="wiki.lawAreas.commercial.description">
                   Regula las actividades comerciales y empresariales.
                 </p>
                 <a href="/legal#commercial" class="text-legal-600 hover:text-legal-700 font-medium">
-                  Ver documentos →
+                  <span data-i18n="wiki.lawAreas.viewDocuments">Ver documentos</span> →
                 </a>
+              </div>
+            </div>
+          </section>
+
+          <!-- Legal Glossary -->
+          <section id="glosario" class="mb-12 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="wiki.glossary.title">
+              Glosario Legal
+            </h2>
+            <HydrationWrapper name="legal-glossary">
+              <LegalGlossary client:visible />
+            </HydrationWrapper>
+          </section>
+
+          <!-- Resources Section -->
+          <section id="recursos" class="mb-12 scroll-mt-20">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="wiki.resources.title">
+              Recursos Educativos
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Official Resources -->
+              <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4" data-i18n="wiki.resources.official.title">
+                  Recursos Oficiales
+                </h3>
+                <ul class="space-y-3">
+                  <li>
+                    <a href="https://www.diputados.gob.mx/LeyesBiblio/" target="_blank" rel="noopener noreferrer" class="flex items-center text-legal-600 hover:text-legal-700 dark:text-legal-400 dark:hover:text-legal-300">
+                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                      </svg>
+                      <span data-i18n="wiki.resources.official.deputiesLibrary">Biblioteca de la Cámara de Diputados</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://www.dof.gob.mx/" target="_blank" rel="noopener noreferrer" class="flex items-center text-legal-600 hover:text-legal-700 dark:text-legal-400 dark:hover:text-legal-300">
+                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                      </svg>
+                      <span data-i18n="wiki.resources.official.officialGazette">Diario Oficial de la Federación</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://www.scjn.gob.mx/" target="_blank" rel="noopener noreferrer" class="flex items-center text-legal-600 hover:text-legal-700 dark:text-legal-400 dark:hover:text-legal-300">
+                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                      </svg>
+                      <span data-i18n="wiki.resources.official.supremeCourt">Suprema Corte de Justicia de la Nación</span>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Educational Guides -->
+              <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4" data-i18n="wiki.resources.guides.title">
+                  Guías de Estudio
+                </h3>
+                <ul class="space-y-3 text-gray-600 dark:text-gray-300">
+                  <li class="flex items-start">
+                    <span class="text-legal-500 mr-2">📚</span>
+                    <span data-i18n="wiki.resources.guides.constitutionalStudy">Guía de estudio del derecho constitucional</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-legal-500 mr-2">📖</span>
+                    <span data-i18n="wiki.resources.guides.legalProcedures">Manual de procedimientos legales básicos</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-legal-500 mr-2">⚖️</span>
+                    <span data-i18n="wiki.resources.guides.jurisprudence">Introducción a la jurisprudencia mexicana</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Useful Tools -->
+              <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4" data-i18n="wiki.resources.tools.title">
+                  Herramientas Útiles
+                </h3>
+                <ul class="space-y-3 text-gray-600 dark:text-gray-300">
+                  <li class="flex items-start">
+                    <span class="text-legal-500 mr-2">🔍</span>
+                    <span data-i18n="wiki.resources.tools.caseSearch">Buscador de jurisprudencia y tesis</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-legal-500 mr-2">📅</span>
+                    <span data-i18n="wiki.resources.tools.legalCalendar">Calendario de términos judiciales</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-legal-500 mr-2">💼</span>
+                    <span data-i18n="wiki.resources.tools.templates">Plantillas de documentos legales</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Learning Path -->
+              <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4" data-i18n="wiki.resources.learning.title">
+                  Ruta de Aprendizaje
+                </h3>
+                <ol class="space-y-3 text-gray-600 dark:text-gray-300">
+                  <li class="flex items-start">
+                    <span class="flex-shrink-0 w-6 h-6 bg-legal-100 dark:bg-legal-900/30 text-legal-600 dark:text-legal-400 rounded-full flex items-center justify-center text-xs font-semibold mr-2">1</span>
+                    <span data-i18n="wiki.resources.learning.step1">Fundamentos del sistema legal mexicano</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="flex-shrink-0 w-6 h-6 bg-legal-100 dark:bg-legal-900/30 text-legal-600 dark:text-legal-400 rounded-full flex items-center justify-center text-xs font-semibold mr-2">2</span>
+                    <span data-i18n="wiki.resources.learning.step2">Estructura constitucional y derechos</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="flex-shrink-0 w-6 h-6 bg-legal-100 dark:bg-legal-900/30 text-legal-600 dark:text-legal-400 rounded-full flex items-center justify-center text-xs font-semibold mr-2">3</span>
+                    <span data-i18n="wiki.resources.learning.step3">Procedimientos legales y judiciales</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="flex-shrink-0 w-6 h-6 bg-legal-100 dark:bg-legal-900/30 text-legal-600 dark:text-legal-400 rounded-full flex items-center justify-center text-xs font-semibold mr-2">4</span>
+                    <span data-i18n="wiki.resources.learning.step4">Especialización por área del derecho</span>
+                  </li>
+                </ol>
               </div>
             </div>
           </section>
 
           <!-- FAQ Section -->
           <section id="faq" class="mb-12 scroll-mt-20">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="wiki.faq.title">
               Preguntas Frecuentes
             </h2>
             <div class="space-y-4">
               <details class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <summary class="font-semibold text-gray-900 dark:text-white cursor-pointer">
+                <summary class="font-semibold text-gray-900 dark:text-white cursor-pointer" data-i18n="wiki.faq.amparo.question">
                   ¿Qué es el amparo?
                 </summary>
-                <p class="mt-2 text-gray-600 dark:text-gray-300">
+                <p class="mt-2 text-gray-600 dark:text-gray-300" data-i18n="wiki.faq.amparo.answer">
                   El amparo es un juicio constitucional que protege los derechos fundamentales contra actos de autoridad.
                 </p>
               </details>
 
               <details class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <summary class="font-semibold text-gray-900 dark:text-white cursor-pointer">
+                <summary class="font-semibold text-gray-900 dark:text-white cursor-pointer" data-i18n="wiki.faq.federalVsState.question">
                   ¿Cuál es la diferencia entre ley federal y estatal?
                 </summary>
-                <p class="mt-2 text-gray-600 dark:text-gray-300">
+                <p class="mt-2 text-gray-600 dark:text-gray-300" data-i18n="wiki.faq.federalVsState.answer">
                   Las leyes federales aplican en todo el país, mientras que las estatales solo en el estado que las emite.
                 </p>
               </details>
 
               <details class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                <summary class="font-semibold text-gray-900 dark:text-white cursor-pointer">
+                <summary class="font-semibold text-gray-900 dark:text-white cursor-pointer" data-i18n="wiki.faq.jurisprudence.question">
                   ¿Qué es la jurisprudencia?
                 </summary>
-                <p class="mt-2 text-gray-600 dark:text-gray-300">
+                <p class="mt-2 text-gray-600 dark:text-gray-300" data-i18n="wiki.faq.jurisprudence.answer">
                   Son criterios obligatorios establecidos por los tribunales al resolver casos similares de forma reiterada.
                 </p>
               </details>

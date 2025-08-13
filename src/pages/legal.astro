@@ -6,11 +6,11 @@ import HydrationWrapper from '../components/HydrationWrapper.astro';
 <BaseLayout title="Códigos Legales - LexMX">
   <main class="min-h-screen bg-white dark:bg-gray-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-8">
+      <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-8" data-i18n="legal.title">
         Códigos Legales Mexicanos
       </h1>
       
-      <p class="text-lg text-gray-600 dark:text-gray-300 mb-12">
+      <p class="text-lg text-gray-600 dark:text-gray-300 mb-12" data-i18n="legal.subtitle">
         Accede al corpus completo de la legislación mexicana actualizada.
       </p>
 
@@ -24,15 +24,15 @@ import HydrationWrapper from '../components/HydrationWrapper.astro';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
               </svg>
             </div>
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4" data-i18n="legal.constitutional.title">
               Constitucional
             </h2>
           </div>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
+          <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="legal.constitutional.description">
             Constitución Política, Ley de Amparo y jurisprudencia constitucional.
           </p>
           <a href="/document/cpeum" class="text-legal-600 hover:text-legal-700 font-medium">
-            Ver documentos →
+            <span data-i18n="common.viewDocuments">Ver documentos</span> →
           </a>
         </div>
 
@@ -44,15 +44,15 @@ import HydrationWrapper from '../components/HydrationWrapper.astro';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4" data-i18n="legal.civil.title">
               Civil
             </h2>
           </div>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
+          <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="legal.civil.description">
             Código Civil Federal, códigos estatales y legislación familiar.
           </p>
           <a href="/document/ccf" class="text-legal-600 hover:text-legal-700 font-medium">
-            Ver documentos →
+            <span data-i18n="common.viewDocuments">Ver documentos</span> →
           </a>
         </div>
 
@@ -64,15 +64,15 @@ import HydrationWrapper from '../components/HydrationWrapper.astro';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4" data-i18n="legal.criminal.title">
               Penal
             </h2>
           </div>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
+          <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="legal.criminal.description">
             Código Penal Federal, CNPP y legislación en materia criminal.
           </p>
           <a href="/document/cpf" class="text-legal-600 hover:text-legal-700 font-medium">
-            Ver documentos →
+            <span data-i18n="common.viewDocuments">Ver documentos</span> →
           </a>
         </div>
 
@@ -84,15 +84,15 @@ import HydrationWrapper from '../components/HydrationWrapper.astro';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4" data-i18n="legal.labor.title">
               Laboral
             </h2>
           </div>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
+          <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="legal.labor.description">
             Ley Federal del Trabajo, LSS, INFONAVIT y normativa laboral.
           </p>
           <a href="/document/lft" class="text-legal-600 hover:text-legal-700 font-medium">
-            Ver documentos →
+            <span data-i18n="common.viewDocuments">Ver documentos</span> →
           </a>
         </div>
 
@@ -104,15 +104,15 @@ import HydrationWrapper from '../components/HydrationWrapper.astro';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
             </div>
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4" data-i18n="legal.tax.title">
               Fiscal
             </h2>
           </div>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
+          <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="legal.tax.description">
             CFF, LISR, LIVA y toda la legislación tributaria federal.
           </p>
           <a href="/document/cff" class="text-legal-600 hover:text-legal-700 font-medium">
-            Ver documentos →
+            <span data-i18n="common.viewDocuments">Ver documentos</span> →
           </a>
         </div>
 
@@ -124,22 +124,22 @@ import HydrationWrapper from '../components/HydrationWrapper.astro';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white ml-4" data-i18n="legal.commercial.title">
               Mercantil
             </h2>
           </div>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
+          <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="legal.commercial.description">
             Código de Comercio, LGSM, LGTOC y legislación comercial.
           </p>
           <a href="/document/ccom" class="text-legal-600 hover:text-legal-700 font-medium">
-            Ver documentos →
+            <span data-i18n="common.viewDocuments">Ver documentos</span> →
           </a>
         </div>
       </div>
 
       <!-- Search Bar -->
       <div class="mt-12">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6" data-i18n="corpus.searchTitle">
           Buscar en el Corpus Legal
         </h2>
         <div class="max-w-2xl">
@@ -147,6 +147,7 @@ import HydrationWrapper from '../components/HydrationWrapper.astro';
             <input
               type="text"
               placeholder="Buscar leyes, códigos, artículos..."
+              data-i18n-placeholder="corpus.searchPlaceholder"
               class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-legal-500 focus:border-transparent"
             />
             <svg class="absolute left-4 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

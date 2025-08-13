@@ -1,175 +1,169 @@
 ---
 import BaseLayout from '../components/layout/BaseLayout.astro';
 
-// Use a stable date format to avoid hydration mismatches
-const lastUpdatedDate = new Date('2024-01-15');
-const lastUpdated = `${lastUpdatedDate.getDate()} de enero de ${lastUpdatedDate.getFullYear()}`;
+const pageTitle = 'Privacy - LexMX';
+const lastUpdated = '15/01/2024';
 ---
 
-<BaseLayout title="Política de Privacidad - LexMX">
+<BaseLayout title={pageTitle}>
   <main class="min-h-screen bg-white dark:bg-gray-900">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-8">
+      <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-8" data-i18n="privacy.title">
         Política de Privacidad
       </h1>
       
       <div class="prose prose-lg dark:prose-invert max-w-none">
         <p class="text-gray-600 dark:text-gray-300 mb-6">
-          <strong>Última actualización:</strong> {lastUpdated}
+          <strong data-i18n="privacy.lastUpdated">Última actualización</strong>: {lastUpdated}
         </p>
 
         <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6 mb-8">
-          <h2 class="text-xl font-semibold text-green-900 dark:text-green-100 mb-3">
+          <h2 class="text-xl font-semibold text-green-900 dark:text-green-100 mb-3" data-i18n="privacy.sections.commitment.title">
             Tu privacidad es nuestra prioridad
           </h2>
-          <p class="text-green-800 dark:text-green-200">
-            LexMX opera completamente en tu navegador. <strong>No recopilamos, almacenamos ni procesamos ningún dato personal en servidores externos.</strong> 
-            Tus consultas legales, tokens de API y preferencias permanecen exclusivamente en tu dispositivo.
+          <p class="text-green-800 dark:text-green-200" data-i18n="privacy.sections.commitment.content">
+            LexMX opera completamente en tu navegador. <strong>No recopilamos, almacenamos ni procesamos ningún dato personal en servidores externos.</strong> Tus consultas legales, tokens de API y preferencias permanecen exclusivamente en tu dispositivo.
           </p>
         </div>
 
         <section class="mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="privacy.sections.dataCollection.title">
             1. Información que NO recopilamos
           </h2>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
+          <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="privacy.sections.dataCollection.content">
             A diferencia de la mayoría de servicios en línea, LexMX no recopila:
           </p>
           <ul class="list-disc pl-6 space-y-2 text-gray-600 dark:text-gray-300">
-            <li>Información personal identificable (nombre, email, teléfono)</li>
-            <li>Direcciones IP o información de ubicación</li>
-            <li>Historial de consultas o búsquedas</li>
-            <li>Cookies de seguimiento o analytics</li>
-            <li>Datos de uso o comportamiento</li>
-            <li>Tokens de API o credenciales</li>
+            <li data-i18n="privacy.sections.dataCollection.items.personal">Información personal identificable (nombre, email, teléfono)</li>
+            <li data-i18n="privacy.sections.dataCollection.items.ip">Direcciones IP o información de ubicación</li>
+            <li data-i18n="privacy.sections.dataCollection.items.history">Historial de consultas o búsquedas</li>
+            <li data-i18n="privacy.sections.dataCollection.items.cookies">Cookies de seguimiento o analytics</li>
+            <li data-i18n="privacy.sections.dataCollection.items.usage">Datos de uso o comportamiento</li>
+            <li data-i18n="privacy.sections.dataCollection.items.tokens">Tokens de API o credenciales</li>
           </ul>
         </section>
 
         <section class="mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="privacy.sections.localStorage.title">
             2. Almacenamiento local
           </h2>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
+          <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="privacy.sections.localStorage.content">
             LexMX utiliza almacenamiento local del navegador para mejorar tu experiencia:
           </p>
           <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 space-y-4">
             <div>
               <h3 class="font-semibold text-gray-900 dark:text-white mb-2">LocalStorage</h3>
-              <p class="text-gray-600 dark:text-gray-300">
+              <p class="text-gray-600 dark:text-gray-300" data-i18n="privacy.sections.localStorage.local">
                 Guarda tus preferencias (tema, idioma) y configuraciones de proveedores de IA.
               </p>
             </div>
             <div>
               <h3 class="font-semibold text-gray-900 dark:text-white mb-2">SessionStorage</h3>
-              <p class="text-gray-600 dark:text-gray-300">
+              <p class="text-gray-600 dark:text-gray-300" data-i18n="privacy.sections.localStorage.session">
                 Almacena temporalmente tokens de API encriptados durante tu sesión.
               </p>
             </div>
             <div>
               <h3 class="font-semibold text-gray-900 dark:text-white mb-2">IndexedDB</h3>
-              <p class="text-gray-600 dark:text-gray-300">
+              <p class="text-gray-600 dark:text-gray-300" data-i18n="privacy.sections.localStorage.indexed">
                 Contiene el corpus legal y vectores para búsqueda offline.
               </p>
             </div>
           </div>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-4" data-i18n="privacy.sections.localStorage.clear">
             Puedes limpiar todos estos datos en cualquier momento desde la configuración de tu navegador.
           </p>
         </section>
 
         <section class="mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="privacy.sections.security.title">
             3. Seguridad
           </h2>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
+          <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="privacy.sections.security.content">
             Implementamos múltiples capas de seguridad:
           </p>
           <ul class="list-disc pl-6 space-y-2 text-gray-600 dark:text-gray-300">
-            <li><strong>Encriptación AES-256:</strong> Todos los tokens de API se encriptan antes de almacenarse</li>
-            <li><strong>Browser Fingerprinting:</strong> Los tokens se vinculan a tu dispositivo específico</li>
-            <li><strong>No hay transmisión:</strong> Los datos sensibles nunca salen de tu navegador</li>
-            <li><strong>Código abierto:</strong> Puedes auditar nuestro código en GitHub</li>
+            <li><strong data-i18n="privacy.sections.security.encryption">Encriptación AES-256</strong>: <span data-i18n="privacy.sections.security.encryptionDesc">Todos los tokens de API se encriptan antes de almacenarse</span></li>
+            <li><strong data-i18n="privacy.sections.security.fingerprinting">Browser Fingerprinting</strong>: <span data-i18n="privacy.sections.security.fingerprintingDesc">Los tokens se vinculan a tu dispositivo específico</span></li>
+            <li><strong data-i18n="privacy.sections.security.noTransmission">No hay transmisión</strong>: <span data-i18n="privacy.sections.security.noTransmissionDesc">Los datos sensibles nunca salen de tu navegador</span></li>
+            <li><strong data-i18n="privacy.sections.security.openSource">Código abierto</strong>: <span data-i18n="privacy.sections.security.openSourceDesc">Puedes auditar nuestro código en GitHub</span></li>
           </ul>
         </section>
 
         <section class="mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="privacy.sections.thirdParty.title">
             4. Proveedores de IA terceros
           </h2>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
-            Cuando usas LexMX con proveedores de IA (OpenAI, Claude, Gemini), tus consultas se envían directamente 
-            desde tu navegador a estos servicios. LexMX nunca actúa como intermediario.
+          <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="privacy.sections.thirdParty.content">
+            Cuando usas LexMX con proveedores de IA (OpenAI, Claude, Gemini), tus consultas se envían directamente desde tu navegador a estos servicios. LexMX nunca actúa como intermediario.
           </p>
           <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
             <p class="text-yellow-800 dark:text-yellow-200">
-              <strong>Importante:</strong> Cada proveedor tiene su propia política de privacidad. 
-              Te recomendamos revisarlas antes de usar sus servicios.
+              <strong data-i18n="privacy.sections.thirdParty.important">Importante</strong>: <span data-i18n="privacy.sections.thirdParty.recommendation">Cada proveedor tiene su propia política de privacidad. Te recomendamos revisarlas antes de usar sus servicios.</span>
             </p>
           </div>
         </section>
 
         <section class="mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="privacy.sections.hosting.title">
             5. GitHub Pages
           </h2>
           <p class="text-gray-600 dark:text-gray-300">
-            LexMX está hospedado en GitHub Pages, que puede recopilar información técnica básica 
-            como direcciones IP y user agents para prevenir abuso. Esta información no es accesible 
-            para nosotros. Consulta la 
+            <span data-i18n="privacy.sections.hosting.content">LexMX está hospedado en GitHub Pages, que puede recopilar información técnica básica como direcciones IP y user agents para prevenir abuso. Esta información no es accesible para nosotros. Consulta la </span>
             <a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" 
                target="_blank" 
                rel="noopener noreferrer"
-               class="text-legal-600 dark:text-legal-400 hover:underline">
+               class="text-legal-600 dark:text-legal-400 hover:underline"
+               data-i18n="privacy.sections.hosting.link">
               política de privacidad de GitHub
-            </a> para más detalles.
+            </a>
+            <span data-i18n="privacy.sections.hosting.details"> para más detalles.</span>
           </p>
         </section>
 
         <section class="mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="privacy.sections.compliance.title">
             6. Cumplimiento legal
           </h2>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
+          <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="privacy.sections.compliance.content">
             LexMX cumple con:
           </p>
           <ul class="list-disc pl-6 space-y-2 text-gray-600 dark:text-gray-300">
-            <li><strong>LFPDPPP:</strong> Ley Federal de Protección de Datos Personales en Posesión de los Particulares (México)</li>
-            <li><strong>GDPR:</strong> Reglamento General de Protección de Datos (Unión Europea)</li>
-            <li><strong>CCPA:</strong> Ley de Privacidad del Consumidor de California</li>
+            <li><strong>LFPDPPP:</strong> <span data-i18n="privacy.sections.compliance.lfpdppp">Ley Federal de Protección de Datos Personales en Posesión de los Particulares (México)</span></li>
+            <li><strong>GDPR:</strong> <span data-i18n="privacy.sections.compliance.gdpr">Reglamento General de Protección de Datos (Unión Europea)</span></li>
+            <li><strong>CCPA:</strong> <span data-i18n="privacy.sections.compliance.ccpa">Ley de Privacidad del Consumidor de California</span></li>
           </ul>
         </section>
 
         <section class="mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="privacy.sections.rights.title">
             7. Tus derechos
           </h2>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
+          <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="privacy.sections.rights.content">
             Aunque no recopilamos datos personales, tienes derecho a:
           </p>
           <ul class="list-disc pl-6 space-y-2 text-gray-600 dark:text-gray-300">
-            <li>Limpiar todo el almacenamiento local en cualquier momento</li>
-            <li>Usar LexMX sin proporcionar ninguna información personal</li>
-            <li>Revisar nuestro código fuente para verificar nuestras prácticas</li>
-            <li>Solicitar aclaraciones sobre esta política</li>
+            <li data-i18n="privacy.sections.rights.clear">Limpiar todo el almacenamiento local en cualquier momento</li>
+            <li data-i18n="privacy.sections.rights.use">Usar LexMX sin proporcionar ninguna información personal</li>
+            <li data-i18n="privacy.sections.rights.review">Revisar nuestro código fuente para verificar nuestras prácticas</li>
+            <li data-i18n="privacy.sections.rights.request">Solicitar aclaraciones sobre esta política</li>
           </ul>
         </section>
 
         <section class="mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="privacy.sections.changes.title">
             8. Cambios a esta política
           </h2>
-          <p class="text-gray-600 dark:text-gray-300">
-            Podemos actualizar esta política ocasionalmente. Los cambios se publicarán en esta página 
-            con la fecha de actualización. Como no recopilamos información de contacto, te recomendamos 
-            revisar esta página periódicamente.
+          <p class="text-gray-600 dark:text-gray-300" data-i18n="privacy.sections.changes.content">
+            Podemos actualizar esta política ocasionalmente. Los cambios se publicarán en esta página con la fecha de actualización. Como no recopilamos información de contacto, te recomendamos revisar esta página periódicamente.
           </p>
         </section>
 
         <section class="mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="privacy.sections.contact.title">
             9. Contacto
           </h2>
-          <p class="text-gray-600 dark:text-gray-300 mb-4">
+          <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="privacy.sections.contact.content">
             Si tienes preguntas sobre esta política de privacidad:
           </p>
           <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
@@ -186,9 +180,8 @@ const lastUpdated = `${lastUpdatedDate.getDate()} de enero de ${lastUpdatedDate.
         </section>
 
         <div class="border-t border-gray-200 dark:border-gray-700 pt-8 mt-12">
-          <p class="text-center text-gray-500 dark:text-gray-400">
-            Esta política de privacidad es parte del compromiso de LexMX con la transparencia 
-            y la protección de la privacidad de nuestros usuarios.
+          <p class="text-center text-gray-500 dark:text-gray-400" data-i18n="privacy.sections.footer">
+            Esta política de privacidad es parte del compromiso de LexMX con la transparencia y la protección de la privacidad de nuestros usuarios.
           </p>
         </div>
       </div>

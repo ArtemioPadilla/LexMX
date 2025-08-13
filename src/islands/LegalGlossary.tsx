@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
 import { TEST_IDS } from '../utils/test-ids';
+import { useTranslation } from '../i18n/index';
 
 interface GlossaryTerm {
   id: string;
@@ -12,12 +13,12 @@ interface GlossaryTerm {
   examples?: string[];
 }
 
-const glossaryTerms: GlossaryTerm[] = [
+const glossaryTerms = (t: any): GlossaryTerm[] => [
   {
     id: 'amparo',
-    term: 'Amparo',
-    definition: 'Juicio constitucional que protege los derechos fundamentales de las personas contra actos de autoridad que los vulneren.',
-    category: 'Constitucional',
+    term: t('wiki.glossary.terms.amparo.term'),
+    definition: t('wiki.glossary.terms.amparo.definition'),
+    category: t('wiki.glossary.categories.constitutional'),
     relatedTerms: ['Derechos Fundamentales', 'Suprema Corte'],
     legalSource: 'Ley de Amparo',
     examples: [
@@ -27,9 +28,9 @@ const glossaryTerms: GlossaryTerm[] = [
   },
   {
     id: 'jurisprudencia',
-    term: 'Jurisprudencia',
-    definition: 'Interpretación de la ley que hacen los tribunales cuando se integra por cinco sentencias ejecutorias ininterrumpidas por otra en contrario.',
-    category: 'Procesal',
+    term: t('wiki.glossary.terms.jurisprudencia.term'),
+    definition: t('wiki.glossary.terms.jurisprudencia.definition'),
+    category: t('wiki.glossary.categories.procedural'),
     relatedTerms: ['Suprema Corte', 'Tesis'],
     legalSource: 'Ley de Amparo, Art. 217',
     examples: [
@@ -39,9 +40,9 @@ const glossaryTerms: GlossaryTerm[] = [
   },
   {
     id: 'persona-moral',
-    term: 'Persona Moral',
-    definition: 'Entidad jurídica distinta de las personas físicas, capaz de adquirir derechos y contraer obligaciones.',
-    category: 'Civil',
+    term: t('wiki.glossary.terms.personaMoral.term'),
+    definition: t('wiki.glossary.terms.personaMoral.definition'),
+    category: t('wiki.glossary.categories.civil'),
     relatedTerms: ['Persona Física', 'Personalidad Jurídica'],
     legalSource: 'Código Civil Federal, Art. 25',
     examples: [
@@ -52,9 +53,9 @@ const glossaryTerms: GlossaryTerm[] = [
   },
   {
     id: 'debido-proceso',
-    term: 'Debido Proceso',
-    definition: 'Derecho fundamental que garantiza que toda persona tenga acceso a un procedimiento justo, imparcial y con todas las garantías legales.',
-    category: 'Constitucional',
+    term: t('wiki.glossary.terms.debidoProceso.term'),
+    definition: t('wiki.glossary.terms.debidoProceso.definition'),
+    category: t('wiki.glossary.categories.constitutional'),
     relatedTerms: ['Garantías Individuales', 'Defensa Adecuada'],
     legalSource: 'CPEUM, Art. 14 y 16',
     examples: [
@@ -65,9 +66,9 @@ const glossaryTerms: GlossaryTerm[] = [
   },
   {
     id: 'contrato-trabajo',
-    term: 'Contrato de Trabajo',
-    definition: 'Acuerdo en virtud del cual una persona se obliga a prestar a otra un trabajo personal subordinado, mediante el pago de un salario.',
-    category: 'Laboral',
+    term: t('wiki.glossary.terms.contratoTrabajo.term'),
+    definition: t('wiki.glossary.terms.contratoTrabajo.definition'),
+    category: t('wiki.glossary.categories.labor'),
     relatedTerms: ['Relación Laboral', 'Subordinación'],
     legalSource: 'Ley Federal del Trabajo, Art. 20',
     examples: [
@@ -78,9 +79,9 @@ const glossaryTerms: GlossaryTerm[] = [
   },
   {
     id: 'delito',
-    term: 'Delito',
-    definition: 'Acto u omisión que sancionan las leyes penales, que debe ser típico, antijurídico y culpable.',
-    category: 'Penal',
+    term: t('wiki.glossary.terms.delito.term'),
+    definition: t('wiki.glossary.terms.delito.definition'),
+    category: t('wiki.glossary.categories.criminal'),
     relatedTerms: ['Tipo Penal', 'Culpabilidad', 'Antijuridicidad'],
     legalSource: 'Código Penal Federal, Art. 7',
     examples: [
@@ -91,9 +92,9 @@ const glossaryTerms: GlossaryTerm[] = [
   },
   {
     id: 'obligacion-tributaria',
-    term: 'Obligación Tributaria',
-    definition: 'Vínculo jurídico en virtud del cual el sujeto pasivo debe dar al Estado una suma de dinero en concepto de tributo.',
-    category: 'Fiscal',
+    term: t('wiki.glossary.terms.obligacionTributaria.term'),
+    definition: t('wiki.glossary.terms.obligacionTributaria.definition'),
+    category: t('wiki.glossary.categories.tax'),
     relatedTerms: ['Contribuyente', 'Hecho Imponible'],
     legalSource: 'Código Fiscal de la Federación, Art. 1',
     examples: [
@@ -104,9 +105,9 @@ const glossaryTerms: GlossaryTerm[] = [
   },
   {
     id: 'sociedad-mercantil',
-    term: 'Sociedad Mercantil',
-    definition: 'Persona moral constituida de acuerdo con la Ley General de Sociedades Mercantiles, con fin lucrativo.',
-    category: 'Mercantil',
+    term: t('wiki.glossary.terms.sociedadMercantil.term'),
+    definition: t('wiki.glossary.terms.sociedadMercantil.definition'),
+    category: t('wiki.glossary.categories.commercial'),
     relatedTerms: ['Persona Moral', 'Capital Social'],
     legalSource: 'Ley General de Sociedades Mercantiles',
     examples: [
@@ -117,36 +118,41 @@ const glossaryTerms: GlossaryTerm[] = [
   }
 ];
 
-const categories = [
-  'Todos',
-  'Constitucional',
-  'Civil',
-  'Penal',
-  'Laboral',
-  'Fiscal',
-  'Mercantil',
-  'Procesal'
+const categories = (t: any) => [
+  t('wiki.glossary.categories.all'),
+  t('wiki.glossary.categories.constitutional'),
+  t('wiki.glossary.categories.civil'),
+  t('wiki.glossary.categories.criminal'),
+  t('wiki.glossary.categories.labor'),
+  t('wiki.glossary.categories.tax'),
+  t('wiki.glossary.categories.commercial'),
+  t('wiki.glossary.categories.procedural')
 ];
 
 export default function LegalGlossary() {
+  const { t } = useTranslation();
   const [isHydrated, setIsHydrated] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Todos');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedTerm, setSelectedTerm] = useState<GlossaryTerm | null>(null);
+
+  const terms = useMemo(() => glossaryTerms(t), [t]);
+  const categoryList = useMemo(() => categories(t), [t]);
 
   // Handle hydration
   useEffect(() => {
     setIsHydrated(true);
-  }, []);
+    setSelectedCategory(categoryList[0]); // Set to "All" after hydration
+  }, [categoryList]);
 
   const filteredTerms = useMemo(() => {
-    return glossaryTerms.filter(term => {
+    return terms.filter(term => {
       const matchesSearch = term.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            term.definition.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === 'Todos' || term.category === selectedCategory;
+      const matchesCategory = selectedCategory === categoryList[0] || term.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategory, terms, categoryList]);
 
   const getCategoryColor = (category: string) => {
     const colorMap: Record<string, string> = {
@@ -178,7 +184,7 @@ export default function LegalGlossary() {
         <div className="relative">
           <input
             type="text"
-            placeholder="Buscar términos legales..."
+            placeholder={t('wiki.glossary.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-3 pl-10 pr-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -194,7 +200,7 @@ export default function LegalGlossary() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {categories.map((category) => (
+          {categoryList.map((category) => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
@@ -214,17 +220,17 @@ export default function LegalGlossary() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Términos encontrados: {filteredTerms.length}
+            {t('wiki.glossary.termsFound')}: {filteredTerms.length}
           </h3>
           {searchTerm && (
             <button
               onClick={() => {
                 setSearchTerm('');
-                setSelectedCategory('Todos');
+                setSelectedCategory(categoryList[0]);
               }}
               className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
             >
-              Limpiar filtros
+              {t('wiki.glossary.clearFilters')}
             </button>
           )}
         </div>
@@ -267,7 +273,7 @@ export default function LegalGlossary() {
 
               {term.legalSource && (
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                  <strong>Fuente legal:</strong> {term.legalSource}
+                  <strong>{t('wiki.glossary.legalSource')}:</strong> {term.legalSource}
                 </p>
               )}
 
@@ -276,7 +282,7 @@ export default function LegalGlossary() {
                   {term.examples && term.examples.length > 0 && (
                     <div>
                       <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
-                        Ejemplos:
+                        {t('wiki.glossary.examples')}:
                       </h5>
                       <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-300">
                         {term.examples.map((example, index) => (
@@ -289,7 +295,7 @@ export default function LegalGlossary() {
                   {term.relatedTerms && term.relatedTerms.length > 0 && (
                     <div>
                       <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
-                        Términos relacionados:
+                        {t('wiki.glossary.relatedTerms')}:
                       </h5>
                       <div className="flex flex-wrap gap-2">
                         {term.relatedTerms.map((relatedTerm, index) => (
@@ -313,16 +319,16 @@ export default function LegalGlossary() {
         {filteredTerms.length === 0 && (
           <div className="text-center py-8">
             <p className="text-gray-500 dark:text-gray-400 mb-4">
-              No se encontraron términos que coincidan con tu búsqueda.
+              {t('wiki.glossary.noTermsFound')}
             </p>
             <button
               onClick={() => {
                 setSearchTerm('');
-                setSelectedCategory('Todos');
+                setSelectedCategory(categoryList[0]);
               }}
               className="text-blue-600 dark:text-blue-400 hover:underline"
             >
-              Ver todos los términos
+              {t('wiki.glossary.viewAllTerms')}
             </button>
           </div>
         )}

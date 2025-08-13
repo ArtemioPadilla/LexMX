@@ -69,7 +69,12 @@ const translationsScript = `
         }
         
         if (typeof value === 'string') {
-          element.textContent = value;
+          // Check if the value contains HTML tags
+          if (value.includes('<') && value.includes('>')) {
+            element.innerHTML = value;
+          } else {
+            element.textContent = value;
+          }
         }
       });
       

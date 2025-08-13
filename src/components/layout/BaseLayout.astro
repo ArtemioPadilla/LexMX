@@ -13,7 +13,8 @@ export interface Props {
   image?: string;
 }
 
-const t = getTranslation(Astro.url);
+// Ensure we always have a valid URL object for getTranslation
+const t = getTranslation(Astro.url || '/');
 
 const { 
   title, 
@@ -182,7 +183,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         </nav>
         
         <!-- Controls Container -->
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-2 sm:space-x-3">
           <!-- Theme and Language Controls (visible on all screen sizes) -->
           <HydrationWrapper name="language-selector" width="100px" height="40px">
             <LanguageSelector client:load />
@@ -192,8 +193,8 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
           </HydrationWrapper>
           
           <!-- Mobile menu (only visible on mobile) -->
-          <div class="lg:hidden">
-            <HydrationWrapper name="mobile-menu" width="48px" height="48px">
+          <div class="lg:hidden ml-1">
+            <HydrationWrapper name="mobile-menu" width="44px" height="44px">
               <MobileMenu client:load />
             </HydrationWrapper>
           </div>
@@ -221,11 +222,11 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
             </div>
             <span class="text-xl font-bold text-gray-900 dark:text-white">LexMX</span>
           </div>
-          <p class="text-gray-600 dark:text-gray-400 mb-4 max-w-md">
+          <p class="text-gray-600 dark:text-gray-400 mb-4 max-w-md" data-i18n="hero.subtitle">
             {t('hero.subtitle')}
           </p>
           <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p class="text-sm text-yellow-800">
+            <p class="text-sm text-yellow-800" data-i18n="legal.disclaimer">
               {t('legal.disclaimer')}
             </p>
           </div>
@@ -233,20 +234,20 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
         <!-- Quick Links -->
         <div>
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 tracking-wider uppercase mb-4">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 tracking-wider uppercase mb-4" data-i18n="footer.quickLinks">
             {t('footer.quickLinks')}
           </h3>
           <ul class="space-y-2">
-            <li><a href="/chat" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors">{t('nav.chat')}</a></li>
-            <li><a href="/legal" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors">{t('nav.codes')}</a></li>
-            <li><a href="/setup" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors">{t('nav.setup')}</a></li>
-            <li><a href="/privacy" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors">{t('footer.privacyPolicy')}</a></li>
+            <li><a href="/chat" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors" data-i18n="nav.chat">{t('nav.chat')}</a></li>
+            <li><a href="/legal" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors" data-i18n="nav.codes">{t('nav.codes')}</a></li>
+            <li><a href="/setup" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors" data-i18n="nav.setup">{t('nav.setup')}</a></li>
+            <li><a href="/privacy" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors" data-i18n="footer.privacyPolicy">{t('footer.privacyPolicy')}</a></li>
           </ul>
         </div>
 
         <!-- Legal Resources -->
         <div>
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 tracking-wider uppercase mb-4">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 tracking-wider uppercase mb-4" data-i18n="footer.legalResources">
             {t('footer.legalResources')}
           </h3>
           <ul class="space-y-2">
@@ -256,6 +257,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
                 target="_blank" 
                 rel="noopener noreferrer"
                 class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors"
+                data-i18n="footer.resources.deputies"
               >
                 {t('footer.resources.deputies')}
               </a>
@@ -276,6 +278,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
                 target="_blank" 
                 rel="noopener noreferrer"
                 class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors"
+                data-i18n="footer.resources.gazette"
               >
                 {t('footer.resources.gazette')}
               </a>
@@ -287,7 +290,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
       <!-- Bottom Bar -->
       <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
         <div class="flex flex-col md:flex-row justify-between items-center">
-          <p class="text-gray-500 text-sm">
+          <p class="text-gray-500 text-sm" data-i18n="legal.copyright">
             {t('legal.copyright')}
           </p>
           <div class="flex items-center space-x-4 mt-4 md:mt-0">

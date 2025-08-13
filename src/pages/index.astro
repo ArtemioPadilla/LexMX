@@ -54,7 +54,7 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
-              <span>Solicitar Documentos</span>
+              <span data-i18n="common.requestDocuments">Solicitar Documentos</span>
             </a>
           </div>
 
@@ -119,9 +119,9 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
               Integra OpenAI, Claude, Gemini y modelos locales. Optimización automática de costos y calidad.
             </p>
             <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-              <li>• Routing inteligente por complejidad</li>
-              <li>• Fallback automático</li>
-              <li>• Control total de costos</li>
+              <li data-i18n="features.multiLLM.items.routing">• Routing inteligente por complejidad</li>
+              <li data-i18n="features.multiLLM.items.fallback">• Fallback automático</li>
+              <li data-i18n="features.multiLLM.items.costControl">• Control total de costos</li>
             </ul>
           </div>
 
@@ -139,9 +139,9 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
               +500MB de legislación mexicana procesada y vectorizada para búsquedas precisas.
             </p>
             <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-              <li>• Constitución y códigos federales</li>
-              <li>• Jurisprudencia SCJN actualizada</li>
-              <li>• Reglamentos y NOMs vigentes</li>
+              <li data-i18n="features.corpus.items.constitution">• Constitución y códigos federales</li>
+              <li data-i18n="features.corpus.items.jurisprudence">• Jurisprudencia SCJN actualizada</li>
+              <li data-i18n="features.corpus.items.regulations">• Reglamentos y NOMs vigentes</li>
             </ul>
           </div>
 
@@ -159,9 +159,9 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
               Todo el procesamiento ocurre en tu navegador. Sin servidores, sin tracking, sin datos enviados.
             </p>
             <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-              <li>• Encriptación AES-256 local</li>
-              <li>• Cumplimiento GDPR/LFPDPPP</li>
-              <li>• Modelos locales soportados</li>
+              <li data-i18n="features.privacy.items.encryption">• Encriptación AES-256 local</li>
+              <li data-i18n="features.privacy.items.compliance">• Cumplimiento GDPR/LFPDPPP</li>
+              <li data-i18n="features.privacy.items.localModels">• Modelos locales soportados</li>
             </ul>
           </div>
 
@@ -172,16 +172,16 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2" data-i18n="features.rag.title">
               Búsqueda Híbrida RAG
             </h3>
-            <p class="text-gray-600 dark:text-gray-300 mb-4">
+            <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="features.rag.description">
               Combina búsqueda semántica y por palabras clave para encontrar la información legal más relevante.
             </p>
             <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-              <li>• Vector search + BM25</li>
-              <li>• Cache inteligente semántico</li>
-              <li>• Ranking por relevancia legal</li>
+              <li data-i18n="features.rag.items.hybrid">• Vector search + BM25</li>
+              <li data-i18n="features.rag.items.cache">• Cache inteligente semántico</li>
+              <li data-i18n="features.rag.items.ranking">• Ranking por relevancia legal</li>
             </ul>
           </div>
 
@@ -192,16 +192,16 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2" data-i18n="features.performance.title">
               Optimizado para Velocidad
             </h3>
-            <p class="text-gray-600 dark:text-gray-300 mb-4">
+            <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="features.performance.description">
               Islands Architecture y CDN global para cargas instantáneas y respuestas rápidas.
             </p>
             <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-              <li>• Carga inicial &lt;1 segundo</li>
-              <li>• PWA con funcionamiento offline</li>
-              <li>• Compresión avanzada de assets</li>
+              <li data-i18n="features.performance.items.fastLoad">• Carga inicial &lt;1 segundo</li>
+              <li data-i18n="features.performance.items.pwa">• PWA con funcionamiento offline</li>
+              <li data-i18n="features.performance.items.compression">• Compresión avanzada de assets</li>
             </ul>
           </div>
 
@@ -212,16 +212,16 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
               </svg>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2" data-i18n="features.costControl.title">
               Control de Costos Inteligente
             </h3>
-            <p class="text-gray-600 dark:text-gray-300 mb-4">
+            <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="features.costControl.description">
               Optimización automática de tokens y selección del proveedor más eficiente para cada consulta.
             </p>
             <ul class="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-              <li>• Predicción de costos en tiempo real</li>
-              <li>• Límites por proveedor</li>
-              <li>• Compresión contextual legal</li>
+              <li data-i18n="features.costControl.items.prediction">• Predicción de costos en tiempo real</li>
+              <li data-i18n="features.costControl.items.limits">• Límites por proveedor</li>
+              <li data-i18n="features.costControl.items.compression">• Compresión contextual legal</li>
             </ul>
           </div>
         </div>
@@ -231,10 +231,10 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
     <!-- CTA Section -->
     <section class="py-20 bg-legal-500">
       <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-        <h2 class="text-3xl font-bold text-white mb-4">
+        <h2 class="text-3xl font-bold text-white mb-4" data-i18n="home.cta.title">
           ¿Listo para transformar tu práctica legal?
         </h2>
-        <p class="text-xl text-legal-100 mb-8">
+        <p class="text-xl text-legal-100 mb-8" data-i18n="home.cta.subtitle">
           Únete a miles de profesionales que ya usan LexMX para consultas legales más eficientes y precisas.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
@@ -245,7 +245,7 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            Iniciar Chat Legal - Gratis
+            <span data-i18n="home.cta.startChat">Iniciar Chat Legal - Gratis</span>
           </a>
           <a 
             href="/setup" 
@@ -255,7 +255,7 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            Configurar Proveedores
+            <span data-i18n="home.cta.configureProviders">Configurar Proveedores</span>
           </a>
         </div>
       </div>
