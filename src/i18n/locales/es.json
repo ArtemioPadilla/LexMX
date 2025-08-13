@@ -1,4 +1,26 @@
 {
+  "rag": {
+    "title": "Procesamiento RAG",
+    "processing": "Procesando consulta...",
+    "overallProgress": "Progreso general",
+    "stages": {
+      "analyzing": "Analizando consulta",
+      "analyzingDesc": "Identificando área legal y tipo de consulta",
+      "embedding": "Preparando búsqueda",
+      "embeddingDesc": "Generando vectores semánticos",
+      "searching": "Buscando documentos",
+      "searchingDesc": "Buscando en corpus legal mexicano",
+      "building": "Construyendo contexto",
+      "buildingDesc": "Organizando información relevante",
+      "generating": "Generando respuesta",
+      "generatingDesc": "Creando respuesta legal contextualizada"
+    },
+    "details": {
+      "documentsFound": "{{count}} documentos encontrados",
+      "topResults": "Documentos relevantes",
+      "confidence": "Confianza: {{score}}%"
+    }
+  },
   "common": {
     "loading": "Cargando...",
     "private": "Privado",
@@ -14,6 +36,9 @@
     "delete": "Eliminar",
     "edit": "Editar",
     "close": "Cerrar",
+    "expand": "Expandir",
+    "collapse": "Contraer",
+    "more": "más",
     "search": "Buscar",
     "filter": "Filtrar",
     "sort": "Ordenar",
@@ -756,7 +781,7 @@
       "characteristics": "Características",
       "examples": "Ejemplos",
       "subordinationNote": "Importante",
-      "subordinationExplanation": "Este nivel debe respetar todas las disposiciones de los niveles 1 al {level}",
+      "subordinationExplanation": "Este nivel debe respetar todas las disposiciones de los niveles 1 al {{level}}",
       "principleTitle": "Principio de Jerarquía Normativa",
       "principleDescription": "En el sistema jurídico mexicano, las normas de menor jerarquía no pueden contradecir a las de mayor jerarquía. Cada nivel debe respetar y alinearse con todos los niveles superiores.",
       "constitution": {
@@ -1065,6 +1090,7 @@
   "legal": {
     "title": "Códigos Legales Mexicanos",
     "subtitle": "Accede al corpus completo de la legislación mexicana actualizada.",
+    "article": "Artículo",
     "disclaimer": "Aviso Legal: LexMX proporciona información legal general con fines educativos. No constituye asesoría legal profesional. Siempre consulte con un abogado certificado para casos específicos.",
     "terms": "Al usar este servicio, aceptas nuestros términos y condiciones.",
     "copyright": "© 2024 LexMX. Código abierto bajo licencia MIT.",

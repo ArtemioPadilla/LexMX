@@ -10,9 +10,11 @@ import MessageContent from '../components/MessageContent';
 import ProviderSelector from '../components/ProviderSelector';
 import CorpusSelector from '../components/CorpusSelector';
 import ModelSelectorModal from '../components/ModelSelectorModal';
+import RAGProgressIndicator from '../components/RAGProgressIndicator';
 import { useTranslation } from '../i18n';
 import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
 import { TEST_IDS } from '../utils/test-ids';
+import type { RAGProgressEvent, RAGSearchResult } from '../types/embeddings';
 
 export interface ChatMessage {
   id: string;
@@ -40,6 +42,8 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
   const [ragEngine] = useState(() => new LegalRAGEngine());
   const [isInitialized, setIsInitialized] = useState(false);
   const [webllmProgress, setWebllmProgress] = useState<{ progress: number; message: string } | null>(null);
+  const [ragProgressEvents, setRagProgressEvents] = useState<RAGProgressEvent[]>([]);
+  const [ragDocuments, setRagDocuments] = useState<RAGSearchResult[]>([]);
   const [corpusSelection, setCorpusSelection] = useState<{ areas: LegalArea[]; documents: string[] }>({
     areas: [],
     documents: []
@@ -92,6 +96,16 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
         }, 3000);
       }
     };
+    
+    // RAG progress listener
+    const ragProgressListener = (event: RAGProgressEvent) => {
+      setRagProgressEvents(prev => [...prev, event]);
+      
+      // Extract documents from search results
+      if (event.stage === 'document_search' && event.status === 'completed' && event.details?.results) {
+        setRagDocuments(event.details.results);
+      }
+    };
 
     const initializeEngine = async () => {
       try {
@@ -119,6 +133,9 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
           console.warn('RAG engine initialization warning:', err);
         });
         
+        // Subscribe to RAG progress events
+        ragEngine.onProgress(ragProgressListener);
+        
         setIsInitialized(true);
         
         // Check if providers are configured
@@ -139,6 +156,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
     // Cleanup: unregister listener on unmount
     return () => {
       providerManager.removeWebLLMProgressListener(progressListener);
+      ragEngine.offProgress(ragProgressListener);
     };
   }, [ragEngine]);
 
@@ -219,12 +237,16 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
     // Re-enable auto-scroll when user sends a message
     shouldAutoScrollRef.current = true;
 
+    // Clear previous RAG progress
+    setRagProgressEvents([]);
+    setRagDocuments([]);
+    
     // Add loading message
     const loadingId = (Date.now() + 1).toString();
     const loadingMessage: ChatMessage = {
       id: loadingId,
       type: 'assistant',
-      content: t('chat.processing'),
+      content: '',
       timestamp: new Date(),
       isStreaming: true
     };
@@ -464,7 +486,16 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
                   ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-800'
                   : 'bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
               }`}>
-                <MessageContent content={message.content} />
+                {message.isStreaming && !message.content ? (
+                  <RAGProgressIndicator
+                    events={ragProgressEvents}
+                    documents={ragDocuments}
+                    variant="inline"
+                    showDetails={true}
+                  />
+                ) : (
+                  <MessageContent content={message.content} />
+                )}
                 
                 {/* Legal Response Details */}
                 {message.legalResponse && (

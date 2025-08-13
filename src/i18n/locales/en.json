@@ -1,4 +1,26 @@
 {
+  "rag": {
+    "title": "RAG Processing",
+    "processing": "Processing query...",
+    "overallProgress": "Overall progress",
+    "stages": {
+      "analyzing": "Analyzing query",
+      "analyzingDesc": "Identifying legal area and query type",
+      "embedding": "Preparing search",
+      "embeddingDesc": "Generating semantic vectors",
+      "searching": "Searching documents",
+      "searchingDesc": "Searching Mexican legal corpus",
+      "building": "Building context",
+      "buildingDesc": "Organizing relevant information",
+      "generating": "Generating response",
+      "generatingDesc": "Creating contextualized legal response"
+    },
+    "details": {
+      "documentsFound": "{{count}} documents found",
+      "topResults": "Relevant documents",
+      "confidence": "Confidence: {{score}}%"
+    }
+  },
   "common": {
     "loading": "Loading...",
     "private": "Private",
@@ -14,6 +36,9 @@
     "delete": "Delete",
     "edit": "Edit",
     "close": "Close",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "more": "more",
     "search": "Search",
     "filter": "Filter",
     "sort": "Sort",
@@ -756,7 +781,7 @@
       "characteristics": "Characteristics",
       "examples": "Examples",
       "subordinationNote": "Important",
-      "subordinationExplanation": "This level must respect all provisions from levels 1 to {level}",
+      "subordinationExplanation": "This level must respect all provisions from levels 1 to {{level}}",
       "principleTitle": "Principle of Normative Hierarchy",
       "principleDescription": "In the Mexican legal system, lower-level norms cannot contradict higher-level ones. Each level must respect and be aligned with all levels above it in the hierarchy.",
       "constitution": {
@@ -1065,6 +1090,7 @@
   "legal": {
     "title": "Mexican Legal Codes",
     "subtitle": "Access the complete corpus of updated Mexican legislation.",
+    "article": "Article",
     "disclaimer": "Legal Notice: LexMX provides general legal information for educational purposes. It does not constitute professional legal advice. Always consult with a certified lawyer for specific cases.",
     "terms": "By using this service, you accept our terms and conditions.",
     "copyright": "© 2024 LexMX. Open source under MIT license.",

@@ -3,6 +3,7 @@
 import type { RAGConfig, RAGResponse, ProcessedQuery } from '@/types/rag';
 import type { LLMRequest, LLMResponse, QueryContext } from '@/types/llm';
 import type { LegalResponse, LegalArea, QueryType } from '@/types/legal';
+import type { RAGProgressEvent, RAGSearchResult } from '@/types/embeddings';
 
 import { IndexedDBVectorStore } from '@/lib/storage/indexeddb-vector-store';
 import { HybridSearchEngine } from './hybrid-search';
@@ -10,6 +11,9 @@ import { MexicanLegalDocumentProcessor } from '@/lib/legal/document-processor';
 import { providerManager } from '@/lib/llm/provider-manager';
 import { promptBuilder } from '@/lib/llm/prompt-builder';
 import { i18n } from '@/i18n';
+import { EmbeddingManager } from '@/lib/embeddings/embedding-manager';
+import { VectorSearch } from './vector-search';
+import { EventEmitter } from 'events';
 
 export interface RAGEngineConfig extends RAGConfig {
   enableCache: boolean;
@@ -18,11 +22,15 @@ export interface RAGEngineConfig extends RAGConfig {
   enableLegalValidation: boolean;
 }
 
-export class LegalRAGEngine {
+export class LegalRAGEngine extends EventEmitter {
   private vectorStore: IndexedDBVectorStore;
   private searchEngine: HybridSearchEngine;
   private documentProcessor: MexicanLegalDocumentProcessor;
+  private embeddingManager: EmbeddingManager;
+  private vectorSearch: VectorSearch;
   private cache: Map<string, { response: LegalResponse; timestamp: number }> = new Map();
+  private progressEvents: RAGProgressEvent[] = [];
+  private useRealEmbeddings = false; // Toggle for real vs mock embeddings
   
   private config: RAGEngineConfig = {
     corpusPath: '/legal-corpus/',
@@ -41,10 +49,28 @@ export class LegalRAGEngine {
   private initialized = false;
 
   constructor(config?: Partial<RAGEngineConfig>) {
+    super();
     this.config = { ...this.config, ...config };
     this.vectorStore = new IndexedDBVectorStore();
     this.searchEngine = new HybridSearchEngine(this.vectorStore);
     this.documentProcessor = new MexicanLegalDocumentProcessor();
+    
+    // Initialize embedding system
+    this.embeddingManager = new EmbeddingManager({
+      defaultProvider: 'transformers',
+      onProgress: (event) => this.handleProgressEvent(event)
+    });
+    
+    this.vectorSearch = new VectorSearch(
+      this.embeddingManager,
+      {
+        chunkSize: this.config.chunkSize,
+        chunkOverlap: this.config.chunkOverlap,
+        topK: this.config.maxResults,
+        scoreThreshold: this.config.similarityThreshold
+      },
+      (event) => this.handleProgressEvent(event)
+    );
   }
 
   async initialize(): Promise<void> {
@@ -67,6 +93,17 @@ export class LegalRAGEngine {
       await providerManager.initialize().catch(err => {
         console.warn('Provider manager initialization warning:', err);
       });
+      
+      // Initialize embedding manager
+      try {
+        await this.embeddingManager.initialize();
+        this.useRealEmbeddings = true;
+        console.log('RAG Engine: Using real embeddings');
+      } catch (err) {
+        console.warn('Embedding manager initialization warning:', err);
+        console.log('RAG Engine: Falling back to mock embeddings');
+        this.useRealEmbeddings = false;
+      }
 
       this.initialized = true;
       console.log('RAG Engine initialized successfully');
@@ -115,20 +152,40 @@ export class LegalRAGEngine {
       }
 
       // Process and analyze the query
+      this.emitProgress('query_analysis', 'active', 'Analyzing legal query...');
       const processedQuery = await this.preprocessQuery(query, options.legalArea, options.queryType);
+      this.emitProgress('query_analysis', 'completed', 'Query analysis complete', {
+        legalArea: processedQuery.legalArea,
+        queryType: processedQuery.queryType,
+        entities: processedQuery.extractedEntities
+      });
 
       // Retrieve relevant legal documents
-      const searchResults = await this.retrieveRelevantDocuments(processedQuery, options.maxResults || 5);
+      let searchResults: any[];
+      if (this.useRealEmbeddings) {
+        // Use real vector search
+        const ragResults = await this.vectorSearch.search(processedQuery.originalQuery, {
+          topK: options.maxResults || 5
+        });
+        searchResults = this.convertRAGResultsToSearchResults(ragResults);
+      } else {
+        // Fall back to mock documents
+        searchResults = await this.retrieveRelevantDocuments(processedQuery, options.maxResults || 5);
+      }
 
       // Build legal context
+      this.emitProgress('context_building', 'active', 'Building legal context...');
       const context = this.buildLegalContext(searchResults, processedQuery);
+      this.emitProgress('context_building', 'completed', 'Context ready');
 
       // Generate response using LLM
+      this.emitProgress('response_generation', 'active', 'Generating legal response...');
       const llmResponse = await this.generateLegalResponse(
         processedQuery,
         context,
         options.legalArea
       );
+      this.emitProgress('response_generation', 'completed', 'Response generated');
 
       // Create final legal response
       const legalResponse: LegalResponse = {
@@ -218,15 +275,34 @@ export class LegalRAGEngine {
       }
 
       // Process and analyze the query
+      this.emitProgress('query_analysis', 'active', 'Analyzing legal query...');
       const processedQuery = await this.preprocessQuery(query, options.legalArea, options.queryType);
+      this.emitProgress('query_analysis', 'completed', 'Query analysis complete', {
+        legalArea: processedQuery.legalArea,
+        queryType: processedQuery.queryType,
+        entities: processedQuery.extractedEntities
+      });
 
       // Retrieve relevant legal documents
-      const searchResults = await this.retrieveRelevantDocuments(processedQuery, options.maxResults || 5);
+      let searchResults: any[];
+      if (this.useRealEmbeddings) {
+        // Use real vector search
+        const ragResults = await this.vectorSearch.search(processedQuery.originalQuery, {
+          topK: options.maxResults || 5
+        });
+        searchResults = this.convertRAGResultsToSearchResults(ragResults);
+      } else {
+        // Fall back to mock documents
+        searchResults = await this.retrieveRelevantDocuments(processedQuery, options.maxResults || 5);
+      }
 
       // Build legal context
+      this.emitProgress('context_building', 'active', 'Building legal context...');
       const context = this.buildLegalContext(searchResults, processedQuery);
+      this.emitProgress('context_building', 'completed', 'Context ready');
 
       // Generate streaming response using LLM
+      this.emitProgress('response_generation', 'active', 'Generating legal response...');
       const llmResponse = await this.generateLegalResponseStreaming(
         processedQuery,
         context,
@@ -234,6 +310,7 @@ export class LegalRAGEngine {
         options.legalArea,
         options.abortSignal
       );
+      this.emitProgress('response_generation', 'completed', 'Response generated');
 
       // Create final legal response
       const legalResponse: LegalResponse = {
@@ -788,8 +865,70 @@ El amparo protege a las personas contra:
     return {
       initialized: this.initialized,
       cacheSize: this.cache.size,
-      searchStats: this.searchEngine.getStats()
+      searchStats: this.searchEngine.getStats(),
+      embeddingStats: this.embeddingManager.getStats(),
+      vectorSearchStats: this.vectorSearch.getStats()
     };
+  }
+
+  // Handle progress events from sub-components
+  private handleProgressEvent(event: RAGProgressEvent): void {
+    this.progressEvents.push(event);
+    this.emit('progress', event);
+  }
+
+  // Emit progress event
+  private emitProgress(
+    stage: RAGProgressEvent['stage'],
+    status: RAGProgressEvent['status'],
+    message?: string,
+    details?: any
+  ): void {
+    const event: RAGProgressEvent = {
+      stage,
+      status,
+      message,
+      details,
+      timestamp: Date.now()
+    };
+    this.handleProgressEvent(event);
+  }
+
+  // Convert RAG search results to the expected format
+  private convertRAGResultsToSearchResults(ragResults: RAGSearchResult[]): any[] {
+    return ragResults.map(result => ({
+      id: result.documentId,
+      content: result.content,
+      metadata: {
+        title: result.metadata?.title || 'Unknown Document',
+        article: result.metadata?.article,
+        section: result.metadata?.section,
+        hierarchy: result.metadata?.hierarchy || 7,
+        legalArea: result.metadata?.legalArea,
+        lastUpdated: result.metadata?.lastUpdated
+      },
+      score: result.score
+    }));
+  }
+
+  // Get current progress events
+  getProgressEvents(): RAGProgressEvent[] {
+    return [...this.progressEvents];
+  }
+
+  // Clear progress events
+  clearProgressEvents(): void {
+    this.progressEvents = [];
+  }
+
+  // Subscribe to progress events
+  onProgress(callback: (event: RAGProgressEvent) => void): void {
+    this.on('progress', callback);
+  }
+
+  // Unsubscribe from progress events
+  offProgress(callback: (event: RAGProgressEvent) => void): void {
+    this.off('progress', callback);
   }
 }
 
