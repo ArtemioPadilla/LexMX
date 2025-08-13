@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import type { LegalDocument, LegalContent } from '../../types/legal';
+import { useTranslation } from '../../i18n';
 
 interface DocumentTextViewProps {
   document: LegalDocument;
@@ -18,6 +19,7 @@ export function DocumentTextView({
   onSectionChange,
   focusMode = false
 }: DocumentTextViewProps) {
+  const { t } = useTranslation();
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Filter content based on focus mode and current section
@@ -276,7 +278,7 @@ export function DocumentTextView({
                 Vista enfocada
               </h3>
               <p className="text-sm text-legal-600 dark:text-legal-400">
-                Mostrando sección seleccionada y subsecciones
+                {t('documentViewer.content.showingSection')}
               </p>
             </div>
             <button
@@ -300,7 +302,7 @@ export function DocumentTextView({
       {/* End of document */}
       <div className="text-center py-8 border-t border-gray-200 dark:border-gray-700 mt-12">
         <p className="text-gray-500 dark:text-gray-400 text-sm">
-          Fin del documento • {document.title}
+          {t('documentViewer.content.endOfDocument')} • {document.title}
         </p>
         {document.officialUrl && (
           <a 
@@ -313,7 +315,7 @@ export function DocumentTextView({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                     d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
-            Ver versión oficial
+            {t('documentViewer.content.viewOfficialVersion')}
           </a>
         )}
       </div>

@@ -1,8 +1,10 @@
 # LexMX 🇲🇽⚖️
 
-> **Tu asistente legal inteligente para México**
+> **Tu asistente legal inteligente para México** | **Your intelligent legal assistant for Mexico**
 
 LexMX es un asistente legal basado en IA que combina el corpus completo de la legislación mexicana con tecnología RAG (Retrieval Augmented Generation) para proporcionar respuestas legales precisas y contextualizadas. Completamente estático, desplegado en GitHub Pages, y optimizado para privacidad y costos.
+
+*LexMX is an AI-powered legal assistant that combines the complete Mexican legal corpus with RAG (Retrieval Augmented Generation) technology to provide accurate, contextualized legal responses. Fully static, deployed on GitHub Pages, and optimized for privacy and cost efficiency.*
 
 [![Deploy Status](https://github.com/ArtemioPadilla/LexMX/workflows/Deploy%20to%20GitHub%20Pages/badge.svg)](https://github.com/ArtemioPadilla/LexMX/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -24,7 +26,19 @@ LexMX es un asistente legal basado en IA que combina el corpus completo de la le
   *Asistente legal con IA • Múltiples proveedores LLM • Corpus legal mexicano completo*
 </div>
 
-## 🌟 Características principales
+## 🌟 Características principales / Main Features
+
+### 🌐 **Soporte Multiidioma** *(NUEVO / NEW)*
+- **Interfaz bilingüe completa** (Español/English) con cambio dinámico
+- **Traducciones en tiempo real** sin recargar la página
+- **Prompts legales optimizados** por idioma
+- **Documentación y ayuda** en ambos idiomas
+
+### 🤖 **WebLLM - IA en tu Navegador** *(NUEVO / NEW)*
+- **Sin configuración** - funciona instantáneamente
+- **100% privado** - nada sale de tu dispositivo
+- **Completamente gratuito** - sin costos ocultos
+- **Funciona offline** una vez descargado el modelo
 
 ### 📁 **Gestión de Casos Legales** *(NUEVO)*
 - Sistema completo de workspaces para casos legales
@@ -33,6 +47,13 @@ LexMX es un asistente legal basado en IA que combina el corpus completo de la le
 - Detección de contradicciones e información faltante
 - Generador de argumentos legales y listas de verificación
 - Timeline de casos con seguimiento de deadlines
+
+### 📚 **Wiki Legal Interactiva** *(NUEVO / NEW)*
+- **Glosario legal completo** con búsqueda instantánea
+- **Estructura gubernamental** visualizada e interactiva
+- **Proceso legislativo** paso a paso con timeline
+- **Jerarquía normativa** del sistema legal mexicano
+- **Recursos y enlaces** a fuentes oficiales
 
 ### 🔬 **RAG Avanzado y Configuración** *(NUEVO)*
 - Chunking contextual que preserva la estructura legal
@@ -64,14 +85,15 @@ LexMX es un asistente legal basado en IA que combina el corpus completo de la le
 - PWA con funcionamiento offline
 
 
-## 📋 Requisitos previos
+## 📋 Requisitos previos / Prerequisites
 
 - Node.js 18+ 
-- Token API de al menos uno de estos proveedores:
+- (Opcional) Token API de uno de estos proveedores / (Optional) API token from one of these providers:
   - [OpenAI API](https://platform.openai.com/api-keys)
   - [Anthropic Claude](https://console.anthropic.com/)
   - [Google Gemini](https://ai.google.dev/)
   - [AWS Bedrock](https://aws.amazon.com/bedrock/)
+  - **O usa WebLLM** - ¡Sin configuración necesaria! / **Or use WebLLM** - No configuration needed!
 
 ## 🛠️ Instalación y desarrollo
 
@@ -115,15 +137,16 @@ npm run dev
 # Abrir http://localhost:4321
 ```
 
-### Comandos disponibles
+### Comandos disponibles / Available Commands
 
 ```bash
-npm run dev          # Servidor de desarrollo
-npm run build        # Build para producción
-npm run preview      # Preview del build
-npm run lint         # Linting con ESLint
-npm run type-check   # Verificación de tipos
-npm run test         # Ejecutar tests
+npm run dev          # Servidor de desarrollo / Development server
+npm run build        # Build para producción / Production build
+npm run preview      # Preview del build / Preview build
+npm run lint         # Linting con ESLint / ESLint checking
+npm run type-check   # Verificación de tipos / Type checking
+npm run test         # Ejecutar tests / Run tests
+npm run test:e2e     # Tests E2E con Playwright / E2E tests with Playwright
 ```
 
 ## 🏗️ Arquitectura
@@ -136,21 +159,25 @@ npm run test         # Ejecutar tests
 - **Storage**: IndexedDB + LocalStorage híbrido
 - **Deployment**: GitHub Pages (100% estático)
 
-### Estructura del proyecto
+### Estructura del proyecto / Project Structure
 
 ```
 LexMX/
 ├── src/
-│   ├── pages/           # Rutas de Astro
-│   ├── components/      # Componentes estáticos (.astro)
-│   ├── islands/         # Componentes interactivos (.tsx)
-│   ├── lib/            # Lógica de negocio
-│   │   ├── rag/        # Motor RAG
-│   │   ├── llm/        # Gestión multi-LLM
-│   │   └── legal/      # Procesamiento legal específico
-│   └── data/           # Corpus legal mexicano
-├── public/             # Assets estáticos
-└── scripts/            # Scripts de build
+│   ├── pages/           # Rutas de Astro / Astro routes
+│   ├── components/      # Componentes estáticos / Static components (.astro)
+│   ├── islands/         # Componentes interactivos / Interactive components (.tsx)
+│   ├── i18n/           # Sistema de internacionalización / i18n system
+│   │   ├── locales/    # Archivos de traducción / Translation files
+│   │   ├── index.ts    # Hook useTranslation / Translation hook
+│   │   └── utils.ts    # Utilidades i18n / i18n utilities
+│   ├── lib/            # Lógica de negocio / Business logic
+│   │   ├── rag/        # Motor RAG / RAG engine
+│   │   ├── llm/        # Gestión multi-LLM / Multi-LLM management
+│   │   └── legal/      # Procesamiento legal / Legal processing
+│   └── data/           # Corpus legal mexicano / Mexican legal corpus
+├── public/             # Assets estáticos / Static assets
+└── scripts/            # Scripts de build / Build scripts
 ```
 
 ### Flujo RAG simplificado
@@ -226,6 +253,40 @@ CONFIGURACIÓN RAG AVANZADA:
 DETECCIÓN DE CONTRADICCIONES:
 Documentos: [testimonio1.pdf, testimonio2.pdf, evidencia.docx]
 Análisis: "Encuentra inconsistencias entre los testimonios"
+```
+
+## 🌐 Internacionalización (i18n)
+
+### Sistema dual de traducción
+LexMX implementa un sistema dual para máxima flexibilidad:
+
+#### 1. Componentes React (useTranslation hook)
+```typescript
+import { useTranslation } from '../i18n/index';
+
+export default function MyComponent() {
+  const { t } = useTranslation();
+  return <h1>{t('myComponent.title')}</h1>;
+}
+```
+
+#### 2. Páginas Astro (data-i18n attributes)
+```astro
+<h1 data-i18n="page.title">Título en Español</h1>
+```
+
+### Agregar nuevas traducciones
+1. Edita `src/i18n/locales/es.json` (Español)
+2. Edita `src/i18n/locales/en.json` (English)
+3. Usa las claves en tus componentes
+
+### Testing de traducciones
+```bash
+# Validar cobertura de traducciones
+npm test src/i18n/__tests__/i18n-validation.test.ts
+
+# Verificar claves faltantes
+npm run check:translations
 ```
 
 ## ⚙️ Configuración avanzada
@@ -354,6 +415,10 @@ npm run test:coverage
 - [x] Integración multi-LLM
 - [x] Corpus legal federal mexicano
 - [x] Interfaz web responsive
+- [x] Soporte multiidioma (ES/EN)
+- [x] WebLLM para IA en navegador
+- [x] Wiki legal interactiva
+- [x] Gestión básica de casos
 
 ### Versión 1.1 (Próxima)
 - [ ] Leyes estatales principales
@@ -369,19 +434,23 @@ npm run test:coverage
 
 ## 🆘 Soporte y FAQ
 
-### Preguntas frecuentes
+### Preguntas frecuentes / FAQ
 
-**P: ¿Es gratuito usar LexMX?**
-R: Sí, LexMX es gratuito. Solo necesitas tus propios tokens API de los proveedores LLM.
+**P: ¿Es gratuito usar LexMX? / Is LexMX free to use?**
+R: Sí, LexMX es gratuito. Puedes usar WebLLM sin ningún costo, o agregar tus propios tokens API de otros proveedores.
+*A: Yes, LexMX is free. You can use WebLLM at no cost, or add your own API tokens from other providers.*
 
-**P: ¿Mis consultas se almacenan en servidores?**
+**P: ¿Mis consultas se almacenan en servidores? / Are my queries stored on servers?**
 R: No, todo el procesamiento es local. Los tokens se encriptan y almacenan solo en tu navegador.
+*A: No, all processing is local. Tokens are encrypted and stored only in your browser.*
 
-**P: ¿Qué tan actualizada está la información legal?**
+**P: ¿Qué tan actualizada está la información legal? / How current is the legal information?**
 R: El corpus se actualiza mensualmente. La última actualización fue: **Enero 2025**.
+*A: The corpus is updated monthly. Last update: **January 2025**.*
 
-**P: ¿Puedo usar LexMX sin conexión a internet?**
-R: Parcialmente. Puedes navegar el corpus legal offline, pero necesitas internet para las consultas de IA.
+**P: ¿Puedo usar LexMX sin conexión a internet? / Can I use LexMX offline?**
+R: Parcialmente. Con WebLLM descargado, puedes hacer consultas offline. El corpus legal también funciona sin conexión.
+*A: Partially. With WebLLM downloaded, you can make offline queries. The legal corpus also works offline.*
 
 ### Obtener ayuda
 
@@ -389,11 +458,15 @@ R: Parcialmente. Puedes navegar el corpus legal offline, pero necesitas internet
 - 🐛 [Reportar bugs](https://github.com/ArtemioPadilla/LexMX/issues)
 - 📧 Email: LexMX@tu-dominio.com
 
-## ⚖️ Aviso legal
+## ⚖️ Aviso legal / Legal Notice
 
 LexMX es una herramienta de asistencia educativa e informativa. **No constituye asesoría legal profesional**. Siempre consulta con un abogado certificado para asuntos legales específicos.
 
+*LexMX is an educational and informational assistance tool. **It does not constitute professional legal advice**. Always consult with a certified lawyer for specific legal matters.*
+
 La información proporcionada puede contener errores o estar desactualizada. Los usuarios son responsables de verificar la exactitud y vigencia de la información legal.
+
+*The information provided may contain errors or be outdated. Users are responsible for verifying the accuracy and validity of legal information.*
 
 ## 📄 Licencia
 
@@ -423,8 +496,11 @@ Este proyecto está licenciado bajo la MIT License - ver el archivo [LICENSE](LI
 
 <div align="center">
 
-**[⭐ Dale una estrella si te gusta el proyecto](https://github.com/ArtemioPadilla/LexMX)**
+**[⭐ Dale una estrella si te gusta el proyecto / Give us a star if you like the project](https://github.com/ArtemioPadilla/LexMX)**
 
 Hecho con ❤️ para la comunidad legal mexicana
+*Made with ❤️ for the Mexican legal community*
+
+[🇪🇸 Español](README.md) | [🇬🇧 English](README.md) | [🌐 Live Demo](https://ArtemioPadilla.github.io/LexMX)
 
 </div>

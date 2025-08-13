@@ -50,6 +50,7 @@ export class LegalPromptBuilder {
    */
   private buildBasePrompt(language: Language): string {
     const role = i18n.t('systemPrompts.base.role', {}, language);
+    const responseLanguage = i18n.t('systemPrompts.base.responseLanguage', {}, language);
     
     // Get sources
     const sources = [
@@ -76,9 +77,11 @@ export class LegalPromptBuilder {
       i18n.t('systemPrompts.base.format.warnings', {}, language)
     ];
 
-    // Build the complete prompt
+    // Build the complete prompt with language instruction first
     if (language === 'es') {
-      return `${role}
+      return `${responseLanguage}
+
+${role}
 
 FUENTES LEGALES:
 ${sources.map((s, i) => `${i + 1}. ${s}`).join('\n')}
@@ -89,7 +92,9 @@ ${instructions.map((inst, i) => `${i + 1}. ${inst}`).join('\n')}
 FORMATO DE RESPUESTA:
 ${format.map(f => `- ${f}`).join('\n')}`;
     } else {
-      return `${role}
+      return `${responseLanguage}
+
+${role}
 
 LEGAL SOURCES:
 ${sources.map((s, i) => `${i + 1}. ${s}`).join('\n')}

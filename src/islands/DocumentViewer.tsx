@@ -11,6 +11,7 @@ import { DocumentSearch } from '../components/legal/DocumentSearch';
 import { DocumentExport } from '../components/legal/DocumentExport';
 import { ViewModeSelector } from '../components/legal/ViewModeSelector';
 import { BreadcrumbNavigation } from '../components/legal/BreadcrumbNavigation';
+import { useTranslation } from '../i18n';
 
 export type ViewMode = 'text' | 'pdf' | 'chunks' | 'metadata' | 'article';
 
@@ -25,6 +26,7 @@ export default function DocumentViewer({
   initialView = 'text', 
   initialSection 
 }: DocumentViewerProps) {
+  const { t } = useTranslation();
   const [isHydrated, setIsHydrated] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>(initialView as ViewMode);
   const [currentSection, setCurrentSection] = useState<string | null>(initialSection);
@@ -137,6 +139,10 @@ export default function DocumentViewer({
       };
 
       window.addEventListener('keydown', handleKeyPress);
+      return () => window.removeEventListener('keydown', handleKeyPress);
+    }
+  }, []);
+
   // Handle SSR/hydration
   if (!isHydrated) {
     return (
@@ -146,10 +152,6 @@ export default function DocumentViewer({
       />
     );
   }
-
-  return () => window.removeEventListener('keydown', handleKeyPress);
-    }
-  }, []);
 
   return (
     <div
@@ -335,8 +337,8 @@ export default function DocumentViewer({
       {/* Keyboard Shortcuts Help */}
       <div className="fixed bottom-6 left-6 text-xs text-gray-500 dark:text-gray-400 hidden lg:block">
         <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm">
-          <p className="font-medium mb-1">Atajos de teclado:</p>
-          <p>Ctrl+F: Buscar • Ctrl+1-4: Cambiar vista • Esc: Limpiar búsqueda</p>
+          <p className="font-medium mb-1">{t('documentViewer.keyboard.shortcuts')}:</p>
+          <p>Ctrl+F: {t('documentViewer.keyboard.search')} • Ctrl+1-4: {t('documentViewer.keyboard.changeView')} • Esc: {t('documentViewer.keyboard.clearSearch')}</p>
         </div>
       </div>
     </div>

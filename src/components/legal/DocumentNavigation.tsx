@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from '../../i18n';
 
 interface DocumentStructureItem {
   id: string;
@@ -24,6 +25,7 @@ export function DocumentNavigation({
   searchResults = [],
   searchQuery = ''
 }: DocumentNavigationProps) {
+  const { t } = useTranslation();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<'all' | 'titles' | 'articles'>('all');
 
@@ -241,20 +243,20 @@ export function DocumentNavigation({
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-          Navegación
+          {t('documentViewer.navigation.title')}
         </h2>
 
         {/* Filter */}
         <div className="flex items-center space-x-2">
-          <label className="text-sm text-gray-600 dark:text-gray-400">Mostrar:</label>
+          <label className="text-sm text-gray-600 dark:text-gray-400">{t('documentViewer.navigation.show')}:</label>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as any)}
             className="text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
-            <option value="all">Todo</option>
-            <option value="titles">Solo títulos</option>
-            <option value="articles">Solo artículos</option>
+            <option value="all">{t('documentViewer.navigation.all')}</option>
+            <option value="titles">{t('documentViewer.navigation.onlyTitles')}</option>
+            <option value="articles">{t('documentViewer.navigation.onlyArticles')}</option>
           </select>
         </div>
 
@@ -264,14 +266,14 @@ export function DocumentNavigation({
             onClick={() => setExpandedItems(new Set(documentStructure.map(item => item.id)))}
             className="text-xs text-legal-600 dark:text-legal-400 hover:text-legal-800 dark:hover:text-legal-200"
           >
-            Expandir todo
+            {t('documentViewer.navigation.expandAll')}
           </button>
           <span className="text-gray-300 dark:text-gray-600">•</span>
           <button
             onClick={() => setExpandedItems(new Set())}
             className="text-xs text-legal-600 dark:text-legal-400 hover:text-legal-800 dark:hover:text-legal-200"
           >
-            Contraer todo
+            {t('documentViewer.navigation.collapseAll')}
           </button>
         </div>
       </div>
@@ -280,7 +282,7 @@ export function DocumentNavigation({
       {searchQuery && searchResults.length > 0 && (
         <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-700">
           <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-            Resultados de búsqueda ({searchResults.length})
+            {t('documentViewer.search.results')} ({searchResults.length})
           </h3>
           <div className="space-y-1">
             {searchResults.slice(0, 5).map((result, index) => (
@@ -329,7 +331,7 @@ export function DocumentNavigation({
       {/* Footer */}
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-          {documentStructure.length} elemento{documentStructure.length !== 1 ? 's' : ''} total
+          {documentStructure.length} {documentStructure.length !== 1 ? t('documentViewer.content.elements') : t('documentViewer.content.element')} {t('documentViewer.content.elementsTotal').split(' ').pop()}
           {currentSection && (
             <div className="mt-1">
               <span className="text-legal-600 dark:text-legal-400">

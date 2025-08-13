@@ -1,5 +1,6 @@
 import React from 'react';
 import type { LegalDocument } from '../../types/legal';
+import { useTranslation } from '../../i18n';
 
 interface BreadcrumbNavigationProps {
   document: LegalDocument;
@@ -8,6 +9,7 @@ interface BreadcrumbNavigationProps {
 }
 
 export function BreadcrumbNavigation({ document, currentSection, className = '' }: BreadcrumbNavigationProps) {
+  const { t } = useTranslation();
   // Build breadcrumb path
   const breadcrumbs = [
     {
@@ -22,7 +24,7 @@ export function BreadcrumbNavigation({ document, currentSection, className = '' 
       )
     },
     {
-      name: 'Documentos Legales',
+      name: t('documentViewer.breadcrumbs.legalDocuments'),
       href: '/legal'
     },
     {
@@ -52,30 +54,15 @@ export function BreadcrumbNavigation({ document, currentSection, className = '' 
   }
 
   function getDocumentTypeDisplay(type: string): string {
-    const types: Record<string, string> = {
-      'constitution': 'Constitución',
-      'law': 'Leyes',
-      'code': 'Códigos',
-      'regulation': 'Reglamentos',
-      'norm': 'Normas',
-      'jurisprudence': 'Jurisprudencia',
-      'treaty': 'Tratados',
-      'format': 'Formatos'
-    };
-    return types[type] || type.charAt(0).toUpperCase() + type.slice(1);
+    const typeKey = `documentViewer.documentTypes.${type}`;
+    const translated = t(typeKey);
+    // If translation key not found, fallback to capitalized type
+    return translated !== typeKey ? translated : type.charAt(0).toUpperCase() + type.slice(1);
   }
 
   function getSectionDisplay(type: string, number?: string, title?: string): string {
-    const typeDisplays: Record<string, string> = {
-      'title': 'Título',
-      'chapter': 'Capítulo',
-      'section': 'Sección', 
-      'article': 'Artículo',
-      'paragraph': 'Párrafo',
-      'fraction': 'Fracción'
-    };
-    
-    const typeDisplay = typeDisplays[type] || type;
+    const typeKey = `documentViewer.sectionTypes.${type}`;
+    const typeDisplay = t(typeKey);
     if (number) {
       return `${typeDisplay} ${number}${title ? ` - ${title}` : ''}`;
     }
@@ -199,7 +186,7 @@ export function BreadcrumbNavigation({ document, currentSection, className = '' 
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                   d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
-          Consultar IA
+          {t('documentViewer.breadcrumbs.consultAI')}
         </a>
       </div>
     </nav>

@@ -176,7 +176,13 @@
     "legalAreaSelect": "Área legal específica",
     "system": "Sistema",
     "recommendations": "Recomendaciones",
+    "processing": "Analizando tu consulta legal...",
     "relatedQueries": "Consultas relacionadas",
+    "relatedQueriesList": {
+      "jurisprudence": "¿Qué dice la jurisprudencia sobre este tema?",
+      "procedures": "¿Cuáles son los procedimientos relacionados?",
+      "reforms": "¿Hay reformas recientes que afecten esta materia?"
+    },
     "confidence": "Confianza",
     "area": "Área",
     "time": "Tiempo",
@@ -1249,6 +1255,93 @@
       "uploadError": "Error al cargar"
     }
   },
+  "documentViewer": {
+    "breadcrumbs": {
+      "legalDocuments": "Documentos Legales",
+      "consultAI": "Consultar IA"
+    },
+    "documentTypes": {
+      "constitution": "Constitución",
+      "law": "Leyes",
+      "code": "Códigos",
+      "regulation": "Reglamentos",
+      "norm": "Normas",
+      "jurisprudence": "Jurisprudencia",
+      "treaty": "Tratados",
+      "format": "Formatos"
+    },
+    "sectionTypes": {
+      "title": "Título",
+      "chapter": "Capítulo",
+      "section": "Sección",
+      "article": "Artículo",
+      "paragraph": "Párrafo",
+      "fraction": "Fracción"
+    },
+    "navigation": {
+      "title": "Navegación",
+      "show": "Mostrar",
+      "all": "Todo",
+      "onlyTitles": "Solo títulos",
+      "onlyArticles": "Solo artículos",
+      "expandAll": "Expandir todo",
+      "collapseAll": "Contraer todo"
+    },
+    "views": {
+      "text": "Texto",
+      "pdf": "PDF",
+      "chunks": "Chunks",
+      "metadata": "Metadatos",
+      "currentView": "Vista actual",
+      "useKeys": "Usa Ctrl+1-4 para cambiar de vista"
+    },
+    "search": {
+      "placeholder": "Buscar en el documento...",
+      "clear": "Limpiar búsqueda",
+      "search": "Buscar",
+      "results": "Resultados de búsqueda"
+    },
+    "export": {
+      "button": "Exportar",
+      "title": "Exportar documento",
+      "copyCitation": "Copiar cita",
+      "permanentLink": "Enlace permanente",
+      "plainText": "Texto plano",
+      "exportMetadata": "Exportar metadatos"
+    },
+    "metadata": {
+      "title": "Metadatos del Documento",
+      "lastReform": "Última reforma",
+      "totalSections": "Total de secciones",
+      "publicationDate": "Fecha de publicación",
+      "updateFrequency": "Frecuencia de actualización"
+    },
+    "content": {
+      "showingSection": "Mostrando sección seleccionada y subsecciones",
+      "endOfDocument": "Fin del documento",
+      "viewOfficialVersion": "Ver versión oficial",
+      "element": "elemento",
+      "elements": "elementos",
+      "elementsTotal": "elementos total",
+      "sections": "secciones",
+      "hierarchyLevel": "Jerarquía Nivel",
+      "current": "vigente",
+      "chunksShown": "Chunks mostrados"
+    },
+    "keyboard": {
+      "shortcuts": "Atajos de teclado",
+      "search": "Buscar",
+      "changeView": "Cambiar vista",
+      "clearSearch": "Limpiar búsqueda"
+    },
+    "messages": {
+      "loading": "Cargando documento...",
+      "notFound": "Documento no encontrado",
+      "documentNotAvailable": "El documento \"{{title}}\" no está disponible.",
+      "viewAllDocuments": "Ver todos los documentos legales",
+      "error": "Error al cargar el documento"
+    }
+  },
   "corpus": {
     "title": "Seleccionar Corpus",
     "selectTitle": "Seleccionar Corpus Legal",
@@ -1371,6 +1464,7 @@
   "systemPrompts": {
     "base": {
       "role": "Eres un asistente legal especializado en derecho mexicano. Tu función es proporcionar información legal precisa y útil sobre el sistema jurídico mexicano.",
+      "responseLanguage": "IMPORTANTE: Debes responder SIEMPRE en español, independientemente del idioma de los documentos de contexto o fuentes legales proporcionadas.",
       "sources": {
         "constitution": "Constitución Política de los Estados Unidos Mexicanos",
         "federal": "Códigos y leyes federales mexicanas vigentes",

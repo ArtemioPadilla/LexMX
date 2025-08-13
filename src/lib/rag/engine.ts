@@ -694,12 +694,23 @@ El amparo protege a las personas contra:
    * Generate related queries
    */
   private generateRelatedQueries(_processedQuery: ProcessedQuery): string[] {
-    // This would be enhanced with actual semantic similarity
-    return [
-      "¿Qué dice la jurisprudencia sobre este tema?",
-      "¿Cuáles son los procedimientos relacionados?",
-      "¿Hay reformas recientes que afecten esta materia?"
-    ];
+    // Get current language
+    const lang = i18n.language;
+    
+    // Return language-appropriate related queries
+    if (lang === 'en') {
+      return [
+        i18n.t('chat.relatedQueriesList.jurisprudence'),
+        i18n.t('chat.relatedQueriesList.procedures'),
+        i18n.t('chat.relatedQueriesList.reforms')
+      ];
+    } else {
+      return [
+        i18n.t('chat.relatedQueriesList.jurisprudence'),
+        i18n.t('chat.relatedQueriesList.procedures'),
+        i18n.t('chat.relatedQueriesList.reforms')
+      ];
+    }
   }
 
   /**

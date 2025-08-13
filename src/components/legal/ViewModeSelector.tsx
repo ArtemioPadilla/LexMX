@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '../../i18n';
 
 export type ViewMode = 'text' | 'pdf' | 'chunks' | 'metadata';
 
@@ -9,10 +10,11 @@ interface ViewModeSelectorProps {
 }
 
 export function ViewModeSelector({ currentMode, onModeChange, availableModes }: ViewModeSelectorProps) {
+  const { t } = useTranslation();
   const viewModes = [
     {
       id: 'text' as ViewMode,
-      name: 'Texto',
+      name: t('documentViewer.views.text'),
       description: 'Vista de texto estructurado',
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,7 +38,7 @@ export function ViewModeSelector({ currentMode, onModeChange, availableModes }: 
     },
     {
       id: 'chunks' as ViewMode,
-      name: 'Chunks',
+      name: t('documentViewer.views.chunks'),
       description: 'Vista de chunks para RAG',
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,7 +50,7 @@ export function ViewModeSelector({ currentMode, onModeChange, availableModes }: 
     },
     {
       id: 'metadata' as ViewMode,
-      name: 'Metadatos',
+      name: t('documentViewer.views.metadata'),
       description: 'Información y linaje del documento',
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,7 +99,7 @@ export function ViewModeSelector({ currentMode, onModeChange, availableModes }: 
       <div className="flex items-center space-x-3 text-sm text-gray-500 dark:text-gray-400">
         {/* Current view info */}
         <div className="hidden md:flex items-center space-x-2">
-          <span className="text-xs">Vista actual:</span>
+          <span className="text-xs">{t('documentViewer.views.currentView')}:</span>
           <span className="font-medium text-gray-700 dark:text-gray-300">
             {filteredModes.find(m => m.id === currentMode)?.name}
           </span>

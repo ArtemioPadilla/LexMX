@@ -176,7 +176,13 @@
     "legalAreaSelect": "Specific legal area",
     "system": "System",
     "recommendations": "Recommendations",
+    "processing": "Analyzing your legal query...",
     "relatedQueries": "Related queries",
+    "relatedQueriesList": {
+      "jurisprudence": "What does the jurisprudence say about this topic?",
+      "procedures": "What are the related procedures?",
+      "reforms": "Are there recent reforms affecting this matter?"
+    },
     "confidence": "Confidence",
     "area": "Area",
     "time": "Time",
@@ -1249,6 +1255,93 @@
       "uploadError": "Upload failed"
     }
   },
+  "documentViewer": {
+    "breadcrumbs": {
+      "legalDocuments": "Legal Documents",
+      "consultAI": "Consult AI"
+    },
+    "documentTypes": {
+      "constitution": "Constitution",
+      "law": "Laws",
+      "code": "Codes",
+      "regulation": "Regulations",
+      "norm": "Standards",
+      "jurisprudence": "Jurisprudence",
+      "treaty": "Treaties",
+      "format": "Formats"
+    },
+    "sectionTypes": {
+      "title": "Title",
+      "chapter": "Chapter",
+      "section": "Section",
+      "article": "Article",
+      "paragraph": "Paragraph",
+      "fraction": "Fraction"
+    },
+    "navigation": {
+      "title": "Navigation",
+      "show": "Show",
+      "all": "All",
+      "onlyTitles": "Only titles",
+      "onlyArticles": "Only articles",
+      "expandAll": "Expand all",
+      "collapseAll": "Collapse all"
+    },
+    "views": {
+      "text": "Text",
+      "pdf": "PDF",
+      "chunks": "Chunks",
+      "metadata": "Metadata",
+      "currentView": "Current view",
+      "useKeys": "Use Ctrl+1-4 to change view"
+    },
+    "search": {
+      "placeholder": "Search in document...",
+      "clear": "Clear search",
+      "search": "Search",
+      "results": "Search results"
+    },
+    "export": {
+      "button": "Export",
+      "title": "Export document",
+      "copyCitation": "Copy citation",
+      "permanentLink": "Permanent link",
+      "plainText": "Plain text",
+      "exportMetadata": "Export metadata"
+    },
+    "metadata": {
+      "title": "Document Metadata",
+      "lastReform": "Last reform",
+      "totalSections": "Total sections",
+      "publicationDate": "Publication date",
+      "updateFrequency": "Update frequency"
+    },
+    "content": {
+      "showingSection": "Showing selected section and subsections",
+      "endOfDocument": "End of document",
+      "viewOfficialVersion": "View official version",
+      "element": "element",
+      "elements": "elements",
+      "elementsTotal": "total elements",
+      "sections": "sections",
+      "hierarchyLevel": "Hierarchy Level",
+      "current": "current",
+      "chunksShown": "Chunks shown"
+    },
+    "keyboard": {
+      "shortcuts": "Keyboard shortcuts",
+      "search": "Search",
+      "changeView": "Change view",
+      "clearSearch": "Clear search"
+    },
+    "messages": {
+      "loading": "Loading document...",
+      "notFound": "Document not found",
+      "documentNotAvailable": "The document \"{{title}}\" is not available.",
+      "viewAllDocuments": "View all legal documents",
+      "error": "Error loading document"
+    }
+  },
   "corpus": {
     "title": "Select Corpus",
     "selectTitle": "Select Legal Corpus",
@@ -1371,6 +1464,7 @@
   "systemPrompts": {
     "base": {
       "role": "You are a legal assistant specialized in Mexican law. Your function is to provide accurate and useful legal information about the Mexican legal system.",
+      "responseLanguage": "IMPORTANT: You must ALWAYS respond in English, regardless of the language of the context documents or legal sources provided.",
       "sources": {
         "constitution": "Political Constitution of the United Mexican States",
         "federal": "Current Mexican federal codes and laws",

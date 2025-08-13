@@ -4,6 +4,7 @@ import { TEST_IDS } from '../utils/test-ids';
 import DocumentViewer from './DocumentViewer';
 import { DocumentLoader } from '../lib/legal/document-loader';
 import type { LegalDocument } from '../types/legal';
+import { useTranslation } from '../i18n';
 
 interface DocumentViewerWrapperProps {
   documentId: string;
@@ -11,6 +12,7 @@ interface DocumentViewerWrapperProps {
 }
 
 export default function DocumentViewerWrapper({ documentId, documentTitle }: DocumentViewerWrapperProps) {
+  const { t } = useTranslation();
   const [isHydrated, setIsHydrated] = useState(false);
   const [document, setDocument] = useState<LegalDocument | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,10 +31,10 @@ export default function DocumentViewerWrapper({ documentId, documentTitle }: Doc
         if (doc) {
           setDocument(doc);
         } else {
-          setError('Documento no encontrado');
+          setError(t('documentViewer.messages.notFound'));
         }
       } catch (err) {
-        setError('Error al cargar el documento');
+        setError(t('documentViewer.messages.error'));
         console.error('Error loading document:', err);
       } finally {
         setLoading(false);
@@ -58,7 +60,7 @@ export default function DocumentViewerWrapper({ documentId, documentTitle }: Doc
       data-testid="document-viewer-wrapper" className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-legal-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Cargando documento...</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('documentViewer.messages.loading')}</p>
         </div>
       </div>
     );
@@ -73,13 +75,13 @@ export default function DocumentViewerWrapper({ documentId, documentTitle }: Doc
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            {error || 'Documento no encontrado'}
+            {error || t('documentViewer.messages.notFound')}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            El documento "{documentTitle}" no está disponible.
+            {t('documentViewer.messages.documentNotAvailable', { title: documentTitle })}
           </p>
           <a href="/legal" className="text-legal-600 hover:text-legal-700 dark:text-legal-400 dark:hover:text-legal-300">
-            Ver todos los documentos legales
+            {t('documentViewer.messages.viewAllDocuments')}
           </a>
         </div>
       </div>

@@ -224,7 +224,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
     const loadingMessage: ChatMessage = {
       id: loadingId,
       type: 'assistant',
-      content: 'Analizando tu consulta legal...',
+      content: t('chat.processing'),
       timestamp: new Date(),
       isStreaming: true
     };
