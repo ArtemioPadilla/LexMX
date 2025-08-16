@@ -277,7 +277,7 @@ export class OllamaProvider extends BaseLLMProvider implements LocalProvider {
     }
   }
 
-  estimateCost(request: LLMRequest): number {
+  estimateCost(_request: LLMRequest): number {
     // Ollama is free to use locally
     return 0;
   }

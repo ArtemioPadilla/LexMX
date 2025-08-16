@@ -1,7 +1,7 @@
 // Mexican legal document processor for RAG system
 
-import type { LegalDocument, LegalContent, LegalArea, DocumentType, LegalHierarchy } from '@/types/legal';
-import type { VectorDocument, DocumentMetadata } from '@/types/rag';
+import type { LegalDocument, LegalContent, LegalArea, DocumentType as _DocumentType, LegalHierarchy } from '@/types/legal';
+import type { VectorDocument, DocumentMetadata as _DocumentMetadata } from '@/types/rag';
 
 export interface ProcessingOptions {
   chunkSize: number;
@@ -43,7 +43,7 @@ export class MexicanLegalDocumentProcessor {
     fraction: /^(?:Fracción|Frac\.?)\s+([IVX]+|\d+)/i,
     paragraph: /^(?:Párrafo|¶)\s+(\d+)/i,
     citation: /(?:artículo|art\.?)\s+(\d+(?:\.\d+)*(?:\s*[A-Z])?)\s+(?:de\s+(?:la|el)\s+)?([\w\s]+)/gi,
-    jurisprudence: /(?:tesis|jurisprudencia)\s+([\d\/A-Z\.]+)/gi,
+    jurisprudence: /(?:tesis|jurisprudencia)\s+([\d/A-Z.]+)/gi,
     law: /(?:Ley|Código)\s+([\w\s]+?)(?:\s*,|\s*;|\s*\.|\s*$)/gi
   };
 

@@ -1,5 +1,4 @@
 import { chromium } from 'playwright';
-import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 

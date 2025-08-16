@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
-import { TEST_IDS } from '../utils/test-ids';
+import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS as _TEST_IDS } from '../utils/test-ids';
 import { useTranslation } from '../i18n/index';
 
 interface GlossaryTerm {
@@ -169,8 +169,8 @@ export default function LegalGlossary() {
   // Handle SSR/hydration
   if (!isHydrated) {
     return (
-      <HydrationBoundary 
-        fallback={<LoadingStates.LegalGlossary />} 
+      <_HydrationBoundary 
+        fallback={<_LoadingStates.LegalGlossary />} 
         testId="legal-glossary"
       />
     );

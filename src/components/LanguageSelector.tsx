@@ -1,7 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation, type Language } from '../i18n/index';
 import { HydrationBoundary, LoadingStates } from './HydrationBoundary';
-import { TEST_IDS } from '../utils/test-ids';
+// import { TEST_IDS } from '../utils/test-ids';
+
+declare global {
+  interface Window {
+    applyTranslations?: () => void;
+  }
+}
 
 export function LanguageSelector() {
   const { language, setLanguage, t } = useTranslation();
@@ -38,8 +44,8 @@ export function LanguageSelector() {
       window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language: newLang } }));
       
       // Call applyTranslations if it exists
-      if (typeof window !== 'undefined' && (window as any).applyTranslations) {
-        (window as any).applyTranslations();
+      if (typeof window !== 'undefined' && window.applyTranslations) {
+        window.applyTranslations();
       }
     } catch (error) {
       console.error('Error changing language:', error);
@@ -95,8 +101,8 @@ export function LanguageSelector() {
     <div className="relative language-selector">
       <button
         data-testid="language-selector"
-        onClick={(e) => {
-          e.stopPropagation();
+        onClick={(_e) => {
+          _e.stopPropagation();
           setIsOpen(!isOpen);
         }}
         className="flex items-center space-x-1 px-2 sm:px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600"
@@ -118,8 +124,8 @@ export function LanguageSelector() {
             <button
               key={code}
               data-testid={`language-option-${code}`}
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={(_e) => {
+                _e.stopPropagation();
                 handleLanguageChange(code);
               }}
               className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center space-x-2 ${

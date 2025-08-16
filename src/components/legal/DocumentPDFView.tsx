@@ -6,10 +6,10 @@ interface DocumentPDFViewProps {
   currentSection?: string | null;
 }
 
-export function DocumentPDFView({ document, currentSection }: DocumentPDFViewProps) {
+export function DocumentPDFView({ document, currentSection: _currentSection }: DocumentPDFViewProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
+  const [totalPages, _setTotalPages] = useState(0);
   const [scale, setScale] = useState(1.0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +37,8 @@ export function DocumentPDFView({ document, currentSection }: DocumentPDFViewPro
               foundUrl = url;
               break;
             }
-          } catch (e) {
+          } catch (_e) {
+            void _e;
             // Continue to next URL
           }
         }

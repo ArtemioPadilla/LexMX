@@ -141,7 +141,8 @@ export class VertexProvider implements LLMProvider {
       serviceAccount = typeof this.config.gcpServiceAccountKey === 'string' 
         ? JSON.parse(this.config.gcpServiceAccountKey)
         : this.config.gcpServiceAccountKey;
-    } catch (error) {
+    } catch (_error) {
+      void _error;
       throw new Error('Invalid service account key format');
     }
 
@@ -192,8 +193,8 @@ export class VertexProvider implements LLMProvider {
     };
 
     // Base64url encode header and payload
-    const encodedHeader = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    const encodedPayload = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    const _encodedHeader = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    const _encodedPayload = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
     
     // For simplicity in browser environment, we'll require the API key approach
     // In production, you'd use a proper JWT library or server-side signing

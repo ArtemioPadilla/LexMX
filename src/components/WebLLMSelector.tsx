@@ -188,7 +188,7 @@ export default function WebLLMSelector({
     setShowRemoveDialog(null);
   };
 
-  const selectedModel = MODELS.find(m => m.id === value);
+  const _selectedModel = MODELS.find(m => m.id === value);
 
   return (
     <div className={`${className}`}>
@@ -299,8 +299,8 @@ export default function WebLLMSelector({
                         {isCached && (
                           <button
                             type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            onClick={(_e) => {
+                              _e.stopPropagation();
                               setShowRemoveDialog(model);
                             }}
                             className="p-1 hover:bg-red-100 dark:hover:bg-red-900/20 rounded transition-colors"

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { useTranslation } from '../i18n/index';
+import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
 import type { LegalArea } from '../types/legal';
-import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
-import { TEST_IDS } from '../utils/test-ids';
+import type { StoredCaseData } from '../types/chat';
+import { TEST_IDS as _TEST_IDS } from '../utils/test-ids';
 import { LegalRAGEngine } from '../lib/rag/engine';
 import { providerManager } from '../lib/llm/provider-manager';
 import { promptBuilder } from '../lib/llm/prompt-builder';
@@ -74,14 +75,14 @@ export default function CaseManager() {
   const { t, language } = useTranslation();
   const [cases, setCases] = useState<LegalCase[]>([]);
   const [selectedCase, setSelectedCase] = useState<LegalCase | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [_viewMode, _setViewMode] = useState<ViewMode>('grid');
   const [activeTab, setActiveTab] = useState<TabView>('overview');
   const [isCreating, setIsCreating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterArea, setFilterArea] = useState<string>('all');
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [_isInitialized, _setIsInitialized] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [streamingSummary, setStreamingSummary] = useState<string>('');
@@ -144,7 +145,7 @@ export default function CaseManager() {
     
     // Load cases immediately and mark as initialized
     loadCases();
-    setIsInitialized(true);
+    _setIsInitialized(true);
   }, [isHydrated]);
 
   const loadCases = async () => {
@@ -158,11 +159,11 @@ export default function CaseManager() {
       const storedCases = localStorage.getItem('lexmx_cases');
       if (storedCases) {
         const parsed = JSON.parse(storedCases);
-        setCases(parsed.map((c: any) => ({
+        setCases(parsed.map((c: StoredCaseData) => ({
           ...c,
           createdAt: new Date(c.createdAt),
           updatedAt: new Date(c.updatedAt),
-          deadlines: c.deadlines?.map((d: any) => ({ ...d, date: new Date(d.date) })) || []
+          deadlines: c.deadlines?.map((d) => ({ ...d, date: new Date(d.date) })) || []
         })));
       } else {
         // Add example cases for demo
@@ -332,7 +333,7 @@ export default function CaseManager() {
     });
   };
 
-  const addDeadline = (deadline: Omit<Deadline, 'id'>) => {
+  const _addDeadline = (deadline: Omit<Deadline, 'id'>) => {
     if (!selectedCase) return;
 
     const newDeadline: Deadline = {
@@ -470,11 +471,10 @@ export default function CaseManager() {
   // Wait for hydration only - don't wait for initialization
   if (!isHydrated) {
     return (
-      <div className="case-manager flex h-full bg-white dark:bg-gray-900 items-center justify-center" data-testid="case-manager">
-        <div className="text-gray-500 dark:text-gray-400">
-          Loading...
-        </div>
-      </div>
+      <_HydrationBoundary 
+        fallback={<_LoadingStates.CaseManager />} 
+        testId="case-manager"
+      />
     );
   }
 

@@ -11,7 +11,7 @@ import ProviderModelGrid from '../components/providers/ProviderModelGrid';
 import TestConnectionStatus from '../components/providers/TestConnectionStatus';
 import ProviderConfigForm from '../components/providers/ProviderConfigForm';
 import { TEST_IDS } from '../utils/test-ids';
-import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
 import { useTranslation } from '../i18n/index';
 // Import provider classes to get their models
 import { OpenAIProvider } from '../lib/llm/providers/openai-provider';
@@ -28,18 +28,18 @@ type SetupStep = 'welcome' | 'profile' | 'providers' | 'configure' | 'test' | 'c
 export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [step, setStep] = useState<SetupStep>('welcome');
-  const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
+  const [_selectedProfile, _setSelectedProfile] = useState<UserProfile | null>(null);
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [providerConfigs, setProviderConfigs] = useState<Map<string, ProviderConfig>>(new Map());
   const [currentProvider, setCurrentProvider] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [webllmProgress, setWebllmProgress] = useState<{ progress: number; message: string } | null>(null);
-  const [isPreloading, setIsPreloading] = useState(false);
-  const [preloadProgress, setPreloadProgress] = useState<{ progress: number; message: string } | null>(null);
+  const [_isPreloading, _setIsPreloading] = useState(false);
+  const [_preloadProgress, _setPreloadProgress] = useState<{ progress: number; message: string } | null>(null);
   const [showPreloadConfirm, setShowPreloadConfirm] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<Record<string, 'untested' | 'testing' | 'success' | 'error'>>({});
-  const [testingConnection, setTestingConnection] = useState(false);
+  const [_connectionStatus, _setConnectionStatus] = useState<Record<string, 'untested' | 'testing' | 'success' | 'error'>>({});
+  const [_testingConnection, _setTestingConnection] = useState(false);
   const { t } = useTranslation();
 
   // Handle hydration
@@ -89,7 +89,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
     );
   };
 
-  const handleConfigureProvider = (providerId: string) => {
+  const _handleConfigureProvider = (providerId: string) => {
     setCurrentProvider(providerId);
     setStep('configure');
   };
@@ -138,7 +138,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
     }
   };
 
-  const testProviderConnection = async (providerId: string) => {
+  const _testProviderConnection = async (providerId: string) => {
     setTestingConnection(true);
     setConnectionStatus(prev => ({ ...prev, [providerId]: 'testing' }));
     
@@ -197,7 +197,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
     }
   };
 
-  const handleTestProviders = async () => {
+  const _handleTestProviders = async () => {
     setIsLoading(true);
     setStep('test');
     
@@ -484,8 +484,8 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
   // Handle SSR/hydration
   if (!isHydrated) {
     return (
-      <HydrationBoundary 
-        fallback={<LoadingStates.ProviderSetup />} 
+      <_HydrationBoundary 
+        fallback={<_LoadingStates.ProviderSetup />} 
         testId={TEST_IDS.provider.container}
       />
     );
@@ -654,7 +654,7 @@ function ProviderCard({
 }
 
 // This function is no longer used - replaced by imported ProviderConfigForm component
-function LegacyProviderConfigForm({ 
+function _LegacyProviderConfigForm({ 
   provider, 
   onSave, 
   onCancel, 

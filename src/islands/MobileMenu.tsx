@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
-import { TEST_IDS } from '../utils/test-ids';
+import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS as _TEST_IDS } from '../utils/test-ids';
 import { useTranslation } from '../i18n/index';
 
 interface NavItem {
@@ -55,8 +55,8 @@ export default function MobileMenu() {
   // Handle SSR/hydration
   if (!isHydrated) {
     return (
-      <HydrationBoundary 
-        fallback={<LoadingStates.MobileMenu />} 
+      <_HydrationBoundary 
+        fallback={<_LoadingStates.MobileMenu />} 
         testId="mobile-menu"
       />
     );

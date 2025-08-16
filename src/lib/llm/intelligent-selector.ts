@@ -1,4 +1,4 @@
-import type { LLMProvider, LLMModel } from '../../types/llm';
+import type { LLMProvider as _LLMProvider, LLMModel as _LLMModel } from '../../types/llm';
 import type { LegalArea, QueryType } from '../../types/legal';
 import { providerManager } from './provider-manager';
 

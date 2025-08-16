@@ -1,6 +1,6 @@
 import type { 
   OfficialSourceValidation, 
-  DocumentSource,
+  DocumentSource as _DocumentSource,
   SpamDetectionResult 
 } from '../../types/legal';
 import { OFFICIAL_SOURCES } from '../../types/legal';
@@ -44,7 +44,7 @@ export class SourceValidator {
     try {
       const urlObj = new URL(url);
       const domain = urlObj.hostname.toLowerCase();
-      const path = urlObj.pathname.toLowerCase();
+      const _path = urlObj.pathname.toLowerCase();
       
       // Check against known official sources
       const isOfficialDomain = OFFICIAL_SOURCES.some(officialDomain => 
@@ -70,7 +70,8 @@ export class SourceValidator {
         metadata: validation.metadata
       };
 
-    } catch (error) {
+    } catch (_error) {
+      void _error;
       return {
         isValid: false,
         confidence: 0,
@@ -310,7 +311,7 @@ export class SourceValidator {
   /**
    * Advanced spam detection for document requests
    */
-  static detectSpam(title: string, description: string, userFingerprint?: string): SpamDetectionResult {
+  static detectSpam(title: string, description: string, _userFingerprint?: string): SpamDetectionResult {
     const reasons: string[] = [];
     let spamScore = 0;
 

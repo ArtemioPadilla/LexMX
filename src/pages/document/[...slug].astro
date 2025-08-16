@@ -11,7 +11,7 @@ export async function getStaticPaths() {
     { id: 'codigo-penal-federal', title: 'Código Penal Federal' }
   ];
   
-  const paths: any[] = [];
+  const paths: Array<{ params: { slug: string }, props: { documentId: string, section?: string } }> = [];
   
   for (const doc of mockDocuments) {
     // Main document route

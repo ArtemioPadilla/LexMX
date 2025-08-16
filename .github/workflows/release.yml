@@ -241,7 +241,7 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           
       - name: 📤 Upload release assets
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release-assets
           path: |

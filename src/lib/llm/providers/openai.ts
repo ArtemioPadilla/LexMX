@@ -1,7 +1,8 @@
 // OpenAI provider implementation
 
-import type { CloudProvider, LLMRequest, LLMResponse, LLMModel, ProviderConfig } from '@/types/llm';
+import type { CloudProvider, LLMRequest, LLMResponse, LLMModel, ProviderConfig, ChatMessage, LLMCapability } from '@/types/llm';
 import type { LegalArea } from '@/types/legal';
+import type { ErrorWithCode, OpenAIApiModel } from '@/types/common';
 import { BaseLLMProvider } from '../base-provider';
 import { promptBuilder } from '../prompt-builder';
 import { i18n } from '@/i18n';
@@ -11,7 +12,7 @@ export class OpenAIProvider extends BaseLLMProvider implements CloudProvider {
   public readonly icon = '/icons/openai.svg';
   public readonly description = 'GPT-4 and GPT-3.5 models - Excellent for complex legal analysis and reasoning';
   public readonly costLevel = 'high' as const;
-  public readonly capabilities = ['reasoning', 'analysis', 'citations', 'multilingual'];
+  public readonly capabilities: LLMCapability[] = ['reasoning', 'analysis', 'citations', 'multilingual'];
   public readonly apiEndpoint = 'https://api.openai.com/v1';
   public readonly requiresApiKey = true;
   public readonly rateLimit = {
@@ -153,21 +154,20 @@ export class OpenAIProvider extends BaseLLMProvider implements CloudProvider {
       // Add OpenAI-specific metadata
       llmResponse.metadata = {
         ...llmResponse.metadata,
-        finishReason: data.choices[0].finish_reason,
         model: data.model
       };
 
       this.updateMetrics(llmResponse, true);
       return llmResponse;
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       const latency = Date.now() - startTime;
       
       // Create error response for metrics
       const errorResponse = this.createBaseResponse(request, '', { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, latency);
       this.updateMetrics(errorResponse, false);
       
-      this.handleError(error, request);
+      this.handleError(error as ErrorWithCode, request);
     }
   }
 
@@ -188,7 +188,7 @@ export class OpenAIProvider extends BaseLLMProvider implements CloudProvider {
     }, model);
   }
 
-  private formatMessages(messages: any[]): any[] {
+  private formatMessages(messages: ChatMessage[]): ChatMessage[] {
     return messages.map(msg => ({
       role: msg.role,
       content: msg.content
@@ -210,12 +210,12 @@ export class OpenAIProvider extends BaseLLMProvider implements CloudProvider {
       const data = await response.json();
       
       // Filter to only chat models and update our model list
-      const chatModels = data.data.filter((model: any) => 
+      const chatModels = data.data.filter((model: OpenAIApiModel) => 
         model.id.includes('gpt-') && !model.id.includes('instruct')
       );
 
       return this.models.filter(model => 
-        chatModels.some((apiModel: any) => apiModel.id === model.id)
+        chatModels.some((apiModel: OpenAIApiModel) => apiModel.id === model.id)
       );
     } catch {
       return this.models;

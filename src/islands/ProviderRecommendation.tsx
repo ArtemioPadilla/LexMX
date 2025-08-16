@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
-import { TEST_IDS } from '../utils/test-ids';
+import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS as _TEST_IDS } from '../utils/test-ids';
 import { providerManager } from '../lib/llm/provider-manager';
 import { useTranslation } from '../i18n';
 
@@ -105,8 +105,8 @@ export default function ProviderRecommendation({
   // Handle SSR/hydration
   if (!isHydrated) {
     return (
-      <HydrationBoundary 
-        fallback={<LoadingStates.ProviderRecommendation />} 
+      <_HydrationBoundary 
+        fallback={<_LoadingStates.ProviderRecommendation />} 
         testId="provider-recommendation"
       />
     );

@@ -128,7 +128,7 @@ export class OpenAICompatibleProvider extends BaseLLMProvider implements LocalPr
     }
   }
 
-  async installModel(modelId: string): Promise<boolean> {
+  async installModel(_modelId: string): Promise<boolean> {
     // OpenAI-compatible APIs typically don't support model installation
     // This would need to be done externally (e.g., in LM Studio)
     console.warn('Model installation not supported for OpenAI-compatible APIs');
@@ -201,7 +201,7 @@ export class OpenAICompatibleProvider extends BaseLLMProvider implements LocalPr
     }
   }
 
-  estimateCost(request: LLMRequest): number {
+  estimateCost(_request: LLMRequest): number {
     // Local APIs are free to use
     return 0;
   }

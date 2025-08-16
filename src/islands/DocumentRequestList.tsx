@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TEST_IDS } from '../utils/test-ids';
+import { TEST_IDS as _TEST_IDS } from '../utils/test-ids';
 import { useTranslation } from '../i18n/index';
 import type { 
   DocumentRequest, 
@@ -8,11 +8,11 @@ import type {
   DocumentType, 
   LegalArea, 
   RequestPriority,
-  RequestComment
+  RequestComment as _RequestComment
 } from '../types/legal';
 import { 
-  REQUEST_STATUS_LABELS, 
-  PRIORITY_LABELS, 
+  REQUEST_STATUS_LABELS as _REQUEST_STATUS_LABELS, 
+  PRIORITY_LABELS as _PRIORITY_LABELS, 
   REQUEST_VOTE_THRESHOLDS 
 } from '../types/legal';
 
@@ -60,9 +60,10 @@ export default function DocumentRequestList({
           return b.votes - a.votes;
         case 'date':
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        case 'priority':
+        case 'priority': {
           const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
           return priorityOrder[b.priority] - priorityOrder[a.priority];
+        }
         default:
           return 0;
       }

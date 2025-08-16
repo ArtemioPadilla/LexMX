@@ -100,9 +100,9 @@ class CorpusBuilder {
       try {
         await fs.mkdir(dir, { recursive: true });
         console.log(`   ✓ ${dir}`);
-      } catch (error) {
-        if (error.code !== 'EEXIST') {
-          throw error;
+      } catch (_error) {
+        if (_error.code !== 'EEXIST') {
+          throw _error;
         }
       }
     }
@@ -115,7 +115,8 @@ class CorpusBuilder {
     // Check if source directory exists
     try {
       await fs.access(CONFIG.sourceDir);
-    } catch (error) {
+    } catch (_error) {
+      void _error;
       console.log('   ⚠️  Directorio fuente no encontrado, creando documentos de ejemplo...');
       await this.createSampleDocuments();
     }
@@ -432,7 +433,8 @@ Contrato individual de trabajo, cualquiera que sea su forma o denominación, es 
     try {
       await fs.rm(CONFIG.tempDir, { recursive: true, force: true });
       console.log('   ✓ Archivos temporales eliminados');
-    } catch (error) {
+    } catch (_error) {
+      void _error;
       console.log('   ⚠️  No se pudieron eliminar todos los archivos temporales');
     }
   }

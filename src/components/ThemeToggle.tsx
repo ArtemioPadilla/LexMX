@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from '../i18n';
 import { HydrationBoundary, LoadingStates } from './HydrationBoundary';
-import { TEST_IDS } from '../utils/test-ids';
+// import { TEST_IDS } from '../utils/test-ids';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -57,7 +57,7 @@ export function ThemeToggle() {
         
         // Listen for system theme changes
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+        const handleSystemThemeChange = (_e: MediaQueryListEvent) => {
           const currentTheme = localStorage.getItem('theme');
           if (currentTheme && JSON.parse(currentTheme) === 'system') {
             applyTheme('system');
@@ -143,8 +143,8 @@ export function ThemeToggle() {
     <div className="relative theme-toggle">
       <button
         data-testid="theme-toggle"
-        onClick={(e) => {
-          e.stopPropagation();
+        onClick={(_e) => {
+          _e.stopPropagation();
           setIsOpen(!isOpen);
         }}
         className="p-2 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600"
@@ -160,8 +160,8 @@ export function ThemeToggle() {
             <button
               key={t.value}
               data-testid={`theme-option-${t.value}`}
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={(_e) => {
+                _e.stopPropagation();
                 handleThemeChange(t.value);
               }}
               className={`w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center space-x-2 ${

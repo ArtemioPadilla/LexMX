@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
-import { TEST_IDS } from '../utils/test-ids';
+import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS as _TEST_IDS } from '../utils/test-ids';
 import type { 
   DocumentRequest, 
   DocumentSource, 
@@ -15,9 +15,9 @@ import type {
   MAX_FILE_SIZE 
 } from '../types/legal';
 import { 
-  REQUEST_VOTE_THRESHOLDS, 
+  REQUEST_VOTE_THRESHOLDS as _REQUEST_VOTE_THRESHOLDS, 
   OFFICIAL_SOURCES, 
-  LEGAL_HIERARCHY 
+  LEGAL_HIERARCHY as _LEGAL_HIERARCHY 
 } from '../types/legal';
 
 interface DocumentRequestFormProps {
@@ -301,8 +301,8 @@ export default function DocumentRequestForm({ onSubmit, onSuggestionsUpdate }: D
   // Handle SSR/hydration
   if (!isHydrated) {
     return (
-      <HydrationBoundary 
-        fallback={<LoadingStates.DocumentRequestForm />} 
+      <_HydrationBoundary 
+        fallback={<_LoadingStates.DocumentRequestForm />} 
         testId="document-request-form"
       />
     );
@@ -588,7 +588,7 @@ export default function DocumentRequestForm({ onSubmit, onSuggestionsUpdate }: D
 }
 
 // Mock API functions (to be replaced with real implementations)
-async function searchDocumentSuggestions(title: string, description: string): Promise<DocumentSuggestion[]> {
+async function searchDocumentSuggestions(title: string, _description: string): Promise<DocumentSuggestion[]> {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 300));
   
@@ -618,7 +618,7 @@ async function searchDocumentSuggestions(title: string, description: string): Pr
   return mockSuggestions;
 }
 
-async function checkForDuplicates(title: string, description: string): Promise<DuplicateDetectionResult> {
+async function checkForDuplicates(title: string, _description: string): Promise<DuplicateDetectionResult> {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 400));
   

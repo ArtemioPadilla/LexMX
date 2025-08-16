@@ -407,7 +407,7 @@ export class WebLLMProvider implements LLMProvider {
     }
   }
 
-  estimateCost(request: LLMRequest): number {
+  estimateCost(_request: LLMRequest): number {
     // WebLLM is free to use
     return 0;
   }
@@ -425,7 +425,7 @@ export class WebLLMProvider implements LLMProvider {
     this.config = { ...this.config, ...config };
   }
 
-  getCost(promptTokens: number, completionTokens: number, model: string): number {
+  getCost(_promptTokens: number, _completionTokens: number, _model: string): number {
     // WebLLM is free
     return 0;
   }

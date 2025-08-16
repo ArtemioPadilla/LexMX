@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
+import type { TranslationValue } from '../../types/common';
 
 describe('i18n Translation Files Validation', () => {
   const localesPath = path.join(process.cwd(), 'src/i18n/locales');
@@ -20,7 +21,7 @@ describe('i18n Translation Files Validation', () => {
         const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
         
         // Recursively check for duplicate keys using the parsed JSON
-        function checkDuplicates(obj: any, path: string = ''): void {
+        function checkDuplicates(obj: TranslationValue, path: string = ''): void {
           if (typeof obj !== 'object' || obj === null) {
             return;
           }
@@ -70,7 +71,7 @@ describe('i18n Translation Files Validation', () => {
   });
 
   it('should have the same keys in all language files', () => {
-    const getAllKeys = (obj: any, prefix = ''): string[] => {
+    const getAllKeys = (obj: TranslationValue, prefix = ''): string[] => {
       let keys: string[] = [];
       
       for (const key in obj) {
@@ -120,7 +121,7 @@ describe('i18n Translation Files Validation', () => {
   });
 
   it('should not have empty translation values', () => {
-    const checkForEmptyValues = (obj: any, path = ''): string[] => {
+    const checkForEmptyValues = (obj: TranslationValue, path = ''): string[] => {
       const emptyPaths: string[] = [];
       
       for (const key in obj) {

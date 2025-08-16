@@ -2,7 +2,8 @@
 
 import { pipeline, env } from '@xenova/transformers';
 import { BaseEmbeddingProvider } from './base-provider';
-import type { EmbeddingProviderType, EmbeddingVector } from '@/types/embeddings';
+import type { EmbeddingProviderType, EmbeddingVector, EmbeddingProviderConfig } from '@/types/embeddings';
+import type { ProgressEvent } from '@/types/common';
 
 // Configure Transformers.js for browser environment
 env.allowLocalModels = false; // Use CDN models
@@ -10,11 +11,11 @@ env.backends.onnx.wasm.numThreads = 1; // Single thread for stability
 
 export class TransformersEmbeddingProvider extends BaseEmbeddingProvider {
   type: EmbeddingProviderType = 'transformers';
-  private extractor: any = null;
+  private extractor: unknown = null;
   private modelName: string;
-  private progressCallback?: (progress: any) => void;
+  private progressCallback?: (progress: ProgressEvent) => void;
 
-  constructor(config: any = {}) {
+  constructor(config: EmbeddingProviderConfig = {}) {
     super({
       dimensions: 384, // Default for all-MiniLM-L6-v2
       ...config

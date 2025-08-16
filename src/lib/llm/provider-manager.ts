@@ -129,6 +129,7 @@ export class ProviderManager {
         enabled: true,
         priority: 100, // High priority as it's free and private
         model: '', // No model selected by default
+        createdAt: Date.now(),
         // No API key needed for WebLLM
       };
       
@@ -138,7 +139,7 @@ export class ProviderManager {
       // Initialize the WebLLM provider
       await this.initializeProvider(defaultWebLLMConfig);
       
-      console.log('WebLLM provider added as default option');
+      // WebLLM provider added as default option
     }
   }
 
@@ -157,7 +158,7 @@ export class ProviderManager {
       // Initialize provider instance
       await this.initializeProvider(config);
 
-      console.log(`Provider ${config.name} configured successfully`);
+      // Provider configured successfully
     } catch (error) {
       console.error(`Failed to configure provider ${config.id}:`, error);
       throw error;
@@ -174,7 +175,7 @@ export class ProviderManager {
     // Remove from registry
     providerRegistry.removeProvider(providerId);
 
-    console.log(`Provider ${providerId} removed`);
+    // Provider removed
   }
 
   // Provider selection and routing
@@ -348,7 +349,8 @@ export class ProviderManager {
           
           await this.logUsage(fallbackProvider.id, request, response, true);
           return response;
-        } catch (fallbackError) {
+        } catch (_fallbackError) {
+          void _fallbackError;
           await this.logUsage(fallbackProvider.id, request, null, false);
         }
       }
@@ -515,14 +517,14 @@ export class ProviderManager {
         }
       }
       
-      console.log(`Loaded ${configs.length} provider configurations`);
+      // Loaded provider configurations
     } catch (error) {
       console.error('Failed to load provider configurations:', error);
     }
   }
 
   private async initializeProvider(config: ProviderConfig): Promise<void> {
-    console.log(`[ProviderManager] Initializing provider: ${config.id}`);
+    // Initializing provider
     
     try {
       // Create provider instance using factory
@@ -540,21 +542,21 @@ export class ProviderManager {
             }
           }
         };
-        console.log('[ProviderManager] Creating WebLLM provider with special config');
+        // Creating WebLLM provider with special config
         provider = ProviderFactory.createProvider(webllmConfig);
       } else {
         provider = ProviderFactory.createProvider(config);
       }
       
-      console.log(`[ProviderManager] Provider instance created: ${provider.id}`);
+      // Provider instance created
       
       // Store provider instance
       this.providers.set(config.id, provider);
       
       // Test connection for all providers
-      const isAvailable = await provider.testConnection();
+      const _isAvailable = await provider.testConnection();
       
-      console.log(`Provider ${config.id} initialized (connected: ${isAvailable})`);
+      // Provider initialized
     } catch (error) {
       console.error(`Failed to initialize provider ${config.id}:`, error);
     }
@@ -598,7 +600,7 @@ export class ProviderManager {
     success: boolean
   ): Promise<void> {
     // Log usage for analytics and billing
-    const usage = {
+    const _usage = {
       timestamp: Date.now(),
       providerId,
       model: request.model,
@@ -668,7 +670,7 @@ export class ProviderManager {
 
   // Initialize WebLLM model immediately (triggers download)
   async initializeWebLLMModel(modelId: string): Promise<void> {
-    console.log(`[ProviderManager] Initializing WebLLM model: ${modelId}`);
+    // Initializing WebLLM model
     
     // Get or create WebLLM config
     let config = await this.getProviderConfig('webllm');
@@ -678,8 +680,11 @@ export class ProviderManager {
       config = {
         id: 'webllm',
         name: 'WebLLM',
+        type: 'local',
         enabled: true,
-        model: modelId
+        priority: 100,
+        model: modelId,
+        createdAt: Date.now()
       };
       await secureStorage.storeProviderConfig(config);
     } else {
@@ -694,7 +699,7 @@ export class ProviderManager {
     // Get the provider and trigger initialization
     const provider = this.providers.get('webllm');
     if (provider && 'initialize' in provider) {
-      console.log('[ProviderManager] Triggering WebLLM initialization/download');
+      // Triggering WebLLM initialization/download
       await (provider as any).initialize();
     }
   }

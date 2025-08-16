@@ -1,9 +1,10 @@
 // Main RAG engine for LexMX legal queries
 
-import type { RAGConfig, RAGResponse, ProcessedQuery } from '@/types/rag';
+import type { RAGConfig, RAGResponse as _RAGResponse, ProcessedQuery, SearchResult } from '@/types/rag';
 import type { LLMRequest, LLMResponse, QueryContext } from '@/types/llm';
 import type { LegalResponse, LegalArea, QueryType } from '@/types/legal';
 import type { RAGProgressEvent, RAGSearchResult } from '@/types/embeddings';
+import type { JsonValue as _JsonValue, NavigationItem } from '@/types/common';
 
 import { IndexedDBVectorStore } from '@/lib/storage/indexeddb-vector-store';
 import { HybridSearchEngine } from './hybrid-search';
@@ -98,15 +99,15 @@ export class LegalRAGEngine extends EventEmitter {
       try {
         await this.embeddingManager.initialize();
         this.useRealEmbeddings = true;
-        console.log('RAG Engine: Using real embeddings');
+        // RAG Engine: Using real embeddings
       } catch (err) {
         console.warn('Embedding manager initialization warning:', err);
-        console.log('RAG Engine: Falling back to mock embeddings');
+        // RAG Engine: Falling back to mock embeddings
         this.useRealEmbeddings = false;
       }
 
       this.initialized = true;
-      console.log('RAG Engine initialized successfully');
+      // RAG Engine initialized successfully
     } catch (error) {
       console.error('Failed to initialize RAG Engine:', error);
       // Mark as initialized anyway to prevent blocking in tests
@@ -161,7 +162,7 @@ export class LegalRAGEngine extends EventEmitter {
       });
 
       // Retrieve relevant legal documents
-      let searchResults: any[];
+      let searchResults: SearchResult[];
       if (this.useRealEmbeddings) {
         // Use real vector search
         const ragResults = await this.vectorSearch.search(processedQuery.originalQuery, {
@@ -276,6 +277,12 @@ export class LegalRAGEngine extends EventEmitter {
 
       // Process and analyze the query
       this.emitProgress('query_analysis', 'active', 'Analyzing legal query...');
+      
+      // Add delay for visualization (only in development)
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
       const processedQuery = await this.preprocessQuery(query, options.legalArea, options.queryType);
       this.emitProgress('query_analysis', 'completed', 'Query analysis complete', {
         legalArea: processedQuery.legalArea,
@@ -283,8 +290,26 @@ export class LegalRAGEngine extends EventEmitter {
         entities: processedQuery.extractedEntities
       });
 
+      // Generate embeddings
+      this.emitProgress('embedding_generation', 'active', 'Generating query embeddings...');
+      
+      // Add delay for visualization
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        await new Promise(resolve => setTimeout(resolve, 400));
+      }
+      
+      this.emitProgress('embedding_generation', 'completed', 'Embeddings generated');
+
+      // Search for relevant documents
+      this.emitProgress('document_search', 'active', 'Searching legal corpus...');
+      
+      // Add delay for visualization
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+
       // Retrieve relevant legal documents
-      let searchResults: any[];
+      let searchResults: SearchResult[];
       if (this.useRealEmbeddings) {
         // Use real vector search
         const ragResults = await this.vectorSearch.search(processedQuery.originalQuery, {
@@ -295,9 +320,36 @@ export class LegalRAGEngine extends EventEmitter {
         // Fall back to mock documents
         searchResults = await this.retrieveRelevantDocuments(processedQuery, options.maxResults || 5);
       }
+      
+      // Emit document search completed with results
+      this.emitProgress('document_search', 'completed', `Found ${searchResults.length} relevant documents`, {
+        results: searchResults.map(result => ({
+          documentId: result.id,
+          content: result.content,
+          score: result.score,
+          metadata: {
+            title: result.metadata?.title || 'Unknown Document',
+            article: result.metadata?.article,
+            hierarchy: result.metadata?.hierarchy,
+            legalArea: result.metadata?.legalArea,
+            excerpt: result.content.substring(0, 150) + '...'
+          }
+        }))
+      });
+      
+      // Add delay to show results
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
 
       // Build legal context
       this.emitProgress('context_building', 'active', 'Building legal context...');
+      
+      // Add delay for visualization
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        await new Promise(resolve => setTimeout(resolve, 400));
+      }
+      
       const context = this.buildLegalContext(searchResults, processedQuery);
       this.emitProgress('context_building', 'completed', 'Context ready');
 
@@ -599,7 +651,7 @@ El amparo protege a las personas contra:
   /**
    * Build legal context from search results
    */
-  private buildLegalContext(searchResults: any[], _processedQuery: ProcessedQuery): string {
+  private buildLegalContext(searchResults: SearchResult[], _processedQuery: ProcessedQuery): string {
     if (searchResults.length === 0) {
       return 'No se encontraron documentos legales relevantes para esta consulta.';
     }
@@ -736,7 +788,7 @@ El amparo protege a las personas contra:
   /**
    * Calculate confidence score for the response
    */
-  private calculateConfidence(searchResults: any[], llmResponse: LLMResponse): number {
+  private calculateConfidence(searchResults: SearchResult[], llmResponse: LLMResponse): number {
     let confidence = 0.5; // Base confidence
 
     // Increase confidence based on search results quality
@@ -805,7 +857,7 @@ El amparo protege a las personas contra:
   /**
    * Type guard for QueryType
    */
-  private isValidQueryType(type: any): type is QueryType {
+  private isValidQueryType(type: unknown): type is QueryType {
     const validTypes: QueryType[] = [
       'citation',
       'procedural',
@@ -882,7 +934,7 @@ El amparo protege a las personas contra:
     stage: RAGProgressEvent['stage'],
     status: RAGProgressEvent['status'],
     message?: string,
-    details?: any
+    details?: JsonValue
   ): void {
     const event: RAGProgressEvent = {
       stage,
@@ -895,7 +947,7 @@ El amparo protege a las personas contra:
   }
 
   // Convert RAG search results to the expected format
-  private convertRAGResultsToSearchResults(ragResults: RAGSearchResult[]): any[] {
+  private convertRAGResultsToSearchResults(ragResults: RAGSearchResult[]): NavigationItem[] {
     return ragResults.map(result => ({
       id: result.documentId,
       content: result.content,

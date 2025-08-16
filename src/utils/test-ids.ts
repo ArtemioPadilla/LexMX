@@ -198,7 +198,7 @@ export const TEST_IDS = {
 // Type-safe helper to get test ID
 export function getTestId(path: string): string {
   const parts = path.split('.');
-  let current: any = TEST_IDS;
+  let current: Record<string, unknown> = TEST_IDS;
   
   for (const part of parts) {
     current = current[part];

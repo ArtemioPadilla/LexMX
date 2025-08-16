@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
-import { TEST_IDS } from '../utils/test-ids';
+import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
+// import { TEST_IDS } from '../utils/test-ids';
 import { useTranslation } from '../i18n/index';
 
 interface WikiSection {
@@ -118,8 +118,8 @@ export default function WikiNavigation() {
   // Handle SSR/hydration
   if (!isHydrated) {
     return (
-      <HydrationBoundary 
-        fallback={<LoadingStates.WikiNavigation />} 
+      <_HydrationBoundary 
+        fallback={<_LoadingStates.WikiNavigation />} 
         testId="wiki-navigation"
       />
     );

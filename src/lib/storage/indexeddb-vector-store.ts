@@ -1,6 +1,7 @@
 // IndexedDB-based vector store for client-side RAG
 
 import type { VectorStore, VectorDocument, SearchOptions, SearchResult, DocumentMetadata } from '@/types/rag';
+import type { MetadataFilter } from '@/types/common';
 
 export class IndexedDBVectorStore implements VectorStore {
   private dbName = 'lexmx_vectors';
@@ -222,7 +223,7 @@ export class IndexedDBVectorStore implements VectorStore {
   }
 
   // Search by metadata filter only (no vector search)
-  async searchByMetadata(filter: any): Promise<SearchResult[]> {
+  async searchByMetadata(filter: MetadataFilter): Promise<SearchResult[]> {
     if (!this.db) throw new Error('Vector store not initialized');
 
     const documentsStore = this.db.transaction([this.STORES.DOCUMENTS]).objectStore(this.STORES.DOCUMENTS);
@@ -262,13 +263,13 @@ export class IndexedDBVectorStore implements VectorStore {
     return new Int8Array(embedding.map(val => Math.round(Math.max(-1, Math.min(1, val)) * 127)));
   }
 
-  private decompressEmbedding(compressed: Int8Array | number[], dimension: number): number[] {
+  private decompressEmbedding(compressed: Int8Array | number[], _dimension: number): number[] {
     // Convert int8 back to float32
     const array = compressed instanceof Int8Array ? compressed : new Int8Array(compressed);
     return Array.from(array).map(val => val / 127);
   }
 
-  private matchesFilter(metadata: DocumentMetadata, filter?: any): boolean {
+  private matchesFilter(metadata: DocumentMetadata, filter?: MetadataFilter): boolean {
     if (!filter) return true;
 
     for (const [key, value] of Object.entries(filter)) {
@@ -315,7 +316,7 @@ export class IndexedDBVectorStore implements VectorStore {
   // Cleanup and maintenance
   async compact(): Promise<void> {
     // IndexedDB doesn't have explicit compaction, but we can optimize by rebuilding
-    console.log('IndexedDB compaction not needed - handled automatically by browser');
+    // IndexedDB compaction not needed - handled automatically by browser
   }
 
   async close(): Promise<void> {

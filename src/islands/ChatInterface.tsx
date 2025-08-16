@@ -1,18 +1,18 @@
 // Main chat interface for legal queries - integrates with RAG engine
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import type { LegalResponse, LegalArea, QueryType } from '../types/legal';
+import type { LegalResponse, LegalArea } from '../types/legal';
 import { LegalRAGEngine } from '../lib/rag/engine';
 import { providerManager } from '../lib/llm/provider-manager';
 import ProviderRecommendation from './ProviderRecommendation';
 import WebLLMProgress from '../components/WebLLMProgress';
 import MessageContent from '../components/MessageContent';
-import ProviderSelector from '../components/ProviderSelector';
+// import ProviderSelector from '../components/ProviderSelector';
 import CorpusSelector from '../components/CorpusSelector';
 import ModelSelectorModal from '../components/ModelSelectorModal';
 import RAGProgressIndicator from '../components/RAGProgressIndicator';
 import { useTranslation } from '../i18n';
-import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
 import { TEST_IDS } from '../utils/test-ids';
 import type { RAGProgressEvent, RAGSearchResult } from '../types/embeddings';
 
@@ -60,7 +60,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
   // Memoize the corpus selection callback to prevent infinite re-renders
   const handleCorpusSelectionChange = useCallback((selection: { areas: LegalArea[]; documents: string[] }) => {
     setCorpusSelection(selection);
-    console.log('Corpus selection changed:', selection);
+    // Corpus selection changed
   }, []);
   
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -80,7 +80,6 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
         timestamp: new Date()
       }
     ]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Remove 't' from dependencies as it causes infinite loop
 
   // Initialize RAG engine and provider manager
@@ -103,7 +102,19 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
       
       // Extract documents from search results
       if (event.stage === 'document_search' && event.status === 'completed' && event.details?.results) {
-        setRagDocuments(event.details.results);
+        setRagDocuments(event.details.results as RAGSearchResult[]);
+      }
+      
+      // Clear progress events when response generation is completed
+      // BUT keep documents visible for transparency
+      if (event.stage === 'response_generation' && event.status === 'completed') {
+        // Delay clearing to show the completed state
+        setTimeout(() => {
+          // Only clear events, keep documents visible
+          setRagProgressEvents([]);
+          // Keep ragDocuments to show what was used for the response
+          // setRagDocuments([]); // COMMENTED: Keep documents visible
+        }, 2000);
       }
     };
 
@@ -374,8 +385,8 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
 
   if (!isHydrated) {
     return (
-      <HydrationBoundary 
-        fallback={<LoadingStates.ChatInterface />} 
+      <_HydrationBoundary 
+        fallback={<_LoadingStates.ChatInterface />} 
         testId={TEST_IDS.chat.container}
       />
     );
@@ -486,14 +497,20 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
                   ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-800'
                   : 'bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
               }`}>
-                {message.isStreaming && !message.content ? (
-                  <RAGProgressIndicator
-                    events={ragProgressEvents}
-                    documents={ragDocuments}
-                    variant="inline"
-                    showDetails={true}
-                  />
-                ) : (
+                {/* Show RAG progress if streaming and we have progress events OR documents */}
+                {message.isStreaming && (ragProgressEvents.length > 0 || ragDocuments.length > 0) && (
+                  <div className="mb-3">
+                    <RAGProgressIndicator
+                      events={ragProgressEvents}
+                      documents={ragDocuments}
+                      variant="inline"
+                      showDetails={true}
+                    />
+                  </div>
+                )}
+                
+                {/* Always show content if available */}
+                {message.content && (
                   <MessageContent content={message.content} />
                 )}
                 
@@ -601,8 +618,8 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
         <div className="flex-shrink-0 px-4 pb-2">
           <ProviderRecommendation 
             query={currentInput}
-            onSelectProvider={(providerId, model) => {
-              console.log('Selected provider:', providerId, model);
+            onSelectProvider={(_providerId, _model) => {
+              // Selected provider
               // TODO: Implement provider switching
             }}
           />
@@ -707,7 +724,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
         onModelSelect={(provider, model) => {
           setCurrentProvider(provider);
           setCurrentModel(model || '');
-          console.log('Model selected:', provider, model);
+          // Model selected
           // Update provider manager
           if (model) {
             providerManager.setPreferredProvider(provider, model);

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../i18n';
-import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
 
 export default function AboutContent() {
-  const { t, language } = useTranslation();
+  const { language } = useTranslation();
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {

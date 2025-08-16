@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { LegalDocument } from '../../types/legal';
+import type { DocumentContentArray } from '../../types/common';
 
 interface DocumentExportProps {
   document: LegalDocument;
@@ -142,7 +143,7 @@ export function DocumentExport({ document, currentView, currentSection }: Docume
   };
 
   // Generate plain text content
-  const generateTextContent = (content: any[]): string => {
+  const generateTextContent = (content: DocumentContentArray): string => {
     let text = `${document.title}\n`;
     text += `${'='.repeat(document.title.length)}\n\n`;
     
@@ -203,7 +204,7 @@ export function DocumentExport({ document, currentView, currentSection }: Docume
   };
 
   // Generate HTML content
-  const generateHTMLContent = (doc: LegalDocument, content: any[]): string => {
+  const generateHTMLContent = (doc: LegalDocument, content: DocumentContentArray): string => {
     let html = `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -288,7 +289,7 @@ export function DocumentExport({ document, currentView, currentSection }: Docume
   };
 
   // Generate Markdown content
-  const generateMarkdownContent = (doc: LegalDocument, content: any[]): string => {
+  const generateMarkdownContent = (doc: LegalDocument, content: DocumentContentArray): string => {
     let md = `# ${doc.title}\n\n`;
     
     if (doc.shortTitle) {
@@ -349,7 +350,7 @@ export function DocumentExport({ document, currentView, currentSection }: Docume
   };
 
   // Export to PDF (simplified - in production use a proper PDF library)
-  const exportToPDF = async (doc: LegalDocument, content: any[]) => {
+  const exportToPDF = async (doc: LegalDocument, content: DocumentContentArray) => {
     // This would use a proper PDF generation library like jsPDF or Puppeteer
     // For now, we'll convert to HTML and let the browser handle PDF generation
     const htmlContent = generateHTMLContent(doc, content);
@@ -362,7 +363,7 @@ export function DocumentExport({ document, currentView, currentSection }: Docume
   };
 
   // Export to DOCX (would require a proper library like docx.js)
-  const exportToDocx = async (doc: LegalDocument, content: any[]) => {
+  const exportToDocx = async (_doc: LegalDocument, _content: DocumentContentArray) => {
     // Fallback to HTML for now
     alert('La exportación a DOCX estará disponible próximamente. Usa HTML o PDF como alternativa.');
   };

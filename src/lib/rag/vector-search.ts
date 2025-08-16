@@ -6,7 +6,7 @@ import type {
   RAGSearchResult,
   RAGProgressEvent 
 } from '@/types/embeddings';
-import type { LegalDocument, LegalContent } from '@/types/legal';
+import type { LegalDocument, LegalContent as _LegalContent } from '@/types/legal';
 
 export interface VectorSearchConfig {
   chunkSize?: number;

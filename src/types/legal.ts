@@ -79,11 +79,18 @@ export interface LegalQuery {
 }
 
 export type QueryType = 
-  | 'citation'      // "Artículo 123 constitucional"
-  | 'procedural'    // "Cómo tramitar divorcio"
-  | 'conceptual'    // "Qué es usucapión"
-  | 'analytical'    // "Diferencias entre dolo y culpa"
-  | 'comparative';  // "Diferencias entre códigos"
+  | 'citation'        // "Artículo 123 constitucional"
+  | 'procedural'      // "Cómo tramitar divorcio"
+  | 'conceptual'      // "Qué es usucapión"
+  | 'analytical'      // "Diferencias entre dolo y culpa"
+  | 'comparative'     // "Diferencias entre códigos"
+  | 'interpretation'  // Legal interpretation questions
+  | 'analysis'        // Legal analysis tasks
+  | 'advice'          // Legal advice requests
+  | 'definition'      // Definition queries
+  | 'procedure'       // Procedure questions
+  | 'general'         // General legal questions
+  | 'document analysis'; // Document analysis tasks
 
 export type QueryIntent = 
   | 'information'

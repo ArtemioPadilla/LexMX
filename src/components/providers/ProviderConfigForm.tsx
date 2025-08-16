@@ -24,7 +24,7 @@ export default function ProviderConfigForm({
   showModelSelection = true,
   inline = false
 }: ProviderConfigFormProps) {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
   const [config, setConfig] = useState<Partial<ProviderConfig>>({
     id: provider.id,
     name: provider.name,

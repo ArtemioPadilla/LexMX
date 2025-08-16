@@ -1,3 +1,4 @@
+/* global console */
 import { chromium } from '@playwright/test';
 
 async function runTests() {

@@ -13,7 +13,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Create a simple colored square PNG as placeholder
-function createPlaceholderPNG(size) {
+function createPlaceholderPNG(_size) {
+  void _size;
   // This is a minimal 1x1 green PNG that we'll use as placeholder
   // In production, you'd use a library like sharp to convert the SVG
   const greenPixelPNG = Buffer.from([

@@ -140,7 +140,6 @@ export default function CorpusSelector({ onSelectionChange, className = '' }: Co
       areas: Array.from(selectedAreas),
       documents: Array.from(selectedDocuments)
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAreas, selectedDocuments]); // onSelectionChange excluded to prevent re-renders
 
   // Close dropdown when clicking outside
@@ -159,7 +158,7 @@ export default function CorpusSelector({ onSelectionChange, className = '' }: Co
   }, [isOpen]);
 
   const selectedCount = selectedDocuments.size;
-  const totalCount = CORPUS_DOCUMENTS.length;
+  const _totalCount = CORPUS_DOCUMENTS.length;
 
   return (
     <div className={`relative corpus-selector ${className}`}>

@@ -3,7 +3,7 @@ import type {
   RateLimitInfo, 
   DocumentRequest 
 } from '../../types/legal';
-import { SourceValidator } from './source-validator';
+import { SourceValidator as _SourceValidator } from './source-validator';
 
 /**
  * Comprehensive Security Manager for Document Request System
@@ -407,7 +407,8 @@ export class SecurityManager {
           reasons.push('URL excesivamente larga');
         }
 
-      } catch (error) {
+      } catch (_error) {
+        void _error;
         reasons.push('URL mal formada');
       }
     }
@@ -508,7 +509,7 @@ export class SecurityManager {
   static async reportUser(
     reporterFingerprint: string,
     targetFingerprint: string,
-    reason: string
+    _reason: string
   ): Promise<{ success: boolean; message: string }> {
     try {
       // Check if reporter is allowed to make reports
@@ -602,7 +603,7 @@ export class SecurityManager {
       localStorage.setItem(this.STORAGE_KEYS.RATE_LIMITS, JSON.stringify(rateLimits));
 
       // Reset user reports older than 30 days
-      const reportThreshold = now - (30 * 24 * 60 * 60 * 1000); // 30 days
+      const _reportThreshold = now - (30 * 24 * 60 * 60 * 1000); // 30 days
       // This is a simplified cleanup - in a real app, you'd track report timestamps
       
       console.log('Security data cleanup completed');

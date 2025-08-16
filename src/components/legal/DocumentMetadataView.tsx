@@ -121,7 +121,7 @@ export function DocumentMetadataView({ document }: DocumentMetadataViewProps) {
     type = 'text' 
   }: { 
     label: string; 
-    value: any; 
+    value: string | string[] | Date | null | undefined; 
     type?: 'text' | 'date' | 'badge' | 'list' | 'link'; 
   }) => (
     <div className="py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0">

@@ -167,7 +167,7 @@ export class MockWebLLMProvider implements LLMProvider {
     };
   }
 
-  estimateCost(request: LLMRequest): number {
+  estimateCost(_request: LLMRequest): number {
     return 0;
   }
 
@@ -183,7 +183,7 @@ export class MockWebLLMProvider implements LLMProvider {
     this.config = { ...this.config, ...config };
   }
 
-  getCost(promptTokens: number, completionTokens: number, model: string): number {
+  getCost(_promptTokens: number, _completionTokens: number, _model: string): number {
     return 0;
   }
 }

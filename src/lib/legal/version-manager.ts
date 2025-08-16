@@ -160,7 +160,7 @@ export class VersionManager {
     );
 
     // Find ancestors
-    let currentId = versionId;
+    const currentId = versionId;
     let current = versionMap.get(currentId);
     
     while (current?.previousVersionId) {

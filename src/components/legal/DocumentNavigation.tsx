@@ -10,11 +10,22 @@ interface DocumentStructureItem {
   level: number;
 }
 
+interface SearchResult {
+  id: string;
+  section?: string;
+  relevance?: number;
+  matchedText?: string;
+}
+
+interface DocumentTreeItem extends DocumentStructureItem {
+  children?: DocumentTreeItem[];
+}
+
 interface DocumentNavigationProps {
   documentStructure: DocumentStructureItem[];
   currentSection?: string | null;
   onSectionChange?: (sectionId: string) => void;
-  searchResults?: any[];
+  searchResults?: SearchResult[];
   searchQuery?: string;
 }
 
@@ -31,7 +42,7 @@ export function DocumentNavigation({
 
   // Build hierarchical structure
   const hierarchicalStructure = useMemo(() => {
-    const itemMap = new Map(documentStructure.map(item => [item.id, item]));
+    const _itemMap = new Map(documentStructure.map(item => [item.id, item]));
     const rootItems: DocumentStructureItem[] = [];
     const childrenMap = new Map<string, DocumentStructureItem[]>();
 
@@ -48,7 +59,7 @@ export function DocumentNavigation({
     });
 
     // Recursive function to build tree
-    const buildTree = (items: DocumentStructureItem[]): (DocumentStructureItem & { children?: any[] })[] => {
+    const buildTree = (items: DocumentStructureItem[]): DocumentTreeItem[] => {
       return items.map(item => ({
         ...item,
         children: childrenMap.has(item.id) ? buildTree(childrenMap.get(item.id)!) : undefined
@@ -62,7 +73,7 @@ export function DocumentNavigation({
   const filteredStructure = useMemo(() => {
     if (filter === 'all') return hierarchicalStructure;
     
-    const filterItems = (items: any[]): any[] => {
+    const filterItems = (items: DocumentTreeItem[]): DocumentTreeItem[] => {
       return items.reduce((acc, item) => {
         const matchesFilter = 
           (filter === 'titles' && ['title', 'chapter', 'section'].includes(item.type)) ||
@@ -149,7 +160,7 @@ export function DocumentNavigation({
   };
 
   // Render navigation item
-  const renderNavigationItem = (item: any, depth = 0) => {
+  const renderNavigationItem = (item: DocumentTreeItem, depth = 0) => {
     const isExpanded = expandedItems.has(item.id);
     const isCurrent = currentSection === item.id || currentSection === item.number;
     const hasChildren = item.children && item.children.length > 0;
@@ -231,7 +242,7 @@ export function DocumentNavigation({
         {/* Children */}
         {hasChildren && isExpanded && (
           <div className="mt-1 space-y-1">
-            {item.children.map((child: any) => renderNavigationItem(child, depth + 1))}
+            {item.children!.map((child) => renderNavigationItem(child, depth + 1))}
           </div>
         )}
       </div>
@@ -251,7 +262,7 @@ export function DocumentNavigation({
           <label className="text-sm text-gray-600 dark:text-gray-400">{t('documentViewer.navigation.show')}:</label>
           <select
             value={filter}
-            onChange={(e) => setFilter(e.target.value as any)}
+            onChange={(e) => setFilter(e.target.value as 'all' | 'titles' | 'articles')}
             className="text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value="all">{t('documentViewer.navigation.all')}</option>

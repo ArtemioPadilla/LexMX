@@ -62,7 +62,7 @@ jobs:
         
       - name: 📊 Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results-node-${{ matrix.node-version }}
           path: |
@@ -115,7 +115,7 @@ jobs:
         
       - name: 📊 Upload E2E results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: e2e-results
           path: |
@@ -198,7 +198,7 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           
       - name: 📊 Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: production-build
           path: dist/

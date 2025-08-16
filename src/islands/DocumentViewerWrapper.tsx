@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
-import { TEST_IDS } from '../utils/test-ids';
+import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS as _TEST_IDS } from '../utils/test-ids';
 import DocumentViewer from './DocumentViewer';
 import { DocumentLoader } from '../lib/legal/document-loader';
 import type { LegalDocument } from '../types/legal';
@@ -48,8 +48,8 @@ export default function DocumentViewerWrapper({ documentId, documentTitle }: Doc
   // Handle SSR/hydration
   if (!isHydrated) {
     return (
-      <HydrationBoundary 
-        fallback={<LoadingStates.DocumentViewerWrapper />} 
+      <_HydrationBoundary 
+        fallback={<_LoadingStates.DocumentViewerWrapper />} 
         testId="document-viewer-wrapper"
       />
     );

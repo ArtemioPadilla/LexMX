@@ -7,8 +7,11 @@ import type {
   ProviderConfig, 
   ProviderStatus,
   LLMModel,
-  ProviderMetrics
-} from '@/types/llm';
+  ProviderMetrics,
+  TokenUsage,
+  LLMCapability
+} from '@/types';
+import type { ErrorWithCode } from '@/types/common';
 
 export abstract class BaseLLMProvider implements LLMProvider {
   public readonly id: string;
@@ -17,7 +20,7 @@ export abstract class BaseLLMProvider implements LLMProvider {
   public readonly icon: string;
   public readonly description: string;
   public readonly costLevel: 'free' | 'low' | 'medium' | 'high';
-  public readonly capabilities: string[];
+  public readonly capabilities: LLMCapability[];
   public models: LLMModel[] = [];
   public status: ProviderStatus = 'disconnected';
 
@@ -107,17 +110,22 @@ export abstract class BaseLLMProvider implements LLMProvider {
     }
   }
 
-  protected createBaseResponse(request: LLMRequest, content: string, usage: any, latency: number): LLMResponse {
+  protected createBaseResponse(request: LLMRequest, content: string, usage: TokenUsage, latency: number): LLMResponse {
+    const promptTokens = usage?.prompt_tokens ?? usage?.promptTokens ?? 0;
+    const completionTokens = usage?.completion_tokens ?? usage?.completionTokens ?? 0;
+    const totalTokens = usage?.total_tokens ?? usage?.totalTokens ?? (promptTokens + completionTokens);
+    
     return {
       content,
       model: request.model,
       provider: this.id,
       usage: {
-        promptTokens: usage.prompt_tokens || usage.promptTokens || 0,
-        completionTokens: usage.completion_tokens || usage.completionTokens || 0,
-        totalTokens: usage.total_tokens || usage.totalTokens || 0
+        promptTokens,
+        completionTokens,
+        totalTokens
       },
       latency,
+      processingTime: latency,
       cost: this.estimateCost(request),
       metadata: {
         cached: false,
@@ -126,7 +134,7 @@ export abstract class BaseLLMProvider implements LLMProvider {
     };
   }
 
-  protected handleError(error: any, request: LLMRequest): never {
+  protected handleError(error: ErrorWithCode, _request: LLMRequest): never {
     // Log error for debugging
     console.error(`[${this.name}] Error processing request:`, error);
     
@@ -138,16 +146,16 @@ export abstract class BaseLLMProvider implements LLMProvider {
       throw new Error(`Request timeout for ${this.name}`);
     }
     
-    if (error.status === 401) {
+    if (error.statusCode === 401) {
       this.status = 'error';
       throw new Error(`Authentication failed for ${this.name}. Please check your API key.`);
     }
     
-    if (error.status === 429) {
+    if (error.statusCode === 429) {
       throw new Error(`Rate limit exceeded for ${this.name}. Please try again later.`);
     }
     
-    if (error.status >= 500) {
+    if (error.statusCode && error.statusCode >= 500) {
       throw new Error(`${this.name} service is temporarily unavailable.`);
     }
     
@@ -155,7 +163,7 @@ export abstract class BaseLLMProvider implements LLMProvider {
   }
 
   // Helper methods for cost calculation
-  protected calculateTokenCost(usage: any, model: LLMModel): number {
+  protected calculateTokenCost(usage: TokenUsage, model: LLMModel): number {
     if (!model.costPer1kTokens) return 0;
     
     const inputCost = (usage.promptTokens / 1000) * model.costPer1kTokens.input;
@@ -168,7 +176,7 @@ export abstract class BaseLLMProvider implements LLMProvider {
   protected checkRateLimit(): boolean {
     // Basic rate limiting - can be overridden by providers
     const now = Date.now();
-    const oneMinuteAgo = now - 60000;
+    const _oneMinuteAgo = now - 60000;
     
     // This is a simple implementation - providers should implement their own
     return true;

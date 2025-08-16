@@ -22,14 +22,15 @@ async function killProcessesOnPorts(ports) {
           try {
             await execAsync(`kill -9 ${pid}`);
             console.log(`  ✅ Killed process ${pid}`);
-          } catch (err) {
-            console.log(`  ⚠️  Could not kill process ${pid}: ${err.message}`);
+          } catch (_err) {
+            console.log(`  ⚠️  Could not kill process ${pid}: ${_err.message}`);
           }
         }
       } else {
         console.log(`No process found on port ${port}`);
       }
-    } catch (err) {
+    } catch (_err) {
+      void _err;
       // No process on this port (lsof returns non-zero when no process found)
       console.log(`No process found on port ${port}`);
     }

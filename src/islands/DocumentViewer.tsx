@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
-import { TEST_IDS } from '../utils/test-ids';
-import type { LegalDocument, LegalContent } from '../types/legal';
+import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS as _TEST_IDS } from '../utils/test-ids';
+import type { LegalDocument, LegalContent as _LegalContent } from '../types/legal';
 import { DocumentTextView } from '../components/legal/DocumentTextView';
 import { DocumentPDFView } from '../components/legal/DocumentPDFView';
 import { DocumentChunksView } from '../components/legal/DocumentChunksView';
@@ -146,8 +146,8 @@ export default function DocumentViewer({
   // Handle SSR/hydration
   if (!isHydrated) {
     return (
-      <HydrationBoundary 
-        fallback={<LoadingStates.DocumentViewer />} 
+      <_HydrationBoundary 
+        fallback={<_LoadingStates.DocumentViewer />} 
         testId="document-viewer"
       />
     );

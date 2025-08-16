@@ -1,11 +1,12 @@
 import { useReducer, useEffect } from 'react';
 import esTranslations from './locales/es.json';
 import enTranslations from './locales/en.json';
+import type { TranslationValue, TranslationParams } from '../types/common';
 
 export type Language = 'es' | 'en';
 
 export interface Translations {
-  [key: string]: any;
+  [key: string]: TranslationValue;
 }
 
 const translations: Record<Language, Translations> = {
@@ -33,7 +34,8 @@ class I18n {
           const browserLang = navigator.language.toLowerCase();
           this.currentLanguage = browserLang.startsWith('es') ? 'es' : 'en';
         }
-      } catch (e) {
+      } catch (_e) {
+        void _e;
         // If parsing fails, default to Spanish
         this.currentLanguage = 'es';
       }
@@ -54,23 +56,34 @@ class I18n {
     }
   }
 
-  t(key: string, params?: Record<string, any>, language?: Language): string {
+  t(key: string, params?: TranslationParams, language?: Language): string {
     const keys = key.split('.');
     const lang = language || this.currentLanguage;
-    let value: any = translations[lang];
+    let value: TranslationValue | undefined = translations[lang];
 
     for (const k of keys) {
-      value = value?.[k];
+      if (typeof value === 'object' && value !== null && k in value) {
+        value = value[k];
+      } else {
+        value = undefined;
+      }
+      
       if (value === undefined) {
         // Fallback to Spanish if translation not found
-        value = translations.es;
+        let fallbackValue: TranslationValue | undefined = translations.es;
         for (const fallbackKey of keys) {
-          value = value?.[fallbackKey];
+          if (typeof fallbackValue === 'object' && fallbackValue !== null && fallbackKey in fallbackValue) {
+            fallbackValue = fallbackValue[fallbackKey];
+          } else {
+            fallbackValue = undefined;
+            break;
+          }
         }
-        if (value === undefined) {
+        if (fallbackValue === undefined) {
           console.warn(`Translation key not found: ${key}`);
           return key;
         }
+        value = fallbackValue;
         break;
       }
     }
@@ -100,19 +113,24 @@ class I18n {
   }
 
   // Helper method to get all translations for a section
-  getSection(section: string, language?: Language): Record<string, any> {
+  getSection(section: string, language?: Language): Record<string, TranslationValue> {
     const keys = section.split('.');
     const lang = language || this.currentLanguage;
-    let value: any = translations[lang];
+    let value: TranslationValue | undefined = translations[lang];
 
     for (const k of keys) {
-      value = value?.[k];
-      if (value === undefined) {
+      if (typeof value === 'object' && value !== null && k in value) {
+        value = value[k];
+      } else {
         return {};
       }
     }
 
-    return value;
+    if (typeof value === 'object' && value !== null) {
+      return value as Record<string, TranslationValue>;
+    }
+    
+    return {};
   }
 
   // Get available languages
@@ -147,7 +165,7 @@ export function useTranslation() {
 }
 
 // For non-React usage
-export function t(key: string, params?: Record<string, any>): string {
+export function t(key: string, params?: TranslationParams): string {
   return i18n.t(key, params);
 }
 

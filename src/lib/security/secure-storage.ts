@@ -1,7 +1,8 @@
 // Secure storage manager with client-side encryption
 
-import type { SecureStorage, EncryptedData, PrivacySettings } from '../../types/security';
-import type { ProviderConfig } from '../../types/llm';
+import type { SecureStorage, EncryptedData as _EncryptedData, PrivacySettings } from '../../types/security';
+import type { ProviderConfig, LLMResponse } from '../../types/llm';
+import type { JsonValue } from '../../types/common';
 import { cryptoManager, ClientCryptoManager } from './encryption';
 
 export class SecureStorageManager implements SecureStorage {
@@ -49,7 +50,7 @@ export class SecureStorageManager implements SecureStorage {
     }
   }
 
-  async store(key: string, data: any): Promise<void> {
+  async store(key: string, data: JsonValue): Promise<void> {
     const storageKey = this.prefix + key;
     
     // Ensure we're initialized
@@ -250,7 +251,7 @@ export class SecureStorageManager implements SecureStorage {
   }
 
   // Query and response caching with privacy controls
-  async storeQuery(queryId: string, query: string, response: any): Promise<void> {
+  async storeQuery(queryId: string, query: string, response: LLMResponse): Promise<void> {
     if (!this.privacySettings.encryptQueries && !this.privacySettings.encryptResponses) {
       return; // Don't store if not allowed
     }
@@ -265,7 +266,7 @@ export class SecureStorageManager implements SecureStorage {
   }
 
   // Utility methods
-  private shouldEncryptData(key: string, data: any): boolean {
+  private shouldEncryptData(key: string, data: JsonValue): boolean {
     // Always encrypt provider configurations (contain API keys)
     if (key.startsWith('provider_')) return true;
     
@@ -282,7 +283,7 @@ export class SecureStorageManager implements SecureStorage {
     return false;
   }
 
-  private storeInBrowser(key: string, data: any): void {
+  private storeInBrowser(key: string, data: JsonValue): void {
     if (!this.isBrowser) {
       throw new Error('Browser storage not available');
     }
@@ -345,7 +346,7 @@ export class SecureStorageManager implements SecureStorage {
     }
   }
 
-  private retrieveFromBrowser(key: string): any | null {
+  private retrieveFromBrowser(key: string): JsonValue | null {
     if (!this.isBrowser) return null;
     
     try {
@@ -434,7 +435,7 @@ export class SecureStorageManager implements SecureStorage {
 
   // Data export for user control
   async exportData(): Promise<any> {
-    const exportData: any = {
+    const exportData: Record<string, JsonValue> = {
       version: 1,
       timestamp: Date.now(),
       privacySettings: this.privacySettings,

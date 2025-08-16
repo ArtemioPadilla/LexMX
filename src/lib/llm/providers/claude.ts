@@ -1,7 +1,8 @@
 // Anthropic Claude provider implementation
 
-import type { CloudProvider, LLMRequest, LLMResponse, LLMModel, ProviderConfig } from '@/types/llm';
+import type { CloudProvider, LLMRequest, LLMResponse, LLMModel, ProviderConfig, ChatMessage } from '@/types/llm';
 import type { LegalArea } from '@/types/legal';
+import type { ErrorWithCode } from '@/types/common';
 import { BaseLLMProvider } from '../base-provider';
 import { promptBuilder } from '../prompt-builder';
 import { i18n } from '@/i18n';
@@ -161,14 +162,14 @@ export class ClaudeProvider extends BaseLLMProvider implements CloudProvider {
       this.updateMetrics(llmResponse, true);
       return llmResponse;
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       const latency = Date.now() - startTime;
       
       // Create error response for metrics
       const errorResponse = this.createBaseResponse(request, '', { input_tokens: 0, output_tokens: 0 }, latency);
       this.updateMetrics(errorResponse, false);
       
-      this.handleError(error, request);
+      this.handleError(error as ErrorWithCode, request);
     }
   }
 
@@ -191,7 +192,7 @@ export class ClaudeProvider extends BaseLLMProvider implements CloudProvider {
     }, model);
   }
 
-  private formatMessages(messages: any[]): any[] {
+  private formatMessages(messages: ChatMessage[]): Array<{ role: string; content: string }> {
     // Claude expects alternating user/assistant messages
     const formatted = [];
     let lastRole = null;

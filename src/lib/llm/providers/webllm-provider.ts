@@ -1,4 +1,31 @@
 // Alternative WebLLM provider implementation with better error handling
+
+// GPU type declarations for WebGPU support
+declare global {
+  interface Navigator {
+    gpu?: GPU;
+  }
+  
+  interface GPU {
+    requestAdapter(options?: GPURequestAdapterOptions): Promise<GPUAdapter | null>;
+  }
+  
+  interface GPUAdapter {
+    readonly features: GPUSupportedFeatures;
+    readonly limits: GPUSupportedLimits;
+    readonly info: GPUAdapterInfo;
+  }
+  
+  interface GPURequestAdapterOptions {
+    powerPreference?: 'low-power' | 'high-performance';
+    forceFallbackAdapter?: boolean;
+  }
+  
+  type GPUSupportedFeatures = ReadonlySet<string>;
+  type GPUSupportedLimits = Record<string, unknown>;
+  type GPUAdapterInfo = Record<string, unknown>;
+}
+
 import type { 
   LLMProvider,
   LLMRequest,
@@ -12,6 +39,7 @@ import type {
   LLMProviderType,
   ProviderMetrics
 } from '../../../types/llm';
+import type { LegalArea } from '../../../types/legal';
 import { promptBuilder } from '../prompt-builder';
 import { i18n } from '@/i18n';
 
@@ -243,11 +271,24 @@ export class WebLLMProvider implements LLMProvider {
           },
           cost: 0,
           latency: processingTime,
+          processingTime: processingTime,
           metadata: {
             cached: false
           }
         };
       }
+      
+      // Return empty response if no streaming callback
+      return {
+        content: '',
+        model: this.config.modelId || this.config.model || 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
+        provider: this.id,
+        usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        cost: 0,
+        latency: 0,
+        processingTime: 0,
+        metadata: { cached: false }
+      };
     } catch (error) {
       console.error('WebLLM stream error:', error);
       throw error;
@@ -300,12 +341,13 @@ export class WebLLMProvider implements LLMProvider {
         model: this.config.modelId || this.config.model || 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
         provider: this.id,
         usage: {
-          promptTokens: response.promptTokens,
-          completionTokens: response.completionTokens,
-          totalTokens: response.totalTokens
+          promptTokens: response.usage.promptTokens,
+          completionTokens: response.usage.completionTokens,
+          totalTokens: response.usage.totalTokens
         },
         cost: 0,
-        latency: response.processingTime,
+        latency: response.latency,
+        processingTime: response.latency,
         metadata: {
           cached: false
         }
@@ -334,7 +376,7 @@ export class WebLLMProvider implements LLMProvider {
     }
   }
 
-  estimateCost(request: LLMRequest): number {
+  estimateCost(_request: LLMRequest): number {
     return 0;
   }
 
@@ -350,7 +392,7 @@ export class WebLLMProvider implements LLMProvider {
     this.config = { ...this.config, ...config };
   }
 
-  getCost(promptTokens: number, completionTokens: number, model: string): number {
+  getCost(_promptTokens: number, _completionTokens: number, _model: string): number {
     return 0;
   }
 

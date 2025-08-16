@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
-import { TEST_IDS } from '../utils/test-ids';
+import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
+import { TEST_IDS as _TEST_IDS } from '../utils/test-ids';
 import type { 
   DocumentRequest, 
-  ModerationAction, 
+  ModerationAction as _ModerationAction, 
   ModeratorUser, 
   RequestStats,
   RequestStatus,
@@ -174,8 +174,8 @@ export default function ModerationPanel({
   // Handle SSR/hydration
   if (!isHydrated) {
     return (
-      <HydrationBoundary 
-        fallback={<LoadingStates.ModerationPanel />} 
+      <_HydrationBoundary 
+        fallback={<_LoadingStates.ModerationPanel />} 
         testId="moderation-panel"
       />
     );

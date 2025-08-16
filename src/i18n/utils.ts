@@ -1,10 +1,11 @@
 // Server-side translation utilities for Astro
 import esTranslations from './locales/es.json';
 import enTranslations from './locales/en.json';
+import type { TranslationValue, TranslationParams } from '../types/common';
 
 type Language = 'es' | 'en';
 
-const translations: Record<Language, any> = {
+const translations: Record<Language, TranslationValue> = {
   es: esTranslations,
   en: enTranslations
 };
@@ -32,22 +33,29 @@ export function getTranslation(url: URL | string) {
   // Extract language from URL or default to Spanish
   const lang = pathname.includes('/en') ? 'en' : 'es';
   
-  return function t(key: string, params?: Record<string, any>): string {
+  return function t(key: string, params?: TranslationParams): string {
     const keys = key.split('.');
-    let value: any = translations[lang];
+    let value: TranslationValue | undefined = translations[lang];
     
     for (const k of keys) {
-      value = value?.[k];
+      if (typeof value === 'object' && value !== null && k in value) {
+        value = value[k];
+      } else {
+        value = undefined;
+      }
+      
       if (value === undefined) {
         // Fallback to Spanish if key not found
-        value = translations.es;
+        let fallbackValue: TranslationValue | undefined = translations.es;
         for (const k2 of keys) {
-          value = value?.[k2];
-          if (value === undefined) {
+          if (typeof fallbackValue === 'object' && fallbackValue !== null && k2 in fallbackValue) {
+            fallbackValue = fallbackValue[k2];
+          } else {
             console.warn(`Translation key not found: ${key}`);
             return key; // Return key if not found
           }
         }
+        value = fallbackValue;
         break;
       }
     }
@@ -73,22 +81,29 @@ export function getTranslation(url: URL | string) {
  * Get translation function for a specific language
  */
 export function getTranslationForLang(lang: Language = 'es') {
-  return function t(key: string, params?: Record<string, any>): string {
+  return function t(key: string, params?: TranslationParams): string {
     const keys = key.split('.');
-    let value: any = translations[lang];
+    let value: TranslationValue | undefined = translations[lang];
     
     for (const k of keys) {
-      value = value?.[k];
+      if (typeof value === 'object' && value !== null && k in value) {
+        value = value[k];
+      } else {
+        value = undefined;
+      }
+      
       if (value === undefined) {
         // Fallback to Spanish if key not found
-        value = translations.es;
+        let fallbackValue: TranslationValue | undefined = translations.es;
         for (const k2 of keys) {
-          value = value?.[k2];
-          if (value === undefined) {
+          if (typeof fallbackValue === 'object' && fallbackValue !== null && k2 in fallbackValue) {
+            fallbackValue = fallbackValue[k2];
+          } else {
             console.warn(`Translation key not found: ${key}`);
             return key; // Return key if not found
           }
         }
+        value = fallbackValue;
         break;
       }
     }
@@ -122,14 +137,15 @@ export function getTranslations(lang: Language = 'es') {
  */
 export function hasTranslation(key: string, lang: Language = 'es'): boolean {
   const keys = key.split('.');
-  let value: any = translations[lang];
+  let value: TranslationValue | undefined = translations[lang];
   
   for (const k of keys) {
-    value = value?.[k];
-    if (value === undefined) {
+    if (typeof value === 'object' && value !== null && k in value) {
+      value = value[k];
+    } else {
       return false;
     }
   }
   
-  return true;
+  return value !== undefined;
 }

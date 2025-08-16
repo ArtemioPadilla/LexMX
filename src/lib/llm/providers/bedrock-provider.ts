@@ -7,7 +7,8 @@ import type {
   StreamCallback,
   ProviderStatus,
   ProviderMetrics,
-  LLMModel
+  LLMModel,
+  LLMCapability
 } from '../../../types/llm';
 
 interface BedrockConfig extends ProviderConfig {
@@ -20,7 +21,11 @@ interface BedrockConfig extends ProviderConfig {
 export class BedrockProvider implements LLMProvider {
   id = 'bedrock';
   name = 'AWS Bedrock';
-  type: 'cloud' = 'cloud';
+  type = 'cloud' as const;
+  icon = '/icons/aws.svg';
+  description = 'AWS Bedrock provides access to foundation models from leading AI companies';
+  costLevel = 'medium' as const;
+  capabilities: LLMCapability[] = ['reasoning', 'analysis', 'citations', 'multilingual'];
   status: ProviderStatus = 'disconnected';
   
   private config: BedrockConfig;
@@ -40,64 +45,71 @@ export class BedrockProvider implements LLMProvider {
       id: 'anthropic.claude-3-sonnet-20240229-v1:0',
       name: 'Claude 3 Sonnet',
       description: 'Balanced performance and cost',
-      contextWindow: 200000,
-      maxOutput: 4096,
+      contextLength: 200000,
+      maxTokens: 4096,
       costPer1kInput: 0.003,
-      costPer1kOutput: 0.015
+      costPer1kOutput: 0.015,
+      capabilities: ['reasoning', 'analysis', 'citations', 'multilingual']
     },
     {
       id: 'anthropic.claude-3-haiku-20240307-v1:0',
       name: 'Claude 3 Haiku',
       description: 'Fast and cost-effective',
-      contextWindow: 200000,
-      maxOutput: 4096,
+      contextLength: 200000,
+      maxTokens: 4096,
       costPer1kInput: 0.00025,
-      costPer1kOutput: 0.00125
+      costPer1kOutput: 0.00125,
+      capabilities: ['reasoning', 'analysis']
     },
     {
       id: 'anthropic.claude-v2:1',
       name: 'Claude 2.1',
       description: 'Previous generation Claude',
-      contextWindow: 100000,
-      maxOutput: 4096,
+      contextLength: 100000,
+      maxTokens: 4096,
       costPer1kInput: 0.008,
-      costPer1kOutput: 0.024
+      costPer1kOutput: 0.024,
+      capabilities: ['reasoning', 'analysis']
     },
     {
       id: 'meta.llama3-70b-instruct-v1:0',
       name: 'Llama 3 70B',
       description: 'Large open-source model',
-      contextWindow: 8192,
-      maxOutput: 2048,
+      contextLength: 8192,
+      maxTokens: 2048,
       costPer1kInput: 0.00265,
-      costPer1kOutput: 0.0035
+      costPer1kOutput: 0.0035,
+      capabilities: ['reasoning', 'analysis']
     },
     {
       id: 'meta.llama3-8b-instruct-v1:0',
       name: 'Llama 3 8B',
       description: 'Smaller, faster Llama model',
-      contextWindow: 8192,
-      maxOutput: 2048,
+      contextLength: 8192,
+      maxTokens: 2048,
       costPer1kInput: 0.0003,
-      costPer1kOutput: 0.0006
+      costPer1kOutput: 0.0006,
+      capabilities: ['reasoning']
     },
     {
       id: 'amazon.titan-text-express-v1',
       name: 'Titan Text Express',
       description: 'Amazon\'s fast text model',
-      contextWindow: 8192,
-      maxOutput: 4096,
+      contextLength: 8192,
+      maxTokens: 4096,
       costPer1kInput: 0.0002,
-      costPer1kOutput: 0.0006
+      costPer1kOutput: 0.0006,
+      capabilities: ['reasoning']
     },
     {
       id: 'cohere.command-text-v14',
       name: 'Cohere Command',
       description: 'Instruction-following model',
-      contextWindow: 4096,
-      maxOutput: 4096,
+      contextLength: 4096,
+      maxTokens: 4096,
       costPer1kInput: 0.0015,
-      costPer1kOutput: 0.002
+      costPer1kOutput: 0.002,
+      capabilities: ['reasoning']
     }
   ];
 
@@ -130,6 +142,7 @@ export class BedrockProvider implements LLMProvider {
       },
       cost: this.getCost(response.promptTokens, response.completionTokens, response.model),
       latency: response.processingTime,
+      processingTime: response.processingTime,
       metadata: {
         cached: false
       }
@@ -149,6 +162,7 @@ export class BedrockProvider implements LLMProvider {
       },
       cost: this.getCost(response.promptTokens, response.completionTokens, response.model),
       latency: response.processingTime,
+      processingTime: response.processingTime,
       metadata: {
         cached: false
       }
@@ -438,7 +452,8 @@ export class BedrockProvider implements LLMProvider {
           chunks.push(this.extractChunkContent(modelId, parsed));
         }
       }
-    } catch (error) {
+    } catch (_error) {
+      void _error;
       // Keep accumulating if we can't parse yet
     }
     
@@ -478,7 +493,7 @@ export class BedrockProvider implements LLMProvider {
     });
   }
 
-  private async getSignedHeaders(method: string, path: string, body: any): Promise<Record<string, string>> {
+  private async getSignedHeaders(_method: string, _path: string, _body: any): Promise<Record<string, string>> {
     // For now, use simple API key authentication if provided
     // In production, you'd use AWS Signature V4
     const headers: Record<string, string> = {

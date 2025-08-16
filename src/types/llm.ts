@@ -13,11 +13,15 @@ export interface LLMModel {
   name: string;
   description?: string;
   contextLength: number;
+  contextWindow?: number; // Alias for contextLength for compatibility
   maxTokens: number;
+  maxOutput?: number; // For providers that use maxOutput instead of maxTokens
   costPer1kTokens?: {
     input: number;
     output: number;
   };
+  costPer1kInput?: number; // Alternative cost format for some providers
+  costPer1kOutput?: number; // Alternative cost format for some providers
   capabilities: LLMCapability[];
   recommended?: boolean;
 }
@@ -45,6 +49,7 @@ export interface LLMProvider {
   generateResponse(request: LLMRequest): Promise<LLMResponse>;
   stream?(request: LLMRequest, onChunk: StreamCallback): Promise<LLMResponse>;
   estimateCost(request: LLMRequest): number;
+  getMetrics(): ProviderMetrics;
 }
 
 export interface CloudProvider extends LLMProvider {
@@ -111,6 +116,7 @@ export interface LLMResponse {
   };
   cost?: number;
   latency: number;
+  processingTime?: number; // Alias for latency for compatibility
   confidence?: number;
   metadata?: {
     cached?: boolean;

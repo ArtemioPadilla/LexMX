@@ -10,6 +10,7 @@ import type {
   EmbeddingVector,
   RAGProgressEvent
 } from '@/types/embeddings';
+import type { ProgressEvent, JsonValue } from '@/types/common';
 
 export interface EmbeddingManagerConfig {
   defaultProvider?: EmbeddingProviderType;
@@ -56,7 +57,7 @@ export class EmbeddingManager {
         case 'transformers':
           provider = new TransformersEmbeddingProvider({
             ...config,
-            onProgress: (progress: any) => {
+            onProgress: (progress: ProgressEvent) => {
               if (progress.status === 'downloading') {
                 this.emitProgress(
                   'embedding_generation',
@@ -208,7 +209,7 @@ export class EmbeddingManager {
     stage: RAGProgressEvent['stage'],
     status: RAGProgressEvent['status'],
     message?: string,
-    details?: any
+    details?: JsonValue
   ): void {
     if (this.progressCallback) {
       this.progressCallback({

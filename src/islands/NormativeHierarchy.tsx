@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HydrationBoundary, LoadingStates } from '../components/HydrationBoundary';
+import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
 import { useTranslation } from '../i18n/index';
 
 interface HierarchyLevel {
@@ -116,7 +116,7 @@ export default function NormativeHierarchy() {
   // Handle SSR/hydration
   if (!isHydrated) {
     return (
-      <HydrationBoundary 
+      <_HydrationBoundary 
         fallback={
           <div className="space-y-4">
             {[1,2,3,4,5,6,7].map(i => (

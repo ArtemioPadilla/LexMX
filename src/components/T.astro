@@ -1,5 +1,10 @@
 ---
 // Translation component for Astro pages
+import type { TranslationValue } from '../types/common';
+
+// Suppress ESLint error for HTMLElementTagNameMap
+/* global HTMLElementTagNameMap */
+
 export interface Props {
   key: string;
   params?: Record<string, string>;
@@ -11,11 +16,11 @@ const { key, params = {}, tag = 'span' } = Astro.props;
 import es from '../i18n/translations/es.json';
 import en from '../i18n/translations/en.json';
 
-const translations: Record<string, any> = { es, en };
+const translations: Record<string, TranslationValue> = { es, en };
 
 function getTranslation(lang: string, key: string, params?: Record<string, string>): string {
   const keys = key.split('.');
-  let value: any = translations[lang];
+  let value: TranslationValue | undefined = translations[lang];
   
   for (const k of keys) {
     value = value?.[k];
@@ -50,7 +55,7 @@ function getTranslation(lang: string, key: string, params?: Record<string, strin
 // Default to Spanish for SSG, will be updated client-side
 const defaultText = getTranslation('es', key, params);
 
-const Tag = tag as any;
+const Tag = tag as keyof HTMLElementTagNameMap;
 ---
 
 <Tag 

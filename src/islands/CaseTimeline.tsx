@@ -325,7 +325,7 @@ export default function CaseTimeline({
                   {/* Connecting line */}
                   <div className="absolute left-5 top-8 bottom-0 w-0.5 bg-gradient-to-b from-gray-300 via-gray-200 to-transparent dark:from-gray-600 dark:via-gray-700"></div>
                   
-                  {dateEvents.map((event, index) => (
+                  {dateEvents.map((event, _index) => (
                     <div
                       key={event.id}
                       className="flex items-start space-x-4 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all hover:-translate-y-0.5 border border-gray-100 dark:border-gray-700 relative"

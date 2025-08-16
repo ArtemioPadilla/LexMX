@@ -1,5 +1,5 @@
 import type { LegalDocument, LegalChunk } from '../../types/legal';
-import type { SearchResult, RetrievalResult } from '../../types/rag';
+import type { SearchResult, RetrievalResult as _RetrievalResult } from '../../types/rag';
 
 export class DocumentRAGIntegration {
   private document: LegalDocument;

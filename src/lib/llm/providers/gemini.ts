@@ -1,7 +1,8 @@
 // Google Gemini provider implementation
 
-import type { CloudProvider, LLMRequest, LLMResponse, LLMModel, ProviderConfig } from '@/types/llm';
+import type { CloudProvider, LLMRequest, LLMResponse, LLMModel, ProviderConfig, ChatMessage, TokenUsage } from '@/types/llm';
 import type { LegalArea } from '@/types/legal';
+import type { ErrorWithCode, GeminiApiModel } from '@/types/common';
 import { BaseLLMProvider } from '../base-provider';
 import { promptBuilder } from '../prompt-builder';
 import { i18n } from '@/i18n';
@@ -180,14 +181,14 @@ export class GeminiProvider extends BaseLLMProvider implements CloudProvider {
       this.updateMetrics(llmResponse, true);
       return llmResponse;
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       const latency = Date.now() - startTime;
       
       // Create error response for metrics
       const errorResponse = this.createBaseResponse(request, '', { promptTokenCount: 0, candidatesTokenCount: 0, totalTokenCount: 0 }, latency);
       this.updateMetrics(errorResponse, false);
       
-      this.handleError(error, request);
+      this.handleError(error as ErrorWithCode, request);
     }
   }
 
@@ -210,7 +211,7 @@ export class GeminiProvider extends BaseLLMProvider implements CloudProvider {
     }, model);
   }
 
-  private formatMessages(messages: any[]): any[] {
+  private formatMessages(messages: ChatMessage[]): Array<{ role: string; parts: Array<{ text: string }> }> {
     // Convert to Gemini format
     const contents = [];
     
@@ -227,7 +228,7 @@ export class GeminiProvider extends BaseLLMProvider implements CloudProvider {
     return contents;
   }
 
-  private estimateUsage(request: LLMRequest, content: string): any {
+  private estimateUsage(request: LLMRequest, content: string): TokenUsage {
     // Estimate tokens when Gemini doesn't provide usage data
     const inputText = request.messages.map(m => m.content).join(' ');
     const promptTokens = Math.ceil(inputText.length / 4);
@@ -254,13 +255,13 @@ export class GeminiProvider extends BaseLLMProvider implements CloudProvider {
       const data = await response.json();
       
       // Filter to generation models
-      const generationModels = data.models?.filter((model: any) => 
+      const generationModels = data.models?.filter((model: GeminiApiModel) => 
         model.name.includes('gemini') && 
         model.supportedGenerationMethods?.includes('generateContent')
       ) || [];
 
       return this.models.filter(model => 
-        generationModels.some((apiModel: any) => 
+        generationModels.some((apiModel: GeminiApiModel) => 
           apiModel.name.includes(model.id)
         )
       );

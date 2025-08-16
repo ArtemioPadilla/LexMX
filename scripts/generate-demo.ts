@@ -22,6 +22,23 @@ interface DemoOptions {
   keepVideo?: boolean;
 }
 
+interface DemoAction {
+  type: 'scroll' | 'hover' | 'type' | 'wait' | 'click';
+  target?: string;
+  to?: number;
+  delay?: number;
+  selector?: string;
+  text?: string;
+  duration?: number;
+}
+
+interface DemoScene {
+  page: string;
+  duration: number;
+  waitFor?: 'networkidle' | 'domcontentloaded' | 'load';
+  actions: DemoAction[];
+}
+
 class DemoRecorder {
   private browser: Browser | null = null;
   private context: BrowserContext | null = null;
@@ -106,7 +123,7 @@ class DemoRecorder {
     }
   }
 
-  private async recordScene(scene: any): Promise<void> {
+  private async recordScene(scene: DemoScene): Promise<void> {
     const url = `${config.server.url}${scene.page}`;
     
     // Navigate to page
@@ -125,31 +142,34 @@ class DemoRecorder {
     }
   }
 
-  private async executeAction(action: any): Promise<void> {
+  private async executeAction(action: DemoAction): Promise<void> {
     const page = this.page!;
 
     switch (action.type) {
-      case 'click':
+      case 'click': {
         const clickElement = page.locator(action.selector).first();
         if (await clickElement.isVisible({ timeout: 2000 }).catch(() => false)) {
           await clickElement.click();
         }
         break;
+      }
 
-      case 'hover':
+      case 'hover': {
         const hoverElement = page.locator(action.selector).first();
         if (await hoverElement.isVisible({ timeout: 2000 }).catch(() => false)) {
           await hoverElement.hover();
         }
         break;
+      }
 
-      case 'type':
+      case 'type': {
         const typeElement = page.locator(action.selector).first();
         if (await typeElement.isVisible({ timeout: 2000 }).catch(() => false)) {
           await typeElement.click();
           await typeElement.type(action.text, { delay: action.delay || 50 });
         }
         break;
+      }
 
       case 'scroll':
         if (action.target === 'smooth') {
@@ -323,13 +343,16 @@ class DemoRecorder {
 // CLI interface
 async function main() {
   const args = process.argv.slice(2);
-  const type = args[0] || 'full';
+  const inputType = args[0] || 'full';
+  const type: 'full' | 'quick' | 'chat' = ['full', 'quick', 'chat'].includes(inputType) 
+    ? inputType as 'full' | 'quick' | 'chat' 
+    : 'full';
   const headless = !args.includes('--headed');
   const screenshots = args.includes('--screenshots');
   const keepVideo = args.includes('--keep-video');
 
   const recorder = new DemoRecorder({
-    type: type as any,
+    type,
     headless,
     keepVideo
   });

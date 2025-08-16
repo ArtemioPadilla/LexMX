@@ -2,6 +2,7 @@
 
 import type { SearchResult, SearchOptions } from '@/types/rag';
 import type { LegalArea, QueryType } from '@/types/legal';
+import type { StorageMetadata } from '@/types/common';
 
 export interface HybridSearchOptions extends SearchOptions {
   semanticWeight?: number;
@@ -41,7 +42,7 @@ export class BM25Search {
     id: string;
     content: string;
     tokens: string[];
-    metadata?: any;
+    metadata?: StorageMetadata;
   }> = new Map();
   
   private termFrequencies: Map<string, Map<string, number>> = new Map();
@@ -55,7 +56,7 @@ export class BM25Search {
   /**
    * Add document to the search index
    */
-  addDocument(id: string, content: string, metadata?: any): void {
+  addDocument(id: string, content: string, metadata?: StorageMetadata): void {
     const tokens = this.tokenize(content);
     const document = { id, content, tokens, metadata };
     
@@ -194,7 +195,7 @@ export class BM25Search {
   }
 
   private calculateBoostFactor(
-    document: any, 
+    document: SearchResult, 
     queryTerms: string[], 
     boostConfig?: Record<string, number>
   ): number {
@@ -253,16 +254,16 @@ export class BM25Search {
  */
 export class HybridSearchEngine {
   private bm25Search = new BM25Search();
-  private vectorStore: any; // Will be injected
+  private vectorStore: unknown; // Will be injected
 
-  constructor(vectorStore?: any) {
+  constructor(vectorStore?: unknown) {
     this.vectorStore = vectorStore;
   }
 
   /**
    * Add document to both search indices
    */
-  async addDocument(id: string, content: string, embedding: number[], metadata?: any): Promise<void> {
+  async addDocument(id: string, content: string, embedding: number[], metadata?: StorageMetadata): Promise<void> {
     // Add to keyword search index
     this.bm25Search.addDocument(id, content, metadata);
 
@@ -320,7 +321,7 @@ export class HybridSearchEngine {
         filter: legalArea ? { legalArea } : undefined
       });
 
-      semanticResults = vectorResults.map((result: any) => ({
+      semanticResults = vectorResults.map((result: SearchResult) => ({
         id: result.id,
         content: result.content,
         score: result.score,
@@ -378,7 +379,7 @@ export class HybridSearchEngine {
     keywordWeight: number,
     semanticWeight: number
   ): SearchResult[] {
-    const scoreMap = new Map<string, { score: number; content: string; metadata?: any }>();
+    const scoreMap = new Map<string, { score: number; content: string; metadata?: StorageMetadata }>();
 
     // Process keyword results
     keywordResults.forEach((result, rank) => {

@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback as _useCallback } from 'react';
 import { useTranslation } from '../i18n';
 import type { LegalResponse, LegalArea } from '../types/legal';
+import type { StoredChatMessage } from '../types/chat';
 import { LegalRAGEngine } from '../lib/rag/engine';
 import { providerManager } from '../lib/llm/provider-manager';
 import MessageContent from '../components/MessageContent';
@@ -45,7 +46,7 @@ export default function CaseChat({
   statusChanges = [],
   summary,
   createdAt,
-  updatedAt,
+  _updatedAt,
   status,
   onConversationUpdate
 }: CaseChatProps) {
@@ -103,7 +104,7 @@ export default function CaseChat({
       if (savedConversation) {
         try {
           const parsed = JSON.parse(savedConversation);
-          setMessages(parsed.messages.map((msg: any) => ({
+          setMessages(parsed.messages.map((msg: StoredChatMessage) => ({
             ...msg,
             timestamp: new Date(msg.timestamp)
           })));

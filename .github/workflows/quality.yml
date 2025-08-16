@@ -106,8 +106,8 @@ jobs:
           
           # Create validation script
           cat > validate-legal.js << 'EOF'
-          const fs = require('fs');
-          const path = require('path');
+          import fs from 'fs';
+          import path from 'path';
           
           const validateLegalContent = () => {
             const corpusDir = 'public/legal-corpus';
@@ -355,7 +355,7 @@ jobs:
           fi
           
       - name: 📊 Upload bundle analysis
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bundle-analysis
           path: |

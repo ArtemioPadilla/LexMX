@@ -20,7 +20,7 @@ export function DocumentChunksView({
   const chunks = useMemo(() => {
     if (!document.content) return [];
     
-    return document.content.map((content, index): LegalChunk => ({
+    return document.content.map((content, _index): LegalChunk => ({
       id: content.id,
       documentId: document.id,
       content: content.content,
@@ -210,7 +210,7 @@ export function DocumentChunksView({
             </label>
             <select
               value={filterType}
-              onChange={(e) => setFilterType(e.target.value as any)}
+              onChange={(e) => setFilterType(e.target.value as 'all' | 'article' | 'paragraph' | 'fraction')}
               className="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value="all">Todos</option>
@@ -227,7 +227,7 @@ export function DocumentChunksView({
             </label>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as 'order' | 'relevance' | 'length')}
               className="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value="order">Orden original</option>

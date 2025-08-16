@@ -154,7 +154,8 @@ export class ClientCryptoManager implements CryptoManager {
 
       // Decode result
       return new TextDecoder().decode(decrypted);
-    } catch (error) {
+    } catch (_error) {
+      void _error;
       throw new Error('Failed to decrypt data. Key may be invalid.');
     }
   }
@@ -167,7 +168,8 @@ export class ClientCryptoManager implements CryptoManager {
         result.push(String.fromCharCode(decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length)));
       }
       return result.join('');
-    } catch (error) {
+    } catch (_error) {
+      void _error;
       throw new Error('Failed to deobfuscate data');
     }
   }

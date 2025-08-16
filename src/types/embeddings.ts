@@ -25,6 +25,7 @@ export interface EmbeddingProviderConfig {
   cacheExpiration?: number;
   apiKey?: string;
   apiUrl?: string;
+  onProgress?: (progress: any) => void;
 }
 
 export interface EmbeddingProviderStats {
@@ -71,7 +72,7 @@ export interface RAGProgressEvent {
   stage: 'query_analysis' | 'embedding_generation' | 'document_search' | 'context_building' | 'response_generation';
   status: 'pending' | 'active' | 'completed' | 'error';
   message?: string;
-  details?: any;
+  details?: unknown;
   progress?: number;
   timestamp: number;
 }

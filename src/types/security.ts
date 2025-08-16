@@ -15,8 +15,8 @@ export interface SecurityConfig {
 }
 
 export interface SecureStorage {
-  store(key: string, data: any): Promise<void>;
-  retrieve(key: string): Promise<any | null>;
+  store(key: string, data: unknown): Promise<void>;
+  retrieve(key: string): Promise<unknown | null>;
   remove(key: string): Promise<void>;
   clear(): Promise<void>;
   exists(key: string): Promise<boolean>;
