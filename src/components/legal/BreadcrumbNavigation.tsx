@@ -1,6 +1,7 @@
 import React from 'react';
 import type { LegalDocument } from '../../types/legal';
 import { useTranslation } from '../../i18n';
+import { getUrl } from '../../utils/urls';
 
 interface BreadcrumbNavigationProps {
   document: LegalDocument;
@@ -14,7 +15,7 @@ export function BreadcrumbNavigation({ document, currentSection, className = '' 
   const breadcrumbs = [
     {
       name: 'LexMX',
-      href: '/',
+      href: getUrl(''),
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
@@ -25,15 +26,15 @@ export function BreadcrumbNavigation({ document, currentSection, className = '' 
     },
     {
       name: t('documentViewer.breadcrumbs.legalDocuments'),
-      href: '/legal'
+      href: getUrl('legal')
     },
     {
       name: getDocumentTypeDisplay(document.type),
-      href: `/legal?type=${document.type}`
+      href: getUrl(`legal?type=${document.type}`)
     },
     {
       name: document.shortTitle || document.title,
-      href: `/document/${document.id}`,
+      href: getUrl(`document/${document.id}`),
       current: !currentSection
     }
   ];
@@ -47,7 +48,7 @@ export function BreadcrumbNavigation({ document, currentSection, className = '' 
     if (sectionContent) {
       breadcrumbs.push({
         name: getSectionDisplay(sectionContent.type, sectionContent.number, sectionContent.title),
-        href: `/document/${document.id}/article/${currentSection}`,
+        href: getUrl(`document/${document.id}/article/${currentSection}`),
         current: true
       });
     }
@@ -179,7 +180,7 @@ export function BreadcrumbNavigation({ document, currentSection, className = '' 
 
         {/* Back to search */}
         <a
-          href="/chat"
+          href={getUrl('chat')}
           className="inline-flex items-center px-3 py-2 text-sm font-medium text-legal-600 dark:text-legal-400 bg-legal-50 dark:bg-legal-900/20 rounded-lg hover:bg-legal-100 dark:hover:bg-legal-900/40 transition-colors"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

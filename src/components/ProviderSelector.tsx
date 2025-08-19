@@ -6,6 +6,7 @@ import WebLLMProgress from './WebLLMProgress';
 import { useTranslation } from '../i18n';
 import type { ProviderConfig } from '../types/llm';
 import { TEST_IDS } from '../utils/test-ids';
+import { getUrl } from '../utils/urls';
 
 interface ProviderSelectorProps {
   onProviderChange?: (providerId: string, model?: string) => void;
@@ -303,7 +304,7 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
 
           <div className="border-t border-gray-200 dark:border-gray-700 p-2">
             <a
-              href="/setup"
+              href={getUrl('setup')}
               className="block w-full text-center px-3 py-2 text-sm text-legal-600 dark:text-legal-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
             >
               {t('providers.configure')}

@@ -1,42 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { APIContext } from 'astro';
 
-// Mock the services
-vi.mock('../../../lib/admin/corpus-service', () => ({
-  CorpusService: vi.fn().mockImplementation(() => ({
-    initialize: vi.fn().mockResolvedValue(undefined),
-    getDocuments: vi.fn().mockResolvedValue([
-      {
-        id: 'doc-1',
-        title: 'Constitución Política',
-        type: 'constitution',
-        primaryArea: 'constitutional',
-        hierarchy: 1,
-        content: [],
-        authority: 'Congreso de la Unión',
-        publicationDate: '1917-02-05',
-        status: 'active',
-        territorialScope: 'federal',
-        secondaryAreas: [],
-        citations: []
-      },
-      {
-        id: 'doc-2',
-        title: 'Ley Federal del Trabajo',
-        type: 'law',
-        primaryArea: 'labor',
-        hierarchy: 3,
-        content: [],
-        authority: 'Congreso de la Unión',
-        publicationDate: '1970-04-01',
-        status: 'active',
-        territorialScope: 'federal',
-        secondaryAreas: [],
-        citations: []
-      }
-    ])
-  }))
-}));
+// Mock the underlying dependencies
+vi.mock('../../../lib/corpus/document-loader');
+vi.mock('../../../lib/storage/indexeddb-vector-store');
+vi.mock('../../../lib/storage/metadata-store');
+vi.mock('../../../lib/ingestion/document-ingestion-pipeline');
+vi.mock('../../../lib/admin/admin-data-service');
 
 // Import after mocking
 import { GET } from '../list';
@@ -130,9 +100,8 @@ describe('Corpus List API Endpoint', () => {
     });
 
     it('should handle service errors gracefully', async () => {
-      const { CorpusService } = await import('../../../lib/admin/corpus-service');
-      const mockInstance = new (CorpusService as any)();
-      mockInstance.getDocuments.mockRejectedValueOnce(new Error('Database error'));
+      const { corpusService } = await import('../../../lib/admin/corpus-service');
+      (corpusService.getDocuments as any).mockRejectedValueOnce(new Error('Database error'));
 
       const response = await GET(mockContext);
       const data = await response.json();
@@ -149,9 +118,8 @@ describe('Corpus List API Endpoint', () => {
     });
 
     it('should handle empty corpus', async () => {
-      const { CorpusService } = await import('../../../lib/admin/corpus-service');
-      const mockInstance = new (CorpusService as any)();
-      mockInstance.getDocuments.mockResolvedValueOnce([]);
+      const { corpusService } = await import('../../../lib/admin/corpus-service');
+      (corpusService.getDocuments as any).mockResolvedValueOnce([]);
 
       const response = await GET(mockContext);
       const data = await response.json();

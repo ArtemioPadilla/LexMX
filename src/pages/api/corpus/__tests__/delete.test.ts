@@ -3,7 +3,7 @@ import type { APIContext } from 'astro';
 
 // Mock the services
 vi.mock('../../../lib/admin/corpus-service', () => ({
-  CorpusService: vi.fn().mockImplementation(() => ({
+  corpusService: {
     initialize: vi.fn().mockResolvedValue(undefined),
     deleteDocument: vi.fn().mockImplementation((id: string) => {
       if (id === 'doc-1') {
@@ -11,13 +11,13 @@ vi.mock('../../../lib/admin/corpus-service', () => ({
       }
       throw new Error('Document not found');
     }),
-    getDocumentById: vi.fn().mockImplementation((id: string) => {
+    getDocument: vi.fn().mockImplementation((id: string) => {
       if (id === 'doc-1') {
         return Promise.resolve({ id: 'doc-1', title: 'Test Document' });
       }
       return Promise.resolve(null);
     })
-  }))
+  }
 }));
 
 // Import after mocking

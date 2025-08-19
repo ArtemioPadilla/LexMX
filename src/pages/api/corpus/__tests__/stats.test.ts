@@ -3,11 +3,10 @@ import type { APIContext } from 'astro';
 
 // Mock the services
 vi.mock('../../../lib/admin/corpus-service', () => ({
-  CorpusService: vi.fn().mockImplementation(() => ({
+  corpusService: {
     initialize: vi.fn().mockResolvedValue(undefined),
     getStatistics: vi.fn().mockResolvedValue({
-      totalDocuments: 125,
-      documentsByType: {
+      byType: {
         law: 45,
         code: 15,
         regulation: 35,
@@ -16,7 +15,7 @@ vi.mock('../../../lib/admin/corpus-service', () => ({
         treaty: 5,
         norm: 4
       },
-      documentsByArea: {
+      byArea: {
         labor: 25,
         civil: 30,
         criminal: 20,
@@ -25,7 +24,7 @@ vi.mock('../../../lib/admin/corpus-service', () => ({
         commercial: 10,
         administrative: 10
       },
-      hierarchyDistribution: {
+      byHierarchy: {
         1: 1,  // Constitution
         2: 5,  // Treaties
         3: 60, // Federal laws
@@ -34,13 +33,10 @@ vi.mock('../../../lib/admin/corpus-service', () => ({
         6: 15, // State laws
         7: 5   // Administrative
       },
-      totalChunks: 2500,
-      averageChunksPerDocument: 20,
-      lastUpdate: '2024-01-15T10:00:00Z',
-      storageSize: 15728640 // 15 MB
+      averageChunks: 20,
+      totalSize: 15728640 // 15 MB
     }),
     validateCorpus: vi.fn().mockResolvedValue({
-      totalDocuments: 125,
       valid: 120,
       invalid: 5,
       issues: [
@@ -48,7 +44,7 @@ vi.mock('../../../lib/admin/corpus-service', () => ({
         { documentId: 'doc-2', issues: ['Invalid metadata'] }
       ]
     })
-  }))
+  }
 }));
 
 // Import after mocking
@@ -111,9 +107,8 @@ describe('Corpus Stats API Endpoint', () => {
     });
 
     it('should handle service errors gracefully', async () => {
-      const { CorpusService } = await import('../../../lib/admin/corpus-service');
-      const mockInstance = new (CorpusService as any)();
-      mockInstance.getStatistics.mockRejectedValueOnce(new Error('Database error'));
+      const { corpusService } = await import('../../../lib/admin/corpus-service');
+      (corpusService.getStatistics as any).mockRejectedValueOnce(new Error('Database error'));
 
       const response = await GET(mockContext);
       const data = await response.json();

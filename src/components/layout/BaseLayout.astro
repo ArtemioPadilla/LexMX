@@ -7,6 +7,7 @@ import ClientTranslations from '../ClientTranslations.astro';
 import APIAdapter from '../APIAdapter.astro';
 import HydrationWrapper from '../HydrationWrapper.astro';
 import { getTranslation } from '../../i18n/utils';
+import { getUrl, getAssetUrl } from '../../utils/urls';
 
 export interface Props {
   title: string;
@@ -32,7 +33,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
   <meta charset="UTF-8" />
   <meta name="description" content={description} />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href={getAssetUrl('favicon.svg')} />
   <meta name="generator" content={Astro.generator} />
   
   <!-- Canonical URL -->
@@ -149,7 +150,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
       <div class="flex justify-between items-center h-16">
         <!-- Logo -->
         <div class="flex items-center">
-          <a href="/" class="flex items-center space-x-2">
+          <a href={getUrl('')} class="flex items-center space-x-2">
             <div class="w-8 h-8 bg-legal-500 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -161,25 +162,25 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
         <!-- Navigation -->
         <nav class="hidden lg:flex items-center space-x-8">
-          <a href="/chat" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.chat">
+          <a href={getUrl('chat')} class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.chat">
             {t('nav.chat')}
           </a>
-          <a href="/casos" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.cases">
+          <a href={getUrl('casos')} class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.cases">
             {t('nav.cases')}
           </a>
-          <a href="/wiki" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.wiki">
+          <a href={getUrl('wiki')} class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.wiki">
             {t('nav.wiki')}
           </a>
-          <a href="/legal" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.codes">
+          <a href={getUrl('legal')} class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.codes">
             {t('nav.codes')}
           </a>
-          <a href="/requests" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.requests">
+          <a href={getUrl('requests')} class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.requests">
             {t('nav.requests')}
           </a>
-          <a href="/setup" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.setup">
+          <a href={getUrl('setup')} class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.setup">
             {t('nav.setup')}
           </a>
-          <a href="/about" class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.about">
+          <a href={getUrl('about')} class="text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 font-medium transition-colors" data-i18n="nav.about">
             {t('nav.about')}
           </a>
         </nav>
@@ -240,10 +241,10 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
             {t('footer.quickLinks')}
           </h3>
           <ul class="space-y-2">
-            <li><a href="/chat" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors" data-i18n="nav.chat">{t('nav.chat')}</a></li>
-            <li><a href="/legal" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors" data-i18n="nav.codes">{t('nav.codes')}</a></li>
-            <li><a href="/setup" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors" data-i18n="nav.setup">{t('nav.setup')}</a></li>
-            <li><a href="/privacy" class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors" data-i18n="footer.privacyPolicy">{t('footer.privacyPolicy')}</a></li>
+            <li><a href={getUrl('chat')} class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors" data-i18n="nav.chat">{t('nav.chat')}</a></li>
+            <li><a href={getUrl('legal')} class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors" data-i18n="nav.codes">{t('nav.codes')}</a></li>
+            <li><a href={getUrl('setup')} class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors" data-i18n="nav.setup">{t('nav.setup')}</a></li>
+            <li><a href={getUrl('privacy')} class="text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400 transition-colors" data-i18n="footer.privacyPolicy">{t('footer.privacyPolicy')}</a></li>
           </ul>
         </div>
 

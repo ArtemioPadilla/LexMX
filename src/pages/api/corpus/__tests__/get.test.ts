@@ -3,9 +3,9 @@ import type { APIContext } from 'astro';
 
 // Mock the services
 vi.mock('../../../lib/admin/corpus-service', () => ({
-  CorpusService: vi.fn().mockImplementation(() => ({
+  corpusService: {
     initialize: vi.fn().mockResolvedValue(undefined),
-    getDocumentById: vi.fn().mockImplementation((id: string) => {
+    getDocument: vi.fn().mockImplementation((id: string) => {
       if (id === 'doc-1') {
         return Promise.resolve({
           id: 'doc-1',
@@ -37,7 +37,7 @@ vi.mock('../../../lib/admin/corpus-service', () => ({
       averageRelevanceScore: 0.85,
       citationCount: 25
     })
-  }))
+  }
 }));
 
 // Import after mocking
@@ -109,9 +109,8 @@ describe('Corpus Get API Endpoint', () => {
     });
 
     it('should handle service errors gracefully', async () => {
-      const { CorpusService } = await import('../../../lib/admin/corpus-service');
-      const mockInstance = new (CorpusService as any)();
-      mockInstance.getDocumentById.mockRejectedValueOnce(new Error('Database error'));
+      const { corpusService } = await import('../../../lib/admin/corpus-service');
+      (corpusService.getDocument as any).mockRejectedValueOnce(new Error('Database error'));
 
       const response = await GET(mockContext);
       const data = await response.json();
@@ -128,8 +127,7 @@ describe('Corpus Get API Endpoint', () => {
     });
 
     it('should handle documents with large content', async () => {
-      const { CorpusService } = await import('../../../lib/admin/corpus-service');
-      const mockInstance = new (CorpusService as any)();
+      const { corpusService } = await import('../../../lib/admin/corpus-service');
       
       const largeDocument = {
         id: 'doc-large',
@@ -143,7 +141,7 @@ describe('Corpus Get API Endpoint', () => {
         }))
       };
       
-      mockInstance.getDocumentById.mockResolvedValueOnce(largeDocument);
+      (corpusService.getDocument as any).mockResolvedValueOnce(largeDocument);
       mockContext.url = new URL('http://localhost:3000/api/corpus/get?id=doc-large');
       mockContext.request = new Request(mockContext.url.toString());
 

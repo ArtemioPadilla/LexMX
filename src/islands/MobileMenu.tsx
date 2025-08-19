@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
 import { TEST_IDS as _TEST_IDS } from '../utils/test-ids';
 import { useTranslation } from '../i18n/index';
+import { getUrl } from '../utils/urls';
 
 interface NavItem {
   href: string;
@@ -79,13 +80,13 @@ export default function MobileMenu() {
   }
 
   const navItems: NavItem[] = [
-    { href: '/chat', label: t('nav.chat'), icon: '💬' },
-    { href: '/casos', label: t('nav.cases') || 'Mis Casos', icon: '📁' },
-    { href: '/wiki', label: t('nav.wiki'), icon: '📚' },
-    { href: '/legal', label: t('nav.codes'), icon: '⚖️' },
-    { href: '/requests', label: t('nav.requests'), icon: '📋' },
-    { href: '/setup', label: t('nav.setup'), icon: '⚙️' },
-    { href: '/about', label: t('nav.about'), icon: 'ℹ️' },
+    { href: getUrl('chat'), label: t('nav.chat'), icon: '💬' },
+    { href: getUrl('casos'), label: t('nav.cases') || 'Mis Casos', icon: '📁' },
+    { href: getUrl('wiki'), label: t('nav.wiki'), icon: '📚' },
+    { href: getUrl('legal'), label: t('nav.codes'), icon: '⚖️' },
+    { href: getUrl('requests'), label: t('nav.requests'), icon: '📋' },
+    { href: getUrl('setup'), label: t('nav.setup'), icon: '⚙️' },
+    { href: getUrl('about'), label: t('nav.about'), icon: 'ℹ️' },
   ];
 
   return (
@@ -175,7 +176,7 @@ export default function MobileMenu() {
                     </h3>
                     <div className="space-y-2">
                       <a
-                        href="/chat"
+                        href={getUrl('chat')}
                         className="flex items-center space-x-3 px-4 py-3 bg-legal-500 text-white rounded-lg hover:bg-legal-600 transition-colors"
                         onClick={() => setIsOpen(false)}
                       >
@@ -195,7 +196,7 @@ export default function MobileMenu() {
                     <ul className="space-y-2">
                       <li>
                         <a
-                          href="/privacy"
+                          href={getUrl('privacy')}
                           className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-legal-600 dark:hover:text-legal-400"
                           onClick={() => setIsOpen(false)}
                         >

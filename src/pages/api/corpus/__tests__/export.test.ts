@@ -3,34 +3,23 @@ import type { APIContext } from 'astro';
 
 // Mock the services
 vi.mock('../../../lib/admin/corpus-service', () => ({
-  CorpusService: vi.fn().mockImplementation(() => ({
+  corpusService: {
     initialize: vi.fn().mockResolvedValue(undefined),
-    exportCorpus: vi.fn().mockResolvedValue({
-      documents: [
-        {
-          id: 'doc-1',
-          title: 'Constitución Política',
-          type: 'constitution',
-          content: []
-        },
-        {
-          id: 'doc-2',
-          title: 'Ley Federal del Trabajo',
-          type: 'law',
-          content: []
-        }
-      ],
-      metadata: {
-        version: '1.0.0',
-        exportDate: new Date().toISOString(),
-        totalDocuments: 2
-      }
-    }),
     getDocuments: vi.fn().mockResolvedValue([
-      { id: 'doc-1', title: 'Doc 1' },
-      { id: 'doc-2', title: 'Doc 2' }
+      {
+        id: 'doc-1',
+        title: 'Constitución Política',
+        type: 'constitution',
+        content: []
+      },
+      {
+        id: 'doc-2',
+        title: 'Ley Federal del Trabajo',
+        type: 'law',
+        content: []
+      }
     ])
-  }))
+  }
 }));
 
 // Import after mocking
@@ -90,23 +79,15 @@ describe('Corpus Export API Endpoint', () => {
     });
 
     it('should handle large corpus export', async () => {
-      const { CorpusService } = await import('../../../lib/admin/corpus-service');
-      const mockInstance = new (CorpusService as any)();
+      const { corpusService } = await import('../../../lib/admin/corpus-service');
       
-      const largeCorpus = {
-        documents: Array(1000).fill(null).map((_, i) => ({
-          id: `doc-${i}`,
-          title: `Document ${i}`,
-          content: []
-        })),
-        metadata: {
-          version: '1.0.0',
-          exportDate: new Date().toISOString(),
-          totalDocuments: 1000
-        }
-      };
+      const largeDocuments = Array(1000).fill(null).map((_, i) => ({
+        id: `doc-${i}`,
+        title: `Document ${i}`,
+        content: []
+      }));
       
-      mockInstance.exportCorpus.mockResolvedValueOnce(largeCorpus);
+      (corpusService.getDocuments as any).mockResolvedValueOnce(largeDocuments);
 
       const response = await GET(mockContext);
       const data = await response.json();
@@ -126,9 +107,8 @@ describe('Corpus Export API Endpoint', () => {
     });
 
     it('should handle service errors gracefully', async () => {
-      const { CorpusService } = await import('../../../lib/admin/corpus-service');
-      const mockInstance = new (CorpusService as any)();
-      mockInstance.exportCorpus.mockRejectedValueOnce(new Error('Export failed'));
+      const { corpusService } = await import('../../../lib/admin/corpus-service');
+      (corpusService.getDocuments as any).mockRejectedValueOnce(new Error('Export failed'));
 
       const response = await GET(mockContext);
       const data = await response.json();
@@ -170,16 +150,8 @@ describe('Corpus Export API Endpoint', () => {
     });
 
     it('should handle empty corpus export', async () => {
-      const { CorpusService } = await import('../../../lib/admin/corpus-service');
-      const mockInstance = new (CorpusService as any)();
-      mockInstance.exportCorpus.mockResolvedValueOnce({
-        documents: [],
-        metadata: {
-          version: '1.0.0',
-          exportDate: new Date().toISOString(),
-          totalDocuments: 0
-        }
-      });
+      const { corpusService } = await import('../../../lib/admin/corpus-service');
+      (corpusService.getDocuments as any).mockResolvedValueOnce([]);
 
       const response = await GET(mockContext);
       const data = await response.json();
