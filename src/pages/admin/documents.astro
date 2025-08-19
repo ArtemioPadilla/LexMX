@@ -1,0 +1,276 @@
+---
+import BaseLayout from '../../components/layout/BaseLayout.astro';
+import HydrationWrapper from '../../components/HydrationWrapper.astro';
+import DocumentIngestionPipeline from '../../islands/DocumentIngestionPipeline';
+---
+
+<BaseLayout title="Document Management - LexMX">
+  <main class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2" data-i18n="admin.documents.title">
+          Document Management Dashboard
+        </h1>
+        <p class="text-lg text-gray-600 dark:text-gray-300" data-i18n="admin.documents.subtitle">
+          Ingest, process, and manage legal documents for the RAG system
+        </p>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="mb-8 border-b border-gray-200 dark:border-gray-700">
+        <nav class="-mb-px flex space-x-8">
+          <a href="#ingestion" class="border-b-2 border-legal-500 py-2 px-1 text-sm font-medium text-legal-600 dark:text-legal-400">
+            <span data-i18n="admin.documents.tabs.ingestion">Document Ingestion</span>
+          </a>
+          <a href="/admin/corpus" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+            <span data-i18n="admin.documents.tabs.corpus">Corpus Overview</span>
+          </a>
+          <a href="/admin/embeddings" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+            <span data-i18n="admin.documents.tabs.embeddings">Embeddings</span>
+          </a>
+          <a href="/admin/quality" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+            <span data-i18n="admin.documents.tabs.quality">Quality Metrics</span>
+          </a>
+        </nav>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400" data-i18n="admin.documents.stats.total">Total Documents</p>
+              <p class="text-2xl font-semibold text-gray-900 dark:text-white">
+                <span id="total-documents">0</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400" data-i18n="admin.documents.stats.chunks">Total Chunks</p>
+              <p class="text-2xl font-semibold text-gray-900 dark:text-white">
+                <span id="total-chunks">0</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400" data-i18n="admin.documents.stats.embeddings">Embeddings</p>
+              <p class="text-2xl font-semibold text-gray-900 dark:text-white">
+                <span id="total-embeddings">0</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400" data-i18n="admin.documents.stats.lastUpdate">Last Update</p>
+              <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                <span id="last-update">Never</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Process Request Alert -->
+      <div id="process-request-alert" class="hidden mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div class="flex items-start">
+          <svg class="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+          </svg>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200" data-i18n="admin.documents.processingRequest">
+              Processing Document Request
+            </h3>
+            <p class="mt-1 text-sm text-blue-700 dark:text-blue-300">
+              <span data-i18n="admin.documents.requestId">Request ID:</span> <span id="request-id" class="font-mono"></span>
+            </p>
+            <button onclick="clearProcessRequest()" class="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200">
+              <span data-i18n="admin.documents.clearRequest">Clear and show normal ingestion</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Document Ingestion Component -->
+      <div id="ingestion">
+        <HydrationWrapper name="document-ingestion-pipeline">
+          <DocumentIngestionPipeline client:load requestId="" />
+        </HydrationWrapper>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="mt-8">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4" data-i18n="admin.documents.recentActivity">
+          Recent Activity
+        </h2>
+        <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md">
+          <ul class="divide-y divide-gray-200 dark:divide-gray-700" id="activity-list">
+            <!-- Activity items will be populated here -->
+            <li class="px-6 py-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <span class="text-2xl">📄</span>
+                  </div>
+                  <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">
+                      No recent activity
+                    </p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      Start by ingesting a document above
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Check for processRequest parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const processRequestId = urlParams.get('processRequest');
+    
+    if (processRequestId) {
+      // Show alert
+      const alert = document.getElementById('process-request-alert');
+      if (alert) {
+        alert.classList.remove('hidden');
+        document.getElementById('request-id').textContent = processRequestId;
+      }
+      
+      // Pass request ID to the ingestion component
+      const ingestionComponent = document.querySelector('[name="document-ingestion-pipeline"]');
+      if (ingestionComponent) {
+        ingestionComponent.setAttribute('requestId', processRequestId);
+      }
+    }
+    
+    function clearProcessRequest() {
+      // Remove query parameter
+      const url = new URL(window.location.href);
+      url.searchParams.delete('processRequest');
+      window.history.replaceState({}, document.title, url.pathname);
+      
+      // Hide alert
+      document.getElementById('process-request-alert').classList.add('hidden');
+      
+      // Clear request ID from component
+      const ingestionComponent = document.querySelector('[name="document-ingestion-pipeline"]');
+      if (ingestionComponent) {
+        ingestionComponent.setAttribute('requestId', '');
+      }
+    }
+    
+    // Load corpus statistics
+    async function loadStatistics() {
+      try {
+        const metadataResponse = await fetch('/legal-corpus/metadata.json');
+        if (metadataResponse.ok) {
+          const metadata = await metadataResponse.json();
+          document.getElementById('total-documents').textContent = metadata.totalDocuments || '0';
+          
+          // Calculate total chunks
+          let totalChunks = 0;
+          if (metadata.documents) {
+            for (const doc of metadata.documents) {
+              totalChunks += doc.chunks || 0;
+            }
+          }
+          document.getElementById('total-chunks').textContent = totalChunks.toString();
+        }
+
+        const embeddingsResponse = await fetch('/embeddings/embeddings-metadata.json');
+        if (embeddingsResponse.ok) {
+          const embeddingsMeta = await embeddingsResponse.json();
+          document.getElementById('total-embeddings').textContent = 
+            embeddingsMeta.corpus?.processedChunks || '0';
+          
+          if (embeddingsMeta.buildDate) {
+            const date = new Date(embeddingsMeta.buildDate);
+            document.getElementById('last-update').textContent = 
+              date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load statistics:', error);
+      }
+    }
+
+    // Load statistics on page load
+    loadStatistics();
+
+    // Refresh statistics every 30 seconds
+    setInterval(loadStatistics, 30000);
+
+    // Handle ingestion completion
+    window.addEventListener('ingestion-complete', (event) => {
+      // Reload statistics
+      loadStatistics();
+      
+      // Add to activity list
+      const activityList = document.getElementById('activity-list');
+      const newActivity = document.createElement('li');
+      newActivity.className = 'px-6 py-4 bg-green-50 dark:bg-green-900/20';
+      newActivity.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <span class="text-2xl">✅</span>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-900 dark:text-white">
+                Document ingested successfully
+              </p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                ${new Date().toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Insert at the beginning of the list
+      activityList.insertBefore(newActivity, activityList.firstChild);
+      
+      // Remove old activities if more than 10
+      while (activityList.children.length > 10) {
+        activityList.removeChild(activityList.lastChild);
+      }
+    });
+  </script>
+</BaseLayout>

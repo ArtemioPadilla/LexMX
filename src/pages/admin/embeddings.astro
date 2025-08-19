@@ -1,0 +1,265 @@
+---
+import BaseLayout from '../../components/layout/BaseLayout.astro';
+---
+
+<BaseLayout title="Embeddings Management - LexMX">
+  <main class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2" data-i18n="admin.embeddings.title">
+          Embeddings Management
+        </h1>
+        <p class="text-lg text-gray-600 dark:text-gray-300" data-i18n="admin.embeddings.subtitle">
+          Manage vector embeddings for semantic search
+        </p>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="mb-8 border-b border-gray-200 dark:border-gray-700">
+        <nav class="-mb-px flex space-x-8">
+          <a href="/admin/documents" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+            <span data-i18n="admin.documents.tabs.ingestion">Document Ingestion</span>
+          </a>
+          <a href="/admin/corpus" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+            <span data-i18n="admin.documents.tabs.corpus">Corpus Overview</span>
+          </a>
+          <a href="/admin/embeddings" class="border-b-2 border-legal-500 py-2 px-1 text-sm font-medium text-legal-600 dark:text-legal-400">
+            <span data-i18n="admin.documents.tabs.embeddings">Embeddings</span>
+          </a>
+          <a href="/admin/quality" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+            <span data-i18n="admin.documents.tabs.quality">Quality Metrics</span>
+          </a>
+        </nav>
+      </div>
+
+      <!-- Embedding Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400" data-i18n="admin.embeddings.stats.totalVectors">
+            Total Vectors
+          </h3>
+          <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+            <span id="total-vectors">0</span>
+          </p>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400" data-i18n="admin.embeddings.stats.dimensions">
+            Vector Dimensions
+          </h3>
+          <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+            <span id="vector-dimensions">384</span>
+          </p>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400" data-i18n="admin.embeddings.stats.storageSize">
+            Storage Size
+          </h3>
+          <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+            <span id="storage-size">0 MB</span>
+          </p>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400" data-i18n="admin.embeddings.stats.indexStatus">
+            Index Status
+          </h3>
+          <p class="text-lg font-semibold mt-2">
+            <span id="index-status" class="text-green-600 dark:text-green-400">Ready</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Embedding Actions -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white" data-i18n="admin.embeddings.actions.title">
+            Embedding Actions
+          </h2>
+        </div>
+        
+        <div class="p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-900 dark:text-white" data-i18n="admin.embeddings.actions.generate">
+                Generate Embeddings
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400" data-i18n="admin.embeddings.actions.generateDesc">
+                Create new embeddings for documents without vectors
+              </p>
+            </div>
+            <button id="generate-embeddings" class="px-4 py-2 bg-legal-600 text-white rounded-lg hover:bg-legal-700 transition-colors">
+              <span data-i18n="admin.embeddings.actions.generateBtn">Generate</span>
+            </button>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-900 dark:text-white" data-i18n="admin.embeddings.actions.rebuild">
+                Rebuild Index
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400" data-i18n="admin.embeddings.actions.rebuildDesc">
+                Rebuild the vector search index for better performance
+              </p>
+            </div>
+            <button id="rebuild-index" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <span data-i18n="admin.embeddings.actions.rebuildBtn">Rebuild</span>
+            </button>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-900 dark:text-white" data-i18n="admin.embeddings.actions.download">
+                Download Embeddings
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400" data-i18n="admin.embeddings.actions.downloadDesc">
+                Export all embeddings as JSON for backup
+              </p>
+            </div>
+            <button id="download-embeddings" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+              <span data-i18n="admin.embeddings.actions.downloadBtn">Download</span>
+            </button>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium text-gray-900 dark:text-white" data-i18n="admin.embeddings.actions.clear">
+                Clear Cache
+              </h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400" data-i18n="admin.embeddings.actions.clearDesc">
+                Clear the embedding cache to free up storage
+              </p>
+            </div>
+            <button id="clear-cache" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+              <span data-i18n="admin.embeddings.actions.clearBtn">Clear</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Embedding Model Configuration -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white" data-i18n="admin.embeddings.model.title">
+            Model Configuration
+          </h2>
+        </div>
+        
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" data-i18n="admin.embeddings.model.current">
+                Current Model
+              </label>
+              <div class="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <p class="font-mono text-sm">Xenova/all-MiniLM-L6-v2</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  384 dimensions, multilingual support
+                </p>
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" data-i18n="admin.embeddings.model.performance">
+                Performance
+              </label>
+              <div class="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <p class="text-sm">
+                  <span data-i18n="admin.embeddings.model.avgTime">Avg. Time</span>: 
+                  <span id="avg-embedding-time" class="font-mono">0.5s</span>
+                </p>
+                <p class="text-sm mt-1">
+                  <span data-i18n="admin.embeddings.model.throughput">Throughput</span>: 
+                  <span id="embedding-throughput" class="font-mono">100 docs/min</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    async function loadEmbeddingStats() {
+      try {
+        // Load embeddings metadata
+        const embeddingsResponse = await fetch('/embeddings/metadata.json');
+        if (embeddingsResponse.ok) {
+          const metadata = await embeddingsResponse.json();
+          
+          document.getElementById('total-vectors').textContent = metadata.totalVectors || '0';
+          document.getElementById('vector-dimensions').textContent = metadata.dimensions || '384';
+          
+          // Calculate storage size (rough estimate)
+          const vectors = parseInt(metadata.totalVectors || '0');
+          const dims = parseInt(metadata.dimensions || '384');
+          const sizeInBytes = vectors * dims * 4; // 4 bytes per float32
+          const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(2);
+          document.getElementById('storage-size').textContent = `${sizeInMB} MB`;
+        }
+        
+        // Check IndexedDB for vector store
+        if ('indexedDB' in window) {
+          const dbRequest = indexedDB.open('LexMX-VectorStore');
+          dbRequest.onsuccess = function(event) {
+            const db = event.target.result;
+            if (db.objectStoreNames.contains('vectors')) {
+              document.getElementById('index-status').textContent = 'Ready';
+              document.getElementById('index-status').className = 'text-green-600 dark:text-green-400';
+            } else {
+              document.getElementById('index-status').textContent = 'Not Initialized';
+              document.getElementById('index-status').className = 'text-yellow-600 dark:text-yellow-400';
+            }
+            db.close();
+          };
+        }
+      } catch (error) {
+        console.error('Failed to load embedding stats:', error);
+      }
+    }
+
+    // Button handlers
+    document.getElementById('generate-embeddings')?.addEventListener('click', async () => {
+      const button = document.getElementById('generate-embeddings');
+      button.disabled = true;
+      button.textContent = 'Generating...';
+      
+      // In production, this would trigger the embedding generation pipeline
+      setTimeout(() => {
+        button.disabled = false;
+        button.textContent = 'Generate';
+        alert('Embedding generation would start here');
+      }, 2000);
+    });
+
+    document.getElementById('rebuild-index')?.addEventListener('click', async () => {
+      const button = document.getElementById('rebuild-index');
+      button.disabled = true;
+      button.textContent = 'Rebuilding...';
+      
+      setTimeout(() => {
+        button.disabled = false;
+        button.textContent = 'Rebuild';
+        alert('Index rebuild would start here');
+      }, 2000);
+    });
+
+    document.getElementById('download-embeddings')?.addEventListener('click', async () => {
+      // In production, this would download the embeddings
+      alert('Embeddings download would start here');
+    });
+
+    document.getElementById('clear-cache')?.addEventListener('click', async () => {
+      if (confirm('Are you sure you want to clear the embedding cache?')) {
+        // In production, this would clear the cache
+        alert('Cache would be cleared here');
+      }
+    });
+
+    // Load stats on page load
+    loadEmbeddingStats();
+  </script>
+</BaseLayout>

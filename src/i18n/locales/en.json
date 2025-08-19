@@ -21,6 +21,251 @@
       "confidence": "Confidence: {{score}}%"
     }
   },
+  "ingestion": {
+    "title": "Document Ingestion Pipeline",
+    "processingRequest": "Processing request",
+    "uploadFile": "Upload file",
+    "selectFile": "Select file",
+    "or": "or",
+    "enterUrl": "Enter URL",
+    "startIngestion": "Start Ingestion",
+    "noSourceError": "Please select a file or enter a URL",
+    "cancel": "Cancel",
+    "progressHistory": "Progress history",
+    "success": "Ingestion completed successfully",
+    "failed": "Ingestion failed",
+    "ingestAnother": "Ingest another document",
+    "viewDocument": "View document",
+    "stages": {
+      "fetching": "Fetching document",
+      "parsing": "Parsing structure",
+      "chunking": "Creating chunks",
+      "embedding": "Generating embeddings",
+      "storing": "Storing document",
+      "complete": "Complete",
+      "error": "Error"
+    },
+    "stats": {
+      "chunks": "Chunks",
+      "tokens": "Tokens",
+      "time": "Time",
+      "embeddings": "Embeddings"
+    }
+  },
+  "admin": {
+    "documents": {
+      "title": "Document Management Dashboard",
+      "subtitle": "Ingest, process, and manage legal documents for the RAG system",
+      "tabs": {
+        "ingestion": "Document Ingestion",
+        "corpus": "Corpus Overview",
+        "embeddings": "Embeddings",
+        "quality": "Quality Metrics"
+      },
+      "stats": {
+        "total": "Total Documents",
+        "chunks": "Total Chunks",
+        "embeddings": "Embeddings",
+        "lastUpdate": "Last Update"
+      },
+      "recentActivity": "Recent Activity"
+    },
+    "quality": {
+      "title": "Quality Metrics",
+      "subtitle": "Monitor and improve RAG system performance",
+      "metrics": {
+        "accuracy": "Retrieval Accuracy",
+        "avgLatency": "Average Latency",
+        "coverage": "Corpus Coverage",
+        "userSatisfaction": "User Satisfaction",
+        "cacheHitRate": "Cache Hit Rate",
+        "errorRate": "Error Rate",
+        "totalQueries": "Total Queries",
+        "confidence": "Average Confidence"
+      },
+      "tests": {
+        "title": "Quality Tests",
+        "runTest": "Run Test",
+        "runAllTests": "Run All Tests",
+        "running": "Running...",
+        "passed": "Passed",
+        "failed": "Failed",
+        "score": "Score",
+        "duration": "Duration",
+        "categories": {
+          "citation": "Citation Accuracy",
+          "semantic": "Semantic Similarity",
+          "crossReference": "Cross-Reference Detection",
+          "contradiction": "Contradiction Detection",
+          "performance": "Performance"
+        },
+        "descriptions": {
+          "citationAccuracy": "Tests accuracy of retrieving specific legal articles",
+          "semanticSimilarity": "Tests understanding of legal concepts and synonyms",
+          "crossReference": "Tests ability to find related legal provisions",
+          "contradiction": "Tests identification of conflicting legal provisions",
+          "performance": "Tests response times for simple queries"
+        }
+      },
+      "queries": {
+        "title": "Recent Query Analysis",
+        "query": "Query",
+        "retrievedDocs": "Retrieved Docs",
+        "relevanceScore": "Relevance Score",
+        "responseTime": "Response Time",
+        "userFeedback": "User Feedback",
+        "legalArea": "Legal Area",
+        "queryType": "Query Type",
+        "cached": "Cached",
+        "error": "Error",
+        "noQueries": "No recent queries available"
+      },
+      "insights": {
+        "title": "Insights and Recommendations",
+        "type": {
+          "warning": "Warning",
+          "info": "Info",
+          "success": "Success",
+          "error": "Error"
+        },
+        "noInsights": "No insights available"
+      },
+      "reports": {
+        "export": "Export Report",
+        "generate": "Generate Report",
+        "timeRange": "Time Range",
+        "last7Days": "Last 7 days",
+        "last30Days": "Last 30 days",
+        "customRange": "Custom range"
+      },
+      "charts": {
+        "latencyTrend": "Latency Trend",
+        "queryVolume": "Query Volume",
+        "errorDistribution": "Error Distribution",
+        "areaDistribution": "Legal Area Distribution"
+      }
+    },
+    "corpus": {
+      "title": "Corpus Management",
+      "subtitle": "Manage legal documents in the system",
+      "validate": "Validate Corpus",
+      "validating": "Validating...",
+      "export": "Export Corpus",
+      "exporting": "Exporting...",
+      "import": "Import Document",
+      "importing": "Importing...",
+      "allTypes": "All types",
+      "allAreas": "All areas",
+      "search": "Search documents...",
+      "loading": "Loading documents...",
+      "noDocuments": "No documents found",
+      "confirmDelete": "Are you sure you want to delete this document?",
+      "deleteSuccess": "Document deleted successfully",
+      "deleteError": "Error deleting document",
+      "reindex": "Reindex",
+      "reindexSuccess": "Document reindexed successfully",
+      "reindexError": "Error reindexing document",
+      "delete": "Delete",
+      "validateError": "Error validating corpus",
+      "exportError": "Error exporting corpus",
+      "importError": "Error importing document",
+      "importSuccess": "Document imported successfully",
+      "types": {
+        "law": "Law",
+        "code": "Code",
+        "regulation": "Regulation",
+        "norm": "Norm"
+      },
+      "areas": {
+        "civil": "Civil",
+        "criminal": "Criminal",
+        "labor": "Labor",
+        "tax": "Tax",
+        "commercial": "Commercial"
+      },
+      "stats": {
+        "totalDocuments": "Total Documents",
+        "totalChunks": "Total Chunks",
+        "totalSize": "Total Size",
+        "lastUpdate": "Last Update"
+      },
+      "table": {
+        "title": "Title",
+        "type": "Type",
+        "area": "Area",
+        "chunks": "Chunks",
+        "actions": "Actions"
+      },
+      "validationResults": "Validation Results",
+      "validDocuments": "valid documents",
+      "invalidDocuments": "invalid documents",
+      "issues": "Issues found",
+      "documentDetails": "Document Details",
+      "details": {
+        "id": "ID",
+        "hierarchy": "Hierarchy",
+        "size": "Size",
+        "quality": "Quality",
+        "embeddings": "Embeddings",
+        "lastUpdated": "Last Updated"
+      }
+    },
+    "embeddings": {
+      "title": "Embeddings Management",
+      "subtitle": "Manage semantic vectors of the corpus",
+      "initError": "Error initializing embeddings service",
+      "loadError": "Error loading data",
+      "switchError": "Error switching provider",
+      "noSelection": "Must select at least one document",
+      "generateError": "Error generating embeddings",
+      "generateAllError": "Error generating all embeddings",
+      "partialError": "Some embeddings failed",
+      "confirmClear": "Are you sure you want to clear the embeddings cache?",
+      "clearSuccess": "Cache cleared successfully",
+      "clearError": "Error clearing cache",
+      "confirmRebuild": "Are you sure you want to rebuild the index?",
+      "rebuildSuccess": "Index rebuilt successfully",
+      "rebuildError": "Error rebuilding index",
+      "confirmGenerateAll": "Are you sure you want to generate embeddings for all documents?",
+      "exportError": "Error exporting embeddings",
+      "generating": "Generating...",
+      "generateSelected": "Generate Selected",
+      "generateAll": "Generate All",
+      "clearing": "Clearing...",
+      "clearCache": "Clear Cache",
+      "rebuilding": "Rebuilding...",
+      "rebuildIndex": "Rebuild Index",
+      "exporting": "Exporting...",
+      "export": "Export",
+      "advanced": "Advanced Options",
+      "batchSize": "Batch size",
+      "batchSizeHelp": "Number of documents to process simultaneously",
+      "stats": {
+        "totalVectors": "Total Vectors",
+        "storageSize": "Storage Size",
+        "avgTime": "Average Time",
+        "status": "Index Status"
+      },
+      "provider": {
+        "title": "Provider Configuration",
+        "current": "Current provider",
+        "switching": "Switching provider...",
+        "model": "Model",
+        "available": "Available"
+      },
+      "generation": {
+        "title": "Generation Control",
+        "progress": "Progress"
+      },
+      "documents": {
+        "title": "Documents",
+        "type": "Type",
+        "chunks": "Chunks",
+        "status": "Status",
+        "indexed": "Indexed"
+      }
+    }
+  },
   "common": {
     "loading": "Loading...",
     "private": "Private",

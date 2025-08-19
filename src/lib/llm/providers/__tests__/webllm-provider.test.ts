@@ -3,8 +3,16 @@ import { WebLLMProvider } from '../webllm-provider';
 import type { LLMRequest, ProviderConfig } from '../../../../types/llm';
 
 // Mock WebLLM module
+const mockEngine = {
+  chat: {
+    completions: {
+      create: vi.fn()
+    }
+  }
+};
+
 vi.mock('@mlc-ai/web-llm', () => ({
-  CreateMLCEngine: vi.fn(),
+  CreateMLCEngine: vi.fn().mockResolvedValue(mockEngine),
   prebuiltAppConfig: {
     model_list: [
       { model_id: 'Phi-3.5-mini-instruct-q4f16_1-MLC' },
@@ -14,13 +22,7 @@ vi.mock('@mlc-ai/web-llm', () => ({
   }
 }));
 
-// Mock navigator.gpu
-Object.defineProperty(navigator, 'gpu', {
-  value: {
-    requestAdapter: vi.fn().mockResolvedValue({})
-  },
-  configurable: true
-});
+// Navigator.gpu is already mocked in setupTests.ts
 
 describe('WebLLMProvider', () => {
   let provider: WebLLMProvider;
@@ -28,6 +30,9 @@ describe('WebLLMProvider', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Reset mockEngine
+    mockEngine.chat.completions.create.mockReset();
     
     mockConfig = {
       id: 'webllm',
@@ -62,6 +67,9 @@ describe('WebLLMProvider', () => {
     });
 
     it('should fail when WebGPU is not available', async () => {
+      // Store original value
+      const originalGpu = navigator.gpu;
+      
       // Remove WebGPU support
       Object.defineProperty(navigator, 'gpu', {
         value: undefined,
@@ -73,9 +81,7 @@ describe('WebLLMProvider', () => {
 
       // Restore WebGPU
       Object.defineProperty(navigator, 'gpu', {
-        value: {
-          requestAdapter: vi.fn().mockResolvedValue({})
-        },
+        value: originalGpu,
         configurable: true
       });
     });
@@ -89,6 +95,9 @@ describe('WebLLMProvider', () => {
     });
 
     it('should return false when WebGPU is not available', async () => {
+      // Store original value
+      const originalGpu = navigator.gpu;
+      
       Object.defineProperty(navigator, 'gpu', {
         value: undefined,
         configurable: true
@@ -100,9 +109,7 @@ describe('WebLLMProvider', () => {
 
       // Restore
       Object.defineProperty(navigator, 'gpu', {
-        value: {
-          requestAdapter: vi.fn().mockResolvedValue({})
-        },
+        value: originalGpu,
         configurable: true
       });
     });
@@ -181,14 +188,18 @@ describe('WebLLMProvider', () => {
 
     it('should prevent multiple initialization attempts', async () => {
       const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
+      
+      // Create a new provider for this test to ensure clean state
+      const testProvider = new WebLLMProvider(mockConfig);
+      
       (CreateMLCEngine as any).mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({ chat: {} }), 100))
+        new Promise(resolve => setTimeout(() => resolve(mockEngine), 50))
       );
 
       // Start multiple initializations
-      const init1 = provider.initialize();
-      const init2 = provider.initialize();
-      const init3 = provider.initialize();
+      const init1 = testProvider.initialize();
+      const init2 = testProvider.initialize();
+      const init3 = testProvider.initialize();
 
       await Promise.all([init1, init2, init3]);
 

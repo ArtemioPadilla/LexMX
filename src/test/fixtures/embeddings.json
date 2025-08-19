@@ -1,0 +1,153 @@
+[
+  {
+    "id": "emb-001",
+    "documentId": "lft-mexico",
+    "chunkId": "art-47-lft",
+    "content": "Son causas de rescisión de la relación de trabajo, sin responsabilidad para el patrón",
+    "embedding": [0.023, -0.145, 0.087, 0.234, -0.056, 0.123, -0.098, 0.178, 0.045, -0.067],
+    "metadata": {
+      "documentTitle": "Ley Federal del Trabajo",
+      "legalArea": "labor",
+      "type": "article",
+      "number": "47",
+      "hierarchy": 3,
+      "keywords": ["rescisión", "trabajo", "patrón", "responsabilidad"]
+    }
+  },
+  {
+    "id": "emb-002",
+    "documentId": "const-mex",
+    "chunkId": "art-123-const",
+    "content": "Toda persona tiene derecho al trabajo digno y socialmente útil",
+    "embedding": [0.134, -0.023, 0.198, -0.087, 0.156, -0.234, 0.089, -0.145, 0.078, 0.203],
+    "metadata": {
+      "documentTitle": "Constitución Política de los Estados Unidos Mexicanos",
+      "legalArea": "constitutional",
+      "type": "article",
+      "number": "123",
+      "hierarchy": 1,
+      "keywords": ["derecho", "trabajo", "digno", "persona"]
+    }
+  },
+  {
+    "id": "emb-003",
+    "documentId": "ccf-mexico",
+    "chunkId": "art-830-ccf",
+    "content": "Es también un medio de adquirir bienes o de liberarse de obligaciones, mediante el transcurso de cierto tiempo",
+    "embedding": [-0.045, 0.167, -0.123, 0.089, 0.234, -0.178, 0.056, -0.134, 0.098, -0.145],
+    "metadata": {
+      "documentTitle": "Código Civil Federal",
+      "legalArea": "civil",
+      "type": "article",
+      "number": "830",
+      "hierarchy": 3,
+      "keywords": ["usucapión", "bienes", "obligaciones", "tiempo"]
+    }
+  },
+  {
+    "id": "emb-004",
+    "documentId": "cpf-mexico",
+    "chunkId": "art-7-cpf",
+    "content": "Delito es el acto u omisión que sancionan las leyes penales",
+    "embedding": [0.078, -0.234, 0.145, -0.056, 0.189, 0.067, -0.123, 0.156, -0.098, 0.203],
+    "metadata": {
+      "documentTitle": "Código Penal Federal",
+      "legalArea": "criminal",
+      "type": "article",
+      "number": "7",
+      "hierarchy": 3,
+      "keywords": ["delito", "acto", "omisión", "leyes", "penales"]
+    }
+  },
+  {
+    "id": "emb-005",
+    "documentId": "lft-mexico",
+    "chunkId": "art-50-lft",
+    "content": "Las indemnizaciones a que se refiere el artículo anterior consistirán",
+    "embedding": [-0.089, 0.123, 0.234, -0.167, 0.045, 0.178, -0.134, 0.056, 0.198, -0.078],
+    "metadata": {
+      "documentTitle": "Ley Federal del Trabajo",
+      "legalArea": "labor",
+      "type": "article",
+      "number": "50",
+      "hierarchy": 3,
+      "keywords": ["indemnizaciones", "artículo", "anterior", "consistirán"]
+    }
+  },
+  {
+    "id": "emb-006",
+    "documentId": "const-mex",
+    "chunkId": "art-1-const",
+    "content": "En los Estados Unidos Mexicanos todas las personas gozarán de los derechos humanos",
+    "embedding": [0.156, -0.078, 0.089, 0.234, -0.145, 0.067, 0.198, -0.123, 0.045, 0.178],
+    "metadata": {
+      "documentTitle": "Constitución Política de los Estados Unidos Mexicanos",
+      "legalArea": "constitutional",
+      "type": "article",
+      "number": "1",
+      "hierarchy": 1,
+      "keywords": ["derechos", "humanos", "personas", "Estados", "Unidos", "Mexicanos"]
+    }
+  },
+  {
+    "id": "emb-007",
+    "documentId": "lgtaip-mexico",
+    "chunkId": "art-1-lgtaip",
+    "content": "La presente Ley es de orden público y tiene por objeto establecer los principios, bases generales y procedimientos para garantizar el derecho de acceso a la información",
+    "embedding": [0.203, -0.134, 0.067, -0.089, 0.178, 0.145, -0.056, 0.234, -0.078, 0.123],
+    "metadata": {
+      "documentTitle": "Ley General de Transparencia y Acceso a la Información Pública",
+      "legalArea": "administrative",
+      "type": "article",
+      "number": "1",
+      "hierarchy": 3,
+      "keywords": ["transparencia", "acceso", "información", "público", "principios"]
+    }
+  },
+  {
+    "id": "emb-008",
+    "documentId": "ccf-mexico",
+    "chunkId": "art-1-ccf",
+    "content": "Las disposiciones de este Código regirán en toda la República en asuntos del orden federal",
+    "embedding": [-0.123, 0.189, -0.067, 0.145, -0.203, 0.078, 0.134, -0.089, 0.156, -0.234],
+    "metadata": {
+      "documentTitle": "Código Civil Federal",
+      "legalArea": "civil",
+      "type": "article",
+      "number": "1",
+      "hierarchy": 3,
+      "keywords": ["disposiciones", "Código", "República", "federal"]
+    }
+  },
+  {
+    "id": "emb-009",
+    "documentId": "lft-mexico",
+    "chunkId": "art-1-lft",
+    "content": "Las disposiciones de esta Ley son de orden público e interés social, por lo que no podrá renunciarse a los beneficios que otorga",
+    "embedding": [0.089, -0.156, 0.234, 0.067, -0.134, 0.203, -0.078, 0.145, 0.056, -0.189],
+    "metadata": {
+      "documentTitle": "Ley Federal del Trabajo",
+      "legalArea": "labor",
+      "type": "article",
+      "number": "1",
+      "hierarchy": 3,
+      "keywords": ["disposiciones", "público", "interés", "social", "beneficios"]
+    }
+  },
+  {
+    "id": "emb-010",
+    "documentId": "cpf-mexico",
+    "chunkId": "art-7-cpf-dolo",
+    "content": "Obra dolosamente el que, conociendo los elementos del tipo penal, o previendo como posible el resultado típico, quiere o acepta la realización del hecho",
+    "embedding": [-0.167, 0.045, 0.178, -0.234, 0.123, 0.089, -0.145, 0.203, -0.056, 0.134],
+    "metadata": {
+      "documentTitle": "Código Penal Federal",
+      "legalArea": "criminal",
+      "type": "article",
+      "number": "7",
+      "section": "dolo",
+      "hierarchy": 3,
+      "keywords": ["dolo", "dolosamente", "tipo", "penal", "resultado", "típico"]
+    }
+  }
+]

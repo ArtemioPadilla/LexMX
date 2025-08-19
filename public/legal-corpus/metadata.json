@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "buildDate": "2025-08-04T06:34:17.373Z",
+  "buildDate": "2025-08-18T19:47:39.873Z",
   "totalDocuments": 3,
   "totalSize": 5442,
   "legalAreas": {
@@ -26,7 +26,7 @@
       "hierarchy": 3,
       "source": "codigo-civil-federal.txt",
       "size": 1861,
-      "lastUpdated": "2025-08-04T06:34:17.370Z"
+      "lastUpdated": "2025-08-18T19:47:39.870Z"
     },
     {
       "id": "constitucion-politica-mexico",
@@ -36,7 +36,7 @@
       "hierarchy": 1,
       "source": "constitucion-politica-mexico.txt",
       "size": 1609,
-      "lastUpdated": "2025-08-04T06:34:17.372Z"
+      "lastUpdated": "2025-08-18T19:47:39.872Z"
     },
     {
       "id": "ley-federal-trabajo",
@@ -46,7 +46,7 @@
       "hierarchy": 4,
       "source": "ley-federal-trabajo.txt",
       "size": 1972,
-      "lastUpdated": "2025-08-04T06:34:17.373Z"
+      "lastUpdated": "2025-08-18T19:47:39.873Z"
     }
   ]
 }

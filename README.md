@@ -137,6 +137,16 @@ npm run dev
 # Abrir http://localhost:4321
 ```
 
+### Verificar configuración / Test Configuration
+
+```bash
+# Verificar que todos los componentes funcionan correctamente
+node test-integration.js
+
+# Probar chat interface con mock provider (no requiere API keys)
+# Visit http://localhost:4321/chat y pregunta: "¿Qué dice la Constitución sobre derechos humanos?"
+```
+
 ### Comandos disponibles / Available Commands
 
 ```bash
@@ -147,6 +157,10 @@ npm run lint         # Linting con ESLint / ESLint checking
 npm run type-check   # Verificación de tipos / Type checking
 npm run test         # Ejecutar tests / Run tests
 npm run test:e2e     # Tests E2E con Playwright / E2E tests with Playwright
+
+# Gestión de corpus / Corpus management
+npm run build:corpus     # Construir corpus desde fuentes / Build corpus from sources
+npm run build:embeddings # Generar embeddings / Generate embeddings
 ```
 
 ## 🏗️ Arquitectura
@@ -155,7 +169,8 @@ npm run test:e2e     # Tests E2E con Playwright / E2E tests with Playwright
 
 - **Frontend**: [Astro](https://astro.build/) con Islands Architecture
 - **UI Components**: React + [Tailwind CSS](https://tailwindcss.com/)
-- **RAG Engine**: Vector search client-side
+- **RAG Engine**: Vector search client-side con corpus real
+- **Document Ingestion**: Pipeline automatizado con chunking contextual
 - **Storage**: IndexedDB + LocalStorage híbrido
 - **Deployment**: GitHub Pages (100% estático)
 
@@ -165,6 +180,7 @@ npm run test:e2e     # Tests E2E con Playwright / E2E tests with Playwright
 LexMX/
 ├── src/
 │   ├── pages/           # Rutas de Astro / Astro routes
+│   │   └── admin/      # Dashboards administrativos / Admin dashboards
 │   ├── components/      # Componentes estáticos / Static components (.astro)
 │   ├── islands/         # Componentes interactivos / Interactive components (.tsx)
 │   ├── i18n/           # Sistema de internacionalización / i18n system
@@ -173,10 +189,15 @@ LexMX/
 │   │   └── utils.ts    # Utilidades i18n / i18n utilities
 │   ├── lib/            # Lógica de negocio / Business logic
 │   │   ├── rag/        # Motor RAG / RAG engine
+│   │   │   └── chunking/ # Estrategias de chunking / Chunking strategies
 │   │   ├── llm/        # Gestión multi-LLM / Multi-LLM management
-│   │   └── legal/      # Procesamiento legal / Legal processing
+│   │   ├── legal/      # Procesamiento legal / Legal processing
+│   │   ├── corpus/     # Cargador de corpus / Corpus loader
+│   │   └── ingestion/  # Pipeline de ingesta / Ingestion pipeline
 │   └── data/           # Corpus legal mexicano / Mexican legal corpus
 ├── public/             # Assets estáticos / Static assets
+│   ├── legal-corpus/   # Documentos legales / Legal documents
+│   └── embeddings/     # Vectores pre-computados / Pre-computed vectors
 └── scripts/            # Scripts de build / Build scripts
 ```
 
@@ -186,9 +207,21 @@ LexMX/
 graph LR
     A[Consulta Usuario] --> B[Clasificación]
     B --> C[Búsqueda Híbrida]
-    C --> D[Documentos Relevantes]
+    C --> D[Documentos Reales del Corpus]
     D --> E[LLM Óptimo]
     E --> F[Respuesta + Referencias]
+```
+
+### Pipeline de Ingesta de Documentos
+
+```mermaid
+graph TD
+    A[Documento Legal] --> B[Fetcher]
+    B --> C[Parser]
+    C --> D[Contextual Chunker]
+    D --> E[Embedding Generator]
+    E --> F[Vector Store]
+    F --> G[Corpus Indexado]
 ```
 
 ## 📚 Corpus legal incluido
@@ -202,6 +235,13 @@ graph LR
 - ✅ Ley Federal del Trabajo
 - ✅ Ley de Amparo
 - ✅ Y 50+ documentos legales adicionales
+
+### Sistema de Ingesta Automatizado
+- **Pipeline completo** para ingesta de documentos
+- **Fuentes oficiales** validadas (DOF, SCJN, Diputados)
+- **Chunking contextual** que preserva estructura legal
+- **Embeddings en tiempo real** con Transformers.js
+- **Dashboard de gestión** en `/admin/documents`
 
 ### Jurisprudencia
 - ✅ Tesis de jurisprudencia SCJN
@@ -411,7 +451,7 @@ npm run test:coverage
 ## 📈 Roadmap
 
 ### Versión 1.0 (Actual)
-- [x] Motor RAG básico
+- [x] Motor RAG con documentos reales del corpus
 - [x] Integración multi-LLM
 - [x] Corpus legal federal mexicano
 - [x] Interfaz web responsive
@@ -419,12 +459,18 @@ npm run test:coverage
 - [x] WebLLM para IA en navegador
 - [x] Wiki legal interactiva
 - [x] Gestión básica de casos
+- [x] Pipeline automatizado de ingesta de documentos
+- [x] Dashboard de administración de documentos
+- [x] Chunking contextual con preservación de estructura legal
 
 ### Versión 1.1 (Próxima)
 - [ ] Leyes estatales principales
-- [ ] Análisis de documentos PDF
+- [ ] Análisis avanzado de documentos PDF con OCR
 - [ ] Plantillas de documentos legales
 - [ ] API pública
+- [ ] GitHub Actions para actualización automática del corpus
+- [ ] Integración con GitHub Issues para solicitudes de documentos
+- [ ] WebHooks para actualizaciones en tiempo real
 
 ### Versión 1.2 (Futuro)
 - [ ] Integración con APIs gubernamentales

@@ -25,6 +25,20 @@ export interface ProviderMetadata {
 
 // Registry of all supported providers
 export const SUPPORTED_PROVIDERS: Record<string, ProviderMetadata> = {
+  mock: {
+    id: 'mock',
+    name: 'Sistema de Demostración',
+    type: 'local',
+    icon: '🎭',
+    description: 'Respuestas simuladas para demostrar LexMX cuando no hay proveedores configurados',
+    costLevel: 'free',
+    capabilities: ['privacy', 'offline'],
+    setupComplexity: 'easy',
+    recommendedFor: ['Demostración del sistema', 'Pruebas de funcionalidad'],
+    documentation: '/docs/providers/mock',
+    website: '#'
+  },
+  
   webllm: {
     id: 'webllm',
     name: 'WebLLM (Browser)',

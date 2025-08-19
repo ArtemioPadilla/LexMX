@@ -1,0 +1,156 @@
+[
+  {
+    "testId": "citation-accuracy-001",
+    "passed": true,
+    "score": 0.95,
+    "duration": 180,
+    "details": {
+      "query": "¿Qué establece el artículo 123 constitucional?",
+      "expectedCitations": ["Artículo 123 constitucional"],
+      "foundCitations": ["Artículo 123 de la Constitución Política de los Estados Unidos Mexicanos"],
+      "citationFound": true,
+      "relevanceScore": 0.95,
+      "documentTitle": "Constitución Política de los Estados Unidos Mexicanos",
+      "matchType": "exact_article"
+    }
+  },
+  {
+    "testId": "semantic-relevance-001",
+    "passed": true,
+    "score": 0.87,
+    "duration": 220,
+    "details": {
+      "query": "¿Cuáles son las causas de despido justificado?",
+      "expectedConcepts": ["rescisión", "causas", "responsabilidad", "patrón"],
+      "foundConcepts": ["rescisión", "causas", "responsabilidad", "patrón", "trabajador"],
+      "relevanceScore": 0.87,
+      "semanticSimilarity": 0.92,
+      "topResults": [
+        {
+          "content": "Son causas de rescisión de la relación de trabajo, sin responsabilidad para el patrón",
+          "score": 0.94
+        }
+      ]
+    }
+  },
+  {
+    "testId": "cross-reference-001",
+    "passed": true,
+    "score": 0.88,
+    "duration": 195,
+    "details": {
+      "query": "Tipos de amparo en México",
+      "expectedReferences": ["amparo directo", "amparo indirecto"],
+      "foundReferences": ["amparo directo", "amparo indirecto", "amparo constitucional"],
+      "multipleSourcesFound": true,
+      "crossReferencesCount": 3,
+      "relatedArticles": ["103", "107"],
+      "relatedLaws": ["Ley de Amparo", "CPEUM"]
+    }
+  },
+  {
+    "testId": "performance-benchmark-001",
+    "passed": true,
+    "score": 0.90,
+    "duration": 150,
+    "details": {
+      "query": "Salario mínimo México",
+      "latency": 150,
+      "performanceTarget": 250,
+      "cacheHit": true,
+      "retrievalTime": 45,
+      "llmProcessingTime": 85,
+      "totalTokens": 1250
+    }
+  },
+  {
+    "testId": "contradiction-detection-001",
+    "passed": true,
+    "score": 0.82,
+    "duration": 280,
+    "details": {
+      "query": "Contradicciones en legislación laboral",
+      "contradictionsFound": 2,
+      "contradictionHandled": true,
+      "resolution": "Se priorizó la ley más específica y reciente",
+      "conflictingSources": [
+        {
+          "source1": "LFT Art. 50",
+          "source2": "Ley del Seguro Social Art. 58",
+          "topic": "indemnización por riesgo de trabajo"
+        }
+      ]
+    }
+  },
+  {
+    "testId": "legal-reasoning-001",
+    "passed": true,
+    "score": 0.85,
+    "duration": 320,
+    "details": {
+      "query": "Análisis de precedente judicial",
+      "reasoningQuality": 0.85,
+      "logicalCoherence": 0.88,
+      "citationAccuracy": 0.92,
+      "conclusionSupported": true,
+      "argumentStructure": "premise-evidence-conclusion",
+      "legalPrinciples": ["supremacía constitucional", "jerarquía normativa"]
+    }
+  },
+  {
+    "testId": "edge-case-handling-001",
+    "passed": false,
+    "score": 0.45,
+    "duration": 180,
+    "details": {
+      "query": "Consulta con términos muy específicos y técnicos",
+      "errorMessage": "Insufficient context for technical legal terminology",
+      "edgeCaseType": "specialized_terminology",
+      "fallbackUsed": true,
+      "suggestedImprovement": "Expand technical legal glossary"
+    }
+  },
+  {
+    "testId": "multilingual-support-001",
+    "passed": true,
+    "score": 0.78,
+    "duration": 200,
+    "details": {
+      "query": "Constitutional rights query in English",
+      "languageDetected": "en",
+      "translationQuality": 0.82,
+      "responseLanguage": "es",
+      "codeSwitch": true,
+      "culturalContext": "maintained"
+    }
+  },
+  {
+    "testId": "data-privacy-001",
+    "passed": true,
+    "score": 1.0,
+    "duration": 50,
+    "details": {
+      "query": "Query with personal information",
+      "piiDetected": true,
+      "piiSanitized": true,
+      "dataRetention": "compliant",
+      "anonymization": "successful",
+      "privacyLevel": "high"
+    }
+  },
+  {
+    "testId": "response-completeness-001",
+    "passed": true,
+    "score": 0.89,
+    "duration": 240,
+    "details": {
+      "query": "Procedimiento completo de divorcio",
+      "completenessScore": 0.89,
+      "requiredElements": ["pasos", "documentos", "plazos", "costos"],
+      "providedElements": ["pasos", "documentos", "plazos"],
+      "missingElements": ["costos"],
+      "structuredResponse": true,
+      "actionableAdvice": true
+    }
+  }
+]

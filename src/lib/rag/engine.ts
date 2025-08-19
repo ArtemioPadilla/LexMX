@@ -15,6 +15,7 @@ import { i18n } from '@/i18n';
 import { EmbeddingManager } from '@/lib/embeddings/embedding-manager';
 import { VectorSearch } from './vector-search';
 import { EventEmitter } from 'events';
+import { documentLoader } from '@/lib/corpus/document-loader';
 
 export interface RAGEngineConfig extends RAGConfig {
   enableCache: boolean;
@@ -85,10 +86,34 @@ export class LegalRAGEngine extends EventEmitter {
         return;
       }
 
+      // Initialize document loader
+      await documentLoader.initialize().catch(err => {
+        console.warn('Document loader initialization warning:', err);
+      });
+
       // Initialize vector store with error handling
       await this.vectorStore.initialize().catch(err => {
         console.warn('Vector store initialization warning:', err);
       });
+      
+      // Load documents into vector store
+      try {
+        const vectorDocuments = await documentLoader.convertToVectorDocuments();
+        if (vectorDocuments.length > 0) {
+          console.log(`Loading ${vectorDocuments.length} documents into vector store...`);
+          for (const doc of vectorDocuments) {
+            await this.vectorStore.addDocument(doc);
+          }
+          this.useRealEmbeddings = true;
+          console.log('RAG Engine: Using real documents from corpus');
+        } else {
+          console.warn('No documents found in corpus, will use fallback');
+          this.useRealEmbeddings = false;
+        }
+      } catch (err) {
+        console.warn('Failed to load corpus documents:', err);
+        this.useRealEmbeddings = false;
+      }
       
       // Initialize provider manager with error handling
       await providerManager.initialize().catch(err => {
@@ -98,16 +123,12 @@ export class LegalRAGEngine extends EventEmitter {
       // Initialize embedding manager
       try {
         await this.embeddingManager.initialize();
-        this.useRealEmbeddings = true;
-        // RAG Engine: Using real embeddings
       } catch (err) {
         console.warn('Embedding manager initialization warning:', err);
-        // RAG Engine: Falling back to mock embeddings
-        this.useRealEmbeddings = false;
       }
 
       this.initialized = true;
-      // RAG Engine initialized successfully
+      console.log('RAG Engine initialized successfully');
     } catch (error) {
       console.error('Failed to initialize RAG Engine:', error);
       // Mark as initialized anyway to prevent blocking in tests
@@ -577,8 +598,35 @@ export class LegalRAGEngine extends EventEmitter {
     processedQuery: ProcessedQuery,
     maxResults: number
   ): Promise<any[]> {
-    // Mock legal documents for demonstration
-    // In production, this would use vector search with embeddings
+    try {
+      // Try to search in the vector store first
+      if (this.vectorStore) {
+        // Generate embedding for the query
+        const queryEmbedding = await this.embeddingManager.embed(processedQuery.normalizedQuery);
+        
+        // Search in vector store
+        const searchResults = await this.vectorStore.search(
+          queryEmbedding.values,
+          {
+            topK: maxResults,
+            scoreThreshold: this.config.similarityThreshold,
+            filter: {
+              legalArea: processedQuery.legalArea
+            }
+          }
+        );
+        
+        if (searchResults.length > 0) {
+          console.log(`Found ${searchResults.length} relevant documents from corpus`);
+          return searchResults;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to search in vector store, using fallback:', error);
+    }
+    
+    // Fallback to mock documents if no real documents found
+    console.warn('No documents found in corpus, using mock documents');
     
     const mockDocuments = [
       {

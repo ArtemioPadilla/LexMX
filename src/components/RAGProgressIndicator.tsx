@@ -42,7 +42,6 @@ export default function RAGProgressIndicator({
 
   // Memoize stage definitions to prevent recreation on every render
   // Only recreate when language changes, not when t function reference changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const stageDefinitions: RAGStage[] = useMemo(() => [
     {
       id: 'query_analysis',

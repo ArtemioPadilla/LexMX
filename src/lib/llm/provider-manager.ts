@@ -13,6 +13,7 @@ import { providerRegistry } from './provider-registry';
 import { secureStorage } from '../security/secure-storage';
 import { ProviderFactory } from './providers';
 import { intelligentSelector } from './intelligent-selector';
+import { getEnvironmentConfig, hasValidApiKey, isProviderEnabled, createProviderConfigFromEnv } from '../utils/env-config';
 
 export class ProviderManager {
   private providers: Map<string, LLMProvider> = new Map();
@@ -35,8 +36,14 @@ export class ProviderManager {
       // Load saved provider configurations
       await this.loadProviderConfigs();
 
+      // Auto-configure providers from environment variables
+      await this.autoConfigureFromEnvironment();
+
       // Ensure WebLLM is always available as a default option
       await this.ensureWebLLMAvailable();
+      
+      // Ensure mock provider is available as ultimate fallback
+      await this.ensureMockProviderAvailable();
       
       // Load cached model tracking
       this.loadCachedModels();
@@ -143,6 +150,85 @@ export class ProviderManager {
     }
   }
 
+  private async ensureMockProviderAvailable(): Promise<void> {
+    // Check if mock provider is already configured
+    const mockConfig = await secureStorage.getProviderConfig('mock');
+    
+    if (!mockConfig) {
+      // Create default mock configuration
+      const defaultMockConfig: ProviderConfig = {
+        id: 'mock',
+        name: 'Sistema de Demostración',
+        type: 'local',
+        enabled: true,
+        priority: 0, // Lowest priority - only as fallback
+        model: 'mock-legal-assistant',
+        createdAt: Date.now(),
+        // No API key needed for mock
+      };
+      
+      // Store the default configuration
+      await secureStorage.storeProviderConfig(defaultMockConfig);
+      
+      // Initialize the mock provider
+      await this.initializeProvider(defaultMockConfig);
+      
+      console.log('[ProviderManager] Mock provider initialized as fallback');
+    }
+  }
+
+  private async autoConfigureFromEnvironment(): Promise<void> {
+    console.log('[ProviderManager] Auto-configuring providers from environment variables');
+    
+    const providersToCheck = ['openai', 'anthropic', 'google', 'ollama', 'bedrock', 'azure', 'vertex'];
+    
+    for (const providerId of providersToCheck) {
+      try {
+        // Skip if already configured by user
+        const existingConfig = await secureStorage.getProviderConfig(providerId);
+        if (existingConfig) {
+          console.log(`[ProviderManager] ${providerId} already configured, skipping auto-config`);
+          continue;
+        }
+        
+        // Check if environment variables are available for this provider
+        if (!isProviderEnabled(providerId) || !hasValidApiKey(providerId)) {
+          console.log(`[ProviderManager] ${providerId} not enabled or missing API key, skipping`);
+          continue;
+        }
+        
+        // Create configuration from environment
+        const envConfig = createProviderConfigFromEnv(providerId);
+        if (envConfig) {
+          console.log(`[ProviderManager] Auto-configuring ${providerId} from environment`);
+          
+          const fullConfig: ProviderConfig = {
+            ...envConfig as ProviderConfig,
+            costLimit: {
+              daily: 50, // Default limits
+              monthly: 500
+            }
+          };
+          
+          // Store the configuration
+          await secureStorage.storeProviderConfig(fullConfig);
+          
+          // Initialize the provider
+          await this.initializeProvider(fullConfig);
+          
+          console.log(`[ProviderManager] ${providerId} auto-configured and initialized`);
+        }
+      } catch (error) {
+        console.warn(`[ProviderManager] Failed to auto-configure ${providerId}:`, error);
+      }
+    }
+    
+    const envConfig = getEnvironmentConfig();
+    if (envConfig.debug) {
+      console.log('[ProviderManager] Auto-configuration complete');
+    }
+  }
+
   // Provider configuration management
   async configureProvider(config: ProviderConfig): Promise<void> {
     try {
@@ -180,10 +266,19 @@ export class ProviderManager {
 
   // Provider selection and routing
   async selectOptimalProvider(context: QueryContext): Promise<LLMProvider | null> {
-    const availableProviders = Array.from(this.providers.values())
+    let availableProviders = Array.from(this.providers.values())
       .filter(p => p.status === 'connected');
 
+    // If no providers are available, ensure we have at least the mock provider
     if (availableProviders.length === 0) {
+      console.warn('[ProviderManager] No providers available, ensuring mock provider is initialized');
+      await this.ensureMockProviderAvailable();
+      availableProviders = Array.from(this.providers.values())
+        .filter(p => p.status === 'connected');
+    }
+
+    if (availableProviders.length === 0) {
+      console.error('[ProviderManager] Still no providers available after mock initialization');
       return null;
     }
 
@@ -198,7 +293,13 @@ export class ProviderManager {
     // Sort by score (descending)
     scoredProviders.sort((a, b) => b.score - a.score);
 
-    return scoredProviders[0]?.provider || null;
+    const selectedProvider = scoredProviders[0]?.provider || null;
+    
+    if (selectedProvider?.id === 'mock') {
+      console.log('[ProviderManager] Using mock provider - configure real providers for full functionality');
+    }
+
+    return selectedProvider;
   }
 
   private async scoreProvider(provider: LLMProvider, context: QueryContext): Promise<number> {
@@ -324,7 +425,11 @@ export class ProviderManager {
     const provider = await this.selectOptimalProvider(context);
     
     if (!provider) {
-      throw new Error('No available LLM providers configured');
+      // Create a temporary mock provider as last resort
+      console.warn('[ProviderManager] No provider available, creating temporary mock provider');
+      const mockProvider = ProviderFactory.createMockProvider();
+      await mockProvider.testConnection();
+      return await mockProvider.generateResponse(request);
     }
 
     try {

@@ -98,6 +98,22 @@ export class MetadataStore {
   }
 
   /**
+   * Delete document lineage
+   */
+  async deleteLineage(documentId: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['lineages'], 'readwrite');
+      const store = transaction.objectStore('lineages');
+      const request = store.delete(documentId);
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
    * Query lineages by criteria
    */
   async queryLineages(criteria: {

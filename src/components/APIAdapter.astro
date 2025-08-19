@@ -1,0 +1,16 @@
+---
+// API Adapter component to ensure client-side API works in static deployment
+---
+
+<script>
+  // Import and install the API adapter for GitHub Pages deployment
+  import { installAPIAdapter } from '../lib/api/api-adapter';
+  
+  // Install adapter immediately
+  installAPIAdapter();
+  
+  // Log for debugging in development
+  if (import.meta.env.DEV) {
+    console.log('[APIAdapter] Client-side API adapter installed for static deployment');
+  }
+</script>

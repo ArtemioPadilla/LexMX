@@ -15,6 +15,12 @@ export class IndexedDBVectorStore implements VectorStore {
   };
 
   async initialize(): Promise<void> {
+    // Skip initialization during SSG build
+    if (typeof indexedDB === 'undefined') {
+      console.log('IndexedDB not available (SSG build context)');
+      return;
+    }
+    
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.version);
 
@@ -52,7 +58,10 @@ export class IndexedDBVectorStore implements VectorStore {
   }
 
   async addDocument(document: VectorDocument): Promise<void> {
-    if (!this.db) throw new Error('Vector store not initialized');
+    if (!this.db) {
+      if (typeof indexedDB === 'undefined') return; // Skip during SSG
+      throw new Error('Vector store not initialized');
+    }
 
     const transaction = this.db.transaction([this.STORES.DOCUMENTS, this.STORES.EMBEDDINGS], 'readwrite');
     
@@ -81,7 +90,10 @@ export class IndexedDBVectorStore implements VectorStore {
   }
 
   async addDocuments(documents: VectorDocument[]): Promise<void> {
-    if (!this.db) throw new Error('Vector store not initialized');
+    if (!this.db) {
+      if (typeof indexedDB === 'undefined') return; // Skip during SSG
+      throw new Error('Vector store not initialized');
+    }
 
     // Process in batches to avoid overwhelming IndexedDB
     const batchSize = 100;
@@ -324,6 +336,40 @@ export class IndexedDBVectorStore implements VectorStore {
       this.db.close();
       this.db = null;
     }
+  }
+
+  // Admin methods
+  async deleteDocument(documentId: string): Promise<void> {
+    if (!this.db) throw new Error('Vector store not initialized');
+
+    const transaction = this.db.transaction([this.STORES.DOCUMENTS, this.STORES.EMBEDDINGS], 'readwrite');
+    
+    try {
+      const documentsStore = transaction.objectStore(this.STORES.DOCUMENTS);
+      await this.promisifyRequest(documentsStore.delete(documentId));
+      
+      const embeddingsStore = transaction.objectStore(this.STORES.EMBEDDINGS);
+      await this.promisifyRequest(embeddingsStore.delete(documentId));
+      
+      await this.promisifyTransaction(transaction);
+    } catch (error) {
+      transaction.abort();
+      throw new Error(`Failed to delete document ${documentId}: ${error}`);
+    }
+  }
+
+  async getAllEmbeddings(): Promise<Array<{id: string; embedding: number[]}>> {
+    if (!this.db) throw new Error('Vector store not initialized');
+
+    const transaction = this.db.transaction([this.STORES.EMBEDDINGS], 'readonly');
+    const embeddingsStore = transaction.objectStore(this.STORES.EMBEDDINGS);
+    
+    const allEmbeddings = await this.promisifyRequest(embeddingsStore.getAll());
+    
+    return allEmbeddings.map(item => ({
+      id: item.documentId,
+      embedding: this.decompressEmbedding(item.embedding, item.dimension)
+    }));
   }
 }
 

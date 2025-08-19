@@ -7,9 +7,11 @@ import { WebLLMProvider } from './webllm-provider';
 import { BedrockProvider } from './bedrock-provider';
 import { AzureProvider } from './azure-provider';
 import { VertexProvider } from './vertex-provider';
+import { MockLLMProvider } from './mock-provider';
+import { MockProvider } from './mock-provider';
 import type { LLMProvider, ProviderConfig } from '../../../types/llm';
 
-export { OpenAIProvider, ClaudeProvider, GeminiProvider, OllamaProvider, WebLLMProvider, BedrockProvider, AzureProvider, VertexProvider };
+export { OpenAIProvider, ClaudeProvider, GeminiProvider, OllamaProvider, WebLLMProvider, BedrockProvider, AzureProvider, VertexProvider, MockLLMProvider, MockProvider };
 
 export class ProviderFactory {
   static createProvider(config: ProviderConfig): LLMProvider {
@@ -38,6 +40,9 @@ export class ProviderFactory {
         return new AzureProvider(config);
       case 'vertex':
         return new VertexProvider(config);
+      case 'mock':
+        console.log('[ProviderFactory] Creating MockLLMProvider instance');
+        return new MockLLMProvider(config);
       default:
         console.error(`[ProviderFactory] Unknown provider: ${config.id}`);
         throw new Error(`Unknown provider: ${config.id}`);
@@ -45,6 +50,19 @@ export class ProviderFactory {
   }
 
   static isProviderSupported(providerId: string): boolean {
-    return ['openai', 'anthropic', 'claude', 'google', 'gemini', 'ollama', 'webllm', 'bedrock', 'azure', 'vertex'].includes(providerId);
+    return ['openai', 'anthropic', 'claude', 'google', 'gemini', 'ollama', 'webllm', 'bedrock', 'azure', 'vertex', 'mock'].includes(providerId);
+  }
+
+  static createMockProvider(): LLMProvider {
+    const mockConfig: ProviderConfig = {
+      id: 'mock',
+      name: 'Sistema de Demostración',
+      type: 'local',
+      enabled: true,
+      priority: 0, // Lowest priority
+      model: 'mock-legal-assistant',
+      createdAt: Date.now()
+    };
+    return new MockLLMProvider(mockConfig);
   }
 }

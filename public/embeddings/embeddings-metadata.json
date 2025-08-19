@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "buildDate": "2025-08-04T06:35:08.595Z",
+  "buildDate": "2025-08-18T19:48:42.786Z",
   "provider": {
     "model": "sentence-transformers/all-MiniLM-L6-v2",
     "dimensions": 384,

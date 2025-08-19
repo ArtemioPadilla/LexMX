@@ -1,0 +1,179 @@
+[
+  {
+    "id": "const-mex",
+    "title": "Constitución Política de los Estados Unidos Mexicanos",
+    "shortTitle": "CPEUM",
+    "type": "constitution",
+    "hierarchy": 1,
+    "primaryArea": "constitutional",
+    "secondaryAreas": ["human-rights", "administrative"],
+    "authority": "Congreso Constituyente",
+    "publicationDate": "1917-02-05",
+    "lastReform": "2023-05-28",
+    "status": "active",
+    "territorialScope": "national",
+    "applicability": "Todo el territorio nacional",
+    "content": [
+      {
+        "id": "art-1-const",
+        "type": "article",
+        "number": "1",
+        "title": "De los Derechos Humanos y sus Garantías",
+        "content": "En los Estados Unidos Mexicanos todas las personas gozarán de los derechos humanos reconocidos en esta Constitución y en los tratados internacionales de los que el Estado Mexicano sea parte, así como de las garantías para su protección.",
+        "chunkIndex": 0
+      },
+      {
+        "id": "art-123-const",
+        "type": "article", 
+        "number": "123",
+        "title": "Del Trabajo y de la Previsión Social",
+        "content": "Toda persona tiene derecho al trabajo digno y socialmente útil; al efecto, se promoverán la creación de empleos y la organización social de trabajo, conforme a la ley.",
+        "chunkIndex": 1
+      }
+    ],
+    "officialUrl": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf",
+    "relatedDependencies": [],
+    "importance": "critical",
+    "updateFrequency": "low"
+  },
+  {
+    "id": "lft-mexico",
+    "title": "Ley Federal del Trabajo",
+    "shortTitle": "LFT",
+    "type": "law",
+    "hierarchy": 3,
+    "primaryArea": "labor",
+    "secondaryAreas": ["social-security"],
+    "authority": "Congreso de la Unión",
+    "publicationDate": "1970-04-01",
+    "lastReform": "2023-07-28",
+    "status": "active",
+    "territorialScope": "federal",
+    "applicability": "Todas las relaciones de trabajo en territorio nacional",
+    "content": [
+      {
+        "id": "art-1-lft",
+        "type": "article",
+        "number": "1",
+        "title": "Disposiciones generales",
+        "content": "Las disposiciones de esta Ley son de orden público e interés social, por lo que no podrá renunciarse a los beneficios que otorga.",
+        "chunkIndex": 0
+      },
+      {
+        "id": "art-47-lft",
+        "type": "article",
+        "number": "47", 
+        "title": "Causas de rescisión sin responsabilidad para el patrón",
+        "content": "Son causas de rescisión de la relación de trabajo, sin responsabilidad para el patrón: I. Engañarlo el trabajador o en su caso, el sindicato que lo hubiese propuesto o recomendado con certificados falsos o referencias en los que se atribuyan al trabajador capacidad, aptitudes o facultades de que carezca.",
+        "chunkIndex": 1
+      },
+      {
+        "id": "art-50-lft",
+        "type": "article",
+        "number": "50",
+        "title": "Indemnizaciones por despido injustificado",
+        "content": "Las indemnizaciones a que se refiere el artículo anterior consistirán: I. Si la relación de trabajo fuere por tiempo determinado menor de un año, en una cantidad igual al importe de los salarios de la mitad del tiempo de servicios prestados.",
+        "chunkIndex": 2
+      }
+    ],
+    "officialUrl": "https://www.diputados.gob.mx/LeyesBiblio/pdf/125_280723.pdf",
+    "relatedDependencies": ["CPEUM"],
+    "importance": "critical",
+    "updateFrequency": "medium"
+  },
+  {
+    "id": "ccf-mexico",
+    "title": "Código Civil Federal",
+    "shortTitle": "CCF",
+    "type": "code",
+    "hierarchy": 3,
+    "primaryArea": "civil",
+    "secondaryAreas": ["family", "property"],
+    "authority": "Congreso de la Unión",
+    "publicationDate": "1928-05-26",
+    "lastReform": "2023-06-12",
+    "status": "active",
+    "territorialScope": "federal",
+    "applicability": "Relaciones civiles en el ámbito federal",
+    "content": [
+      {
+        "id": "art-1-ccf",
+        "type": "article",
+        "number": "1",
+        "title": "Aplicación del Código",
+        "content": "Las disposiciones de este Código regirán en toda la República en asuntos del orden federal.",
+        "chunkIndex": 0
+      },
+      {
+        "id": "art-830-ccf",
+        "type": "article",
+        "number": "830",
+        "title": "Definición de la usucapión",
+        "content": "Es también un medio de adquirir bienes o de liberarse de obligaciones, mediante el transcurso de cierto tiempo, y bajo las condiciones establecidas por la ley.",
+        "chunkIndex": 1
+      }
+    ],
+    "officialUrl": "https://www.diputados.gob.mx/LeyesBiblio/pdf/2_120623.pdf",
+    "relatedDependencies": ["CPEUM"],
+    "importance": "high",
+    "updateFrequency": "medium"
+  },
+  {
+    "id": "cpf-mexico",
+    "title": "Código Penal Federal",
+    "shortTitle": "CPF",
+    "type": "code",
+    "hierarchy": 3,
+    "primaryArea": "criminal",
+    "secondaryAreas": [],
+    "authority": "Congreso de la Unión",
+    "publicationDate": "1931-08-14",
+    "lastReform": "2023-05-16",
+    "status": "active",
+    "territorialScope": "federal",
+    "applicability": "Delitos del fuero federal",
+    "content": [
+      {
+        "id": "art-7-cpf",
+        "type": "article",
+        "number": "7",
+        "title": "Delito doloso y culposo",
+        "content": "Delito es el acto u omisión que sancionan las leyes penales. El delito es: I. Intencional o doloso. Obra dolosamente el que, conociendo los elementos del tipo penal, o previendo como posible el resultado típico, quiere o acepta la realización del hecho descrito por la ley.",
+        "chunkIndex": 0
+      }
+    ],
+    "officialUrl": "https://www.diputados.gob.mx/LeyesBiblio/pdf/9_160523.pdf",
+    "relatedDependencies": ["CPEUM", "CNPP"],
+    "importance": "critical",
+    "updateFrequency": "medium"
+  },
+  {
+    "id": "lgtaip-mexico",
+    "title": "Ley General de Transparencia y Acceso a la Información Pública",
+    "shortTitle": "LGTAIP",
+    "type": "law",
+    "hierarchy": 3,
+    "primaryArea": "administrative",
+    "secondaryAreas": ["human-rights"],
+    "authority": "Congreso de la Unión",
+    "publicationDate": "2015-05-04",
+    "lastReform": "2021-01-20",
+    "status": "active",
+    "territorialScope": "national",
+    "applicability": "Todos los sujetos obligados en transparencia",
+    "content": [
+      {
+        "id": "art-1-lgtaip",
+        "type": "article",
+        "number": "1",
+        "title": "Objeto de la Ley",
+        "content": "La presente Ley es de orden público y tiene por objeto establecer los principios, bases generales y procedimientos para garantizar el derecho de acceso a la información en posesión de cualquier autoridad, entidad, órgano y organismo de los poderes Ejecutivo, Legislativo y Judicial.",
+        "chunkIndex": 0
+      }
+    ],
+    "officialUrl": "https://www.diputados.gob.mx/LeyesBiblio/pdf/LGTAIP_200521.pdf",
+    "relatedDependencies": ["CPEUM"],
+    "importance": "high",
+    "updateFrequency": "low"
+  }
+]

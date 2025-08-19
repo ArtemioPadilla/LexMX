@@ -10,8 +10,6 @@ LexMX is a Mexican legal AI assistant that combines the complete Mexican legal c
 
 ## Development Commands
 
-Currently, the project is in the planning/documentation phase. Once the codebase is established, these commands are expected to be available:
-
 ```bash
 # Development
 npm run dev          # Start development server
@@ -37,17 +35,21 @@ npm run test:e2e     # End-to-end tests with Playwright
 - **Interactive Islands** (.tsx): ChatInterface, RAGEngine, TokenManager, DocumentUploader
 - **Selective Hydration**: Only interactive components load JavaScript client-side
 
-### Directory Structure (Planned)
+### Directory Structure
 ```
 src/
 ├── pages/              # Astro routes
+│   └── admin/         # Admin dashboards
 ├── components/         # Static Astro components
 ├── islands/            # Interactive React components
 ├── lib/
 │   ├── rag/           # RAG engine core
+│   │   └── chunking/  # Advanced chunking strategies
 │   ├── llm/           # Multi-LLM management
 │   ├── legal/         # Mexican legal processing
-│   └── storage/       # Hybrid storage system
+│   ├── storage/       # Hybrid storage system
+│   ├── corpus/        # Document corpus loader
+│   └── ingestion/     # Document ingestion pipeline
 ├── data/
 │   ├── legal-corpus/  # Mexican legal documents
 │   └── embeddings/    # Pre-computed vectors
@@ -60,9 +62,11 @@ src/
    - Hybrid search (semantic + keyword)
    - Legal document chunking and retrieval
    - Context optimization for Mexican law
-   - **NEW**: Contextual chunking with legal structure preservation
-   - **NEW**: Configurable chunking strategies (semantic, hierarchical, entity-aware)
-   - **NEW**: Dynamic chunk sizing based on content type
+   - Contextual chunking with legal structure preservation
+   - Configurable chunking strategies (semantic, hierarchical, entity-aware)
+   - Dynamic chunk sizing based on content type
+   - **Real corpus document loading** from legal-corpus directory
+   - **Automatic fallback** to mock documents when corpus is empty
 
 2. **Multi-LLM Manager** (`lib/llm/`):
    - Cost-optimized provider selection
@@ -84,13 +88,21 @@ src/
    - **NEW**: Case workspace storage and management
    - **NEW**: Document versioning and sets
 
-5. **Case Management** (`lib/case-management/`) - **NEW**:
+5. **Case Management** (`lib/case-management/`):
    - Case workspace creation and organization
    - Document library with multi-file upload
    - Document sets for selective analysis
    - Timeline and deadline tracking
    - Party and evidence management
    - Notes and annotations system
+
+6. **Document Ingestion Pipeline** (`lib/ingestion/`) - **NEW**:
+   - **DocumentFetcher**: Downloads from official Mexican government sources
+   - **DocumentParser**: Extracts structured content from PDFs/HTML/XML
+   - **ContextualChunker**: Maintains legal context across chunks
+   - **Real-time progress tracking** with stage-by-stage updates
+   - **Official source validation** for government domains
+   - **Batch processing** support for multiple documents
 
 ## Legal Domain Knowledge
 
@@ -117,6 +129,9 @@ src/
 - Legal citations are preserved and validated
 - Jurisprudence and legal precedents are properly indexed
 - Updates are tracked with reformation dates
+- **Automated ingestion** from official sources (DOF, SCJN, Diputados)
+- **Smart chunking** with contextual overlap and cross-references
+- **Legal-aware parsing** that preserves article hierarchy
 
 ## API Integration
 
@@ -234,10 +249,27 @@ interface ChunkingStrategy {
 ## Common Development Tasks
 
 ### Adding New Legal Documents
-1. Place document JSON in `src/data/legal-corpus/`
+
+#### Method 1: Manual Upload (Recommended for single documents)
+1. Navigate to `/admin/documents`
+2. Upload PDF/TXT file or enter official URL
+3. System automatically:
+   - Validates source (checks if from official domain)
+   - Parses document structure
+   - Creates contextual chunks
+   - Generates embeddings
+   - Stores in corpus
+
+#### Method 2: Document Request System
+1. Create request at `/requests/new`
+2. Provide document details and official source
+3. Community votes on priority
+4. Approved documents are automatically ingested
+
+#### Method 3: Batch Processing (For corpus updates)
+1. Place document JSON in `public/legal-corpus/`
 2. Run `npm run build:embeddings` to generate vectors
-3. Update legal classification in `src/lib/legal/classifier.ts`
-4. Add to document registry
+3. Documents are automatically loaded on next startup
 
 ### Integrating New LLM Provider
 1. Create provider class in `src/lib/llm/providers/`
@@ -466,13 +498,60 @@ t('items', { count: 5 })
 - Local storage of preferences
 - No query logging
 
+## Document Ingestion & Management
+
+### Admin Dashboard (`/admin/documents`)
+- **Real-time ingestion monitoring** with progress bars
+- **Document statistics** (total docs, chunks, embeddings)
+- **Recent activity tracking**
+- **Quality metrics** for ingested documents
+
+### Ingestion Pipeline Features
+
+#### Supported Sources
+- **Official Government Sites**:
+  - dof.gob.mx (Diario Oficial de la Federación)
+  - scjn.gob.mx (Suprema Corte de Justicia)
+  - diputados.gob.mx (Cámara de Diputados)
+  - senado.gob.mx (Senado de la República)
+  - sat.gob.mx (SAT)
+  - imss.gob.mx (IMSS)
+  - infonavit.org.mx
+
+#### Processing Stages
+1. **Fetching**: Downloads from URL or processes uploaded file
+2. **Parsing**: Extracts structure (titles, chapters, articles)
+3. **Chunking**: Creates contextual chunks with overlap
+4. **Embedding**: Generates vectors using Transformers.js
+5. **Storing**: Saves to IndexedDB and corpus
+
+#### Chunking Strategies
+- **Hierarchical**: Preserves document structure
+- **Contextual**: Maintains surrounding context
+- **Cross-referenced**: Links related articles
+- **Legal-aware**: Respects article boundaries
+
+### API Endpoints (Planned)
+```typescript
+// Document ingestion
+POST /api/ingest/url      // Ingest from URL
+POST /api/ingest/file     // Ingest uploaded file
+GET  /api/ingest/status   // Check ingestion status
+
+// GitHub integration
+POST /api/github/issue    // Create document request issue
+GET  /api/github/requests // List pending requests
+```
+
 ## Future Development
 
 ### Planned Features
 - State-level legal documents
-- PDF document analysis
+- PDF document analysis with OCR
 - Legal document templates
-- Real-time legal updates
+- Real-time legal updates from RSS feeds
+- GitHub Actions automation for corpus updates
+- WebHook receivers for partner organizations
 
 ### Scalability Considerations
 - Modular architecture for legal area expansion

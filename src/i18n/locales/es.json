@@ -21,6 +21,251 @@
       "confidence": "Confianza: {{score}}%"
     }
   },
+  "ingestion": {
+    "title": "Pipeline de Ingesta de Documentos",
+    "processingRequest": "Procesando solicitud",
+    "uploadFile": "Subir archivo",
+    "selectFile": "Seleccionar archivo",
+    "or": "o",
+    "enterUrl": "Ingresar URL",
+    "startIngestion": "Iniciar Ingesta",
+    "noSourceError": "Por favor selecciona un archivo o ingresa una URL",
+    "cancel": "Cancelar",
+    "progressHistory": "Historial de progreso",
+    "success": "Ingesta completada exitosamente",
+    "failed": "La ingesta falló",
+    "ingestAnother": "Ingestar otro documento",
+    "viewDocument": "Ver documento",
+    "stages": {
+      "fetching": "Obteniendo documento",
+      "parsing": "Analizando estructura",
+      "chunking": "Creando fragmentos",
+      "embedding": "Generando embeddings",
+      "storing": "Almacenando documento",
+      "complete": "Completado",
+      "error": "Error"
+    },
+    "stats": {
+      "chunks": "Fragmentos",
+      "tokens": "Tokens",
+      "time": "Tiempo",
+      "embeddings": "Embeddings"
+    }
+  },
+  "admin": {
+    "documents": {
+      "title": "Panel de Gestión de Documentos",
+      "subtitle": "Ingestar, procesar y gestionar documentos legales para el sistema RAG",
+      "tabs": {
+        "ingestion": "Ingesta de Documentos",
+        "corpus": "Vista General del Corpus",
+        "embeddings": "Embeddings",
+        "quality": "Métricas de Calidad"
+      },
+      "stats": {
+        "total": "Documentos Totales",
+        "chunks": "Fragmentos Totales",
+        "embeddings": "Embeddings",
+        "lastUpdate": "Última Actualización"
+      },
+      "recentActivity": "Actividad Reciente"
+    },
+    "quality": {
+      "title": "Métricas de Calidad",
+      "subtitle": "Monitorear y mejorar el rendimiento del sistema RAG",
+      "metrics": {
+        "accuracy": "Precisión de Recuperación",
+        "avgLatency": "Latencia Promedio",
+        "coverage": "Cobertura del Corpus",
+        "userSatisfaction": "Satisfacción del Usuario",
+        "cacheHitRate": "Tasa de Aciertos en Caché",
+        "errorRate": "Tasa de Errores",
+        "totalQueries": "Consultas Totales",
+        "confidence": "Confianza Promedio"
+      },
+      "tests": {
+        "title": "Pruebas de Calidad",
+        "runTest": "Ejecutar Prueba",
+        "runAllTests": "Ejecutar Todas las Pruebas",
+        "running": "Ejecutando...",
+        "passed": "Aprobado",
+        "failed": "Falló",
+        "score": "Puntuación",
+        "duration": "Duración",
+        "categories": {
+          "citation": "Precisión de Citas",
+          "semantic": "Similitud Semántica",
+          "crossReference": "Detección de Referencias Cruzadas",
+          "contradiction": "Detección de Contradicciones",
+          "performance": "Rendimiento"
+        },
+        "descriptions": {
+          "citationAccuracy": "Prueba la precisión de recuperar artículos legales específicos",
+          "semanticSimilarity": "Prueba la comprensión de conceptos legales y sinónimos",
+          "crossReference": "Prueba la capacidad de encontrar disposiciones legales relacionadas",
+          "contradiction": "Prueba la identificación de disposiciones legales conflictivas",
+          "performance": "Prueba los tiempos de respuesta para consultas simples"
+        }
+      },
+      "queries": {
+        "title": "Análisis de Consultas Recientes",
+        "query": "Consulta",
+        "retrievedDocs": "Documentos Recuperados",
+        "relevanceScore": "Puntuación de Relevancia",
+        "responseTime": "Tiempo de Respuesta",
+        "userFeedback": "Retroalimentación del Usuario",
+        "legalArea": "Área Legal",
+        "queryType": "Tipo de Consulta",
+        "cached": "En Caché",
+        "error": "Error",
+        "noQueries": "No hay consultas recientes disponibles"
+      },
+      "insights": {
+        "title": "Información y Recomendaciones",
+        "type": {
+          "warning": "Advertencia",
+          "info": "Información",
+          "success": "Éxito",
+          "error": "Error"
+        },
+        "noInsights": "No hay información disponible"
+      },
+      "reports": {
+        "export": "Exportar Reporte",
+        "generate": "Generar Reporte",
+        "timeRange": "Rango de Tiempo",
+        "last7Days": "Últimos 7 días",
+        "last30Days": "Últimos 30 días",
+        "customRange": "Rango personalizado"
+      },
+      "charts": {
+        "latencyTrend": "Tendencia de Latencia",
+        "queryVolume": "Volumen de Consultas",
+        "errorDistribution": "Distribución de Errores",
+        "areaDistribution": "Distribución por Área Legal"
+      }
+    },
+    "corpus": {
+      "title": "Gestión del Corpus",
+      "subtitle": "Administrar documentos legales del sistema",
+      "validate": "Validar Corpus",
+      "validating": "Validando...",
+      "export": "Exportar Corpus",
+      "exporting": "Exportando...",
+      "import": "Importar Documento",
+      "importing": "Importando...",
+      "allTypes": "Todos los tipos",
+      "allAreas": "Todas las áreas",
+      "search": "Buscar documentos...",
+      "loading": "Cargando documentos...",
+      "noDocuments": "No se encontraron documentos",
+      "confirmDelete": "¿Está seguro de que desea eliminar este documento?",
+      "deleteSuccess": "Documento eliminado exitosamente",
+      "deleteError": "Error al eliminar documento",
+      "reindex": "Reindexar",
+      "reindexSuccess": "Documento reindexado exitosamente",
+      "reindexError": "Error al reindexar documento",
+      "delete": "Eliminar",
+      "validateError": "Error al validar el corpus",
+      "exportError": "Error al exportar el corpus",
+      "importError": "Error al importar documento",
+      "importSuccess": "Documento importado exitosamente",
+      "types": {
+        "law": "Ley",
+        "code": "Código",
+        "regulation": "Reglamento",
+        "norm": "Norma"
+      },
+      "areas": {
+        "civil": "Civil",
+        "criminal": "Penal",
+        "labor": "Laboral",
+        "tax": "Fiscal",
+        "commercial": "Mercantil"
+      },
+      "stats": {
+        "totalDocuments": "Total de Documentos",
+        "totalChunks": "Total de Fragmentos",
+        "totalSize": "Tamaño Total",
+        "lastUpdate": "Última Actualización"
+      },
+      "table": {
+        "title": "Título",
+        "type": "Tipo",
+        "area": "Área",
+        "chunks": "Fragmentos",
+        "actions": "Acciones"
+      },
+      "validationResults": "Resultados de Validación",
+      "validDocuments": "documentos válidos",
+      "invalidDocuments": "documentos inválidos",
+      "issues": "Problemas encontrados",
+      "documentDetails": "Detalles del Documento",
+      "details": {
+        "id": "ID",
+        "hierarchy": "Jerarquía",
+        "size": "Tamaño",
+        "quality": "Calidad",
+        "embeddings": "Embeddings",
+        "lastUpdated": "Última Actualización"
+      }
+    },
+    "embeddings": {
+      "title": "Gestión de Embeddings",
+      "subtitle": "Administrar vectores semánticos del corpus",
+      "initError": "Error al inicializar el servicio de embeddings",
+      "loadError": "Error al cargar datos",
+      "switchError": "Error al cambiar proveedor",
+      "noSelection": "Debe seleccionar al menos un documento",
+      "generateError": "Error al generar embeddings",
+      "generateAllError": "Error al generar todos los embeddings",
+      "partialError": "Algunos embeddings fallaron",
+      "confirmClear": "¿Está seguro de que desea limpiar la caché de embeddings?",
+      "clearSuccess": "Caché limpiada exitosamente",
+      "clearError": "Error al limpiar caché",
+      "confirmRebuild": "¿Está seguro de que desea reconstruir el índice?",
+      "rebuildSuccess": "Índice reconstruido exitosamente",
+      "rebuildError": "Error al reconstruir índice",
+      "confirmGenerateAll": "¿Está seguro de que desea generar embeddings para todos los documentos?",
+      "exportError": "Error al exportar embeddings",
+      "generating": "Generando...",
+      "generateSelected": "Generar Seleccionados",
+      "generateAll": "Generar Todos",
+      "clearing": "Limpiando...",
+      "clearCache": "Limpiar Caché",
+      "rebuilding": "Reconstruyendo...",
+      "rebuildIndex": "Reconstruir Índice",
+      "exporting": "Exportando...",
+      "export": "Exportar",
+      "advanced": "Opciones Avanzadas",
+      "batchSize": "Tamaño de lote",
+      "batchSizeHelp": "Número de documentos a procesar simultáneamente",
+      "stats": {
+        "totalVectors": "Total de Vectores",
+        "storageSize": "Tamaño de Almacenamiento",
+        "avgTime": "Tiempo Promedio",
+        "status": "Estado del Índice"
+      },
+      "provider": {
+        "title": "Configuración de Proveedor",
+        "current": "Proveedor actual",
+        "switching": "Cambiando proveedor...",
+        "model": "Modelo",
+        "available": "Disponibles"
+      },
+      "generation": {
+        "title": "Control de Generación",
+        "progress": "Progreso"
+      },
+      "documents": {
+        "title": "Documentos",
+        "type": "Tipo",
+        "chunks": "Fragmentos",
+        "status": "Estado",
+        "indexed": "Indexado"
+      }
+    }
+  },
   "common": {
     "loading": "Cargando...",
     "private": "Privado",

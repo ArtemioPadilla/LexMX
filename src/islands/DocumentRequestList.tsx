@@ -342,6 +342,15 @@ export default function DocumentRequestList({
                         <option value="rejected">{t('requests.status.rejected')}</option>
                         <option value="duplicate">{t('requests.status.duplicate')}</option>
                       </select>
+                      
+                      {request.status === 'under_review' && (
+                        <button
+                          onClick={() => window.location.href = `/admin/documents?processRequest=${request.id}`}
+                          className="text-sm px-3 py-1 bg-legal-600 text-white rounded hover:bg-legal-700 transition-colors"
+                        >
+                          {t('requests.processRequest')}
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
