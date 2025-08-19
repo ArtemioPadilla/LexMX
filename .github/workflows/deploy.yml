@@ -176,7 +176,7 @@ jobs:
           retention-days: 1
           
       - name: 📄 Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
         
       - name: 📤 Upload to GitHub Pages
         uses: actions/upload-pages-artifact@v4.0.0
