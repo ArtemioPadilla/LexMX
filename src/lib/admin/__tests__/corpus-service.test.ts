@@ -1,10 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import type { LegalDocument } from '@/types/legal';
-import type { CorpusFilter, ValidationResult } from '../corpus-service';
+import type { CorpusFilter } from '../corpus-service';
 import {
-  createMockCorpusService,
-  createMockDocument,
-  createMockDocumentMetrics,
   legalDocumentsFixture
 } from '@/test/mocks';
 

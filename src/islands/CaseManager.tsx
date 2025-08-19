@@ -458,7 +458,7 @@ export default function CaseManager() {
       setStreamingSummary('');
       
       // Show success message (you might want to add a toast notification here)
-      console.log('Summary generated successfully');
+      // Summary generated successfully
       
     } catch (error) {
       console.error('Error generating summary:', error);
@@ -972,9 +972,9 @@ export default function CaseManager() {
                       deadlines={selectedCase.deadlines}
                       parties={selectedCase.parties}
                       statusChanges={[]}
-                      onAddEvent={(event) => {
+                      onAddEvent={(_event) => {
                         // Here you could store custom events if needed
-                        console.log('New event added:', event);
+                        // New event added: event
                       }}
                     />
                   </Suspense>

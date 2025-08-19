@@ -231,7 +231,14 @@ jobs:
           # Display results
           if [ -f accessibility-report.json ]; then
             echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
-            jq '{violations: .violations | length, passes: .passes | length}' accessibility-report.json >> $GITHUB_STEP_SUMMARY
+            # Check if the report is an array or object
+            if jq -e 'type == "array"' accessibility-report.json > /dev/null 2>&1; then
+              # If array, get the first element
+              jq '.[0] | {violations: (.violations // []) | length, passes: (.passes // []) | length}' accessibility-report.json >> $GITHUB_STEP_SUMMARY
+            else
+              # If object, process directly
+              jq '{violations: (.violations // []) | length, passes: (.passes // []) | length}' accessibility-report.json >> $GITHUB_STEP_SUMMARY
+            fi
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           fi
 

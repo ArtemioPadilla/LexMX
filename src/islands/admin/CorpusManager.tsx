@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from '../../i18n/index';
-import { corpusService, type DocumentMetrics } from '../../lib/admin/corpus-service';
+import type { DocumentMetrics } from '../../lib/admin/corpus-service';
 import { adminDataService, type CorpusStats } from '../../lib/admin/admin-data-service';
 import type { LegalDocument, DocumentType, LegalArea } from '../../types/legal';
 import type { CorpusFilter } from '../../lib/admin/corpus-service';
@@ -46,7 +46,7 @@ export default function CorpusManager() {
         const searchLower = filter.searchTerm.toLowerCase();
         docs = docs.filter(doc => 
           doc.title.toLowerCase().includes(searchLower) ||
-          doc.identifier?.toLowerCase().includes(searchLower)
+          doc.id.toLowerCase().includes(searchLower)
         );
       }
       
@@ -81,7 +81,7 @@ export default function CorpusManager() {
           legalArea: doc.primaryArea,
           chunks: doc.content?.length || 0,
           embeddings: doc.content?.length || 0, // Assume all chunks have embeddings
-          lastUpdated: doc.lastModified || new Date().toISOString(),
+          lastUpdated: doc.lastReform || doc.publicationDate || new Date().toISOString(),
           size: JSON.stringify(doc).length,
           quality: 85 // Placeholder quality score
         };
@@ -187,7 +187,7 @@ export default function CorpusManager() {
     }
   };
 
-  const handleImport = async (file: File) => {
+  const handleImport = async (_file: File) => {
     setOperation('import');
     setError(null);
     try {

@@ -2,19 +2,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { EmbeddingsService } from '../embeddings-service';
 import { DocumentLoader } from '../../corpus/document-loader';
 import { IndexedDBVectorStore } from '../../storage/indexeddb-vector-store';
-import { EmbeddingProvider } from '../../embeddings/types';
 import { TransformersEmbeddings } from '../../embeddings/transformers-embeddings';
 import { OpenAIEmbeddings } from '../../embeddings/openai-embeddings';
 import { MockEmbeddings } from '../../embeddings/mock-embeddings';
 import type { LegalDocument, VectorDocument } from '@/types/legal';
-import { 
-  createMockService, 
-  createMockDocument, 
-  createMockVectorDocument,
-  createMockAsyncOperation,
-  createMockEmbedding 
-} from '@/test/mocks/factories';
-import embeddingsFixture from '@/test/fixtures/embeddings.json';
 
 // Mock the dependencies
 vi.mock('../../corpus/document-loader');
@@ -44,7 +35,7 @@ describe('EmbeddingsService', () => {
     ]
   });
 
-  const mockVectorDoc: VectorDocument = {
+  const _mockVectorDoc: VectorDocument = {
     id: 'chunk1',
     content: 'First chunk content',
     embedding: [0.1, 0.2, 0.3],
@@ -65,7 +56,7 @@ describe('EmbeddingsService', () => {
   };
 
   // Helper function to wait for events
-  const waitForEvents = (eventName: string, count: number, timeout = 1000): Promise<any[]> => {
+  const _waitForEvents = (eventName: string, count: number, timeout = 1000): Promise<any[]> => {
     return new Promise((resolve, reject) => {
       const events: any[] = [];
       const handler = (event: any) => {

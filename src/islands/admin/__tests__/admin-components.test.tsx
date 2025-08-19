@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderAsync, screen, fireEvent, waitFor, act, testHelpers } from '@/test/test-utils';
 import CorpusManager from '../CorpusManager';
 import EmbeddingsManager from '../EmbeddingsManager';
@@ -259,9 +259,9 @@ describe('CorpusManager', () => {
 
   it('should render corpus statistics', async () => {
     // Test that CorpusManager renders without throwing errors
-    let renderError = false;
+    const renderError = false;
     try {
-      const { container } = await renderAsync(<CorpusManager />);
+      await renderAsync(<CorpusManager />);
       await testHelpers.waitForLoading();
       
       // If we get here without error, the component at least attempted to render

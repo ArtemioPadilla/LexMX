@@ -20,6 +20,9 @@ export default [
         ecmaFeatures: {
           jsx: true
         }
+      },
+      globals: {
+        console: 'readonly'
       }
     },
     rules: {
@@ -44,7 +47,7 @@ export default [
     }
   },
   {
-    files: ['scripts/**/*.js', 'scripts/**/*.cjs', '*.config.js', '*.config.mjs', '*.config.ts'],
+    files: ['scripts/**/*.js', 'scripts/**/*.cjs', '*.config.js', '*.config.mjs', '*.config.ts', '*.cjs'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -62,6 +65,7 @@ export default [
     rules: {
       '@typescript-eslint/no-var-requires': 'off',
       '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
       'no-undef': 'off',
       'no-console': 'off'
     }
@@ -86,6 +90,8 @@ export default [
       'eslint.config.js',
       'clear-storage.js',
       'run-tests.js',
+      'validate-build.cjs',
+      'test-integration.js',
       'tests/**/*.ts',
       'tests/**/*.js',
       'playwright.config.ts',

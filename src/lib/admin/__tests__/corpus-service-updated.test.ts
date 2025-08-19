@@ -6,16 +6,15 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { 
   createMockDocument, 
-  createMockDocumentMetrics,
-  createMockAsyncOperation 
+  createMockDocumentMetrics
 } from '../../../test/mocks/factories';
 import { 
   createMockCorpusService,
   createMockEventEmitterUtils
 } from '../../../test/mocks/service-mocks';
-import { autoMockService, resetAllMocks, validateMockCalls } from '../../../test/mocks/auto-mock';
+import { autoMockService, resetAllMocks } from '../../../test/mocks/auto-mock';
 import legalDocumentsFixture from '../../../test/fixtures/legal-documents.json';
-import type { LegalDocument, CorpusFilter } from '@/types/legal';
+import type { CorpusFilter } from '@/types/legal';
 
 // Mock the dependencies before importing CorpusService
 vi.mock('../../corpus/document-loader');
@@ -49,7 +48,7 @@ describe('CorpusService (Updated with Mock Infrastructure)', () => {
   describe('Document Operations with Mock Factories', () => {
     it('should handle documents using mock factories', async () => {
       // Create test documents using factories
-      const mockDocs = [
+      const _mockDocs = [
         createMockDocument({ 
           type: 'law', 
           primaryArea: 'labor',
@@ -100,7 +99,7 @@ describe('CorpusService (Updated with Mock Infrastructure)', () => {
       const documentId = 'lft-mexico';
       
       // Create mock metrics using factory
-      const expectedMetrics = createMockDocumentMetrics({
+      const _expectedMetrics = createMockDocumentMetrics({
         id: documentId,
         title: 'Ley Federal del Trabajo',
         type: 'law',

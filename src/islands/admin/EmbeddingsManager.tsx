@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from '../../i18n/index';
-import { embeddingsService, type EmbeddingStats, type GenerationResult, type BatchResult } from '../../lib/admin/embeddings-service';
+import { embeddingsService, type EmbeddingStats } from '../../lib/admin/embeddings-service';
 import { adminDataService } from '../../lib/admin/admin-data-service';
-import { corpusService } from '../../lib/admin/corpus-service';
 import type { LegalDocument } from '@/types/legal';
 
 export default function EmbeddingsManager() {

@@ -35,7 +35,7 @@ if (fs.existsSync(indexPath) && fs.existsSync(metadataPath) && fs.existsSync(emb
     const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
     console.log(`📈 Total chunks: ${metadata.corpus?.processedChunks || 'unknown'}`);
     console.log(`📏 Dimensions: ${metadata.provider?.dimensions || 'unknown'}`);
-  } catch (error) {
+  } catch {
     console.log('⚠️ Could not read metadata, but embeddings are present');
   }
   

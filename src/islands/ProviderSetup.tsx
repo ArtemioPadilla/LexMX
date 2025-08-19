@@ -109,7 +109,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
       // For WebLLM, set up progress callback before initialization
       if (config.id === 'webllm') {
         providerManager.setWebLLMProgressCallback((progress, message) => {
-          console.log(`[WebLLM] ${message}`);
+          console.warn(`[WebLLM] ${message}`);
           setWebllmProgress({ progress, message });
         });
       }

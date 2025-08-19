@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from '../../i18n/index';
 import { qualityTestSuite, type QualityTest, type TestResult, type TestSuiteResult } from '../../lib/admin/quality-test-suite';
 import { queryAnalyzer, type QueryMetrics, type PerformanceReport, type PerformanceInsight } from '../../lib/admin/query-analyzer';
-import { adminDataService, type QualityStats } from '../../lib/admin/admin-data-service';
-import { LegalRAGEngine } from '../../lib/rag/engine';
+import type { QualityStats } from '../../lib/admin/admin-data-service';
 
 export default function QualityMetrics() {
   const { t } = useTranslation();

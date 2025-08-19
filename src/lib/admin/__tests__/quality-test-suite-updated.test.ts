@@ -7,8 +7,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { 
   createMockTestResult, 
   createMockTestSuiteResult,
-  createMockAsyncOperation,
-  createMockDocument
+  createMockAsyncOperation
 } from '../../../test/mocks/factories';
 import { 
   createMockQualityTestSuite,
@@ -18,7 +17,6 @@ import {
   autoMockService, 
   resetAllMocks,
   createSequenceMock,
-  mockGenerators,
   testHelpers
 } from '../../../test/mocks/auto-mock';
 // Test fixtures are created inline for now
@@ -45,7 +43,7 @@ const legalDocumentsFixture = {
   ]
 };
 import { QualityTestSuite } from '../quality-test-suite';
-import type { TestResult, TestSuiteResult, QualityTest } from '../quality-test-suite';
+import type { QualityTest } from '../quality-test-suite';
 
 // Mock RAG engine
 vi.mock('../../rag/engine', () => ({

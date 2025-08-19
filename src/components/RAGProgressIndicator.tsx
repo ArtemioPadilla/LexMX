@@ -36,7 +36,7 @@ export default function RAGProgressIndicator({
   // Debug: Log documents when they change
   useEffect(() => {
     if (documents.length > 0) {
-      console.log('RAGProgressIndicator received documents:', documents);
+      console.warn('RAGProgressIndicator received documents:', documents);
     }
   }, [documents]);
 
