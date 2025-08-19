@@ -10,12 +10,46 @@ vi.mock('../../../lib/admin/admin-data-service');
 
 // Import after mocking
 import { GET } from '../list';
+import { corpusService } from '../../../lib/admin/corpus-service';
 
 describe('Corpus List API Endpoint', () => {
   let mockContext: APIContext;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Mock the corpus service methods
+    vi.mocked(corpusService.initialize).mockResolvedValue(undefined);
+    vi.mocked(corpusService.getDocuments).mockResolvedValue([
+      {
+        id: 'doc-1',
+        title: 'Constitución Política',
+        type: 'constitution',
+        primaryArea: 'constitutional',
+        hierarchy: 1,
+        content: [],
+        authority: 'Congreso de la Unión',
+        publicationDate: '1917-02-05',
+        status: 'active',
+        territorialScope: 'federal',
+        secondaryAreas: [],
+        citations: []
+      },
+      {
+        id: 'doc-2',
+        title: 'Ley Federal del Trabajo',
+        type: 'law',
+        primaryArea: 'labor',
+        hierarchy: 3,
+        content: [],
+        authority: 'Congreso de la Unión',
+        publicationDate: '1970-04-01',
+        status: 'active',
+        territorialScope: 'federal',
+        secondaryAreas: [],
+        citations: []
+      }
+    ]);
 
     // Create mock context
     mockContext = {
