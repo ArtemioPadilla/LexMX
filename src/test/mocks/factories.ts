@@ -431,12 +431,13 @@ export function createMockBatchOperation<T>(
   const { batchSize = 5, delay = 10, failureRate = 0 } = options;
   const results: any[] = [];
   
-  return new Promise(async (resolve, reject) => {
-    try {
-      for (let i = 0; i < items.length; i += batchSize) {
-        const batch = items.slice(i, i + batchSize);
-        const batchResults = await Promise.all(
-          batch.map(item => 
+  return new Promise((resolve, reject) => {
+    (async () => {
+      try {
+        for (let i = 0; i < items.length; i += batchSize) {
+          const batch = items.slice(i, i + batchSize);
+          const batchResults = await Promise.all(
+            batch.map(item => 
             createMockAsyncOperation(
               processor(item),
               { delay, failureRate }
@@ -449,5 +450,6 @@ export function createMockBatchOperation<T>(
     } catch (error) {
       reject(error);
     }
+    })();
   });
 }

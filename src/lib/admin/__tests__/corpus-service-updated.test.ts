@@ -26,7 +26,7 @@ vi.mock('../../ingestion/document-ingestion-pipeline');
 import { CorpusService } from '../corpus-service';
 
 describe('CorpusService (Updated with Mock Infrastructure)', () => {
-  let service: CorpusService;
+  let _service: CorpusService;
   let mockService: ReturnType<typeof createMockCorpusService>;
   let eventUtils: ReturnType<typeof createMockEventEmitterUtils>;
 

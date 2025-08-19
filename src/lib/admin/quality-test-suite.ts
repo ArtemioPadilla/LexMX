@@ -507,15 +507,16 @@ export class QualityTestSuite {
         message = `Query type: ${actualValue} (expected: ${expectation.value})`;
         break;
 
-      case 'document_count':
+      case 'document_count': {
         actualValue = response.sources.length;
         const threshold = expectation.threshold || 1;
         passed = actualValue >= threshold;
         score = Math.min(actualValue / threshold, 1);
         message = `Documents found: ${actualValue} (minimum: ${threshold})`;
         break;
+      }
 
-      case 'citation_accuracy':
+      case 'citation_accuracy': {
         const citationText = expectation.value.toString().toLowerCase();
         const responseText = response.answer.toLowerCase();
         const sourcesText = response.sources.map(s => s.title.toLowerCase() + ' ' + s.excerpt.toLowerCase()).join(' ');
@@ -526,6 +527,7 @@ export class QualityTestSuite {
           ? `Citation accurately referenced: "${expectation.value}"`
           : `Citation not found in response: "${expectation.value}"`;
         break;
+      }
 
       default:
         passed = false;
