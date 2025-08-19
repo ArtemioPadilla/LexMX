@@ -179,7 +179,7 @@ jobs:
         uses: actions/configure-pages@v4
         
       - name: 📤 Upload to GitHub Pages
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v4.0.0
         with:
           path: dist/
 
