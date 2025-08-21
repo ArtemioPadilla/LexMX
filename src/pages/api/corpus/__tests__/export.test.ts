@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { APIContext } from 'astro';
 
-// Mock the services
-vi.mock('../../../lib/admin/corpus-service', () => ({
+// Mock the corpus service using the same path alias as the API
+vi.mock('@/lib/admin/corpus-service', () => ({
   corpusService: {
     initialize: vi.fn().mockResolvedValue(undefined),
     getDocuments: vi.fn().mockResolvedValue([
@@ -24,6 +24,7 @@ vi.mock('../../../lib/admin/corpus-service', () => ({
 
 // Import after mocking
 import { GET } from '../export';
+import { corpusService } from '@/lib/admin/corpus-service';
 
 describe('Corpus Export API Endpoint', () => {
   let mockContext: APIContext;
@@ -79,8 +80,6 @@ describe('Corpus Export API Endpoint', () => {
     });
 
     it('should handle large corpus export', async () => {
-      const { corpusService } = await import('../../../lib/admin/corpus-service');
-      
       const largeDocuments = Array(1000).fill(null).map((_, i) => ({
         id: `doc-${i}`,
         title: `Document ${i}`,
@@ -107,7 +106,6 @@ describe('Corpus Export API Endpoint', () => {
     });
 
     it('should handle service errors gracefully', async () => {
-      const { corpusService } = await import('../../../lib/admin/corpus-service');
       (corpusService.getDocuments as any).mockRejectedValueOnce(new Error('Export failed'));
 
       const response = await GET(mockContext);
@@ -150,7 +148,6 @@ describe('Corpus Export API Endpoint', () => {
     });
 
     it('should handle empty corpus export', async () => {
-      const { corpusService } = await import('../../../lib/admin/corpus-service');
       (corpusService.getDocuments as any).mockResolvedValueOnce([]);
 
       const response = await GET(mockContext);

@@ -5,6 +5,7 @@ import DocumentViewer from './DocumentViewer';
 import { DocumentLoader } from '../lib/legal/document-loader';
 import type { LegalDocument } from '../types/legal';
 import { useTranslation } from '../i18n';
+import { getUrl } from '../utils/urls';
 
 interface DocumentViewerWrapperProps {
   documentId: string;
@@ -80,7 +81,7 @@ export default function DocumentViewerWrapper({ documentId, documentTitle }: Doc
           <p className="text-gray-600 dark:text-gray-400 mb-4">
             {t('documentViewer.messages.documentNotAvailable', { title: documentTitle })}
           </p>
-          <a href="/legal" className="text-legal-600 hover:text-legal-700 dark:text-legal-400 dark:hover:text-legal-300">
+          <a href={getUrl('legal')} className="text-legal-600 hover:text-legal-700 dark:text-legal-400 dark:hover:text-legal-300">
             {t('documentViewer.messages.viewAllDocuments')}
           </a>
         </div>

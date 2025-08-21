@@ -32,7 +32,9 @@ test.describe('WebLLM Integration Flow', () => {
     await page.click('[data-testid="setup-begin"]');
     
     // 3. Select custom configuration
-    await page.click('text="Configuración Personalizada"');
+    const customButton = page.locator('[data-testid="setup-custom"]').first();
+    const customFallback = page.locator('button').filter({ hasText: /Configuración Personalizada|Custom Configuration/i }).first();
+    await (await customButton.isVisible() ? customButton : customFallback).click();
     
     // 4. Select WebLLM provider
     const webllmCard = page.locator('[role="button"]:has-text("WebLLM"), .provider-card:has-text("WebLLM")').first();
@@ -102,7 +104,9 @@ test.describe('WebLLM Integration Flow', () => {
     
     // Start configuration
     await page.click('[data-testid="setup-begin"]');
-    await page.click('text="Configuración Personalizada"');
+    const customButton = page.locator('[data-testid="setup-custom"]').first();
+    const customFallback = page.locator('button').filter({ hasText: /Configuración Personalizada|Custom Configuration/i }).first();
+    await (await customButton.isVisible() ? customButton : customFallback).click();
     
     // Select WebLLM
     await page.click('[role="button"]:has-text("WebLLM"), .provider-card:has-text("WebLLM")');

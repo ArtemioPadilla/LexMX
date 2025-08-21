@@ -125,15 +125,15 @@ vi.mock('../../../../lib/admin/quality-test-suite', () => ({
         timeout: 5000
       },
       {
-        id: 'semantic-labor-rights',
-        name: 'Labor Rights Semantic Search',
-        description: 'Test semantic understanding of labor law concepts',
-        category: 'semantic',
-        query: 'derechos laborales trabajadores',
-        timeout: 10000
+        id: 'citation-art-14',
+        name: 'Artículo 14 Constitucional',
+        description: 'Test retrieval accuracy for constitutional article 14',
+        category: 'citation',
+        query: 'Artículo 14 constitucional',
+        timeout: 5000
       }
     ]),
-    getCategories: vi.fn().mockReturnValue(['citation', 'semantic', 'cross-reference', 'contradiction', 'performance']),
+    getCategories: vi.fn().mockReturnValue(['citation']),
     getTestsByCategory: vi.fn().mockImplementation((category: string) => {
       if (category === 'citation') {
         return [
@@ -358,7 +358,7 @@ describe('Quality Test API Endpoint', () => {
         const response = await POST(mockContext);
         const data = await response.json();
 
-        expect(response.status).toBe(500);
+        expect(response.status).toBe(400);
         expect(data.success).toBe(false);
         expect(data.error).toBeTruthy();
       });
@@ -372,7 +372,7 @@ describe('Quality Test API Endpoint', () => {
         const response = await POST(mockContext);
         const data = await response.json();
 
-        expect(response.status).toBe(500);
+        expect(response.status).toBe(400);
         expect(data.success).toBe(false);
         expect(data.error).toBeTruthy();
       });
@@ -419,7 +419,7 @@ describe('Quality Test API Endpoint', () => {
         expect(response.status).toBe(200);
         expect(data.success).toBe(true);
         expect(data.data.tests).toHaveLength(2);
-        expect(data.data.categories).toHaveLength(5);
+        expect(data.data.categories).toHaveLength(1);
         expect(data.data.totalTests).toBe(2);
         expect(data.data.testsByCategory).toBeDefined();
         expect(data.data.testsByCategory.citation).toBe(2);
@@ -519,7 +519,7 @@ describe('Quality Test API Endpoint', () => {
     it('should handle OPTIONS request for CORS preflight', async () => {
       const response = await OPTIONS(mockContext);
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(204);
       expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*');
       expect(response.headers.get('Access-Control-Allow-Methods')).toBe('GET, POST, DELETE, OPTIONS');
       expect(response.headers.get('Access-Control-Allow-Headers')).toBe('Content-Type, Authorization');

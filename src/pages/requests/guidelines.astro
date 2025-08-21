@@ -1,6 +1,7 @@
 ---
 // Guidelines page for document requests
 import BaseLayout from '../../components/layout/BaseLayout.astro';
+import { getUrl } from '../../utils/urls';
 ---
 
 <BaseLayout title="Guía de Solicitudes - LexMX">
@@ -361,13 +362,13 @@ import BaseLayout from '../../components/layout/BaseLayout.astro';
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
               <a 
-                href="/requests/new" 
+                href={getUrl('requests/new')} 
                 class="bg-white text-legal-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
               >
                 Crear Nueva Solicitud
               </a>
               <a 
-                href="/requests" 
+                href={getUrl('requests')} 
                 class="border border-legal-300 text-white px-6 py-3 rounded-lg font-semibold hover:bg-legal-500 transition-colors"
               >
                 Ver Solicitudes Existentes

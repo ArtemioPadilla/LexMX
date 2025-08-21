@@ -5,7 +5,7 @@ import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('Provider Setup to Chat Journey', () => {
   test.beforeEach(async ({ page }) => {
-  await setupPage(page);
+    await setupPage(page);
     // Clear storage before each test
     await page.goto('http://localhost:4321/');
     await page.evaluate(() => {

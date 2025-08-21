@@ -13,6 +13,7 @@ import ProviderConfigForm from '../components/providers/ProviderConfigForm';
 import { TEST_IDS } from '../utils/test-ids';
 import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
 import { useTranslation } from '../i18n/index';
+import { getUrl } from '../utils/urls';
 // Import provider classes to get their models
 import { OpenAIProvider } from '../lib/llm/providers/openai-provider';
 import { ClaudeProvider } from '../lib/llm/providers/claude-provider';
@@ -463,7 +464,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
         onClick={() => {
           onComplete?.(Array.from(providerConfigs.values()));
           // Navigate to chat after completing setup
-          window.location.href = '/chat';
+          window.location.href = getUrl('chat');
         }}
         className="w-full bg-legal-500 dark:bg-legal-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-legal-600 dark:hover:bg-legal-700 transition-colors"
       >

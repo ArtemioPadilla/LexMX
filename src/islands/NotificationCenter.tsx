@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingStates } from '../components/HydrationBoundary';
 // import { TEST_IDS } from '../utils/test-ids';
 import { useNotifications } from '../lib/document-requests/notification-system';
+import { getUrl } from '../utils/urls';
 import type { RequestNotification } from '../types/legal';
 
 interface NotificationCenterProps {
@@ -275,7 +276,7 @@ export default function NotificationCenter({ userId, className = '' }: Notificat
             {filteredNotifications.length > 0 && (
               <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
                 <a
-                  href="/notifications"
+                  href={getUrl('notifications')}
                   className="text-sm text-legal-600 hover:text-legal-800 dark:text-legal-400 dark:hover:text-legal-300 font-medium"
                   onClick={() => setIsOpen(false)}
                 >

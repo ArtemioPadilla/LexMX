@@ -3,6 +3,7 @@ import { useTranslation } from '../../i18n/index';
 import { qualityTestSuite, type QualityTest, type TestResult, type TestSuiteResult } from '../../lib/admin/quality-test-suite';
 import { queryAnalyzer, type QueryMetrics, type PerformanceReport, type PerformanceInsight } from '../../lib/admin/query-analyzer';
 import type { QualityStats } from '../../lib/admin/admin-data-service';
+import { getUrl } from '../../utils/urls';
 
 export default function QualityMetrics() {
   const { t } = useTranslation();
@@ -72,7 +73,7 @@ export default function QualityMetrics() {
       setError(null);
       
       // Load quality stats from API with detailed information
-      const response = await fetch('/api/quality/metrics?detailed=true&historical=true');
+      const response = await fetch(getUrl('api/quality/metrics?detailed=true&historical=true'));
       if (!response.ok) {
         throw new Error(`Failed to fetch quality metrics: ${response.status}`);
       }
@@ -119,7 +120,7 @@ export default function QualityMetrics() {
       setRunningTests(prev => new Set(prev).add(testId));
       setError(null);
       
-      const response = await fetch('/api/quality/test', {
+      const response = await fetch(getUrl('api/quality/test'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ testId }),
@@ -153,7 +154,7 @@ export default function QualityMetrics() {
       setRunningAllTests(true);
       setError(null);
       
-      const response = await fetch('/api/quality/test', {
+      const response = await fetch(getUrl('api/quality/test'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ operation: 'run_all' }),

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '../i18n';
+import { TEST_IDS } from '../utils/test-ids';
 
 export interface CaseEvent {
   id: string;
@@ -217,7 +218,7 @@ export default function CaseTimeline({
   };
   
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+    <div className="h-full flex flex-col bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800" data-testid="case-timeline-container">
       {/* Timeline Header */}
       <div className="flex items-center justify-between mb-6 p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-sm">
         <div className="flex items-center space-x-4">

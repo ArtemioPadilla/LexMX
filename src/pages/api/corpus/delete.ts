@@ -20,7 +20,7 @@ async function getDocumentId(request: Request): Promise<string | null> {
     try {
       const body = await request.json();
       documentId = body.id;
-    } catch (error) {
+    } catch (_error) {
       // Invalid JSON body
       return null;
     }

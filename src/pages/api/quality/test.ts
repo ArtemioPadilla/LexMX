@@ -26,7 +26,7 @@ export const GET: APIRoute = async (_context) => {
         data: {
           category,
           tests: categoryTests,
-          total: categoryTests.length
+          count: categoryTests.length
         }
       }), {
         status: 200,
@@ -39,12 +39,18 @@ export const GET: APIRoute = async (_context) => {
     
     // Return all tests with categories
     const categories = [...new Set(availableTests.map(test => test.category))];
+    const testsByCategory = categories.reduce((acc, cat) => {
+      acc[cat] = availableTests.filter(test => test.category === cat).length;
+      return acc;
+    }, {} as Record<string, number>);
+    
     return new Response(JSON.stringify({
       success: true,
       data: {
         tests: availableTests,
         categories,
-        total: availableTests.length
+        totalTests: availableTests.length,
+        testsByCategory
       }
     }), {
       status: 200,
@@ -94,7 +100,7 @@ export const POST: APIRoute = async (_context) => {
     if (!testId && !category && !runAll) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Either testId, category, or runAll=true must be specified'
+        error: 'Either testId, category, or runAll=true must be provided'
       }), {
         status: 400,
         headers: {
@@ -113,9 +119,9 @@ export const POST: APIRoute = async (_context) => {
       return new Response(JSON.stringify({
         success: true,
         data: {
-          type: 'suite',
+          type: 'full_suite',
           results,
-          message: `Complete suite: ${results.passedTests}/${results.totalTests} tests passed (${(results.averageScore * 100).toFixed(1)}%)`
+          message: `Completed ${results.totalTests} tests (${results.passedTests} passed) - Average score: ${(results.averageScore * 100).toFixed(1)}%`
         }
       }), {
         status: 200,
@@ -134,7 +140,7 @@ export const POST: APIRoute = async (_context) => {
           type: 'category',
           category,
           results,
-          message: `Category ${category}: ${results.passedTests}/${results.totalTests} tests passed (${(results.averageScore * 100).toFixed(1)}%)`
+          message: `Completed ${results.totalTests} ${category} tests (${results.passedTests} passed)`
         }
       }), {
         status: 200,

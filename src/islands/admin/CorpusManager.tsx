@@ -4,6 +4,7 @@ import type { DocumentMetrics } from '../../lib/admin/corpus-service';
 import { adminDataService, type CorpusStats } from '../../lib/admin/admin-data-service';
 import type { LegalDocument, DocumentType, LegalArea } from '../../types/legal';
 import type { CorpusFilter } from '../../lib/admin/corpus-service';
+import { getUrl } from '../../utils/urls';
 
 export default function CorpusManager() {
   const { t } = useTranslation();
@@ -117,7 +118,7 @@ export default function CorpusManager() {
     setError(null);
     try {
       // Call embeddings generation API for specific document
-      const response = await fetch('/api/embeddings/generate', {
+      const response = await fetch(getUrl('api/embeddings/generate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -150,7 +151,7 @@ export default function CorpusManager() {
     setError(null);
     try {
       // Call corpus stats API with detailed validation
-      const response = await fetch('/api/corpus/stats?detailed=true');
+      const response = await fetch(getUrl('api/corpus/stats?detailed=true'));
       if (!response.ok) {
         throw new Error(`Validation failed: ${response.status}`);
       }
@@ -197,7 +198,7 @@ export default function CorpusManager() {
       // TODO: Implement import API endpoint
       // const formData = new FormData();
       // formData.append('document', file);
-      // const response = await fetch('/api/corpus/import', {
+      // const response = await fetch(getUrl('api/corpus/import'), {
       //   method: 'POST',
       //   body: formData,
       // });

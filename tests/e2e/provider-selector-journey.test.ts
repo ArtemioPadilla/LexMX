@@ -61,7 +61,8 @@ test.describe('Provider Selector User Journey', () => {
     ]);
     
     await page.reload();
-    await waitForProviderSelector(page);
+    await navigateAndWaitForHydration(page, '/chat');
+    await waitForProviderSelectorReady(page);
     
     // Open dropdown
     const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
@@ -149,7 +150,8 @@ test.describe('Provider Selector User Journey', () => {
     ]);
     
     await page.reload();
-    await waitForProviderSelector(page);
+    await navigateAndWaitForHydration(page, '/chat');
+    await waitForProviderSelectorReady(page);
     
     // Select OpenAI
     const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
@@ -163,7 +165,8 @@ test.describe('Provider Selector User Journey', () => {
     
     // Reload page
     await page.reload();
-    await waitForProviderSelector(page);
+    await navigateAndWaitForHydration(page, '/chat');
+    await waitForProviderSelectorReady(page);
     
     // Check OpenAI is still selected
     const selectorAfterReload = page.locator('[data-testid="provider-selector-toggle"]').first();
@@ -184,7 +187,8 @@ test.describe('Provider Selector User Journey', () => {
     ]);
     
     await page.reload();
-    await waitForProviderSelector(page);
+    await navigateAndWaitForHydration(page, '/chat');
+    await waitForProviderSelectorReady(page);
     
     // Check icon is visible in button
     const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
@@ -224,10 +228,11 @@ test.describe('Provider Selector User Journey', () => {
     await setupWebLLMProvider(page);
     
     // Check both selectors are visible
-    const providerSelector = page.locator('.provider-selector').first();
+    // Model selector button contains WebLLM text
+    const modelSelectorButton = page.locator('button:has-text("WebLLM")').first();
     const corpusSelector = page.locator('.corpus-selector').first();
     
-    await expect(providerSelector).toBeVisible();
+    await expect(modelSelectorButton).toBeVisible();
     await expect(corpusSelector).toBeVisible();
     
     // Check they are in the same row
@@ -268,7 +273,8 @@ test.describe('Provider Selector User Journey', () => {
     
     // Refresh to load new provider
     await page.reload();
-    await waitForProviderSelector(page);
+    await navigateAndWaitForHydration(page, '/chat');
+    await waitForProviderSelectorReady(page);
     
     // Open dropdown again
     await page.locator('[data-testid="provider-selector-toggle"]').first().click();
@@ -308,7 +314,8 @@ test.describe('Provider Selector User Journey', () => {
     });
     
     await page.reload();
-    await waitForProviderSelector(page);
+    await navigateAndWaitForHydration(page, '/chat');
+    await waitForProviderSelectorReady(page);
     
     // Open dropdown
     const selector = page.locator('[data-testid="provider-selector-toggle"]').first();

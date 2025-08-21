@@ -8,8 +8,8 @@ import {
   fillFormField,
   testMobileView,
   testDarkMode
-} from './utils/test-helpers';
-import { waitForHydrationWrapper, waitForInteractive } from './utils/hydration-helpers';
+} from '../utils/test-helpers';
+import { waitForHydrationWrapper, waitForInteractive } from '../utils/hydration-helpers';
 
 test.describe('Example Tests with Helpers', () => {
   test.beforeEach(async ({ page }) => {

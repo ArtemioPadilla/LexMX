@@ -183,19 +183,172 @@ src/
 - **E2E Tests**: Full legal query workflows
 - **Legal Accuracy Tests**: Validation against known legal precedents
 
-## Deployment
+## Deployment & Static Architecture
+
+### GitHub Pages Static Deployment
+
+**IMPORTANT**: LexMX is a fully static site designed for GitHub Pages deployment. Understanding this architecture is critical for development.
+
+#### Static Build Configuration
+```javascript
+// astro.config.mjs
+export default defineConfig({
+  output: 'static',  // CRITICAL: Must be static for GitHub Pages
+  site: 'https://artemiopadilla.github.io',
+  base: '/LexMX',    // GitHub Pages subpath
+  ...
+});
+```
+
+#### Architecture Overview
+
+1. **Build Time (SSG - Static Site Generation)**:
+   - Astro generates static HTML/CSS/JS files
+   - All pages are pre-rendered at build time
+   - API routes (`src/pages/api/`) are compiled but NOT deployed
+   - Result: Static files in `dist/` directory
+
+2. **Runtime (Client-Side Only)**:
+   - No server-side execution
+   - All functionality runs in the browser
+   - API routes don't exist in production
+   - `ClientAPI` class handles all "API" functionality client-side
+
+#### API Routes: Development vs Production
+
+**Development Mode** (`npm run dev`):
+```typescript
+// API routes work as normal server endpoints
+const response = await fetch('/api/quality/test', {
+  method: 'POST',
+  body: JSON.stringify(data)
+});
+```
+
+**Production Mode** (GitHub Pages):
+```typescript
+// ClientAPI intercepts and handles locally
+const response = await fetch('/api/quality/test', {
+  method: 'POST',
+  body: JSON.stringify(data)
+});
+// ↑ Same code, but ClientAPI handles it client-side
+```
+
+#### ClientAPI Architecture
+
+The `ClientAPI` class (`src/lib/api/api-adapter.ts`) provides seamless transition between dev and production:
+
+```typescript
+class ClientAPI {
+  async handleRequest(path: string, options: RequestInit) {
+    // In production, handle API calls client-side
+    switch(path) {
+      case '/api/quality/test':
+        return this.handleQualityTest(options);
+      case '/api/corpus/list':
+        return this.handleCorpusList(options);
+      // ... etc
+    }
+  }
+}
+```
+
+#### URL Handling for GitHub Pages
+
+**Always use the `getUrl` helper** for internal links:
+
+```typescript
+import { getUrl } from '../../utils/urls';
+
+// ✅ Correct - works in dev and production
+<a href={getUrl('chat')}>Chat</a>
+<img src={getUrl('images/logo.png')} />
+
+// ❌ Wrong - breaks on GitHub Pages
+<a href="/chat">Chat</a>
+<img src="/images/logo.png" />
+```
+
+#### Common Pitfalls to Avoid
+
+1. **SSR-Only Features**:
+   ```typescript
+   // ❌ NEVER use these in API routes
+   export const GET: APIRoute = async ({ clientAddress, locals }) => {
+     // clientAddress and locals are SSR-only
+   }
+   
+   // ✅ Use this pattern instead
+   export const GET: APIRoute = async (context) => {
+     const url = new URL(context.request.url);
+     // Process using only static-compatible features
+   }
+   ```
+
+2. **Hardcoded URLs**:
+   ```typescript
+   // ❌ Breaks on GitHub Pages
+   fetch('/api/endpoint')
+   window.location.href = '/chat'
+   
+   // ✅ Works everywhere
+   fetch(getUrl('api/endpoint'))
+   window.location.href = getUrl('chat')
+   ```
+
+3. **Environment Variables**:
+   ```typescript
+   // ❌ Runtime env vars don't exist in static build
+   const key = process.env.API_KEY;
+   
+   // ✅ Use client-side storage
+   const key = localStorage.getItem('api_key');
+   ```
 
 ### GitHub Pages Configuration
-- Fully static build with Astro
-- Automatic deployment on push to main
-- Pre-built legal corpus and embeddings
-- CDN optimization for legal documents
+- **Output**: Fully static build (`output: 'static'`)
+- **Deployment**: Automatic via GitHub Actions on push to main
+- **Base Path**: `/LexMX/` (repository name)
+- **Assets**: Pre-built legal corpus and embeddings in `public/`
+- **CDN**: GitHub's global CDN serves all static assets
+
+### Build & Deployment Process
+
+1. **Local Development**:
+   ```bash
+   npm run dev          # Full dev server with API routes
+   npm run build        # Generate static files
+   npm run preview      # Preview static build locally
+   ```
+
+2. **CI/CD Pipeline** (GitHub Actions):
+   ```yaml
+   - name: Build
+     run: npm run build
+   - name: Upload artifact
+     uses: actions/upload-pages-artifact@v3
+     with:
+       path: ./dist
+   - name: Deploy to GitHub Pages
+     uses: actions/deploy-pages@v4
+   ```
+
+3. **Production URL Structure**:
+   ```
+   https://artemiopadilla.github.io/LexMX/          # Homepage
+   https://artemiopadilla.github.io/LexMX/chat      # Chat interface
+   https://artemiopadilla.github.io/LexMX/admin     # Admin panel
+   ```
 
 ### Environment Variables
 ```bash
-# Optional for corpus building
+# Build-time only (for local corpus generation)
 OPENAI_API_KEY=sk-...          # For embedding generation
 CLAUDE_API_KEY=sk-ant-...      # For legal validation
+
+# Runtime configuration is handled via UI
+# API keys are stored encrypted in browser storage
 ```
 
 ## Code Quality Standards

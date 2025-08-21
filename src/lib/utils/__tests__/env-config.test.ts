@@ -196,7 +196,8 @@ describe('EnvConfig', () => {
       const config = new EnvConfig();
       
       expect(config.isValidOpenAIKey('sk-proj-abcd1234')).toBe(true);
-      expect(config.isValidOpenAIKey('sk-1234')).toBe(true);
+      expect(config.isValidOpenAIKey('sk-1234567890')).toBe(true); // Length > 10
+      expect(config.isValidOpenAIKey('sk-1234')).toBe(false); // Too short
       expect(config.isValidOpenAIKey('invalid')).toBe(false);
       expect(config.isValidOpenAIKey('')).toBe(false);
     });
@@ -214,7 +215,8 @@ describe('EnvConfig', () => {
       const config = new EnvConfig();
       
       expect(config.isValidGeminiKey('AIzaSyAbcd1234')).toBe(true);
-      expect(config.isValidGeminiKey('AIza1234')).toBe(true);
+      expect(config.isValidGeminiKey('AIza1234567890')).toBe(true); // Length > 10
+      expect(config.isValidGeminiKey('AIza1234')).toBe(false); // Too short
       expect(config.isValidGeminiKey('invalid')).toBe(false);
       expect(config.isValidGeminiKey('')).toBe(false);
     });

@@ -30,7 +30,7 @@ export async function apiFetch(url: string, options?: RequestInit): Promise<Resp
   
   // Parse the URL to determine which API endpoint is being called
   const urlPath = new URL(url, window.location.origin).pathname;
-  const method = options?.method || 'GET';
+  const _method = options?.method || 'GET';
   
   // Route to appropriate client-side implementation
   let result: any;

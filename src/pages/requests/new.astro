@@ -2,6 +2,7 @@
 import BaseLayout from '../../components/layout/BaseLayout.astro';
 import HydrationWrapper from '../../components/HydrationWrapper.astro';
 import DocumentRequestForm from '../../islands/DocumentRequestForm';
+import { getUrl } from '../../utils/urls';
 ---
 
 <BaseLayout title="Nueva Solicitud - LexMX">
@@ -10,7 +11,7 @@ import DocumentRequestForm from '../../islands/DocumentRequestForm';
       <!-- Back Link -->
       <div class="mb-6">
         <a 
-          href="/requests" 
+          href={getUrl('requests')} 
           class="inline-flex items-center text-gray-600 dark:text-gray-300 hover:text-legal-600 dark:hover:text-legal-400 transition-colors"
         >
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

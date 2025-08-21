@@ -3,6 +3,7 @@ import { HydrationBoundary as _HydrationBoundary, LoadingStates as _LoadingState
 import { TEST_IDS as _TEST_IDS } from '../utils/test-ids';
 import { providerManager } from '../lib/llm/provider-manager';
 import { useTranslation } from '../i18n';
+import { getUrl } from '../utils/urls';
 
 interface ProviderRecommendationProps {
   query: string;
@@ -205,7 +206,7 @@ export default function ProviderRecommendation({
               {!rec.available && (
                 <div className="mt-2 text-xs">
                   <a 
-                    href="/setup" 
+                    href={getUrl('setup')} 
                     className="text-blue-600 dark:text-blue-400 hover:underline"
                     onClick={(e) => e.stopPropagation()}
                   >

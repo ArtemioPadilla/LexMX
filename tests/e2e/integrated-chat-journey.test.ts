@@ -34,7 +34,12 @@ test.describe('Integrated Chat Journey with All Features', () => {
   test('complete user journey from setup to chat with all features', async ({ page }) => {
     // 1. Start from homepage
     await page.goto('/');
-    await expect(page.locator('h1').first().first()).toContainText('Tu Asistente Legal');
+    await page.waitForTimeout(500);
+    
+    // Check hero title with i18n support
+    const heroTitle = page.locator(`[data-testid="${TEST_IDS.home.heroTitle}"]`);
+    const heroFallback = page.locator('h1').filter({ hasText: /Asistente Legal|Legal Assistant/i }).first();
+    await expect(await heroTitle.isVisible() ? heroTitle : heroFallback).toBeVisible({ timeout: 10000 });
     
     // 2. Set up WebLLM provider directly via localStorage (skip wizard)
     await setupWebLLMProvider(page);
@@ -44,28 +49,46 @@ test.describe('Integrated Chat Journey with All Features', () => {
     await page.waitForURL('**/chat');
     
     // 5. Verify all selectors are visible
-    await expect(page.locator('.provider-selector')).toBeVisible();
-    await expect(page.locator('.corpus-selector')).toBeVisible();
+    // Model selector button should be visible (contains provider name)
+    const providerSelector = page.locator(`[data-testid="${TEST_IDS.provider.selectorToggle}"]`);
+    const providerFallback = page.locator('button').filter({ hasText: 'WebLLM' }).first();
+    await expect(await providerSelector.isVisible() ? providerSelector : providerFallback).toBeVisible({ timeout: 10000 });
+    
+    // Corpus selector should be visible
+    const corpusContainer = page.locator(`[data-testid="${TEST_IDS.corpus.container}"]`);
+    const corpusFallback = page.locator('.corpus-selector').first();
+    await expect(await corpusContainer.isVisible() ? corpusContainer : corpusFallback).toBeVisible({ timeout: 10000 });
     
     // 6. Select specific corpus documents
-    const corpusSelector = page.locator('[data-testid="corpus-selector-toggle"]').first();
+    const corpusSelector = page.locator(`[data-testid="${TEST_IDS.corpus.selectorToggle}"]`).first();
     await corpusSelector.click();
+    await page.waitForTimeout(300);
     
-    // Switch to documents tab
-    await page.click('button:has-text("Por Documento")');
+    // Switch to documents tab with i18n support
+    const docTab = page.locator(`[data-testid="${TEST_IDS.corpus.documentTab}"]`);
+    const docTabFallback = page.locator('button').filter({ hasText: /Por Documento|By Document/i }).first();
+    await (await docTab.isVisible() ? docTab : docTabFallback).click();
+    await page.waitForTimeout(300);
     
     // Select Constitution and Labor Law
-    await page.click('button:has-text("CPEUM")');
-    await page.click('button:has-text("LFT")');
+    const cpeumBtn = page.locator('button').filter({ hasText: 'CPEUM' }).first();
+    await cpeumBtn.click();
+    await page.waitForTimeout(200);
+    
+    const lftBtn = page.locator('button').filter({ hasText: 'LFT' }).first();
+    await lftBtn.click();
+    await page.waitForTimeout(200);
     
     // Close corpus selector
     await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
     
-    // Verify selection
-    await expect(corpusSelector).toContainText('2 documentos');
+    // Verify selection with i18n support
+    await expect(corpusSelector).toContainText(/2 documento|2 document/i);
     
     // 7. Send a legal query
-    const input = page.locator('[data-testid="chat-input"]');
+    const input = page.locator(`[data-testid="${TEST_IDS.chat.input}"]`);
+    await input.waitFor({ state: 'visible' });
     await input.fill('¿Cuáles son los derechos laborales básicos según la constitución?');
     await page.keyboard.press('Enter');
     

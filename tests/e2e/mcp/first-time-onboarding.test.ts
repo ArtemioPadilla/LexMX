@@ -1,13 +1,26 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import { 
   setupPage, 
   clearAllStorage,
   assertNoConsoleErrors,
   testMobileView,
-  switchLanguage
+  switchLanguage,
+  navigateAndWaitForHydration
 } from '../../utils/test-helpers';
-import { TEST_IDS } from '../../src/utils/test-ids';
-import { TEST_DATA } from '../../src/utils/test-data';
+import { TEST_IDS } from '../../../src/utils/test-ids';
+import { TEST_DATA } from '../../../src/utils/test-data';
+
+// Helper to wait for component to be interactive
+async function waitForInteractive(page: Page, selector: string) {
+  await page.waitForSelector(selector, { state: 'visible' });
+  await page.waitForTimeout(300);
+}
+
+// Helper for i18n text matching
+async function expectI18nText(page: Page, textPatterns: string[]) {
+  const pattern = textPatterns.join('|');
+  await expect(page.locator(`text=/${pattern}/i`)).toBeVisible({ timeout: 10000 });
+}
 
 test.describe('First-Time User Onboarding Journey', () => {
   test.beforeEach(async ({ page }) => {
@@ -21,15 +34,19 @@ test.describe('First-Time User Onboarding Journey', () => {
     await page.waitForLoadState('networkidle');
     
     // Verify compelling value proposition is visible
-    await expect(page.locator('h1:has-text("Tu Asistente Legal Mexicano")')).toBeVisible();
-    await expect(page.locator('text=/legislación mexicana|IA avanzada/')).toBeVisible();
+    const heroTitle = page.locator(`[data-testid="${TEST_IDS.home.heroTitle}"]`);
+    const heroFallback = page.locator('h1').filter({ hasText: /Asistente Legal|Legal Assistant/i }).first();
+    await expect(await heroTitle.isVisible() ? heroTitle : heroFallback).toBeVisible({ timeout: 10000 });
+    
+    await expectI18nText(page, ['legislación mexicana', 'Mexican legislation', 'IA avanzada', 'Advanced AI']);
     
     // Check privacy emphasis for first-time users
-    await expect(page.locator('text=/100%.*Privado|Sin servidores/')).toBeVisible();
+    await expectI18nText(page, ['100%.*Privado', '100%.*Private', 'Sin servidores', 'No servers']);
     
     // 2. Explore features before committing
     // Scroll to see feature cards
-    await page.locator('h2:has-text("Características Principales")').scrollIntoViewIfNeeded();
+    const featuresSection = page.locator('h2').filter({ hasText: /Características|Features/i }).first();
+    await featuresSection.scrollIntoViewIfNeeded();
     
     // Verify key features are explained
     const features = [
@@ -39,39 +56,58 @@ test.describe('First-Time User Onboarding Journey', () => {
       'Búsqueda Híbrida RAG'
     ];
     
-    for (const feature of features) {
-      await expect(page.locator(`h3:has-text("${feature}")`)).toBeVisible();
+    // Check features with i18n support
+    const featurePatterns = [
+      /Múltiples Proveedores|Multiple Providers/i,
+      /Corpus Legal|Legal Corpus/i,
+      /Privacidad|Privacy/i,
+      /Búsqueda|Search|RAG/i
+    ];
+    
+    for (const pattern of featurePatterns) {
+      await expect(page.locator('h3').filter({ hasText: pattern })).toBeVisible({ timeout: 5000 });
     }
     
     // 3. Try to use chat without setup (common first-time behavior)
-    await page.click('link:has-text("Iniciar Chat Legal")');
+    const chatLink = page.locator(`[data-testid="${TEST_IDS.home.ctaChat}"]`);
+    const chatFallback = page.locator('a').filter({ hasText: /Chat Legal|Legal Chat/i }).first();
+    await (await chatLink.isVisible() ? chatLink : chatFallback).click();
     await page.waitForURL('**/chat');
     
     // Should see welcome message and provider warning
-    await expect(page.locator('text="¡Bienvenido a LexMX!"')).toBeVisible();
-    await expect(page.locator('text=/No tienes proveedores configurados/')).toBeVisible();
+    const welcomeMsg = page.locator(`[data-testid="${TEST_IDS.chat.welcomeMessage}"]`);
+    const welcomeFallback = page.locator('text=/Bienvenido|Welcome/i');
+    await expect(await welcomeMsg.isVisible() ? welcomeMsg : welcomeFallback).toBeVisible({ timeout: 10000 });
+    
+    await expectI18nText(page, ['No tienes proveedores', 'No providers configured']);
     
     // Try to send a message anyway
-    await page.fill('[data-testid="chat-input"]', '¿Qué es el amparo?');
+    await waitForInteractive(page, `[data-testid="${TEST_IDS.chat.input}"]`);
+    await page.fill(`[data-testid="${TEST_IDS.chat.input}"]`, '¿Qué es el amparo?');
     await page.keyboard.press('Enter');
     
     // Should get clear error directing to setup
-    await expect(page.locator('text=/No tienes proveedores.*Configuración/')).toBeVisible();
+    await expectI18nText(page, ['No tienes proveedores.*Configuración', 'No providers.*Configuration']);
     
     // 4. Navigate to setup from error message
-    await page.click('link:has-text("Configuración")');
+    const setupLink = page.locator(`[data-testid="${TEST_IDS.nav.setup}"]`);
+    const setupFallback = page.locator('a').filter({ hasText: /Configuración|Setup|Configuration/i }).first();
+    await (await setupLink.isVisible() ? setupLink : setupFallback).click();
     await page.waitForURL('**/setup');
     
     // 5. First-time setup experience
     // Verify welcoming setup screen
-    await expect(page.locator('h2:has-text("Configura tu Asistente Legal IA")')).toBeVisible();
-    await expect(page.locator('text=/segura.*encriptada/')).toBeVisible();
+    const setupTitle = page.locator('h2').filter({ hasText: /Configura|Configure|Setup/i }).first();
+    await expect(setupTitle).toBeVisible({ timeout: 10000 });
+    
+    await expectI18nText(page, ['segura.*encriptada', 'secure.*encrypted']);
     
     // Start configuration
+    await waitForInteractive(page, '[data-testid="setup-begin"]');
     await page.click('[data-testid="setup-begin"]');
     
     // 6. Profile selection for beginners
-    await expect(page.locator('h2:has-text("Elige tu Perfil")')).toBeVisible();
+    await expect(page.locator('h2').filter({ hasText: /Elige tu Perfil|Choose Your Profile/i })).toBeVisible({ timeout: 10000 });
     
     // Hover over profiles to see descriptions
     const balancedProfile = page.locator('div:has-text("Balanceado"):has-text("Mezcla de rendimiento")');
@@ -79,9 +115,10 @@ test.describe('First-Time User Onboarding Journey', () => {
     
     // Select balanced profile (good for beginners)
     await balancedProfile.click();
+    await page.waitForTimeout(300);
     
     // 7. Provider selection education
-    await expect(page.locator('h2:has-text("Selecciona Proveedores")')).toBeVisible();
+    await expect(page.locator('h2').filter({ hasText: /Selecciona Proveedores|Select Providers/i })).toBeVisible({ timeout: 10000 });
     
     // Should see recommended providers highlighted
     const openAICard = page.locator('div:has-text("OpenAI"):has-text("GPT-4")');
@@ -92,39 +129,54 @@ test.describe('First-Time User Onboarding Journey', () => {
     
     // Select OpenAI for first-time user
     await openAICard.click();
-    await expect(page.locator('button:has-text("Configurar (1)")')).toBeVisible();
-    await page.click('button:has-text("Configurar (1)")');
+    await page.waitForTimeout(300);
+    
+    const configBtn = page.locator('button').filter({ hasText: /Configurar.*1|Configure.*1/i }).first();
+    await expect(configBtn).toBeVisible({ timeout: 5000 });
+    await configBtn.click();
     
     // 8. API key configuration with help
-    await expect(page.locator('h2:has-text("Configurar OpenAI")')).toBeVisible();
+    await page.waitForTimeout(500);
+    await expect(page.locator('h2').filter({ hasText: /Configurar OpenAI|Configure OpenAI/i })).toBeVisible({ timeout: 10000 });
     
     // Check for help text about API keys
     await expect(page.locator('text=/clave.*encriptada|API/')).toBeVisible();
     
     // Fill dummy API key
+    await waitForInteractive(page, 'input[type="password"]');
     await page.fill('input[type="password"]', 'sk-beginner-test-key-123456');
-    await page.click('button:has-text("Guardar")');
+    
+    const saveBtn = page.locator('button').filter({ hasText: /Guardar|Save/i }).first();
+    await saveBtn.click();
     
     // 9. Setup completion celebration
-    await expect(page.locator('h2:has-text("¡Configuración Completa!")')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h2').filter({ hasText: /Configuración Completa|Configuration Complete|Setup Complete/i })).toBeVisible({ timeout: 10000 });
     
     // Should show next steps
     await expect(page.locator('text=/primera consulta|Siguientes pasos/')).toBeVisible();
     
     // Navigate to chat
-    await page.click('button:has-text("Comenzar a Usar LexMX")');
+    const startBtn = page.locator('button').filter({ hasText: /Comenzar|Start/i }).first();
+    await startBtn.click();
     await page.waitForURL('**/chat');
+    await page.waitForTimeout(500);
     
     // 10. First successful query
     await page.waitForSelector('[data-testid="chat-container"]');
     
     // Type a beginner-friendly query
     const beginnerQuery = '¿Qué es el amparo y para qué sirve?';
-    await page.fill('[data-testid="chat-input"]', beginnerQuery);
-    await page.click('button[aria-label="Enviar mensaje"]');
+    await waitForInteractive(page, `[data-testid="${TEST_IDS.chat.input}"]`);
+    await page.fill(`[data-testid="${TEST_IDS.chat.input}"]`, beginnerQuery);
+    
+    const sendBtn = page.locator(`[data-testid="${TEST_IDS.chat.sendButton}"]`);
+    const sendFallback = page.locator('button[aria-label="Enviar mensaje"]');
+    await (await sendBtn.isVisible() ? sendBtn : sendFallback).click();
     
     // Should see processing indicator
-    await expect(page.locator('text=/Analizando|procesando/')).toBeVisible();
+    const processingIndicator = page.locator(`[data-testid="${TEST_IDS.chat.processingIndicator}"]`);
+    const processingFallback = page.locator('text=/Analizando|Analyzing|procesando|processing/i');
+    await expect(await processingIndicator.isVisible() ? processingIndicator : processingFallback).toBeVisible({ timeout: 5000 });
     
     // Wait for response
     await page.waitForSelector(`text="${beginnerQuery}"`, { timeout: 10000 });

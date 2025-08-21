@@ -16,7 +16,7 @@ export interface ChatMessage {
     cost?: number;
     tokens?: number;
     processingTime?: number;
-    [key: string]: JsonValue;
+    [key: string]: JsonValue | undefined;
   };
 }
 

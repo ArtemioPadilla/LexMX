@@ -5,8 +5,8 @@ import {
   clearAllStorage,
   assertNoConsoleErrors 
 } from '../../utils/test-helpers';
-import { TEST_IDS } from '../../src/utils/test-ids';
-import { TEST_DATA } from '../../src/utils/test-data';
+import { TEST_IDS } from '../../../src/utils/test-ids';
+import { TEST_DATA } from '../../../src/utils/test-data';
 
 test.describe('WebLLM Integration', () => {
   test.beforeEach(async ({ page }) => {
@@ -150,7 +150,9 @@ test.describe('WebLLM Integration', () => {
     // Setup WebLLM provider first
     await navigateAndWaitForHydration(page, 'http://localhost:4321/setup');
     await page.click('[data-testid="setup-begin"]');
-    await page.click('text="Configuración Personalizada"');
+    const customSetup = page.locator('[data-testid="setup-custom"]').first();
+    const customSetupFallback = page.locator('button').filter({ hasText: /Configuración Personalizada|Custom Configuration/i }).first();
+    await (await customSetup.isVisible() ? customSetup : customSetupFallback).click();
     await page.click('div:has-text("WebLLM")');
     await page.click('button:has-text("Configurar (1)")');
     await page.click('button:has-text("Guardar")');
@@ -232,7 +234,9 @@ test.describe('WebLLM Integration', () => {
     
     await navigateAndWaitForHydration(page, 'http://localhost:4321/setup');
     await page.click('[data-testid="setup-begin"]');
-    await page.click('text="Configuración Personalizada"');
+    const customSetup = page.locator('[data-testid="setup-custom"]').first();
+    const customSetupFallback = page.locator('button').filter({ hasText: /Configuración Personalizada|Custom Configuration/i }).first();
+    await (await customSetup.isVisible() ? customSetup : customSetupFallback).click();
     await page.click('div:has-text("WebLLM")');
     await page.click('button:has-text("Configurar (1)")');
     await page.click('button:has-text("Guardar")');

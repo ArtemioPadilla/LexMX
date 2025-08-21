@@ -70,8 +70,8 @@ export const TEST_IDS = {
     container: 'case-manager',
     sidebar: 'case-sidebar',
     newCaseButton: 'new-case-button',
-    searchInput: 'case-search',
-    caseList: 'case-list',
+    searchInput: 'search-cases-input',
+    caseList: 'cases-list',
     caseItem: (id: string) => `case-item-${id}`,
     caseTitle: 'case-title-input',
     caseDescription: 'case-description-input',
@@ -81,6 +81,23 @@ export const TEST_IDS = {
     cancelButton: 'case-cancel',
     deleteButton: 'case-delete',
     editButton: 'case-edit',
+    emptyMessage: 'empty-cases-message',
+    selectMessage: 'select-case-message',
+    createMessage: 'or-create-new-message',
+    filterStatus: 'filter-status-select',
+    filterArea: 'filter-area-select',
+    caseStatus: (status: string) => `case-status-${status}`,
+    creationForm: 'case-creation-form',
+    // Case Chat
+    chatContainer: 'case-chat-container',
+    chatMessages: 'case-chat-messages',
+    chatInput: 'case-chat-input',
+    chatSend: 'case-chat-send',
+    chatStop: 'case-chat-stop',
+    // Case Timeline
+    timelineContainer: 'case-timeline-container',
+    timelineList: 'case-timeline-list',
+    timelineEvent: (id: string) => `timeline-event-${id}`,
   },
 
   // Theme & Language
@@ -175,6 +192,14 @@ export const TEST_IDS = {
     reportButton: 'moderation-report',
     approveButton: 'moderation-approve',
     rejectButton: 'moderation-reject',
+  },
+  
+  // Upload Components
+  upload: {
+    area: 'upload-area',
+    text: 'upload-text',
+    input: 'file-input',
+    deleteButton: 'delete-document',
   },
   
   // WebLLM Specific

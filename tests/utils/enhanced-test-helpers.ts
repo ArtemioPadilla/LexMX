@@ -297,3 +297,33 @@ export async function verifyResponsiveLayout(
     expect(box.width).toBeLessThanOrEqual(size.width);
   }
 }
+
+/**
+ * Setup all mock providers with test data
+ */
+export async function setupAllMockProvidersWithTestData(page: Page): Promise<void> {
+  // Set up multiple providers using test data
+  await page.evaluate((testData) => {
+    // WebLLM provider
+    localStorage.setItem('lexmx_provider_webllm', JSON.stringify(testData.providers.webllm));
+    
+    // OpenAI provider
+    localStorage.setItem('lexmx_provider_openai', JSON.stringify(testData.providers.openai));
+    
+    // Claude provider
+    localStorage.setItem('lexmx_provider_claude', JSON.stringify(testData.providers.claude));
+    
+    // Set WebLLM as preferred
+    localStorage.setItem('lexmx_preferred_provider', 'webllm');
+    
+    // Store all providers list
+    localStorage.setItem('lexmx_providers', JSON.stringify([
+      testData.providers.webllm,
+      testData.providers.openai,
+      testData.providers.claude
+    ]));
+  }, TEST_DATA);
+  
+  // Wait for providers to initialize
+  await page.waitForTimeout(TEST_DATA.timing.providerInit || 500);
+}

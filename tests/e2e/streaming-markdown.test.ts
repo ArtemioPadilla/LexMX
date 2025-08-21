@@ -5,7 +5,7 @@ import { TEST_DATA } from '../../src/utils/test-data';
 
 test.describe('Chat Streaming and Markdown', () => {
   test.beforeEach(async ({ page }) => {
-  await setupPage(page);
+    await setupPage(page);
     // Navigate to the home page
     await page.goto('/');
     

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import {
   setupPage,
   navigateAndWaitForHydration,
@@ -11,6 +11,14 @@ import {
 import { TEST_IDS } from '../../src/utils/test-ids';
 import { TEST_DATA } from '../../src/utils/test-data';
 
+// Helper to wait for theme to be applied
+async function waitForThemeApplied(page: Page, theme: 'dark' | 'light') {
+  await page.waitForFunction((expectedTheme) => {
+    const html = document.documentElement;
+    return expectedTheme === 'dark' ? html.classList.contains('dark') : !html.classList.contains('dark');
+  }, theme, { timeout: 5000 });
+}
+
 test.describe('Dark Mode User Journey', () => {
   test.beforeEach(async ({ page }) => {
     await setupPage(page);
@@ -19,26 +27,41 @@ test.describe('Dark Mode User Journey', () => {
   });
 
   test('theme toggle is visible and functional', async ({ page }) => {
-    // Check theme toggle is visible
-    const themeToggle = page.locator('.theme-toggle button').first();
-    await expect(themeToggle).toBeVisible();
+    // Check theme toggle is visible using data-testid
+    const themeToggle = page.locator(`[data-testid="${TEST_IDS.theme.dropdownButton}"]`).first();
+    await expect(themeToggle).toBeVisible({ timeout: 10000 });
     
     // Click to open dropdown
     await themeToggle.click();
+    await page.waitForTimeout(300);
     
-    // Check dropdown options are visible
-    await expect(page.locator('button:has-text("Claro")')).toBeVisible();
-    await expect(page.locator('button:has-text("Oscuro")')).toBeVisible();
-    await expect(page.locator('button:has-text("Sistema")')).toBeVisible();
+    // Check dropdown options are visible using data-testid
+    const lightOption = page.locator(`[data-testid="${TEST_IDS.theme.lightOption}"]`);
+    const darkOption = page.locator(`[data-testid="${TEST_IDS.theme.darkOption}"]`);
+    const systemOption = page.locator(`[data-testid="${TEST_IDS.theme.systemOption}"]`);
+    
+    // Use fallback selectors if data-testid not available
+    const lightFallback = page.locator('button').filter({ hasText: /Claro|Light/i }).first();
+    const darkFallback = page.locator('button').filter({ hasText: /Oscuro|Dark/i }).first();
+    const systemFallback = page.locator('button').filter({ hasText: /Sistema|System/i }).first();
+    
+    await expect(await lightOption.isVisible() ? lightOption : lightFallback).toBeVisible();
+    await expect(await darkOption.isVisible() ? darkOption : darkFallback).toBeVisible();
+    await expect(await systemOption.isVisible() ? systemOption : systemFallback).toBeVisible();
     
     // Select dark mode
-    await page.click('button:has-text("Oscuro")');
+    const darkSelector = await darkOption.isVisible() ? darkOption : darkFallback;
+    await darkSelector.click();
+    
+    // Wait for dark mode to be applied
+    await waitForThemeApplied(page, 'dark');
     
     // Verify dark mode is applied
     await expect(page.locator('html')).toHaveClass(/dark/);
     
     // Verify it persists after reload
     await page.reload();
+    await waitForThemeApplied(page, 'dark');
     await expect(page.locator('html')).toHaveClass(/dark/);
   });
 
@@ -46,22 +69,30 @@ test.describe('Dark Mode User Journey', () => {
     // Enable dark mode
     await toggleDarkMode(page);
     
+    // Wait for dark mode to be applied
+    await waitForThemeApplied(page, 'dark');
+    
     // Verify dark mode is enabled
     await expect(page.locator('html')).toHaveClass(/dark/);
     
-    // Check theme toggle is still accessible in dark mode
-    const themeToggle = page.locator('.theme-toggle button').first();
-    await expect(themeToggle).toBeVisible();
+    // Check theme toggle is still accessible in dark mode using data-testid
+    const themeToggle = page.locator(`[data-testid="${TEST_IDS.theme.dropdownButton}"]`).first();
+    await expect(themeToggle).toBeVisible({ timeout: 10000 });
     
     // Open dropdown again
     await themeToggle.click();
+    await page.waitForTimeout(300);
     
     // Verify dropdown is visible in dark mode
-    const dropdown = page.locator('.theme-toggle div.absolute');
-    await expect(dropdown).toBeVisible();
+    const dropdown = page.locator(`[data-testid="${TEST_IDS.theme.toggle}"]`).locator('.absolute').first();
+    // Fallback to class-based selector if needed
+    const dropdownFallback = page.locator('.theme-toggle div.absolute').first();
+    const dropdownSelector = await dropdown.isVisible() ? dropdown : dropdownFallback;
+    
+    await expect(dropdownSelector).toBeVisible();
     
     // Check dropdown has dark styling
-    await expect(dropdown).toHaveCSS('background-color', 'rgb(31, 41, 55)'); // gray-800
+    await expect(dropdownSelector).toHaveCSS('background-color', 'rgb(31, 41, 55)'); // gray-800
     
     // Close dropdown
     await page.keyboard.press('Escape');
@@ -85,8 +116,11 @@ test.describe('Dark Mode User Journey', () => {
     await expect(inputArea).toHaveCSS('background-color', 'rgb(55, 65, 81)'); // gray-700
     
     // Check example questions have proper dark mode styling
-    const exampleSection = page.locator('.flex-shrink-0.p-4.border-t').first();
-    await expect(exampleSection).toHaveCSS('background-color', 'rgb(31, 41, 55)'); // gray-800
+    const exampleSection = page.locator(`[data-testid="${TEST_IDS.chat.exampleQuestions}"]`).first();
+    // Fallback to class selector if data-testid not available
+    const exampleFallback = page.locator('.flex-shrink-0.p-4.border-t').first();
+    const exampleSelector = await exampleSection.isVisible() ? exampleSection : exampleFallback;
+    await expect(exampleSelector).toHaveCSS('background-color', 'rgb(31, 41, 55)'); // gray-800
   });
 
   test('markdown content renders correctly in dark mode', async ({ page }) => {

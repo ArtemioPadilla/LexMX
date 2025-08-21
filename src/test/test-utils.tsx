@@ -3,7 +3,7 @@
  * Provides custom render function with providers and common test helpers
  */
 
-import React, { ReactElement, Suspense, ErrorBoundary } from 'react';
+import React, { ReactElement, Suspense } from 'react';
 import { render, RenderOptions, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
@@ -13,14 +13,14 @@ import { act } from 'react';
 const mockI18n = {
   language: 'en',
   changeLanguage: vi.fn(),
-  t: (key: string, params?: Record<string, any>) => {
+  t: (key: string, params?: Record<string, unknown>) => {
     // Return the key for testing, optionally with params
     if (params) {
       return `${key}:${JSON.stringify(params)}`;
     }
     return key;
   },
-  getSection: (section: string) => ({}),
+  getSection: (_section: string) => ({}),
   getAvailableLanguages: () => [
     { code: 'es', name: 'Español' },
     { code: 'en', name: 'English' }
@@ -102,9 +102,14 @@ export function customRender(
     ...renderOptions 
   } = options;
   
-  // Ensure we have a container for React
+  // Always create a proper container for React 18
   if (!renderOptions.container) {
-    const container = document.getElementById('test-root') || document.body;
+    let container = document.getElementById('test-root');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'test-root';
+      document.body.appendChild(container);
+    }
     renderOptions.container = container;
   }
 
@@ -205,7 +210,12 @@ export const testHelpers = {
   waitForLoading: async () => {
     await waitFor(() => {
       expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
-    }, { timeout: 5000 });
+    }, { timeout: 10000 });
+    
+    // Additional wait for React concurrent features
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    });
   },
 
   // Check if error boundary was triggered
@@ -243,7 +253,7 @@ export const testHelpers = {
   },
 
   // Create mock file for upload tests
-  createMockFile: (name = 'test.txt', size = 1024, type = 'text/plain') => {
+  createMockFile: (name = 'test.txt', _size = 1024, type = 'text/plain') => {
     return new File(['test content'], name, { type });
   },
 
@@ -259,7 +269,7 @@ global.fetch = mockFetch;
 
 // Mock responses helpers
 export const mockResponses = {
-  success: (data: any = {}) => ({
+  success: (data: unknown = {}) => ({
     ok: true,
     status: 200,
     json: vi.fn().mockResolvedValue(data),

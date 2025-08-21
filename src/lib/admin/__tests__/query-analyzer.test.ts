@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { QueryAnalyzer } from '../query-analyzer';
-import type { QueryMetrics, PerformanceReport, PerformanceInsight } from '../query-analyzer';
-import { setupTestEnvironment, queryMetricsFixture } from '../../../test/mocks';
+import type { QueryMetrics as _QueryMetrics, PerformanceReport as _PerformanceReport, PerformanceInsight as _PerformanceInsight } from '../query-analyzer';
+import { setupTestEnvironment, queryMetricsFixture as _queryMetricsFixture } from '../../../test/mocks';
 
 describe('QueryAnalyzer', () => {
   let analyzer: QueryAnalyzer;
@@ -14,7 +14,7 @@ describe('QueryAnalyzer', () => {
     vi.setSystemTime(fixedDate);
     
     // Set up test environment with localStorage mock
-    const testEnv = setupTestEnvironment({ mockLocalStorage: true });
+    const _testEnv = setupTestEnvironment({ mockLocalStorage: true });
     mockStorage = global.localStorage;
     
     // Clear any existing data

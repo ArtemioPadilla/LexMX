@@ -181,7 +181,7 @@ export class QualityTestService {
     return templates[testType] || templates.basic;
   }
 
-  private async executeQuery(query: { query: string; expectedAnswer?: string }, modelId?: string): Promise<string> {
+  private async executeQuery(query: { query: string; expectedAnswer?: string }, _modelId?: string): Promise<string> {
     // Simulate query execution
     // In a real implementation, this would call the RAG engine
     await new Promise(resolve => setTimeout(resolve, Math.random() * 100 + 50));

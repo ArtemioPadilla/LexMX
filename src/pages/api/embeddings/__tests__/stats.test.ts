@@ -294,6 +294,25 @@ describe('Embeddings Stats API Endpoint', () => {
         mockContext.url = new URL('http://localhost:3000/api/embeddings/stats?detailed=true');
         mockContext.request = new Request(mockContext.url.toString(), { method: 'GET' });
 
+        // Reset embeddings service to succeed (in case previous test left it in error state)
+        const { embeddingsService } = await import('../../../../lib/admin/embeddings-service');
+        embeddingsService.getStats.mockResolvedValue({
+          totalVectors: 1250,
+          totalDocuments: 45,
+          averageVectorsPerDocument: 27.8,
+          storageSize: 524288,
+          indexSize: 65536,
+          model: 'transformers/all-MiniLM-L6-v2',
+          dimensions: 384,
+          provider: 'transformers',
+          lastUpdated: '2024-01-15T10:30:00.000Z',
+          performanceMetrics: {
+            averageEmbeddingTime: 45,
+            averageQueryTime: 12,
+            cacheHitRate: 0.75
+          }
+        });
+
         const { adminDataService } = await import('../../../../lib/admin/admin-data-service');
         adminDataService.getEmbeddingsStats.mockRejectedValue(new Error('Admin service unavailable'));
 

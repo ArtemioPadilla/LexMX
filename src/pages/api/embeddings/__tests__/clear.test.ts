@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { APIContext } from 'astro';
 
 // Mock the services
-vi.mock('../../../../lib/admin/embeddings-service', () => {
+vi.mock('@/lib/admin/embeddings-service', () => {
   const mockEmbeddingsService = {
     clearEmbeddings: vi.fn().mockImplementation(() => {
       return Promise.resolve({
@@ -20,7 +20,7 @@ vi.mock('../../../../lib/admin/embeddings-service', () => {
   };
 });
 
-vi.mock('../../../../lib/admin/admin-data-service', () => {
+vi.mock('@/lib/admin/admin-data-service', () => {
   const mockAdminDataService = {
     clearEmbeddingsCache: vi.fn().mockImplementation(() => {
       return Promise.resolve({
@@ -48,12 +48,42 @@ vi.mock('../../../../lib/admin/admin-data-service', () => {
 
 // Import after mocking
 import { DELETE, POST, OPTIONS } from '../clear';
+import { embeddingsService } from '@/lib/admin/embeddings-service';
+import { adminDataService } from '@/lib/admin/admin-data-service';
 
 describe('Embeddings Clear API Endpoint', () => {
   let mockContext: APIContext;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Reset mock implementations to successful defaults
+    embeddingsService.clearEmbeddings.mockImplementation(() => {
+      return Promise.resolve({
+        clearedVectors: 1250,
+        clearedDocuments: 45,
+        timeElapsed: 750,
+        success: true
+      });
+    });
+    
+    adminDataService.clearEmbeddingsCache.mockImplementation(() => {
+      return Promise.resolve({
+        clearedCacheEntries: 125,
+        freedMemory: 51200, // 50KB
+        timeElapsed: 150,
+        success: true
+      });
+    });
+    
+    adminDataService.rebuildIndex.mockImplementation(() => {
+      return Promise.resolve({
+        rebuiltDocuments: 45,
+        indexSize: 65536, // 64KB
+        timeElapsed: 2500,
+        success: true
+      });
+    });
 
     mockContext = {
       request: new Request('http://localhost:3000/api/embeddings/clear', {
@@ -159,7 +189,6 @@ describe('Embeddings Clear API Endpoint', () => {
 
     describe('Error Handling', () => {
       it('should handle embeddings service error', async () => {
-        const { embeddingsService } = await import('../../../../lib/admin/embeddings-service');
         embeddingsService.clearEmbeddings.mockRejectedValue(new Error('Failed to clear embeddings'));
 
         const response = await DELETE(mockContext);
@@ -177,7 +206,6 @@ describe('Embeddings Clear API Endpoint', () => {
           body: JSON.stringify({ clearCache: true })
         });
 
-        const { adminDataService } = await import('../../../../lib/admin/admin-data-service');
         adminDataService.clearEmbeddingsCache.mockRejectedValue(new Error('Cache clear failed'));
 
         const response = await DELETE(mockContext);
@@ -189,7 +217,6 @@ describe('Embeddings Clear API Endpoint', () => {
       });
 
       it('should handle generic error', async () => {
-        const { embeddingsService } = await import('../../../../lib/admin/embeddings-service');
         embeddingsService.clearEmbeddings.mockRejectedValue('Unexpected error');
 
         const response = await DELETE(mockContext);
@@ -212,7 +239,6 @@ describe('Embeddings Clear API Endpoint', () => {
       });
 
       it('should include CORS headers in error response', async () => {
-        const { embeddingsService } = await import('../../../../lib/admin/embeddings-service');
         embeddingsService.clearEmbeddings.mockRejectedValue(new Error('Service error'));
 
         const response = await DELETE(mockContext);
@@ -329,7 +355,6 @@ describe('Embeddings Clear API Endpoint', () => {
 
     describe('Operation Error Handling', () => {
       it('should handle clear_all operation error', async () => {
-        const { embeddingsService } = await import('../../../../lib/admin/embeddings-service');
         embeddingsService.clearEmbeddings.mockRejectedValue(new Error('Clear all failed'));
 
         const response = await POST(mockContext);
@@ -347,7 +372,6 @@ describe('Embeddings Clear API Endpoint', () => {
           body: JSON.stringify({ operation: 'clear_cache' })
         });
 
-        const { adminDataService } = await import('../../../../lib/admin/admin-data-service');
         adminDataService.clearEmbeddingsCache.mockRejectedValue(new Error('Clear cache failed'));
 
         const response = await POST(mockContext);
@@ -365,7 +389,6 @@ describe('Embeddings Clear API Endpoint', () => {
           body: JSON.stringify({ operation: 'rebuild_index' })
         });
 
-        const { adminDataService } = await import('../../../../lib/admin/admin-data-service');
         adminDataService.rebuildIndex.mockRejectedValue(new Error('Rebuild index failed'));
 
         const response = await POST(mockContext);
@@ -377,7 +400,6 @@ describe('Embeddings Clear API Endpoint', () => {
       });
 
       it('should handle generic operation error', async () => {
-        const { embeddingsService } = await import('../../../../lib/admin/embeddings-service');
         embeddingsService.clearEmbeddings.mockRejectedValue('Unexpected error');
 
         const response = await POST(mockContext);
@@ -398,8 +420,6 @@ describe('Embeddings Clear API Endpoint', () => {
           body: JSON.stringify({ operation: 'rebuild_index' })
         });
 
-        const { adminDataService } = await import('../../../../lib/admin/admin-data-service');
-        
         // Simulate operation with progress
         adminDataService.rebuildIndex.mockImplementation(() => {
           return new Promise((resolve) => {
@@ -439,7 +459,6 @@ describe('Embeddings Clear API Endpoint', () => {
       });
 
       it('should include CORS headers in error POST response', async () => {
-        const { embeddingsService } = await import('../../../../lib/admin/embeddings-service');
         embeddingsService.clearEmbeddings.mockRejectedValue(new Error('Service error'));
 
         const response = await POST(mockContext);

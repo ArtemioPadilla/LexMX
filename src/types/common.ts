@@ -44,7 +44,7 @@ export interface StorageMetadata {
   updated: number;
   version: string;
   tags?: string[];
-  [key: string]: JsonValue;
+  [key: string]: JsonValue | undefined;
 }
 
 // API response wrappers
@@ -188,7 +188,7 @@ export interface RequestMetadata {
   userAgent?: string;
   fingerprint?: string;
   sessionId?: string;
-  [key: string]: JsonValue;
+  [key: string]: JsonValue | undefined;
 }
 
 // Rate limiting types

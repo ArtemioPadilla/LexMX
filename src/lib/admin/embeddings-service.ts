@@ -5,7 +5,7 @@ import { TransformersEmbeddings } from '../embeddings/transformers-embeddings';
 import { OpenAIEmbeddings } from '../embeddings/openai-embeddings';
 import { MockEmbeddings } from '../embeddings/mock-embeddings';
 import type { EmbeddingProvider } from '../embeddings/types';
-import type { LegalDocument, VectorDocument } from '@/types/legal';
+import type { LegalDocument as _LegalDocument, VectorDocument as _VectorDocument } from '@/types/legal';
 
 export interface EmbeddingStats {
   totalVectors: number;

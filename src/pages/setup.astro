@@ -2,6 +2,7 @@
 // Provider setup page
 import BaseLayout from '../components/layout/BaseLayout.astro';
 import ProviderSetup from '../islands/ProviderSetup.tsx';
+import { getUrl } from '../utils/urls';
 ---
 
 <BaseLayout title="Configuración - LexMX">
@@ -50,7 +51,7 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                 <li data-i18n="setup.help.items.troubleshooting">• Resolución de problemas</li>
               </ul>
               <a 
-                href="/docs/setup" 
+                href={getUrl('docs/setup')} 
                 class="inline-flex items-center mt-3 text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-medium"
               >
                 <span data-i18n="setup.help.viewDocs">Ver Documentación</span>
@@ -81,7 +82,7 @@ import ProviderSetup from '../islands/ProviderSetup.tsx';
                 <li data-i18n="setup.privacy.items.control">• Control total sobre tus datos</li>
               </ul>
               <a 
-                href="/privacy" 
+                href={getUrl('privacy')} 
                 class="inline-flex items-center mt-3 text-green-600 dark:text-green-400 hover:text-green-500 dark:hover:text-green-300 font-medium"
               >
                 <span data-i18n="setup.privacy.privacyPolicy">Política de Privacidad</span>

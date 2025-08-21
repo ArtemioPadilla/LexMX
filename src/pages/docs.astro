@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../components/layout/BaseLayout.astro';
+import { getUrl } from '../utils/urls';
 
 const docSections = [
   {
@@ -113,7 +114,7 @@ const faqs = [
           </div>
         </div>
         <div class="mt-6">
-          <a href="/setup" class="inline-flex items-center px-6 py-3 bg-white text-legal-600 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+          <a href={getUrl('setup')} class="inline-flex items-center px-6 py-3 bg-white text-legal-600 rounded-lg font-medium hover:bg-gray-50 transition-colors">
             Comenzar ahora →
           </a>
         </div>

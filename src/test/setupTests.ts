@@ -4,7 +4,7 @@
  */
 
 import '@testing-library/jest-dom';
-import { expect, vi, beforeEach, afterEach } from 'vitest';
+import { vi, beforeEach, afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
 // Mock admin services globally - must be at top level
@@ -176,14 +176,14 @@ vi.mock('../lib/admin/data-service', () => {
 });
 
 // Extend Vitest's expect with jest-dom matchers
-declare global {
-  namespace Vi {
-    interface JestAssertion<T = any> extends jest.Matchers<void, T> {}
-  }
+// Using module declaration instead of namespace
+declare module 'vitest' {
+  interface Assertion<T = any> extends jest.Matchers<void, T> {}
+  interface AsymmetricMatchersContaining extends jest.AsymmetricMatchers {}
 }
 
 // Mock global fetch for Node.js environment
-global.fetch = vi.fn((url, options) => {
+global.fetch = vi.fn((_url, _options) => {
   // Default mock response
   return Promise.resolve({
     ok: true,
@@ -194,7 +194,7 @@ global.fetch = vi.fn((url, options) => {
     blob: () => Promise.resolve(new Blob(['mocked blob'])),
     headers: new Headers(),
   } as Response);
-}) as any;
+}) as jest.MockedFunction<typeof fetch>;
 
 // Mock Astro-specific globals and features
 beforeEach(() => {
@@ -218,28 +218,28 @@ beforeEach(() => {
   // Mock URL constructor first
   if (!global.URL) {
     global.URL = class MockURL {
-      constructor(public href: string, base?: string | URL) {
+      constructor(public href: string, _base?: string | URL) {
         this.href = href;
       }
       toString() { return this.href; }
-    } as any;
+    } as typeof URL;
   }
 
   // Mock Request constructor
   if (!global.Request) {
     global.Request = class MockRequest {
-      constructor(public url: string, init?: any) {
+      constructor(public url: string, _init?: RequestInit) {
         this.url = url;
       }
-    } as any;
+    } as typeof Request;
   }
 
   // Mock Astro global
   global.Astro = {
-    url: { href: 'http://localhost:3000', toString: () => 'http://localhost:3000' } as any,
+    url: { href: 'http://localhost:3000', toString: () => 'http://localhost:3000' } as URL,
     params: {},
-    request: { url: 'http://localhost:3000' } as any,
-    site: { href: 'http://localhost:3000', toString: () => 'http://localhost:3000' } as any,
+    request: { url: 'http://localhost:3000' } as Request,
+    site: { href: 'http://localhost:3000', toString: () => 'http://localhost:3000' } as URL,
     generator: 'Astro v4.0.0',
     slots: {}
   };

@@ -1,6 +1,10 @@
-import { Page, expect } from '@playwright/test';
-import { waitForHydration, waitForComponentHydration } from './hydration-helpers';
+import { Page, expect, test } from '@playwright/test';
+import { waitForHydration as waitForHydrationHelper, waitForComponentHydration } from './hydration-helpers';
 import { MockProviderManager, setupMockProviders, ProviderScenarios } from './mock-provider-manager';
+import { TestContextManager } from './test-context-manager';
+
+// Re-export waitForHydration
+export const waitForHydration = waitForHydrationHelper;
 
 /**
  * Common setup for LexMX tests
@@ -45,6 +49,85 @@ export async function setupPage(page: Page): Promise<void> {
 }
 
 /**
+ * Setup page with complete test isolation
+ * @param page - Playwright page object
+ * @param testInfo - Test information from Playwright
+ * @returns TestContextManager instance for this test
+ */
+export async function setupIsolatedPage(
+  page: Page,
+  testInfo: { title: string; workerIndex: number }
+): Promise<TestContextManager> {
+  // Create test context manager
+  const contextManager = new TestContextManager(testInfo.title, testInfo.workerIndex);
+  
+  // Inject isolation before navigation
+  await contextManager.injectIsolation(page);
+  
+  // Navigate to base URL with isolated context
+  const baseUrl = contextManager.getBaseUrl();
+  await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+  
+  // Set up error monitoring (isolated per test)
+  const errors: string[] = [];
+  page.on('console', (msg) => {
+    if (msg.type() === 'error' && 
+        !msg.text().includes('Failed to load resource') &&
+        !msg.text().includes('favicon.ico') &&
+        !msg.text().includes('initialization warning') &&
+        !msg.text().includes('Test Isolation')) {
+      errors.push(msg.text());
+    }
+  });
+  
+  page.on('pageerror', (error) => {
+    errors.push(error.toString());
+  });
+  
+  // Store errors on page object for later assertion
+  (page as any).consoleErrors = errors;
+  
+  // Set Spanish as default language with isolated key
+  await page.evaluate((testId) => {
+    // Using the namespaced localStorage (already overridden)
+    localStorage.setItem('language', JSON.stringify('es'));
+    document.documentElement.setAttribute('data-language', 'es');
+    document.documentElement.lang = 'es';
+    (window as any).__INITIAL_LANGUAGE__ = 'es';
+    (window as any).__TEST_ID__ = testId;
+  }, contextManager.getTestId());
+  
+  // Wait for language initialization
+  await page.waitForTimeout(200);
+  
+  return contextManager;
+}
+
+/**
+ * Clean up isolated test context
+ * @param page - Playwright page object
+ * @param contextManager - TestContextManager instance
+ */
+export async function cleanupIsolatedTest(
+  page: Page,
+  contextManager: TestContextManager
+): Promise<void> {
+  // Clean up all storage used by this test
+  await contextManager.cleanup(page);
+  
+  // Clear any remaining state
+  await page.evaluate(() => {
+    // Reset any global state
+    if ((window as any).__TEST_CONTEXT__) {
+      delete (window as any).__TEST_CONTEXT__;
+    }
+    if ((window as any).__TEST_ID__) {
+      delete (window as any).__TEST_ID__;
+    }
+  });
+}
+
+/**
  * Navigate to a page and wait for hydration
  * @param page - Playwright page object
  * @param path - Path to navigate to
@@ -58,6 +141,30 @@ export async function navigateAndWaitForHydration(
   await page.waitForLoadState('networkidle');
   // Additional wait for React components to fully initialize
   await page.waitForTimeout(500);
+}
+
+/**
+ * Navigate to a page
+ * @param page - Playwright page object
+ * @param path - Path to navigate to (relative to localhost:4321)
+ */
+export async function navigateToPage(
+  page: Page,
+  path: string
+): Promise<void> {
+  const url = path.startsWith('http') ? path : `http://localhost:4321${path}`;
+  await page.goto(url, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(500); // Allow initial hydration
+}
+
+/**
+ * Wait for page to be ready
+ * @param page - Playwright page object
+ */
+export async function waitForPageReady(page: Page): Promise<void> {
+  await page.waitForLoadState('networkidle');
+  await waitForHydration(page);
+  await page.waitForTimeout(300);
 }
 
 /**
@@ -118,6 +225,83 @@ export async function clearAllStorage(page: Page): Promise<void> {
     // If page is not yet navigated or accessible, ignore the error
     console.warn('Could not clear storage:', error);
   }
+}
+
+/**
+ * Deep clean all state including DOM, storage, and event listeners
+ * @param page - Playwright page object
+ */
+export async function deepCleanState(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    // 1. Clear all storage types
+    try { localStorage.clear(); } catch (e) {}
+    try { sessionStorage.clear(); } catch (e) {}
+    
+    // 2. Clear IndexedDB databases
+    if (window.indexedDB && window.indexedDB.databases) {
+      window.indexedDB.databases().then(databases => {
+        databases.forEach(db => {
+          if (db.name) {
+            window.indexedDB.deleteDatabase(db.name);
+          }
+        });
+      }).catch(() => {});
+    }
+    
+    // 3. Clear all caches
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => caches.delete(name));
+      }).catch(() => {});
+    }
+    
+    // 4. Clear all cookies
+    document.cookie.split(";").forEach(c => {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, 
+        "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    
+    // 5. Remove all event listeners by cloning body
+    const oldBody = document.body;
+    const newBody = oldBody.cloneNode(true) as HTMLElement;
+    oldBody.parentNode?.replaceChild(newBody, oldBody);
+    
+    // 6. Clear all intervals and timeouts
+    const highestId = setTimeout(() => {}, 0);
+    for (let i = 0; i < highestId; i++) {
+      clearTimeout(i);
+      clearInterval(i);
+    }
+    
+    // 7. Clear any global test state
+    const globalKeys = Object.keys(window).filter(key => 
+      key.startsWith('__TEST') || 
+      key.startsWith('__MOCK') ||
+      key.includes('test') ||
+      key.includes('Test')
+    );
+    globalKeys.forEach(key => {
+      try { delete (window as any)[key]; } catch (e) {}
+    });
+    
+    // 8. Reset document attributes
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.removeAttribute('data-language');
+    document.documentElement.className = '';
+    document.body.className = '';
+    
+    // 9. Clear any React Fiber nodes
+    const reactRoot = document.getElementById('root') || document.querySelector('[data-reactroot]');
+    if (reactRoot) {
+      reactRoot.innerHTML = '';
+    }
+    
+    // 10. Clear console
+    if (console.clear) console.clear();
+  });
+  
+  // Wait for cleanup to complete
+  await page.waitForTimeout(100);
 }
 
 /**

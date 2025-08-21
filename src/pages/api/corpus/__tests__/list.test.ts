@@ -1,26 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { APIContext } from 'astro';
 
-// Mock the underlying dependencies
-vi.mock('../../../lib/corpus/document-loader');
-vi.mock('../../../lib/storage/indexeddb-vector-store');
-vi.mock('../../../lib/storage/metadata-store');
-vi.mock('../../../lib/ingestion/document-ingestion-pipeline');
-vi.mock('../../../lib/admin/admin-data-service');
-
-// Import after mocking
-import { GET } from '../list';
-import { corpusService } from '../../../lib/admin/corpus-service';
-
-describe('Corpus List API Endpoint', () => {
-  let mockContext: APIContext;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    
-    // Mock the corpus service methods
-    vi.mocked(corpusService.initialize).mockResolvedValue(undefined);
-    vi.mocked(corpusService.getDocuments).mockResolvedValue([
+// Mock the corpus service using the same path alias as the API
+vi.mock('@/lib/admin/corpus-service', () => ({
+  corpusService: {
+    initialize: vi.fn().mockResolvedValue(undefined),
+    getDocuments: vi.fn().mockResolvedValue([
       {
         id: 'doc-1',
         title: 'Constitución Política',
@@ -49,7 +34,19 @@ describe('Corpus List API Endpoint', () => {
         secondaryAreas: [],
         citations: []
       }
-    ]);
+    ])
+  }
+}));
+
+// Import after mocking
+import { GET } from '../list';
+import { corpusService } from '@/lib/admin/corpus-service';
+
+describe('Corpus List API Endpoint', () => {
+  let mockContext: APIContext;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
 
     // Create mock context
     mockContext = {
@@ -134,7 +131,6 @@ describe('Corpus List API Endpoint', () => {
     });
 
     it('should handle service errors gracefully', async () => {
-      const { corpusService } = await import('../../../lib/admin/corpus-service');
       (corpusService.getDocuments as any).mockRejectedValueOnce(new Error('Database error'));
 
       const response = await GET(mockContext);
@@ -152,7 +148,6 @@ describe('Corpus List API Endpoint', () => {
     });
 
     it('should handle empty corpus', async () => {
-      const { corpusService } = await import('../../../lib/admin/corpus-service');
       (corpusService.getDocuments as any).mockResolvedValueOnce([]);
 
       const response = await GET(mockContext);

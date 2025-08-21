@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { APIContext } from 'astro';
 
-// Mock the services
-vi.mock('../../../lib/admin/corpus-service', () => ({
+// Mock the corpus service using the same path alias as the API
+vi.mock('@/lib/admin/corpus-service', () => ({
   corpusService: {
     initialize: vi.fn().mockResolvedValue(undefined),
     deleteDocument: vi.fn().mockImplementation((id: string) => {
@@ -22,6 +22,7 @@ vi.mock('../../../lib/admin/corpus-service', () => ({
 
 // Import after mocking
 import { DELETE, POST } from '../delete';
+import { corpusService as _corpusService } from '@/lib/admin/corpus-service';
 
 describe('Corpus Delete API Endpoint', () => {
   let mockContext: APIContext;
@@ -63,7 +64,7 @@ describe('Corpus Delete API Endpoint', () => {
       const data = await response.json();
 
       expect(response.status).toBe(404);
-      expect(data.error).toContain('not found');
+      expect(data.error).toBe('Document not found');
     });
 
     it('should return 400 when ID is missing', async () => {

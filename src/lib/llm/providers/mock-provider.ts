@@ -32,6 +32,12 @@ export class MockProvider implements LLMProvider {
     totalTokens: 0
   };
   private requestHistory: RequestHistoryEntry[] = [];
+  
+  // Provider metadata
+  public readonly id = 'mock';
+  public readonly name = 'Mock Provider';
+  public readonly type: 'local' | 'cloud' = 'local';
+  public status: 'connected' | 'disconnected' | 'error' = 'disconnected';
 
   constructor(config: MockProviderConfig = {}) {
     this.config = {
@@ -54,7 +60,19 @@ export class MockProvider implements LLMProvider {
     // This makes tests more predictable
     
     this._initialized = true;
+    this.status = 'connected';
     return true;
+  }
+
+  async testConnection(): Promise<boolean> {
+    // Mock provider always returns true for test connection
+    // unless it's not initialized
+    return this._initialized;
+  }
+
+  async isAvailable(): Promise<boolean> {
+    // Check if provider is available and initialized
+    return this._initialized && this.status === 'connected';
   }
 
   isInitialized(): boolean {
@@ -183,6 +201,102 @@ export class MockProvider implements LLMProvider {
 
   getRequestHistory(): RequestHistoryEntry[] {
     return [...this.requestHistory];
+  }
+
+  // Additional methods for compatibility with provider-manager
+
+  async generateResponse(request: any): Promise<any> {
+    // Use the complete method for generating responses
+    const response = await this.complete({
+      messages: request.messages || [],
+      maxTokens: request.maxTokens,
+      temperature: request.temperature,
+      stream: false
+    });
+    
+    return {
+      ...response,
+      metadata: {
+        ...response.metadata,
+        provider: this.id,
+        model: this.getModel()
+      }
+    };
+  }
+
+  async stream(request: any, onChunk?: (chunk: string) => void): Promise<any> {
+    // Use the complete method with streaming enabled
+    const response = await this.complete({
+      messages: request.messages || [],
+      maxTokens: request.maxTokens,
+      temperature: request.temperature,
+      stream: true
+    });
+    
+    // If onChunk callback is provided and we have a stream
+    if (onChunk && response.stream) {
+      for await (const chunk of response.stream) {
+        onChunk(chunk);
+      }
+    }
+    
+    return response;
+  }
+
+  getMetrics(): any {
+    // Return basic metrics for the mock provider
+    return {
+      totalRequests: this.requestHistory.length,
+      totalTokens: this.totalUsage.totalTokens,
+      averageResponseTime: 500, // Mock average
+      errorRate: this.config.simulateErrors ? this.config.errorRate : 0,
+      status: this.status,
+      lastUsed: this.requestHistory.length > 0 
+        ? this.requestHistory[this.requestHistory.length - 1].timestamp 
+        : null
+    };
+  }
+
+  validateConfig(config: any): boolean {
+    // Mock provider accepts any config for testing
+    return true;
+  }
+
+  getModelInfo(modelId: string): any {
+    return {
+      id: modelId || 'mock-model',
+      name: 'Mock Model',
+      maxTokens: 4096,
+      contextWindow: 8192,
+      capabilities: ['chat', 'completion', 'embeddings'],
+      costPer1kTokens: { input: 0.001, output: 0.002 }
+    };
+  }
+
+  async listModels(): Promise<any[]> {
+    return Promise.resolve([
+      {
+        id: 'mock-model-small',
+        name: 'Mock Model Small',
+        maxTokens: 2048,
+        contextWindow: 4096,
+        capabilities: ['chat', 'completion'],
+        costPer1kTokens: { input: 0.0005, output: 0.001 }
+      },
+      {
+        id: 'mock-model-large',
+        name: 'Mock Model Large',
+        maxTokens: 8192,
+        contextWindow: 16384,
+        capabilities: ['chat', 'completion', 'embeddings'],
+        costPer1kTokens: { input: 0.002, output: 0.004 }
+      }
+    ]);
+  }
+
+  getEstimatedCost(tokens: number): number {
+    // Simple cost calculation: $0.001 per 1000 tokens
+    return (tokens / 1000) * 0.001;
   }
 
   // Private helper methods

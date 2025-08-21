@@ -6,6 +6,7 @@ import LegalGlossary from '../islands/LegalGlossary.tsx';
 import LegislativeProcess from '../islands/LegislativeProcess.tsx';
 import GovernmentStructure from '../islands/GovernmentStructure.tsx';
 import NormativeHierarchy from '../islands/NormativeHierarchy.tsx';
+import { getUrl } from '../utils/urls';
 ---
 
 <BaseLayout title="Wiki Legal - LexMX">
@@ -123,7 +124,7 @@ import NormativeHierarchy from '../islands/NormativeHierarchy.tsx';
                 <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="wiki.lawAreas.constitutional.description">
                   Estudia la organización del Estado y los derechos fundamentales.
                 </p>
-                <a href="/legal#constitutional" class="text-legal-600 hover:text-legal-700 font-medium">
+                <a href={getUrl('legal#constitutional')} class="text-legal-600 hover:text-legal-700 font-medium">
                   <span data-i18n="wiki.lawAreas.viewDocuments">Ver documentos</span> →
                 </a>
               </div>
@@ -136,7 +137,7 @@ import NormativeHierarchy from '../islands/NormativeHierarchy.tsx';
                 <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="wiki.lawAreas.civil.description">
                   Regula las relaciones entre particulares, familia y propiedad.
                 </p>
-                <a href="/legal#civil" class="text-legal-600 hover:text-legal-700 font-medium">
+                <a href={getUrl('legal#civil')} class="text-legal-600 hover:text-legal-700 font-medium">
                   <span data-i18n="wiki.lawAreas.viewDocuments">Ver documentos</span> →
                 </a>
               </div>
@@ -149,7 +150,7 @@ import NormativeHierarchy from '../islands/NormativeHierarchy.tsx';
                 <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="wiki.lawAreas.criminal.description">
                   Define los delitos y establece las penas correspondientes.
                 </p>
-                <a href="/legal#criminal" class="text-legal-600 hover:text-legal-700 font-medium">
+                <a href={getUrl('legal#criminal')} class="text-legal-600 hover:text-legal-700 font-medium">
                   <span data-i18n="wiki.lawAreas.viewDocuments">Ver documentos</span> →
                 </a>
               </div>
@@ -162,7 +163,7 @@ import NormativeHierarchy from '../islands/NormativeHierarchy.tsx';
                 <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="wiki.lawAreas.labor.description">
                   Regula las relaciones entre trabajadores y empleadores.
                 </p>
-                <a href="/legal#labor" class="text-legal-600 hover:text-legal-700 font-medium">
+                <a href={getUrl('legal#labor')} class="text-legal-600 hover:text-legal-700 font-medium">
                   <span data-i18n="wiki.lawAreas.viewDocuments">Ver documentos</span> →
                 </a>
               </div>
@@ -175,7 +176,7 @@ import NormativeHierarchy from '../islands/NormativeHierarchy.tsx';
                 <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="wiki.lawAreas.tax.description">
                   Normas sobre impuestos y obligaciones tributarias.
                 </p>
-                <a href="/legal#tax" class="text-legal-600 hover:text-legal-700 font-medium">
+                <a href={getUrl('legal#tax')} class="text-legal-600 hover:text-legal-700 font-medium">
                   <span data-i18n="wiki.lawAreas.viewDocuments">Ver documentos</span> →
                 </a>
               </div>
@@ -188,7 +189,7 @@ import NormativeHierarchy from '../islands/NormativeHierarchy.tsx';
                 <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="wiki.lawAreas.commercial.description">
                   Regula las actividades comerciales y empresariales.
                 </p>
-                <a href="/legal#commercial" class="text-legal-600 hover:text-legal-700 font-medium">
+                <a href={getUrl('legal#commercial')} class="text-legal-600 hover:text-legal-700 font-medium">
                   <span data-i18n="wiki.lawAreas.viewDocuments">Ver documentos</span> →
                 </a>
               </div>

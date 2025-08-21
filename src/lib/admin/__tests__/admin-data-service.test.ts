@@ -11,6 +11,7 @@ Object.defineProperty(window, 'location', {
 });
 
 describe('AdminDataService', () => {
+  let service: AdminDataService;
   let fetchMock: any;
 
   beforeEach(() => {
@@ -18,7 +19,7 @@ describe('AdminDataService', () => {
     vi.clearAllMocks();
     
     // Create fresh instance
-    new AdminDataService();
+    service = new AdminDataService();
     
     // Mock global fetch
     fetchMock = vi.fn();

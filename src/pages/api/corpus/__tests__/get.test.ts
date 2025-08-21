@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { APIContext } from 'astro';
 
-// Mock the services
-vi.mock('../../../lib/admin/corpus-service', () => ({
+// Mock the corpus service using the same path alias as the API
+vi.mock('@/lib/admin/corpus-service', () => ({
   corpusService: {
     initialize: vi.fn().mockResolvedValue(undefined),
     getDocument: vi.fn().mockImplementation((id: string) => {
@@ -42,6 +42,7 @@ vi.mock('../../../lib/admin/corpus-service', () => ({
 
 // Import after mocking
 import { GET } from '../get';
+import { corpusService } from '@/lib/admin/corpus-service';
 
 describe('Corpus Get API Endpoint', () => {
   let mockContext: APIContext;
@@ -109,7 +110,6 @@ describe('Corpus Get API Endpoint', () => {
     });
 
     it('should handle service errors gracefully', async () => {
-      const { corpusService } = await import('../../../lib/admin/corpus-service');
       (corpusService.getDocument as any).mockRejectedValueOnce(new Error('Database error'));
 
       const response = await GET(mockContext);
@@ -127,8 +127,6 @@ describe('Corpus Get API Endpoint', () => {
     });
 
     it('should handle documents with large content', async () => {
-      const { corpusService } = await import('../../../lib/admin/corpus-service');
-      
       const largeDocument = {
         id: 'doc-large',
         title: 'Large Document',

@@ -2,6 +2,7 @@
 import BaseLayout from '../../components/layout/BaseLayout.astro';
 import HydrationWrapper from '../../components/HydrationWrapper.astro';
 import DocumentRequestList from '../../islands/DocumentRequestList';
+import { getUrl } from '../../utils/urls';
 ---
 
 <BaseLayout title="Solicitudes de Documentos - LexMX">
@@ -20,7 +21,7 @@ import DocumentRequestList from '../../islands/DocumentRequestList';
       <!-- New Request Button -->
       <div class="mb-8">
         <a 
-          href="/requests/new" 
+          href={getUrl('requests/new')} 
           class="inline-flex items-center px-6 py-3 bg-legal-500 text-white font-medium rounded-lg hover:bg-legal-600 transition-colors"
         >
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

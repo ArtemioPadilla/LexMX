@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../components/layout/BaseLayout.astro';
+import { getUrl } from '../utils/urls';
 ---
 
 <BaseLayout title="Códigos Legales - LexMX">
@@ -30,7 +31,7 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
           <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="legal.constitutional.description">
             Constitución Política, Ley de Amparo y jurisprudencia constitucional.
           </p>
-          <a href="/document/cpeum" class="text-legal-600 hover:text-legal-700 font-medium">
+          <a href={getUrl('document/cpeum')} class="text-legal-600 hover:text-legal-700 font-medium">
             <span data-i18n="common.viewDocuments">Ver documentos</span> →
           </a>
         </div>
@@ -50,7 +51,7 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
           <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="legal.civil.description">
             Código Civil Federal, códigos estatales y legislación familiar.
           </p>
-          <a href="/document/ccf" class="text-legal-600 hover:text-legal-700 font-medium">
+          <a href={getUrl('document/ccf')} class="text-legal-600 hover:text-legal-700 font-medium">
             <span data-i18n="common.viewDocuments">Ver documentos</span> →
           </a>
         </div>
@@ -70,7 +71,7 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
           <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="legal.criminal.description">
             Código Penal Federal, CNPP y legislación en materia criminal.
           </p>
-          <a href="/document/cpf" class="text-legal-600 hover:text-legal-700 font-medium">
+          <a href={getUrl('document/cpf')} class="text-legal-600 hover:text-legal-700 font-medium">
             <span data-i18n="common.viewDocuments">Ver documentos</span> →
           </a>
         </div>
@@ -90,7 +91,7 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
           <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="legal.labor.description">
             Ley Federal del Trabajo, LSS, INFONAVIT y normativa laboral.
           </p>
-          <a href="/document/lft" class="text-legal-600 hover:text-legal-700 font-medium">
+          <a href={getUrl('document/lft')} class="text-legal-600 hover:text-legal-700 font-medium">
             <span data-i18n="common.viewDocuments">Ver documentos</span> →
           </a>
         </div>
@@ -110,7 +111,7 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
           <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="legal.tax.description">
             CFF, LISR, LIVA y toda la legislación tributaria federal.
           </p>
-          <a href="/document/cff" class="text-legal-600 hover:text-legal-700 font-medium">
+          <a href={getUrl('document/cff')} class="text-legal-600 hover:text-legal-700 font-medium">
             <span data-i18n="common.viewDocuments">Ver documentos</span> →
           </a>
         </div>
@@ -130,7 +131,7 @@ import BaseLayout from '../components/layout/BaseLayout.astro';
           <p class="text-gray-600 dark:text-gray-300 mb-4" data-i18n="legal.commercial.description">
             Código de Comercio, LGSM, LGTOC y legislación comercial.
           </p>
-          <a href="/document/ccom" class="text-legal-600 hover:text-legal-700 font-medium">
+          <a href={getUrl('document/ccom')} class="text-legal-600 hover:text-legal-700 font-medium">
             <span data-i18n="common.viewDocuments">Ver documentos</span> →
           </a>
         </div>

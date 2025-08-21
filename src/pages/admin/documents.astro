@@ -2,6 +2,7 @@
 import BaseLayout from '../../components/layout/BaseLayout.astro';
 import HydrationWrapper from '../../components/HydrationWrapper.astro';
 import DocumentIngestionPipeline from '../../islands/DocumentIngestionPipeline';
+import { getUrl } from '../../utils/urls';
 ---
 
 <BaseLayout title="Document Management - LexMX">
@@ -23,13 +24,13 @@ import DocumentIngestionPipeline from '../../islands/DocumentIngestionPipeline';
           <a href="#ingestion" class="border-b-2 border-legal-500 py-2 px-1 text-sm font-medium text-legal-600 dark:text-legal-400">
             <span data-i18n="admin.documents.tabs.ingestion">Document Ingestion</span>
           </a>
-          <a href="/admin/corpus" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+          <a href={getUrl('admin/corpus')} class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
             <span data-i18n="admin.documents.tabs.corpus">Corpus Overview</span>
           </a>
-          <a href="/admin/embeddings" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+          <a href={getUrl('admin/embeddings')} class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
             <span data-i18n="admin.documents.tabs.embeddings">Embeddings</span>
           </a>
-          <a href="/admin/quality" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+          <a href={getUrl('admin/quality')} class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
             <span data-i18n="admin.documents.tabs.quality">Quality Metrics</span>
           </a>
         </nav>

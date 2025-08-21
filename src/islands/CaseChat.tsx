@@ -7,6 +7,7 @@ import { providerManager } from '../lib/llm/provider-manager';
 import MessageContent from '../components/MessageContent';
 import ModelSelectorModal from '../components/ModelSelectorModal';
 import WebLLMProgress from '../components/WebLLMProgress';
+import { TEST_IDS } from '../utils/test-ids';
 
 export interface CaseChatMessage {
   id: string;
@@ -442,7 +443,7 @@ export default function CaseChat({
   }, [messages]);
   
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+    <div className="flex flex-col h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800" data-testid="case-chat-container">
       {/* Chat Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
         <div className="flex items-center space-x-4">
@@ -519,7 +520,7 @@ export default function CaseChat({
       />
       
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4" data-testid="case-chat-messages">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -580,11 +581,13 @@ export default function CaseChat({
             className="flex-1 px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-legal-500 focus:border-legal-500 transition-all placeholder-gray-400 dark:placeholder-gray-500 shadow-sm"
             rows={2}
             disabled={isProcessing}
+            data-testid="case-chat-input"
           />
           {isProcessing ? (
             <button
               onClick={handleStopGeneration}
               className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all shadow-md hover:shadow-lg"
+              data-testid="case-chat-stop"
             >
               {t('chat.stop')}
             </button>
@@ -593,6 +596,7 @@ export default function CaseChat({
               onClick={handleSendMessage}
               disabled={!currentInput.trim()}
               className="px-6 py-3 bg-gradient-to-r from-legal-500 to-legal-600 text-white rounded-xl hover:from-legal-600 hover:to-legal-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg disabled:shadow-none"
+              data-testid="case-chat-send"
             >
               {t('chat.send')}
             </button>

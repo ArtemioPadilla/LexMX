@@ -192,7 +192,9 @@ export default function CorpusSelector({ onSelectionChange, className = '' }: Co
           />
           
           {/* Dropdown/Modal */}
-          <div className="fixed md:absolute inset-x-0 md:inset-auto bottom-0 md:top-full md:mt-2 md:left-0 md:right-auto md:w-80 lg:w-96 w-full md:mx-0 bg-white dark:bg-gray-800 rounded-t-lg md:rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-[70vh] md:max-h-[500px] flex flex-col">
+          <div 
+            data-testid={TEST_IDS.corpus.dropdown}
+            className="fixed md:absolute inset-x-0 md:inset-auto bottom-0 md:top-full md:mt-2 md:left-0 md:right-auto md:w-80 lg:w-96 w-full md:mx-0 bg-white dark:bg-gray-800 rounded-t-lg md:rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-[70vh] md:max-h-[500px] flex flex-col">
             {/* Header */}
             <div className="p-3 md:p-3 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between mb-2">
@@ -234,6 +236,7 @@ export default function CorpusSelector({ onSelectionChange, className = '' }: Co
               <div className="flex space-x-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                 <button
                   type="button"
+                  data-testid={TEST_IDS.corpus.areaTab}
                   onClick={() => setActiveTab('areas')}
                   className={`flex-1 px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                     activeTab === 'areas'
@@ -245,6 +248,7 @@ export default function CorpusSelector({ onSelectionChange, className = '' }: Co
                 </button>
                 <button
                   type="button"
+                  data-testid={TEST_IDS.corpus.documentTab}
                   onClick={() => setActiveTab('documents')}
                   className={`flex-1 px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                     activeTab === 'documents'
@@ -262,6 +266,7 @@ export default function CorpusSelector({ onSelectionChange, className = '' }: Co
             <div className="p-3 border-b border-gray-200 dark:border-gray-700">
               <input
                 type="text"
+                data-testid={TEST_IDS.corpus.searchInput}
                 placeholder={t('corpus.searchDocument')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}

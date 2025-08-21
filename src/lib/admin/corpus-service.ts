@@ -76,7 +76,7 @@ export class CorpusService extends EventEmitter {
     const document = await this.getDocument(documentId);
     if (!document) return null;
     
-    const stats = await adminDataService.getCorpusStats();
+    const _stats = await adminDataService.getCorpusStats();
     const embeddingsStats = await adminDataService.getEmbeddingsStats();
     
     // Calculate metrics
