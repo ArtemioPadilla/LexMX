@@ -1,13 +1,12 @@
-import { test, expect, Page } from '@playwright/test';
-import {
-  setupPage,
-  navigateAndWaitForHydration,
-  toggleDarkMode,
-  isVisibleInDarkMode,
-  setupWebLLMProvider,
-  testDarkMode,
-  clearAllStorage
-} from '../utils/test-helpers';
+import { clearAllStorage, expect, setupWebLLMProvider, test, toggleDarkMode, waitForHydration, navigateAndWaitForHydration, isVisibleInDarkMode } from '../utils/test-helpers-consolidated';
+import { setupCompleteMockEnvironment, quickSetupProvider } from '../utils/mock-all-providers';
+import { smartWait, waitForElement, clickElement, fillInput as fastFillInput, waitForText, waitForHydrationFast } from '../utils/fast-helpers';
+
+/**
+ * Isolated version of dark-mode-journey tests
+ * Uses the new test isolation system for parallel execution
+ */
+import { Page } from '@playwright/test';
 import { TEST_IDS } from '../../src/utils/test-ids';
 import { TEST_DATA } from '../../src/utils/test-data';
 
@@ -19,26 +18,26 @@ async function waitForThemeApplied(page: Page, theme: 'dark' | 'light') {
   }, theme, { timeout: 5000 });
 }
 
-test.describe('Dark Mode User Journey', () => {
+test.describe('Dark Mode User Journey (Mocked)', () => {
   test.beforeEach(async ({ page }) => {
-    await setupPage(page);
+    // Note: setupIsolatedPage is already called by the fixture
     await clearAllStorage(page);
     await page.goto('/');
-  });
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);});
 
   test('theme toggle is visible and functional', async ({ page }) => {
-    // Check theme toggle is visible using data-testid
-    const themeToggle = page.locator(`[data-testid="${TEST_IDS.theme.dropdownButton}"]`).first();
-    await expect(themeToggle).toBeVisible({ timeout: 10000 });
+    // Check theme toggle is visible using correct data-testid
+    const themeToggle = page.locator('[data-testid="theme-toggle"]').first();
+    await expect(themeToggle).toBeVisible({ timeout: 5000 });
     
     // Click to open dropdown
     await themeToggle.click();
-    await page.waitForTimeout(300);
     
-    // Check dropdown options are visible using data-testid
-    const lightOption = page.locator(`[data-testid="${TEST_IDS.theme.lightOption}"]`);
-    const darkOption = page.locator(`[data-testid="${TEST_IDS.theme.darkOption}"]`);
-    const systemOption = page.locator(`[data-testid="${TEST_IDS.theme.systemOption}"]`);
+    // Check dropdown options are visible using correct data-testids
+    const lightOption = page.locator('[data-testid="theme-light"]');
+    const darkOption = page.locator('[data-testid="theme-dark"]');
+    const systemOption = page.locator('[data-testid="theme-system"]');
     
     // Use fallback selectors if data-testid not available
     const lightFallback = page.locator('button').filter({ hasText: /Claro|Light/i }).first();
@@ -75,16 +74,16 @@ test.describe('Dark Mode User Journey', () => {
     // Verify dark mode is enabled
     await expect(page.locator('html')).toHaveClass(/dark/);
     
-    // Check theme toggle is still accessible in dark mode using data-testid
-    const themeToggle = page.locator(`[data-testid="${TEST_IDS.theme.dropdownButton}"]`).first();
-    await expect(themeToggle).toBeVisible({ timeout: 10000 });
+    // Check theme toggle is still accessible in dark mode using correct data-testid
+    const themeToggle = page.locator('[data-testid="theme-toggle"]').first();
+    await expect(themeToggle).toBeVisible({ timeout: 5000 });
     
     // Open dropdown again
     await themeToggle.click();
-    await page.waitForTimeout(300);
+    // Removed unnecessary wait
     
-    // Verify dropdown is visible in dark mode
-    const dropdown = page.locator(`[data-testid="${TEST_IDS.theme.toggle}"]`).locator('.absolute').first();
+    // Verify dropdown is visible in dark mode using proper selector
+    const dropdown = page.locator('[data-testid="theme-dropdown-button"]').first();
     // Fallback to class-based selector if needed
     const dropdownFallback = page.locator('.theme-toggle div.absolute').first();
     const dropdownSelector = await dropdown.isVisible() ? dropdown : dropdownFallback;
@@ -100,7 +99,7 @@ test.describe('Dark Mode User Journey', () => {
 
   test('chat interface displays correctly in dark mode', async ({ page }) => {
     await navigateAndWaitForHydration(page, '/chat');
-    await setupWebLLMProvider(page);
+    await quickSetupProvider(page, "webllm");
     
     // Enable dark mode
     await toggleDarkMode(page);
@@ -116,7 +115,7 @@ test.describe('Dark Mode User Journey', () => {
     await expect(inputArea).toHaveCSS('background-color', 'rgb(55, 65, 81)'); // gray-700
     
     // Check example questions have proper dark mode styling
-    const exampleSection = page.locator(`[data-testid="${TEST_IDS.chat.exampleQuestions}"]`).first();
+    const exampleSection = page.locator('[data-testid="chat-examples"]').first();
     // Fallback to class selector if data-testid not available
     const exampleFallback = page.locator('.flex-shrink-0.p-4.border-t').first();
     const exampleSelector = await exampleSection.isVisible() ? exampleSection : exampleFallback;
@@ -125,7 +124,7 @@ test.describe('Dark Mode User Journey', () => {
 
   test('markdown content renders correctly in dark mode', async ({ page }) => {
     await navigateAndWaitForHydration(page, '/chat');
-    await setupWebLLMProvider(page);
+    await quickSetupProvider(page, "webllm");
     
     // Enable dark mode
     await toggleDarkMode(page);
@@ -136,7 +135,7 @@ test.describe('Dark Mode User Journey', () => {
     await page.keyboard.press('Enter');
     
     // Wait for response
-    await page.waitForSelector('.markdown-content', { timeout: 10000 });
+    await page.waitForSelector('.markdown-content', { timeout: 5000 });
     
     // Check bold text is visible
     const boldText = page.locator('strong').first();
@@ -214,10 +213,10 @@ test.describe('Dark Mode User Journey', () => {
     await expect(setupContainer).toHaveCSS('background-color', 'rgb(17, 24, 39)'); // gray-900
     
     // Check welcome screen text is readable
-    const welcomeTitle = page.locator('h2:has-text("Configura tu Asistente Legal IA")');
+    const welcomeTitle = page.locator('h2:text="Configura tu Asistente Legal IA", :has-text(/Configura tu Asistente Legal IA/i)');
     await expect(welcomeTitle).toBeVisible();
     
-    const titleReadable = await isVisibleInDarkMode(page, 'h2:has-text("Configura tu Asistente Legal IA")');
+    const titleReadable = await isVisibleInDarkMode(page, 'h2:text="Configura tu Asistente Legal IA", :has-text(/Configura tu Asistente Legal IA/i)');
     expect(titleReadable).toBe(true);
     
     // Check buttons are visible
@@ -233,20 +232,20 @@ test.describe('Dark Mode User Journey', () => {
     await toggleDarkMode(page);
     
     // Check main container has dark background
-    await expect(page.locator('[data-testid="case-manager"]')).toHaveCSS('background-color', 'rgb(17, 24, 39)'); // gray-900
+    await expect(page.locator('[data-testid="chat-container"]')).toHaveCSS('background-color', 'rgb(17, 24, 39)'); // gray-900
     
     // Check sidebar has proper dark styling
-    const sidebar = page.locator('[data-testid="case-manager"] > div').first();
+    const sidebar = page.locator('[data-testid="chat-container"] > div').first();
     await expect(sidebar).toBeVisible();
     
     // Check "Nuevo Caso" button is visible
-    const newCaseButton = page.locator('[data-testid="new-case-button"]');
+    const newCaseButton = page.locator('button:has-text("Nuevo Caso"), button:has-text("New Case")');
     await expect(newCaseButton).toBeVisible();
     // Button uses legal-500 which is green (rgb(34, 197, 94))
     await expect(newCaseButton).toHaveCSS('background-color', /rgb\(34, 197, 94\)/); // legal-500 green
     
     // Check search input has dark styling
-    const searchInput = page.locator('[data-testid="case-search"]');
+    const searchInput = page.locator('[data-testid="search-cases-input"]');
     await expect(searchInput).toBeVisible();
     await expect(searchInput).toHaveCSS('background-color', 'rgb(31, 41, 55)'); // gray-800
   });
@@ -260,9 +259,9 @@ test.describe('Dark Mode User Journey', () => {
     const linkTexts = ['Chat Legal', 'Mis Casos', 'Wiki Legal', 'Códigos', 'Solicitudes', 'Configuración', 'Acerca de'];
     
     for (const text of linkTexts) {
-      const link = page.locator(`nav a:has-text("${text}")`).first();
+      const link = page.locator(`nav a:text="${text}", :has-text(/${text}/i)`).first();
       if (await link.isVisible()) {
-        const linkReadable = await isVisibleInDarkMode(page, `nav a:has-text("${text}")`);
+        const linkReadable = await isVisibleInDarkMode(page, `nav a:text="${text}", :has-text(/${text}/i)`);
         expect(linkReadable).toBe(true);
       }
     }
@@ -282,18 +281,27 @@ test.describe('Dark Mode User Journey', () => {
     
     // Navigate to chat
     await page.goto('/chat');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     await expect(page.locator('html')).toHaveClass(/dark/);
     
     // Navigate to casos
     await page.goto('/casos');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     await expect(page.locator('html')).toHaveClass(/dark/);
     
     // Navigate to setup
     await page.goto('/setup');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     await expect(page.locator('html')).toHaveClass(/dark/);
     
     // Go back to home
     await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     await expect(page.locator('html')).toHaveClass(/dark/);
   });
 
@@ -322,12 +330,12 @@ test.describe('Dark Mode User Journey', () => {
     }
     
     // Check WebLLM row (should be first)
-    const webllmRow = page.locator('tr:has-text("WebLLM")').first();
+    const webllmRow = page.locator('tr:text="WebLLM", :has-text(/WebLLM/i)').first();
     if (await webllmRow.isVisible()) {
       await expect(webllmRow.locator('td').first()).toContainText('WebLLM');
       
       // Check recommended badge is visible
-      const badge = webllmRow.locator('span:has-text("Recomendado")');
+      const badge = webllmRow.locator('span:text="Recomendado", :has-text(/Recomendado/i)');
       if (await badge.isVisible()) {
         await expect(badge).toHaveCSS('color', /rgb/); // Should have a color
       }

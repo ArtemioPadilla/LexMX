@@ -183,7 +183,8 @@ export class TestContextManager {
    * Get port for this worker (for multi-port development server)
    */
   getPort(): number {
-    return 4321 + this.workerId;
+    // Always use the same port since we're using a single dev server
+    return 4321;
   }
 
   /**

@@ -3,6 +3,9 @@ import { useTranslation } from '../i18n/index';
 import { ingestionPipeline } from '../lib/ingestion/document-ingestion-pipeline';
 import type { IngestionProgress, IngestionResult } from '../lib/ingestion/document-ingestion-pipeline';
 import type { DocumentRequest } from '../types/legal';
+import { contentExtractor } from '../lib/ingestion/document-content-extractors';
+import { CorsBlockedError } from '../lib/ingestion/document-fetcher';
+import { isLikelyCorsBlocked } from '../lib/utils/cors-aware-fetch';
 
 interface DocumentIngestionPipelineProps {
   request?: DocumentRequest;
@@ -29,6 +32,30 @@ export default function DocumentIngestionPipeline({
 
   // Progress history for visualization
   const [progressHistory, setProgressHistory] = useState<IngestionProgress[]>([]);
+  
+  // Format detection and preview
+  const [urlAnalysis, setUrlAnalysis] = useState<{
+    isValid: boolean;
+    isOfficial: boolean;
+    detectedFormat: string;
+    estimatedSize?: string;
+    previewText?: string;
+    isAnalyzing: boolean;
+    error?: string;
+    corsWarning?: boolean;
+  }>({
+    isValid: false,
+    isOfficial: false,
+    detectedFormat: 'unknown',
+    isAnalyzing: false
+  });
+
+  // CORS error state
+  const [corsError, setCorsError] = useState<{
+    blocked: boolean;
+    suggestions: string[];
+    url?: string;
+  } | null>(null);
 
   useEffect(() => {
     // Initialize pipeline
@@ -121,6 +148,18 @@ export default function DocumentIngestionPipeline({
       }
     } catch (error) {
       console.error('Ingestion error:', error);
+      
+      // Handle CORS errors specifically
+      if (error instanceof CorsBlockedError) {
+        setCorsError({
+          blocked: true,
+          suggestions: error.suggestions || [],
+          url: manualUrl || activeRequest?.sources[0]?.url
+        });
+      } else {
+        setCorsError(null);
+      }
+      
       setResult({
         success: false,
         stats: {
@@ -185,6 +224,142 @@ export default function DocumentIngestionPipeline({
     };
     return colors[stage] || 'text-gray-600';
   };
+
+  // Analyze URL for format and validity
+  const analyzeUrl = async (url: string) => {
+    if (!url.trim()) {
+      setUrlAnalysis({
+        isValid: false,
+        isOfficial: false,
+        detectedFormat: 'unknown',
+        corsWarning: false,
+        isAnalyzing: false
+      });
+      return;
+    }
+
+    setUrlAnalysis(prev => ({ ...prev, isAnalyzing: true, error: undefined }));
+
+    try {
+      // Validate URL format
+      const parsedUrl = new URL(url);
+      
+      // Check if official source
+      const officialDomains = [
+        'dof.gob.mx', 'scjn.gob.mx', 'diputados.gob.mx', 'senado.gob.mx',
+        'gob.mx', 'sat.gob.mx', 'imss.gob.mx', 'infonavit.org.mx'
+      ];
+      const isOfficial = officialDomains.some(domain => 
+        parsedUrl.hostname.includes(domain)
+      );
+
+      // Detect format from URL
+      let detectedFormat = 'html';
+      let formatIcon = '🌐';
+      
+      if (url.toLowerCase().includes('.pdf')) {
+        detectedFormat = 'PDF Document';
+        formatIcon = '📄';
+      } else if (url.toLowerCase().includes('.doc')) {
+        detectedFormat = 'Word Document';
+        formatIcon = '📝';
+      } else if (url.toLowerCase().includes('.xml')) {
+        detectedFormat = 'XML Document';
+        formatIcon = '🔖';
+      }
+
+      // Try to get content info with HEAD request
+      try {
+        const response = await fetch(url, { 
+          method: 'HEAD',
+          signal: AbortSignal.timeout(5000)
+        });
+        
+        if (response.ok) {
+          const contentType = response.headers.get('content-type') || '';
+          const contentLength = response.headers.get('content-length');
+          
+          // Refine format detection based on content type
+          if (contentType.includes('pdf')) {
+            detectedFormat = 'PDF Document';
+            formatIcon = '📄';
+          } else if (contentType.includes('msword') || contentType.includes('wordprocessingml')) {
+            detectedFormat = 'Word Document';
+            formatIcon = '📝';
+          } else if (contentType.includes('xml')) {
+            detectedFormat = 'XML Document';
+            formatIcon = '🔖';
+          } else if (contentType.includes('html')) {
+            detectedFormat = 'Web Page';
+            formatIcon = '🌐';
+          }
+
+          const estimatedSize = contentLength ? 
+            `${Math.round(parseInt(contentLength) / 1024)} KB` : 
+            undefined;
+
+          setUrlAnalysis({
+            isValid: true,
+            isOfficial,
+            detectedFormat: `${formatIcon} ${detectedFormat}`,
+            estimatedSize,
+            corsWarning: isLikelyCorsBlocked(url),
+            isAnalyzing: false
+          });
+
+        } else {
+          setUrlAnalysis({
+            isValid: false,
+            isOfficial,
+            detectedFormat: `${formatIcon} ${detectedFormat}`,
+            corsWarning: isLikelyCorsBlocked(url),
+            isAnalyzing: false,
+            error: `HTTP ${response.status}: ${response.statusText}`
+          });
+        }
+      } catch (fetchError) {
+        // Still valid URL, just couldn't fetch metadata
+        setUrlAnalysis({
+          isValid: true,
+          isOfficial,
+          detectedFormat: `${formatIcon} ${detectedFormat}`,
+          corsWarning: isLikelyCorsBlocked(url),
+          isAnalyzing: false,
+          error: 'Could not verify document accessibility'
+        });
+      }
+
+    } catch (error) {
+      setUrlAnalysis({
+        isValid: false,
+        isOfficial: false,
+        detectedFormat: 'Invalid URL',
+        corsWarning: false,
+        isAnalyzing: false,
+        error: 'Please enter a valid URL'
+      });
+    }
+  };
+
+  // Debounced URL analysis
+  useEffect(() => {
+    if (!manualUrl.trim()) {
+      setUrlAnalysis({
+        isValid: false,
+        isOfficial: false,
+        detectedFormat: 'unknown',
+        corsWarning: false,
+        isAnalyzing: false
+      });
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      analyzeUrl(manualUrl);
+    }, 1000); // Wait 1 second after user stops typing
+
+    return () => clearTimeout(timeoutId);
+  }, [manualUrl]);
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
@@ -251,20 +426,112 @@ export default function DocumentIngestionPipeline({
                 </div>
               </div>
 
-              <div>
+              <div className="space-y-3">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('ingestion.enterUrl')}
                 </label>
-                <input
-                  type="url"
-                  value={manualUrl}
-                  onChange={(e) => {
-                    setManualUrl(e.target.value);
-                    setUploadedFile(null); // Clear file when URL is entered
-                  }}
-                  placeholder="https://www.dof.gob.mx/..."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-legal-500 dark:bg-gray-700 dark:text-white"
-                />
+                <div className="relative">
+                  <input
+                    type="url"
+                    value={manualUrl}
+                    onChange={(e) => {
+                      setManualUrl(e.target.value);
+                      setUploadedFile(null); // Clear file when URL is entered
+                    }}
+                    placeholder="https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf"
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-legal-500 dark:bg-gray-700 dark:text-white transition-colors ${
+                      manualUrl.trim() && urlAnalysis.isValid 
+                        ? 'border-green-300 dark:border-green-600' 
+                        : manualUrl.trim() && !urlAnalysis.isAnalyzing && !urlAnalysis.isValid
+                        ? 'border-red-300 dark:border-red-600'
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                  />
+                  {urlAnalysis.isAnalyzing && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-legal-600"></div>
+                    </div>
+                  )}
+                </div>
+
+                {/* URL Analysis Results */}
+                {manualUrl.trim() && !urlAnalysis.isAnalyzing && (
+                  <div className={`p-3 rounded-lg border ${
+                    urlAnalysis.isValid 
+                      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
+                      : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                  }`}>
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium">
+                            {urlAnalysis.detectedFormat}
+                          </span>
+                          {urlAnalysis.isOfficial && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                              🏛️ Official Source
+                            </span>
+                          )}
+                          {urlAnalysis.estimatedSize && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {urlAnalysis.estimatedSize}
+                            </span>
+                          )}
+                        </div>
+                        {urlAnalysis.error && (
+                          <p className="text-xs text-red-600 dark:text-red-400">
+                            {urlAnalysis.error}
+                          </p>
+                        )}
+                        {urlAnalysis.isValid && !urlAnalysis.error && (
+                          <>
+                            <p className="text-xs text-green-600 dark:text-green-400">
+                              ✓ Document is accessible and ready for ingestion
+                            </p>
+                            {urlAnalysis.corsWarning && (
+                              <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                ⚠️ CORS may block direct access - fallback strategies available
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick Examples */}
+                {!manualUrl.trim() && (
+                  <div className="space-y-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                      Quick examples:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { 
+                          label: '📄 Constitution (PDF)', 
+                          url: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf' 
+                        },
+                        { 
+                          label: '📝 Constitution (DOC)', 
+                          url: 'https://www.diputados.gob.mx/LeyesBiblio/doc/CPEUM.doc' 
+                        },
+                        { 
+                          label: '📄 Labor Law (PDF)', 
+                          url: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/125_120924.pdf' 
+                        }
+                      ].map((example, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setManualUrl(example.url)}
+                          className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                          {example.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -353,7 +620,7 @@ export default function DocumentIngestionPipeline({
       )}
 
       {/* Result Section */}
-      {result && (
+      {result && !(corsError && corsError.blocked) && (
         <div className="space-y-6">
           <div className={`p-6 rounded-lg ${
             result.success 
@@ -395,6 +662,7 @@ export default function DocumentIngestionPipeline({
               </div>
             </div>
           </div>
+
 
           {/* Statistics */}
           {result.stats && (
@@ -458,6 +726,64 @@ export default function DocumentIngestionPipeline({
                 {t('ingestion.viewDocument')}
               </a>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* CORS Error Help Section - Independent */}
+      {corsError && corsError.blocked && (
+        <div className="p-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+          <div className="flex items-start space-x-3">
+            <span className="text-2xl">🔒</span>
+            <div className="flex-1">
+              <h3 className="font-medium text-amber-800 dark:text-amber-200 mb-2">
+                CORS Policy Blocked Document Access
+              </h3>
+              <p className="text-sm text-amber-700 dark:text-amber-300 mb-4">
+                Your browser blocked direct access to <code className="px-1 py-0.5 bg-amber-100 dark:bg-amber-800 rounded text-xs">{corsError.url}</code> due to CORS security policy. 
+                This is normal for external websites.
+              </p>
+              
+              {corsError.suggestions.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="font-medium text-amber-800 dark:text-amber-200 text-sm">
+                    📝 Alternative Options:
+                  </h4>
+                  <ul className="space-y-2 text-sm text-amber-700 dark:text-amber-300">
+                    {corsError.suggestions.map((suggestion, index) => (
+                      <li key={index} className="flex items-start space-x-2">
+                        <span className="text-amber-600 dark:text-amber-400 flex-shrink-0">•</span>
+                        <span>{suggestion}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  <div className="mt-4 p-3 bg-amber-100 dark:bg-amber-800 rounded border border-amber-200 dark:border-amber-600">
+                    <div className="flex items-start space-x-2">
+                      <span className="text-blue-600 dark:text-blue-400 text-sm">💡</span>
+                      <div className="text-sm text-amber-800 dark:text-amber-200">
+                        <strong>Recommended:</strong> Use the file upload option above instead of the URL. Download the document to your computer first, then upload it here.
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Action Button for CORS Error */}
+                  <div className="mt-4">
+                    <button
+                      onClick={() => {
+                        setCorsError(null);
+                        setResult(null);
+                        setProgress(null);
+                        setProgressHistory([]);
+                      }}
+                      className="w-full px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+                    >
+                      Try Another Document
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

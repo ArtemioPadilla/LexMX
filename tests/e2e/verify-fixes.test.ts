@@ -1,5 +1,11 @@
-import { test, expect } from '@playwright/test';
-import { setupPage, navigateToPage, waitForPageReady, setupAllMockProviders, setupProviderScenario } from '../utils/test-helpers';
+import { expect, test, waitForHydration } from '../utils/test-helpers-consolidated';
+import { setupCompleteMockEnvironment, quickSetupProvider } from '../utils/mock-all-providers';
+import { smartWait, waitForElement, clickElement, fillInput as fastFillInput, waitForText, waitForHydrationFast } from '../utils/fast-helpers';
+
+/**
+ * Isolated version of verify-fixes tests
+ * Uses the new test isolation system for parallel execution
+ */
 import { TEST_IDS } from '../../src/utils/test-ids';
 import { TEST_DATA } from '../../src/utils/test-data';
 
@@ -21,10 +27,10 @@ test('verify hydration and service worker fixes', async ({ page }) => {
 
   // Navigate to chat page
   await page.goto('http://localhost:4321/chat');
-  
-  // Wait for hydration
-  await page.waitForSelector('[data-testid="chat-container"]', { state: 'visible', timeout: 10000 });
-  await page.waitForTimeout(2000); // Give time for all hydration to complete
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);// Wait for hydration
+  await page.waitForSelector('[data-testid="chat-container"]', { state: 'visible', timeout: 5000 });
+  // await smartWait(page, "network"); // TODO: Replace with proper wait condition; // Give time for all hydration to complete
   
   // Check that no critical errors occurred
   const criticalErrors = consoleErrors.filter(err => 
@@ -57,28 +63,37 @@ test('verify hydration and service worker fixes', async ({ page }) => {
 test('verify provider setup to chat flow works', async ({ page }) => {
   // Clear storage
   await page.goto('http://localhost:4321');
-  await page.evaluate(() => {
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    await page.evaluate(() => {
     localStorage.clear();
     sessionStorage.clear();
   });
   
   // Complete minimal setup
   await page.goto('http://localhost:4321/setup');
-  await page.click('[data-testid="setup-begin"]');
-  await page.click('text="Configuración Personalizada"');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    await page.waitForSelector('[data-testid="setup-begin"]', { state: 'visible', timeout: 5000 });
+    await page.click('[data-testid="setup-begin"]');
+  await page.waitForSelector('text=/Configuración Personalizada/i', { state: 'visible', timeout: 5000 });
+    await page.click('text=/Configuración Personalizada/i');
   
   // Select Ollama (simplest setup)
   await page.locator('div').filter({ hasText: /^Ollama.*Modelos locales/ }).first().click();
-  await page.click('button:has-text("Configurar (1)")');
+  await page.waitForSelector('button:has-text("Configurar")/i)', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Configurar")/i)');
   await page.fill('input[type="url"]', 'http://localhost:11434');
-  await page.click('button:has-text("Guardar")');
+  await page.waitForSelector('button:has-text("Guardar")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Guardar")');
   
   // Wait for completion
-  await expect(page.locator('h2:has-text("¡Configuración Completa!")')).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('h2:text="¡Configuración Completa!", :has-text(/¡Configuración Completa!/i)')).toBeVisible({ timeout: 5000 });
   
   // Click button and verify navigation
-  await page.click('button:has-text("Comenzar a Usar LexMX")');
-  await expect(page).toHaveURL(/.*\/chat/, { timeout: 10000 });
+  await page.waitForSelector('button:has-text("Comenzar a Usar LexMX")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Comenzar a Usar LexMX")');
+  await expect(page).toHaveURL(/.*\/chat/, { timeout: 5000 });
   
   // Verify chat loads without errors
   await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();

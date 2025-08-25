@@ -34,25 +34,32 @@ export class LegalRAGEngine extends EventEmitter {
   private progressEvents: RAGProgressEvent[] = [];
   private useRealEmbeddings = false; // Toggle for real vs mock embeddings
   
-  private config: RAGEngineConfig = {
-    corpusPath: '/legal-corpus/',
-    embeddingsPath: '/embeddings/',
-    chunkSize: 512,
-    chunkOverlap: 50,
-    vectorDimensions: 1536,
-    similarityThreshold: 0.7,
-    maxResults: 5,
-    enableCache: true,
-    cacheExpiration: 24 * 60 * 60 * 1000, // 24 hours
-    maxContextLength: 4000,
-    enableLegalValidation: true
-  };
+  private config: RAGEngineConfig;
 
   private initialized = false;
 
   constructor(config?: Partial<RAGEngineConfig>) {
     super();
-    this.config = { ...this.config, ...config };
+    
+    // Get base path from environment
+    const basePath = typeof import.meta !== 'undefined' && import.meta.env 
+      ? import.meta.env.BASE_URL || '/' 
+      : '/';
+
+    this.config = {
+      corpusPath: `${basePath}legal-corpus/`,
+      embeddingsPath: `${basePath}embeddings/`,
+      chunkSize: 512,
+      chunkOverlap: 50,
+      vectorDimensions: 1536,
+      similarityThreshold: 0.7,
+      maxResults: 5,
+      enableCache: true,
+      cacheExpiration: 24 * 60 * 60 * 1000, // 24 hours
+      maxContextLength: 4000,
+      enableLegalValidation: true,
+      ...config
+    };
     this.vectorStore = new IndexedDBVectorStore();
     this.searchEngine = new HybridSearchEngine(this.vectorStore);
     this.documentProcessor = new MexicanLegalDocumentProcessor();

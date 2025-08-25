@@ -2,12 +2,35 @@
 // Supports official Mexican government sources and validated URLs
 
 import type { DocumentRequest, DocumentSource } from '@/types/legal';
+import { contentExtractor, type ExtractionOptions } from './document-content-extractors';
+import { corsAwareFetch, isLikelyCorsBlocked } from '../utils/cors-aware-fetch';
+
+/**
+ * Custom error for CORS-blocked requests with detailed information
+ */
+export class CorsBlockedError extends Error {
+  public readonly corsBlocked = true;
+  public readonly suggestions: string[];
+  public readonly strategy?: string;
+
+  constructor(message: string, details: {
+    corsBlocked?: boolean;
+    suggestions?: string[];
+    strategy?: string;
+  }) {
+    super(message);
+    this.name = 'CorsBlockedError';
+    this.suggestions = details.suggestions || [];
+    this.strategy = details.strategy;
+  }
+}
 
 export interface FetchOptions {
   validateSource?: boolean;
   timeout?: number;
   maxSize?: number;
   signal?: AbortSignal;
+  extractionOptions?: ExtractionOptions;
 }
 
 export interface FetchResult {
@@ -19,6 +42,9 @@ export interface FetchResult {
     etag?: string;
     sourceUrl?: string;
     isOfficial: boolean;
+    fetchStrategy?: string;
+    corsBlocked?: boolean;
+    suggestions?: string[];
   };
 }
 
@@ -108,11 +134,34 @@ export class DocumentFetcher {
     };
 
     try {
-      const response = await fetch(url, fetchOptions);
+      // Use CORS-aware fetch to handle cross-origin requests
+      const fetchResult = await corsAwareFetch(url, {
+        ...fetchOptions,
+        timeout,
+        maxRetries: 2,
+        useProxy: true,
+        fallbackStrategies: ['proxy', 'no-cors']
+      });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      if (!fetchResult.success) {
+        const errorDetails = {
+          corsBlocked: fetchResult.corsBlocked,
+          suggestions: fetchResult.suggestions || [],
+          strategy: fetchResult.strategy
+        };
+        
+        // Provide detailed error information for CORS issues
+        if (fetchResult.corsBlocked) {
+          throw new CorsBlockedError(
+            `CORS policy blocked access to ${url}. ${fetchResult.error || 'Cross-origin request not allowed.'}`,
+            errorDetails
+          );
+        } else {
+          throw new Error(fetchResult.error || 'Failed to fetch document');
+        }
       }
+
+      const response = fetchResult.data!;
 
       // Check content size
       const contentLength = response.headers.get('content-length');
@@ -126,11 +175,20 @@ export class DocumentFetcher {
       // Get content type
       const contentType = response.headers.get('content-type') || 'text/plain';
 
-      // Handle different content types
-      if (contentType.includes('application/pdf')) {
-        // For PDFs, we'd need a PDF parser
-        // For now, return a placeholder
-        return `[PDF Document from ${url}]\n\nThis document requires PDF parsing.`;
+      // Handle different content types using enhanced extractors
+      if (contentType.includes('application/pdf') || 
+          contentType.includes('application/msword') ||
+          contentType.includes('application/vnd.openxml')) {
+        
+        // Use enhanced content extractor for binary formats
+        const buffer = await response.arrayBuffer();
+        const result = await contentExtractor.extractFromArrayBuffer(
+          buffer, 
+          contentType, 
+          options.extractionOptions || {}
+        );
+        
+        return result.text;
       }
 
       if (contentType.includes('application/xml') || contentType.includes('text/xml')) {
@@ -180,10 +238,37 @@ export class DocumentFetcher {
     return await this.fetchFromUrl(url);
   }
 
-  async fetchFromDiputados(lawId: string): Promise<string> {
+  async fetchFromDiputados(lawId: string, format: 'pdf' | 'doc' = 'pdf'): Promise<string> {
     // Construct URL for Chamber of Deputies
-    const url = `http://www.diputados.gob.mx/LeyesBiblio/pdf/${lawId}.pdf`;
-    return await this.fetchFromUrl(url);
+    const baseUrl = 'https://www.diputados.gob.mx/LeyesBiblio';
+    const url = `${baseUrl}/${format}/${lawId}.${format}`;
+    
+    return await this.fetchFromUrl(url, {
+      extractionOptions: {
+        preserveFormatting: true,
+        includeMetadata: true,
+        maxPages: 1000 // Legal documents can be long
+      }
+    });
+  }
+
+  /**
+   * Fetch specific Mexican legal documents with enhanced extraction
+   */
+  async fetchConstitution(format: 'pdf' | 'doc' = 'pdf'): Promise<string> {
+    return await this.fetchFromDiputados('CPEUM', format);
+  }
+
+  async fetchLaborLaw(format: 'pdf' | 'doc' = 'pdf'): Promise<string> {
+    return await this.fetchFromDiputados('125', format); // Ley Federal del Trabajo
+  }
+
+  async fetchCivilCode(format: 'pdf' | 'doc' = 'pdf'): Promise<string> {
+    return await this.fetchFromDiputados('CCF', format);
+  }
+
+  async fetchPenalCode(format: 'pdf' | 'doc' = 'pdf'): Promise<string> {
+    return await this.fetchFromDiputados('CPF', format);
   }
 
   /**

@@ -21,12 +21,22 @@ export interface CorpusMetadata {
 }
 
 export class DocumentLoader {
-  private corpusPath = '/legal-corpus/';
-  private embeddingsPath = '/embeddings/';
+  private corpusPath: string;
+  private embeddingsPath: string;
   private metadata: CorpusMetadata | null = null;
   private documentsCache = new Map<string, LegalDocument>();
   private embeddingsCache = new Map<string, number[]>();
   private initialized = false;
+
+  constructor() {
+    // Get base path from import.meta.env or fall back to root
+    const basePath = typeof import.meta !== 'undefined' && import.meta.env 
+      ? import.meta.env.BASE_URL || '/' 
+      : '/';
+    
+    this.corpusPath = `${basePath}legal-corpus/`;
+    this.embeddingsPath = `${basePath}embeddings/`;
+  }
 
   private getFullUrl(path: string): string {
     if (typeof window !== 'undefined') {

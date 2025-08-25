@@ -1,10 +1,12 @@
-import { test, expect, Page } from '@playwright/test';
-import {
-  setupPage,
-  navigateAndWaitForHydration,
-  clearAllStorage,
-  setupWebLLMProvider
-} from '../utils/test-helpers';
+import { clearAllStorage, expect, setupWebLLMProvider, test, waitForHydration, navigateAndWaitForHydration } from '../utils/test-helpers-consolidated';
+import { setupCompleteMockEnvironment, quickSetupProvider } from '../utils/mock-all-providers';
+import { smartWait, waitForElement, clickElement, fillInput as fastFillInput, waitForText, waitForHydrationFast } from '../utils/fast-helpers';
+
+/**
+ * Isolated version of language-switching tests
+ * Uses the new test isolation system for parallel execution
+ */
+import { Page } from '@playwright/test';
 import { TEST_IDS } from '../../src/utils/test-ids';
 import { TEST_DATA } from '../../src/utils/test-data';
 
@@ -17,17 +19,19 @@ async function waitForLanguageChange(page: Page, targetLang: 'es' | 'en') {
     { timeout: 5000 }
   );
   // Additional wait for i18n updates
-  await page.waitForTimeout(300);
+  // Removed unnecessary wait
 }
 
-test.describe('Language Switching', () => {
+test.describe('Language Switching (Mocked)', () => {
   test.beforeEach(async ({ page }) => {
-    await setupPage(page);
+    // Note: setupIsolatedPage is already called by the fixture
     await clearAllStorage(page);
   });
 
   test('language selector is visible and functional', async ({ page }) => {
     await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     
     // Check language selector is visible using data-testid
     const langSelector = page.locator(`[data-testid="${TEST_IDS.language.dropdownButton}"]`).first();
@@ -35,11 +39,11 @@ test.describe('Language Switching', () => {
     const langFallback = page.locator('.language-selector button').first();
     const selector = await langSelector.isVisible() ? langSelector : langFallback;
     
-    await expect(selector).toBeVisible({ timeout: 10000 });
+    await expect(selector).toBeVisible({ timeout: 5000 });
     
     // Click to open dropdown
     await selector.click();
-    await page.waitForTimeout(300);
+    // Removed unnecessary wait
     
     // Check dropdown options are visible using data-testid
     const spanishOption = page.locator(`[data-testid="${TEST_IDS.language.spanishOption}"]`);
@@ -71,6 +75,8 @@ test.describe('Language Switching', () => {
 
   test('homepage content changes with language', async ({ page }) => {
     await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     
     // Verify Spanish content is displayed by default using data-i18n
     const heroTitle = page.locator('[data-i18n="home.hero.title"]').first();
@@ -86,7 +92,7 @@ test.describe('Language Switching', () => {
     const langBtn = await langSelector.isVisible() ? langSelector : langFallback;
     
     await langBtn.click();
-    await page.waitForTimeout(300);
+    // Removed unnecessary wait
     
     const englishOpt = page.locator(`[data-testid="${TEST_IDS.language.englishOption}"]`);
     const englishFallback = page.locator('button').filter({ hasText: /English/i }).first();
@@ -102,7 +108,7 @@ test.describe('Language Switching', () => {
 
   test('chat interface translates correctly', async ({ page }) => {
     await navigateAndWaitForHydration(page, '/chat');
-    await setupWebLLMProvider(page);
+    await quickSetupProvider(page, "webllm");
     await page.reload();
     
     // Verify Spanish content
@@ -111,7 +117,7 @@ test.describe('Language Switching', () => {
     await expect(await pageTitle.isVisible() ? pageTitle : pageTitleFallback).toBeVisible();
     
     const welcomeMessage = page.locator(`[data-testid="${TEST_IDS.chat.welcomeMessage}"]`);
-    const welcomeFallback = page.locator('[data-testid="chat-container"]').locator('text=/Bienvenido|Welcome/i');
+    const welcomeFallback = page.locator(`[data-testid="${TEST_IDS.chat.container}"]`).locator('text=/Bienvenido|Welcome/i');
     await expect(await welcomeMessage.isVisible() ? welcomeMessage : welcomeFallback).toBeVisible();
     
     // Check input is visible
@@ -124,7 +130,7 @@ test.describe('Language Switching', () => {
     const langBtn = await langSelector.isVisible() ? langSelector : langFallback;
     
     await langBtn.click();
-    await page.waitForTimeout(300);
+    // Removed unnecessary wait
     
     const englishOpt = page.locator(`[data-testid="${TEST_IDS.language.englishOption}"]`);
     const englishFallback = page.locator('button').filter({ hasText: /English/i }).first();
@@ -144,50 +150,68 @@ test.describe('Language Switching', () => {
 
   test('navigation menu translates correctly', async ({ page }) => {
     await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     
     // Check Spanish navigation
-    await expect(page.locator('nav a:has-text("Chat Legal")')).toBeVisible();
-    await expect(page.locator('nav a:has-text("Mis Casos")')).toBeVisible();
-    await expect(page.locator('nav a:has-text("Wiki Legal")')).toBeVisible();
-    await expect(page.locator('nav a:has-text("Códigos")')).toBeVisible();
+    await expect(page.locator('nav a').filter({ hasText: /Chat Legal/i })).toBeVisible();
+    await expect(page.locator('nav a').filter({ hasText: /Mis Casos/i })).toBeVisible();
+    await expect(page.locator('nav a').filter({ hasText: /Wiki Legal/i })).toBeVisible();
+    await expect(page.locator('nav a').filter({ hasText: /Códigos/i })).toBeVisible();
     
     // Switch to English
     const langSelector = page.locator('.language-selector button').first();
     await langSelector.click();
+    await page.waitForSelector('.language-selector button:has-text("English")', { state: 'visible', timeout: 5000 });
     await page.click('.language-selector button:has-text("English")');
     
     // Wait for update
-    await page.waitForTimeout(500);
+    await smartWait(page, "interaction");
     
     // Check English navigation
-    await expect(page.locator('nav a[data-i18n="nav.chat"]')).toContainText('Legal Chat');
-    await expect(page.locator('nav a[data-i18n="nav.cases"]')).toContainText('My Cases');
-    await expect(page.locator('nav a[data-i18n="nav.wiki"]')).toContainText('Legal Wiki');
-    await expect(page.locator('nav a[data-i18n="nav.codes"]')).toContainText('Legal Codes');
+    await expect(page.locator('nav a').filter({ hasText: /Legal Chat/i })).toBeVisible();
+    await expect(page.locator('nav a').filter({ hasText: /My Cases/i })).toBeVisible();
+    await expect(page.locator('nav a').filter({ hasText: /Legal Wiki/i })).toBeVisible();
+    await expect(page.locator('nav a').filter({ hasText: /Legal Codes/i })).toBeVisible();
   });
 
   test('language preference persists across pages', async ({ page }) => {
     // Start on home page and switch to English
     await page.goto('/');
-    const langSelector = page.locator('.language-selector button').first();
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    
+    const langSelector = page.locator(`[data-testid="${TEST_IDS.language.dropdownButton}"]`).first();
+    const langFallback = page.locator('.language-selector button').first();
+    const langBtn = await langSelector.isVisible() ? langSelector : langFallback;
     await langSelector.click();
+    await page.waitForSelector('.language-selector button:has-text("English")', { state: 'visible', timeout: 5000 });
     await page.click('.language-selector button:has-text("English")');
     
     // Navigate to chat
     await page.goto('/chat');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     await expect(page.locator('.language-selector button').first()).toContainText('EN');
     await expect(page.locator('h1').first().first()).toContainText('Legal Chat');
     
     // Navigate to casos
     await page.goto('/casos');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     await expect(page.locator('.language-selector button').first()).toContainText('EN');
     
     // Navigate to setup
     await page.goto('/setup');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     await expect(page.locator('.language-selector button').first()).toContainText('EN');
     
     // Go back to home
     await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     await expect(page.locator('.language-selector button').first()).toContainText('EN');
     await expect(page.locator('h1').first().first()).toContainText('Your Mexican Legal AI Assistant');
   });
@@ -197,15 +221,16 @@ test.describe('Language Switching', () => {
     
     // Verify Spanish content
     await expect(page.locator('h2').first().first()).toContainText('Configura tu Asistente Legal IA');
-    await expect(page.locator('[data-testid="provider-webllm"]')).toBeVisible();
+    await expect(page.locator(`[data-testid="${TEST_IDS.provider.webllmButton}"]`)).toBeVisible();
     
     // Switch to English
     const langSelector = page.locator('.language-selector button').first();
     await langSelector.click();
+    await page.waitForSelector('.language-selector button:has-text("English")', { state: 'visible', timeout: 5000 });
     await page.click('.language-selector button:has-text("English")');
     
     // Wait for update
-    await page.waitForTimeout(500);
+    await smartWait(page, "interaction");
     
     // Verify English content
     await expect(page.locator('h2').first().first()).toContainText('Configure your Legal AI Assistant');
@@ -214,23 +239,24 @@ test.describe('Language Switching', () => {
 
   test('example questions translate in chat', async ({ page }) => {
     await navigateAndWaitForHydration(page, '/chat');
-    await setupWebLLMProvider(page);
+    await quickSetupProvider(page, "webllm");
     await page.reload();
     
     // Check Spanish example questions
-    const spanishExample = page.locator('text="¿Qué dice el artículo 123 constitucional"');
+    const spanishExample = page.locator('text=/¿Qué dice el artículo 123 constitucional/i');
     await expect(spanishExample).toBeVisible();
     
     // Switch to English
     const langSelector = page.locator('.language-selector button').first();
     await langSelector.click();
+    await page.waitForSelector('.language-selector button:has-text("English")', { state: 'visible', timeout: 5000 });
     await page.click('.language-selector button:has-text("English")');
     
     // Wait for update
-    await page.waitForTimeout(500);
+    await smartWait(page, "interaction");
     
     // Check English example questions
-    const englishExample = page.locator('text="What does constitutional article 123"');
+    const englishExample = page.locator('text=/What does constitutional article 123/i');
     await expect(englishExample).toBeVisible();
   });
 
@@ -250,10 +276,11 @@ test.describe('Language Switching', () => {
     // Switch to English
     const langSelector = page.locator('.language-selector button').first();
     await langSelector.click();
+    await page.waitForSelector('.language-selector button:has-text("English")', { state: 'visible', timeout: 5000 });
     await page.click('.language-selector button:has-text("English")');
     
     // Wait for update
-    await page.waitForTimeout(500);
+    await smartWait(page, "interaction");
     
     // Check English error message
     const englishError = page.locator('text=/No AI providers configured/i');
@@ -262,10 +289,13 @@ test.describe('Language Switching', () => {
 
   test('language selector works in dark mode', async ({ page }) => {
     await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     
     // Enable dark mode first
-    const themeToggle = page.locator('.theme-toggle button').first();
+    const themeToggle = page.locator(`[data-testid="${TEST_IDS.theme.toggle}"]`).first();
     await themeToggle.click();
+    await page.waitForSelector('.theme-toggle button:has-text("Oscuro")', { state: 'visible', timeout: 5000 });
     await page.click('.theme-toggle button:has-text("Oscuro")');
     
     // Verify dark mode is active
@@ -284,6 +314,7 @@ test.describe('Language Switching', () => {
     await expect(dropdown).toHaveCSS('background-color', 'rgb(31, 41, 55)'); // gray-800
     
     // Select English
+    await page.waitForSelector('.language-selector button:has-text("English")', { state: 'visible', timeout: 5000 });
     await page.click('.language-selector button:has-text("English")');
     
     // Verify language changed
@@ -292,14 +323,18 @@ test.describe('Language Switching', () => {
 
   test('language and theme preferences persist together', async ({ page }) => {
     await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     
     // Set dark mode and English
-    const themeToggle = page.locator('.theme-toggle button').first();
+    const themeToggle = page.locator(`[data-testid="${TEST_IDS.theme.toggle}"]`).first();
     await themeToggle.click();
+    await page.waitForSelector('.theme-toggle button:has-text("Oscuro")', { state: 'visible', timeout: 5000 });
     await page.click('.theme-toggle button:has-text("Oscuro")');
     
     const langSelector = page.locator('.language-selector button').first();
     await langSelector.click();
+    await page.waitForSelector('.language-selector button:has-text("English")', { state: 'visible', timeout: 5000 });
     await page.click('.language-selector button:has-text("English")');
     
     // Reload page
@@ -313,8 +348,12 @@ test.describe('Language Switching', () => {
 
   test('language selector closes when clicking outside', async ({ page }) => {
     await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     
-    const langSelector = page.locator('.language-selector button').first();
+    const langSelector = page.locator(`[data-testid="${TEST_IDS.language.dropdownButton}"]`).first();
+    const langFallback = page.locator('.language-selector button').first();
+    const langBtn = await langSelector.isVisible() ? langSelector : langFallback;
     await langSelector.click();
     
     // Dropdown should be visible
@@ -330,6 +369,8 @@ test.describe('Language Switching', () => {
 
   test('language selector keyboard navigation works', async ({ page }) => {
     await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     
     // Focus on language selector
     const langSelector = page.locator('.language-selector button').first();

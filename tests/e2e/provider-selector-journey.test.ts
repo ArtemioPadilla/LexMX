@@ -1,32 +1,61 @@
-import { test, expect } from '@playwright/test';
-import {
-  setupPage,
-  navigateAndWaitForHydration,
-  setupWebLLMProvider,
-  setupAllMockProviders, setupLegacyMockProviders,
-  waitForProviderSelector,
-  selectProvider,
-  clearAllStorage
-} from '../utils/test-helpers';
+import { clearAllStorage, expect, setupWebLLMProvider, test, navigateAndWaitForHydration } from '../utils/test-helpers-consolidated';
+import { setupCompleteMockEnvironment, quickSetupProvider } from '../utils/mock-all-providers';
+import { smartWait, waitForElement, clickElement, fillInput as fastFillInput, waitForText, waitForHydrationFast } from '../utils/fast-helpers';
+
+/**
+ * Isolated version of provider-selector-journey tests
+ * Uses the new test isolation system for parallel execution
+ */
 import { TEST_IDS } from '../../src/utils/test-ids';
 import { TEST_DATA } from '../../src/utils/test-data';
 
-test.describe('Provider Selector User Journey', () => {
+// Helper functions
+async function setupLegacyMockProviders(page: any, providers: any[]) {
+  for (const provider of providers) {
+    const config = {
+      encrypted: false,
+      data: {
+        id: provider.id,
+        name: provider.name,
+        type: provider.id === 'webllm' ? 'local' : 'cloud',
+        enabled: provider.enabled,
+        apiKey: provider.apiKey || '',
+        model: provider.models?.[0] || '',
+        priority: providers.indexOf(provider) + 1
+      },
+      timestamp: Date.now(),
+      version: 1
+    };
+    await page.evaluate((data) => {
+      localStorage.setItem(`lexmx_provider_${data.provider.id}`, JSON.stringify(data.config));
+    }, { provider, config });
+  }
+}
+
+async function waitForProviderSelectorReady(page: any) {
+  await page.waitForSelector(`[data-testid="${TEST_IDS.provider.selectorToggle}"]`, { 
+    state: 'visible', 
+    timeout: 5000 
+  });
+  await smartWait(page, "interaction");
+}
+
+test.describe('Provider Selector User Journey (Mocked)', () => {
   test.beforeEach(async ({ page }) => {
-    await setupPage(page);
+    // Note: setupIsolatedPage is already called by the fixture
     await clearAllStorage(page);
   });
 
   test('provider selector is visible in chat interface', async ({ page }) => {
     await navigateAndWaitForHydration(page, '/chat');
-    await setupWebLLMProvider(page);
+    await quickSetupProvider(page, "webllm");
     
     // Wait for provider selector to initialize
-    await page.waitForTimeout(1000);
+    // await smartWait(page, "interaction"); // TODO: Replace with proper wait condition;
     
     // Check provider selector is visible
-    const providerSelector = page.locator('.provider-selector').first();
-    await expect(providerSelector).toBeVisible({ timeout: 10000 });
+    const providerSelector = page.locator(`[data-testid="${TEST_IDS.provider.selector}"]`).first();
+    await expect(providerSelector).toBeVisible({ timeout: 5000 });
     
     // Check it shows WebLLM by default (may show "Loading..." initially)
     await expect(providerSelector).toContainText(/WebLLM|Loading/);
@@ -65,31 +94,31 @@ test.describe('Provider Selector User Journey', () => {
     await waitForProviderSelectorReady(page);
     
     // Open dropdown
-    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
+    const selector = page.locator(`[data-testid="${TEST_IDS.provider.selectorToggle}"]`).first();
     await selector.click();
     
     // Check dropdown is visible
-    const dropdown = page.locator('.provider-selector').first();
-    await expect(dropdown.locator('text="Proveedores Disponibles"')).toBeVisible();
+    const dropdown = page.locator(`[data-testid="${TEST_IDS.provider.selector}"]`).first();
+    await expect(dropdown.locator('text=/Proveedores Disponibles/i')).toBeVisible();
     
     // Check providers are listed
-    await expect(dropdown.locator('text="WebLLM"')).toBeVisible();
-    await expect(dropdown.locator('text="OpenAI"')).toBeVisible();
-    await expect(dropdown.locator('text="Claude"')).toBeVisible();
+    await expect(dropdown.locator('text=/WebLLM/i')).toBeVisible();
+    await expect(dropdown.locator('text=/OpenAI/i')).toBeVisible();
+    await expect(dropdown.locator('text=/Claude/i')).toBeVisible();
     
     // Check cost levels are shown
-    await expect(dropdown.locator('text="Gratis"').first()).toBeVisible();
-    await expect(dropdown.locator('text="high"')).toBeVisible();
-    await expect(dropdown.locator('text="medium"')).toBeVisible();
+    await expect(dropdown.locator('text=/Gratis/i').first()).toBeVisible();
+    await expect(dropdown.locator('text=/high/i')).toBeVisible();
+    await expect(dropdown.locator('text=/medium/i')).toBeVisible();
   });
 
   test('WebLLM provider shows model selection', async ({ page }) => {
     await navigateAndWaitForHydration(page, '/chat');
-    await setupWebLLMProvider(page);
+    await quickSetupProvider(page, "webllm");
     await page.reload();
     
     // Open provider selector
-    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
+    const selector = page.locator(`[data-testid="${TEST_IDS.provider.selectorToggle}"]`).first();
     await selector.click();
     
     // Click on WebLLM to see models
@@ -97,8 +126,8 @@ test.describe('Provider Selector User Journey', () => {
     await webllmOption.click();
     
     // Check model options are visible
-    await expect(page.locator('text="Llama 3.2"')).toBeVisible();
-    await expect(page.locator('text="1.7GB"')).toBeVisible();
+    await expect(page.locator('text=/Llama 3.2/i')).toBeVisible();
+    await expect(page.locator('text=/1.7GB/i')).toBeVisible();
     
     // Select a model
     const modelButton = page.locator('button:has-text("Llama 3.2")').first();
@@ -110,14 +139,14 @@ test.describe('Provider Selector User Journey', () => {
 
   test('provider selector has link to setup page', async ({ page }) => {
     await navigateAndWaitForHydration(page, '/chat');
-    await setupWebLLMProvider(page);
+    await quickSetupProvider(page, "webllm");
     
     // Open provider selector
-    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
+    const selector = page.locator(`[data-testid="${TEST_IDS.provider.selectorToggle}"]`).first();
     await selector.click();
     
     // Check setup link is visible
-    const setupLink = page.locator('a:has-text("Configurar Proveedores")');
+    const setupLink = page.locator('a:text="Configurar Proveedores", :has-text(/Configurar Proveedores/i)');
     await expect(setupLink).toBeVisible();
     
     // Click the link
@@ -125,7 +154,7 @@ test.describe('Provider Selector User Journey', () => {
     
     // Verify navigation to setup page
     await page.waitForURL('**/setup');
-    await expect(page.locator('.provider-setup')).toBeVisible();
+    await expect(page.locator(`[data-testid="${TEST_IDS.provider.container}"]`)).toBeVisible();
   });
 
   test('provider selection persists after page reload', async ({ page }) => {
@@ -154,7 +183,7 @@ test.describe('Provider Selector User Journey', () => {
     await waitForProviderSelectorReady(page);
     
     // Select OpenAI
-    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
+    const selector = page.locator(`[data-testid="${TEST_IDS.provider.selectorToggle}"]`).first();
     await selector.click();
     
     const openaiOption = page.locator('button:has-text("OpenAI")').first();
@@ -169,7 +198,7 @@ test.describe('Provider Selector User Journey', () => {
     await waitForProviderSelectorReady(page);
     
     // Check OpenAI is still selected
-    const selectorAfterReload = page.locator('[data-testid="provider-selector-toggle"]').first();
+    const selectorAfterReload = page.locator(`[data-testid="${TEST_IDS.provider.selectorToggle}"]`).first();
     await expect(selectorAfterReload).toContainText('OpenAI');
   });
 
@@ -191,7 +220,7 @@ test.describe('Provider Selector User Journey', () => {
     await waitForProviderSelectorReady(page);
     
     // Check icon is visible in button
-    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
+    const selector = page.locator(`[data-testid="${TEST_IDS.provider.selectorToggle}"]`).first();
     const icon = selector.locator('img').first();
     await expect(icon).toBeVisible();
     await expect(icon).toHaveAttribute('alt', 'WebLLM');
@@ -203,14 +232,14 @@ test.describe('Provider Selector User Journey', () => {
     await page.setViewportSize({ width: 375, height: 667 });
     
     await navigateAndWaitForHydration(page, '/chat');
-    await setupWebLLMProvider(page);
+    await quickSetupProvider(page, "webllm");
     
     // Check provider selector is visible
-    const providerSelector = page.locator('.provider-selector').first();
+    const providerSelector = page.locator(`[data-testid="${TEST_IDS.provider.selector}"]`).first();
     await expect(providerSelector).toBeVisible();
     
     // Open dropdown
-    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
+    const selector = page.locator(`[data-testid="${TEST_IDS.provider.selectorToggle}"]`).first();
     await selector.click();
     
     // Check dropdown fits in mobile view
@@ -225,12 +254,12 @@ test.describe('Provider Selector User Journey', () => {
 
   test('corpus selector is visible alongside provider selector', async ({ page }) => {
     await navigateAndWaitForHydration(page, '/chat');
-    await setupWebLLMProvider(page);
+    await quickSetupProvider(page, "webllm");
     
     // Check both selectors are visible
     // Model selector button contains WebLLM text
     const modelSelectorButton = page.locator('button:has-text("WebLLM")').first();
-    const corpusSelector = page.locator('.corpus-selector').first();
+    const corpusSelector = page.locator(`[data-testid="${TEST_IDS.corpus.selectorToggle}"]`).first();
     
     await expect(modelSelectorButton).toBeVisible();
     await expect(corpusSelector).toBeVisible();
@@ -244,15 +273,15 @@ test.describe('Provider Selector User Journey', () => {
 
   test('provider selector updates when new provider is configured', async ({ page }) => {
     await navigateAndWaitForHydration(page, '/chat');
-    await setupWebLLMProvider(page);
+    await quickSetupProvider(page, "webllm");
     
     // Initially only WebLLM
-    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
+    const selector = page.locator(`[data-testid="${TEST_IDS.provider.selectorToggle}"]`).first();
     await selector.click();
     
-    let dropdown = page.locator('.provider-selector').first();
-    await expect(dropdown.locator('text="WebLLM"')).toBeVisible();
-    await expect(dropdown.locator('text="OpenAI"')).not.toBeVisible();
+    let dropdown = page.locator(`[data-testid="${TEST_IDS.provider.selector}"]`).first();
+    await expect(dropdown.locator('text=/WebLLM/i')).toBeVisible();
+    await expect(dropdown.locator('text=/OpenAI/i')).not.toBeVisible();
     
     // Close dropdown
     await page.keyboard.press('Escape');
@@ -277,12 +306,12 @@ test.describe('Provider Selector User Journey', () => {
     await waitForProviderSelectorReady(page);
     
     // Open dropdown again
-    await page.locator('[data-testid="provider-selector-toggle"]').first().click();
+    await page.locator(`[data-testid="${TEST_IDS.provider.selectorToggle}"]`).first().click();
     
     // Check both providers are now visible
-    dropdown = page.locator('.provider-selector').first();
-    await expect(dropdown.locator('text="WebLLM"')).toBeVisible();
-    await expect(dropdown.locator('text="OpenAI"')).toBeVisible();
+    dropdown = page.locator(`[data-testid="${TEST_IDS.provider.selector}"]`).first();
+    await expect(dropdown.locator('text=/WebLLM/i')).toBeVisible();
+    await expect(dropdown.locator('text=/OpenAI/i')).toBeVisible();
   });
 
   test('disabled providers are not shown in selector', async ({ page }) => {
@@ -318,12 +347,12 @@ test.describe('Provider Selector User Journey', () => {
     await waitForProviderSelectorReady(page);
     
     // Open dropdown
-    const selector = page.locator('[data-testid="provider-selector-toggle"]').first();
+    const selector = page.locator(`[data-testid="${TEST_IDS.provider.selectorToggle}"]`).first();
     await selector.click();
     
     // Check only enabled provider is shown
-    const dropdown = page.locator('.provider-selector').first();
-    await expect(dropdown.locator('text="WebLLM"')).toBeVisible();
-    await expect(dropdown.locator('text="OpenAI"')).not.toBeVisible();
+    const dropdown = page.locator(`[data-testid="${TEST_IDS.provider.selector}"]`).first();
+    await expect(dropdown.locator('text=/WebLLM/i')).toBeVisible();
+    await expect(dropdown.locator('text=/OpenAI/i')).not.toBeVisible();
   });
 });

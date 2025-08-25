@@ -1,93 +1,131 @@
-import { test, expect } from '@playwright/test';
-import { setupPage, navigateToPage, waitForPageReady, setupAllMockProviders, setupProviderScenario } from '../utils/test-helpers';
+import { expect, test, waitForHydration } from '../utils/test-helpers-consolidated';
+import { setupCompleteMockEnvironment, quickSetupProvider } from '../utils/mock-all-providers';
+import { smartWait, waitForElement, clickElement, fillInput as fastFillInput, waitForText, waitForHydrationFast } from '../utils/fast-helpers';
+
+/**
+ * Isolated version of debug-provider tests
+ * Uses the new test isolation system for parallel execution
+ */
 import { TEST_IDS } from '../../src/utils/test-ids';
 import { TEST_DATA } from '../../src/utils/test-data';
 
-test('debug provider setup', async ({ page }) => {
-  // Enable console logging
-  page.on('console', msg => console.log(`Browser console: ${msg.type()}: ${msg.text()}`));
-  page.on('pageerror', err => console.log(`Browser error: ${err.message}`));
+test.describe('Debug Provider Setup (Mocked)', () => {
+  test('debug provider setup and chat functionality', async ({ page }) => {
+    // Enable console logging
+    page.on('console', msg => console.log(`Browser console: ${msg.type()}: ${msg.text()}`));
+    page.on('pageerror', err => console.log(`Browser error: ${err.message}`));
 
-  // Clear storage
-  await page.goto('http://localhost:4321');
-  await page.evaluate(() => {
-    localStorage.clear();
-    sessionStorage.clear();
+    // Clear storage and set up provider using proven pattern
+    console.log('Setting up provider using quickSetupProvider...');
+    await page.goto('http://localhost:4321/chat');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    await quickSetupProvider(page, "webllm");
+
+    // 1. Test chat interface is working
+    console.log('Testing chat interface...');
+    
+    // Check if chat interface is visible
+    const chatInterface = await page.locator('[data-testid="chat-container"]').isVisible();
+    console.log('Chat interface visible:', chatInterface);
+    
+    // Test if chat input is functional (not disabled)
+    const chatInput = page.locator('[data-testid="chat-input"]');
+    const isDisabled = await chatInput.isDisabled();
+    console.log('Chat input disabled:', isDisabled);
+    
+    // Take screenshot of current state
+    await page.screenshot({ path: 'debug-chat-state.png' });
+    
+    // 2. Test navigation to setup page
+    console.log('Testing navigation to setup page...');
+    await page.goto('http://localhost:4321/setup');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    
+    // Check if setup page loads using proper data-testid
+    console.log('Waiting for setup page...');
+    await page.waitForSelector('[data-testid="provider-setup"]', { timeout: 5000 });
+    console.log('Setup page loaded');
+    
+    // Take screenshot
+    await page.screenshot({ path: 'debug-setup-page.png' });
+    
+    // 3. Test setup wizard components
+    const welcomeText = await page.locator('h2:has-text("Configura tu Asistente Legal IA")').isVisible();
+    console.log('Welcome text visible:', welcomeText);
+    
+    // Check start button
+    const startButton = page.locator('[data-testid="setup-begin"]');
+    const startButtonVisible = await startButton.isVisible();
+    console.log('Start button visible:', startButtonVisible);
+    
+    if (startButtonVisible) {
+      console.log('Clicking start button...');
+      await startButton.click();
+      await page.screenshot({ path: 'debug-after-start-click.png' });
+    }
+    
+    // 4. Test WebLLM setup button (our configured provider)
+    const webllmButton = page.locator('[data-testid="setup-webllm"]');
+    const webllmVisible = await webllmButton.isVisible();
+    console.log('WebLLM button visible:', webllmVisible);
+    
+    // 5. Go back to chat and verify everything still works
+    console.log('Returning to chat to verify functionality...');
+    await page.goto('http://localhost:4321/chat');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    
+    // Final state check
+    const finalChatInterface = await page.locator('[data-testid="chat-container"]').isVisible();
+    const finalInputDisabled = await page.locator('[data-testid="chat-input"]').isDisabled();
+    
+    console.log('Final chat interface visible:', finalChatInterface);
+    console.log('Final chat input disabled:', finalInputDisabled);
+    
+    // Take final screenshot
+    await page.screenshot({ path: 'debug-final-state.png' });
+    
+    // Assertions to verify everything works
+    expect(chatInterface).toBe(true);
+    expect(isDisabled).toBe(false);
+    expect(finalChatInterface).toBe(true);
+    expect(finalInputDisabled).toBe(false);
   });
 
-  // 1. Navigate to setup
-  console.log('Navigating to setup page...');
-  await page.goto('http://localhost:4321/setup');
-  
-  // 2. Check if setup page loads
-  console.log('Waiting for setup page...');
-  await page.waitForSelector('.provider-setup', { timeout: 10000 });
-  console.log('Setup page loaded');
-  
-  // 3. Take screenshot
-  await page.screenshot({ path: 'setup-page.png' });
-  
-  // 4. Check what's visible
-  const welcomeText = await page.locator('h2:has-text("Configura tu Asistente Legal IA")').isVisible();
-  console.log('Welcome text visible:', welcomeText);
-  
-  // 5. Click start button if visible
-  const startButton = page.locator('[data-testid="setup-begin"]');
-  if (await startButton.isVisible()) {
-    console.log('Clicking start button...');
-    await startButton.click();
-    await page.waitForTimeout(2000);
-    await page.screenshot({ path: 'after-start-click.png' });
-  }
-  
-  // 6. Check current state
-  const profileTitle = await page.locator('h2:has-text("Elige tu Perfil")').isVisible();
-  console.log('Profile selection visible:', profileTitle);
-  
-  // 7. Try custom configuration
-  const customButton = page.locator('text="Configuración Personalizada"');
-  if (await customButton.isVisible()) {
-    console.log('Clicking custom configuration...');
-    await customButton.click();
-    await page.waitForTimeout(2000);
-    await page.screenshot({ path: 'after-custom-click.png' });
-  }
-  
-  // 8. Check providers page
-  const providersTitle = await page.locator('h2:has-text("Selecciona Proveedores")').isVisible();
-  console.log('Providers selection visible:', providersTitle);
-  
-  // 9. Complete a simple setup to test navigation
-  console.log('Setting up Ollama provider...');
-  await page.goto('http://localhost:4321/setup');
-  await page.click('[data-testid="setup-begin"]');
-  await page.click('text="Configuración Personalizada"');
-  
-  // Select Ollama
-  const ollamaCard = page.locator('div').filter({ hasText: /^Ollama.*Modelos locales/ });
-  await ollamaCard.click();
-  
-  // Click configure
-  await page.click('button:has-text("Configurar (1)")');
-  
-  // Fill endpoint
-  await page.fill('input[type="url"]', 'http://localhost:11434');
-  await page.click('button:has-text("Guardar")');
-  
-  // Wait for completion
-  await page.waitForSelector('h2:has-text("¡Configuración Completa!")', { timeout: 10000 });
-  console.log('Configuration completed');
-  
-  // Click start using button
-  console.log('Clicking "Comenzar a Usar LexMX"...');
-  await page.click('button:has-text("Comenzar a Usar LexMX")');
-  
-  // Check if navigation happened
-  await page.waitForTimeout(2000);
-  const currentUrl = page.url();
-  console.log('Current URL after clicking:', currentUrl);
-  
-  // Check if chat page loaded
-  const chatInterface = await page.locator('[data-testid="chat-container"]').isVisible();
-  console.log('Chat interface visible:', chatInterface);
+  test('debug theme functionality', async ({ page }) => {
+    // Enable console logging
+    page.on('console', msg => console.log(`Browser console (theme): ${msg.type()}: ${msg.text()}`));
+    page.on('pageerror', err => console.log(`Browser error (theme): ${err.message}`));
+
+    // Set up and navigate to homepage
+    await page.goto('http://localhost:4321/');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+
+    // Check theme toggle functionality
+    console.log('Testing theme toggle...');
+    const themeToggle = page.locator('[data-testid="theme-toggle"]');
+    const themeVisible = await themeToggle.isVisible();
+    console.log('Theme toggle visible:', themeVisible);
+
+    if (themeVisible) {
+      await themeToggle.click();
+      const darkOption = page.locator('[data-testid="theme-dark"]');
+      const darkVisible = await darkOption.isVisible();
+      console.log('Dark theme option visible:', darkVisible);
+      
+      if (darkVisible) {
+        await darkOption.click();
+        await page.screenshot({ path: 'debug-dark-theme.png' });
+      }
+    }
+    
+    // Verify dark mode is applied
+    const isDark = await page.locator('html').evaluate(el => el.classList.contains('dark'));
+    console.log('Dark mode applied:', isDark);
+    
+    expect(themeVisible).toBe(true);
+  });
 });

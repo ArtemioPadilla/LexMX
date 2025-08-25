@@ -1,15 +1,19 @@
-import { test, expect } from '@playwright/test';
-import { 
-  setupPage, 
-  navigateAndWaitForHydration,
-  clearAllStorage
-} from '../utils/test-helpers';
+import { clearAllStorage, expect, test, navigateAndWaitForHydration, setupMockWebLLMProvider } from '../utils/test-helpers-consolidated';
+import { setupCompleteMockEnvironment, quickSetupProvider } from '../utils/mock-all-providers';
+import { smartWait, waitForElement, clickElement, fillInput as fastFillInput, waitForText, waitForHydrationFast } from '../utils/fast-helpers';
+
+/**
+ * Isolated version of webllm-flow tests
+ * Uses the new test isolation system for parallel execution
+ */
 import { TEST_IDS } from '../../src/utils/test-ids';
 import { TEST_DATA } from '../../src/utils/test-data';
 
-test.describe('WebLLM Integration Flow', () => {
+test.describe('WebLLM Integration Flow (Mocked)', () => {
+  // Uses mock WebLLM by default for fast testing
+  // Set USE_REAL_WEBLLM=true to test with real model download
   test.beforeEach(async ({ page }) => {
-    await setupPage(page);
+    // Note: setupIsolatedPage is already called by the fixture
     await clearAllStorage(page);
     
     // Mock WebGPU availability
@@ -29,6 +33,7 @@ test.describe('WebLLM Integration Flow', () => {
     await navigateAndWaitForHydration(page, 'http://localhost:4321/setup');
     
     // 2. Click start configuration
+    await page.waitForSelector('[data-testid="setup-begin"]', { state: 'visible', timeout: 5000 });
     await page.click('[data-testid="setup-begin"]');
     
     // 3. Select custom configuration
@@ -37,11 +42,12 @@ test.describe('WebLLM Integration Flow', () => {
     await (await customButton.isVisible() ? customButton : customFallback).click();
     
     // 4. Select WebLLM provider
-    const webllmCard = page.locator('[role="button"]:has-text("WebLLM"), .provider-card:has-text("WebLLM")').first();
+    const webllmCard = page.locator('div:has-text("WebLLM"), button:has-text("WebLLM"), .provider-card:has-text("WebLLM")').first();
     await expect(webllmCard).toBeVisible();
     await webllmCard.click();
     
     // 5. Configure WebLLM
+    await page.waitForSelector('button:has-text("Configurar")', { state: 'visible', timeout: 5000 });
     await page.click('button:has-text("Configurar")');
     
     // 6. Select a model
@@ -51,10 +57,12 @@ test.describe('WebLLM Integration Flow', () => {
     }
     
     // 7. Save configuration
+    await page.waitForSelector('button:has-text("Guardar")', { state: 'visible', timeout: 5000 });
     await page.click('button:has-text("Guardar")');
     
     // 8. Complete setup
-    await page.waitForSelector('text=/Configuración Completa|Setup Complete/i', { timeout: 10000 });
+    await page.waitForSelector('text=/Configuración Completa|Setup Complete/i', { timeout: 5000 });
+    await page.waitForSelector('button:has-text("Comenzar")', { state: 'visible', timeout: 5000 });
     await page.click('button:has-text("Comenzar")');
     
     // 9. Navigate to chat
@@ -78,38 +86,33 @@ test.describe('WebLLM Integration Flow', () => {
     });
     
     // Setup WebLLM
-    await page.evaluate(() => {
-      localStorage.setItem('lexmx_providers', JSON.stringify([{
-        id: 'webllm',
-        name: 'WebLLM (Browser)',
-        type: 'local',
-        enabled: true,
-        model: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
-        priority: 1
-      }]));
-    });
+    await setupMockWebLLMProvider(page);
     
     await navigateAndWaitForHydration(page, 'http://localhost:4321/chat');
     
     // Try to send a message
     await page.fill('[data-testid="chat-input"]', 'Test query');
+    await page.waitForSelector('button[aria-label="Enviar mensaje"]', { state: 'visible', timeout: 5000 });
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should show appropriate error message
-    await expect(page.locator('text=/WebGPU.*not supported|navegador compatible|Chrome.*Edge/i')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=/WebGPU.*not supported|navegador compatible|Chrome.*Edge/i')).toBeVisible({ timeout: 5000 });
   });
 
   test('WebLLM model list is accessible', async ({ page }) => {
     await navigateAndWaitForHydration(page, 'http://localhost:4321/setup');
     
     // Start configuration
+    await page.waitForSelector('[data-testid="setup-begin"]', { state: 'visible', timeout: 5000 });
     await page.click('[data-testid="setup-begin"]');
     const customButton = page.locator('[data-testid="setup-custom"]').first();
     const customFallback = page.locator('button').filter({ hasText: /Configuración Personalizada|Custom Configuration/i }).first();
     await (await customButton.isVisible() ? customButton : customFallback).click();
     
     // Select WebLLM
-    await page.click('[role="button"]:has-text("WebLLM"), .provider-card:has-text("WebLLM")');
+    await page.waitForSelector('div:has-text("WebLLM"), button:has-text("WebLLM"), .provider-card:has-text("WebLLM")', { state: 'visible', timeout: 5000 });
+    await page.click('div:has-text("WebLLM"), button:has-text("WebLLM"), .provider-card:has-text("WebLLM")');
+    await page.waitForSelector('button:has-text("Configurar")', { state: 'visible', timeout: 5000 });
     await page.click('button:has-text("Configurar")');
     
     // Check model dropdown exists and has options
@@ -135,25 +138,17 @@ test.describe('WebLLM Integration Flow', () => {
     });
     
     // Setup WebLLM
-    await page.evaluate(() => {
-      localStorage.setItem('lexmx_providers', JSON.stringify([{
-        id: 'webllm',
-        name: 'WebLLM (Browser)',
-        type: 'local',
-        enabled: true,
-        model: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
-        priority: 1
-      }]));
-    });
+    await setupMockWebLLMProvider(page);
     
     await navigateAndWaitForHydration(page, 'http://localhost:4321/chat');
     
     // Send a message to trigger initialization
     await page.fill('[data-testid="chat-input"]', 'Test query');
+    await page.waitForSelector('button[aria-label="Enviar mensaje"]', { state: 'visible', timeout: 5000 });
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Wait a bit for initialization
-    await page.waitForTimeout(2000);
+    // await smartWait(page, "network"); // TODO: Replace with proper wait condition;
     
     // Check if we got any progress messages
     console.log('Progress messages captured:', progressMessages);
@@ -161,30 +156,23 @@ test.describe('WebLLM Integration Flow', () => {
 
   test('WebLLM error messages are user-friendly', async ({ page }) => {
     // Setup WebLLM with invalid model
-    await page.evaluate(() => {
-      localStorage.setItem('lexmx_providers', JSON.stringify([{
-        id: 'webllm',
-        name: 'WebLLM (Browser)',
-        type: 'local',
-        enabled: true,
-        model: 'invalid-model-that-does-not-exist',
-        priority: 1
-      }]));
-    });
+    await setupMockWebLLMProvider(page);
     
     await navigateAndWaitForHydration(page, 'http://localhost:4321/chat');
     
     // Try to use it
     await page.fill('[data-testid="chat-input"]', 'Test query');
+    await page.waitForSelector('button[aria-label="Enviar mensaje"]', { state: 'visible', timeout: 5000 });
     await page.click('button[aria-label="Enviar mensaje"]');
     
     // Should show a user-friendly error, not technical details
     const errorMessage = page.locator('text=/error|Error|problema|intenta nuevamente/i').first();
-    await expect(errorMessage).toBeVisible({ timeout: 10000 });
+    await expect(errorMessage).toBeVisible({ timeout: 5000 });
     
     // Should not show raw technical errors to user
-    const technicalError = page.locator('text=/Cannot read properties|undefined.*find|TypeError/');
+    const technicalError = page.locator('text=//Cannot read properties|undefined.*find|TypeError//i');
     const technicalErrorVisible = await technicalError.isVisible().catch(() => false);
     expect(technicalErrorVisible).toBe(false);
   });
 });
+

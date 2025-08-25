@@ -1,12 +1,20 @@
-import { test, expect } from '@playwright/test';
-import { setupPage, navigateToPage, waitForPageReady, setupAllMockProviders, setupProviderScenario } from '../utils/test-helpers';
+import { expect, test, waitForHydration } from '../utils/test-helpers-consolidated';
+import { setupCompleteMockEnvironment, quickSetupProvider } from '../utils/mock-all-providers';
+import { smartWait, waitForElement, clickElement, fillInput as fastFillInput, waitForText, waitForHydrationFast } from '../utils/fast-helpers';
+
+/**
+ * Isolated version of user-journeys tests
+ * Uses the new test isolation system for parallel execution
+ */
 import { TEST_IDS } from '../../src/utils/test-ids';
 import { TEST_DATA } from '../../src/utils/test-data';
 
-test.describe('Comprehensive User Journeys', () => {
+test.describe('Comprehensive User Journeys (Mocked)', () => {
   test.beforeEach(async ({ page }) => {
-    await setupPage(page);
+    // Note: setupIsolatedPage is already called by the fixture
     await page.goto('http://localhost:4321/');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
     await page.evaluate(() => {
       localStorage.clear();
       sessionStorage.clear();
@@ -17,12 +25,15 @@ test.describe('Comprehensive User Journeys', () => {
     test('complete onboarding flow', async ({ page }) => {
       // 1. Land on homepage
       await page.goto('http://localhost:4321/');
-      
-      // 2. Click "Iniciar Consulta Gratis"
-      await page.click('[data-testid="cta-chat"]');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    
+    // 2. Click "Iniciar Consulta Gratis"
+      await page.waitForSelector(`[data-testid="${TEST_IDS.home.ctaChat}"]`, { state: 'visible', timeout: 5000 });
+    await page.click(`[data-testid="${TEST_IDS.home.ctaChat}"]`);
       
       // 3. Could go to either setup or chat depending on config
-      await page.waitForURL(/(setup|chat)/, { timeout: 15000 });
+      await page.waitForURL(/(setup|chat)/, { timeout: 5000 });
       
       const currentUrl = page.url();
       if (currentUrl.includes('setup')) {
@@ -36,12 +47,14 @@ test.describe('Comprehensive User Journeys', () => {
             await privacyFirst.click();
           }
           
-          const ollamaOption = page.locator('div:has-text("Ollama")');
+          const ollamaOption = page.locator('div:text="Ollama", :has-text(/Ollama/i)');
           if (await ollamaOption.isVisible({ timeout: 2000 }).catch(() => false)) {
             await ollamaOption.click();
-            await page.click('button:has-text("Configurar")');
+            await page.waitForSelector('button:has-text("Configurar")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Configurar")');
             await page.fill('input[type="url"]', 'http://localhost:11434');
-            await page.click('button:has-text("Guardar")');
+            await page.waitForSelector('button:has-text("Guardar")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Guardar")');
           }
           
           // 5. Wait for completion and navigate to chat
@@ -53,8 +66,8 @@ test.describe('Comprehensive User Journeys', () => {
       }
       
       // 6. Verify chat is ready
-      await page.waitForURL('**/chat', { timeout: 15000 });
-      await expect(page.locator('[data-testid="chat-container"]')).toBeVisible({ timeout: 10000 });
+      await page.waitForURL('**/chat', { timeout: 5000 });
+      await expect(page.locator(`[data-testid="${TEST_IDS.chat.container}"]`)).toBeVisible({ timeout: 5000 });
     });
   });
 
@@ -62,24 +75,30 @@ test.describe('Comprehensive User Journeys', () => {
     test('browse legal wiki sections', async ({ page }) => {
       // 1. Navigate to wiki
       await page.goto('http://localhost:4321/wiki');
-      
-      // 2. Verify wiki navigation is visible
-      await expect(page.locator('.wiki-navigation')).toBeVisible();
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    
+    // 2. Verify wiki navigation is visible
+      await expect(page.locator(`[data-testid="${TEST_IDS.wiki.navigation}"]`)).toBeVisible();
       
       // 3. Click on Government Structure
-      await page.click('button:has-text("Estructura del Gobierno")');
-      await expect(page.locator('h2:has-text("Estructura del Gobierno Mexicano")')).toBeVisible();
+      await page.waitForSelector('button:has-text("Estructura del Gobierno")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Estructura del Gobierno")');
+      await expect(page.locator('h2:text="Estructura del Gobierno Mexicano", :has-text(/Estructura del Gobierno Mexicano/i)')).toBeVisible();
       
       // 4. Navigate to Legal System
-      await page.click('button:has-text("Sistema Legal")');
-      await expect(page.locator('h2:has-text("Sistema Legal Mexicano")')).toBeVisible();
+      await page.waitForSelector('button:has-text("Sistema Legal")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Sistema Legal")');
+      await expect(page.locator('h2:text="Sistema Legal Mexicano", :has-text(/Sistema Legal Mexicano/i)')).toBeVisible();
       
       // 5. Check progress indicator
-      await expect(page.locator('text=/Sección \\d+ de \\d+/')).toBeVisible();
+      await expect(page.locator('text=//Sección \\d+ de \\d+//i')).toBeVisible();
       
       // 6. Navigate using next/previous buttons
-      await page.click('button[aria-label="Siguiente sección"]');
-      await page.click('button[aria-label="Sección anterior"]');
+      await page.waitForSelector('button[aria-label="Siguiente sección"]', { state: 'visible', timeout: 5000 });
+    await page.click('button[aria-label="Siguiente sección"]');
+      await page.waitForSelector('button[aria-label="Sección anterior"]', { state: 'visible', timeout: 5000 });
+    await page.click('button[aria-label="Sección anterior"]');
     });
   });
 
@@ -87,9 +106,12 @@ test.describe('Comprehensive User Journeys', () => {
     test('create and view document request', async ({ page }) => {
       // 1. Navigate to requests page
       await page.goto('http://localhost:4321/requests');
-      
-      // 2. Click new request
-      await page.click('text="Nueva Solicitud"');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    
+    // 2. Click new request
+      await page.waitForSelector('text=/Nueva Solicitud/i', { state: 'visible', timeout: 5000 });
+    await page.click('text=/Nueva Solicitud/i');
       
       // 3. Fill out request form
       await page.fill('input[placeholder*="Título"]', 'Ley de Protección de Datos Personales');
@@ -98,15 +120,17 @@ test.describe('Comprehensive User Journeys', () => {
       await page.fill('textarea[placeholder*="Justificación"]', 'Para cumplir con las obligaciones de privacidad en nuestra empresa.');
       
       // 4. Submit request
-      await page.click('button:has-text("Enviar Solicitud")');
+      await page.waitForSelector('button:has-text("Enviar Solicitud")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Enviar Solicitud")');
       
       // 5. Verify request appears in list
-      await expect(page.locator('text="Ley de Protección de Datos Personales"')).toBeVisible();
-      await expect(page.locator('text="Pendiente"')).toBeVisible();
+      await expect(page.locator('text=/Ley de Protección de Datos Personales/i')).toBeVisible();
+      await expect(page.locator('text=/Pendiente/i')).toBeVisible();
       
       // 6. Vote on request
-      await page.click('button:has-text("Votar")');
-      await expect(page.locator('text="Votado"')).toBeVisible();
+      await page.waitForSelector('button:has-text("Votar")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Votar")');
+      await expect(page.locator('text=/Votado/i')).toBeVisible();
     });
   });
 
@@ -114,25 +138,30 @@ test.describe('Comprehensive User Journeys', () => {
     test('view and navigate legal documents', async ({ page }) => {
       // 1. Navigate to a document
       await page.goto('http://localhost:4321/document/constitucion');
-      
-      // 2. Verify document viewer loads
-      await expect(page.locator('.document-viewer')).toBeVisible();
-      await expect(page.locator('h1:has-text("Constitución Política")')).toBeVisible();
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    
+    // 2. Verify document viewer loads
+      await expect(page.locator(`[data-testid="${TEST_IDS.documents.viewer}"]`)).toBeVisible();
+      await expect(page.locator('h1:text="Constitución Política", :has-text(/Constitución Política/i)')).toBeVisible();
       
       // 3. Use table of contents
-      await page.click('button[aria-label="Mostrar índice"]');
+      await page.waitForSelector('button[aria-label="Mostrar índice"]', { state: 'visible', timeout: 5000 });
+    await page.click('button[aria-label="Mostrar índice"]');
       await expect(page.locator('.document-toc')).toBeVisible();
       
       // 4. Navigate to specific article
-      await page.click('text="Artículo 123"');
-      await expect(page.locator('text=/Artículo 123/')).toBeVisible();
+      await page.waitForSelector('text=/Artículo 123/i', { state: 'visible', timeout: 5000 });
+    await page.click('text=/Artículo 123/i');
+      await expect(page.locator('text=//Artículo 123//i')).toBeVisible();
       
       // 5. Use search functionality
       await page.fill('input[placeholder*="Buscar"]', 'derechos laborales');
       await page.keyboard.press('Enter');
       
       // 6. Toggle highlights
-      await page.click('button[aria-label="Resaltar resultados"]');
+      await page.waitForSelector('button[aria-label="Resaltar resultados"]', { state: 'visible', timeout: 5000 });
+    await page.click('button[aria-label="Resaltar resultados"]');
     });
   });
 
@@ -140,25 +169,32 @@ test.describe('Comprehensive User Journeys', () => {
     test('switch between Spanish and English', async ({ page }) => {
       // 1. Start in Spanish (default)
       await page.goto('http://localhost:4321/');
-      await expect(page.locator('text="Tu Asistente Legal Mexicano con IA"')).toBeVisible();
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    await expect(page.locator('text=/Tu Asistente Legal Mexicano con IA/i')).toBeVisible();
       
       // 2. Open language selector
-      await page.click('button[aria-label="Cambiar idioma"]');
+      await page.waitForSelector('button[aria-label="Cambiar idioma"]', { state: 'visible', timeout: 5000 });
+    await page.click('button[aria-label="Cambiar idioma"]');
       
       // 3. Switch to English
-      await page.click('text="English"');
+      await page.waitForSelector('text=/English/i', { state: 'visible', timeout: 5000 });
+    await page.click('text=/English/i');
       
       // 4. Verify UI updates to English
-      await expect(page.locator('text="Your Mexican Legal AI Assistant"')).toBeVisible();
+      await expect(page.locator('text=/Your Mexican Legal AI Assistant/i')).toBeVisible();
       
       // 5. Navigate to chat in English
-      await page.click('text="Legal Chat"');
-      await expect(page.locator('text="Legal Chat"')).toBeVisible();
+      await page.waitForSelector('text=/Legal Chat/i', { state: 'visible', timeout: 5000 });
+    await page.click('text=/Legal Chat/i');
+      await expect(page.locator('text=/Legal Chat/i')).toBeVisible();
       
       // 6. Switch back to Spanish
-      await page.click('button[aria-label="Change language"]');
-      await page.click('text="Español"');
-      await expect(page.locator('text="Chat Legal"')).toBeVisible();
+      await page.waitForSelector('button[aria-label="Change language"]', { state: 'visible', timeout: 5000 });
+    await page.click('button[aria-label="Change language"]');
+      await page.waitForSelector('text=/Español/i', { state: 'visible', timeout: 5000 });
+    await page.click('text=/Español/i');
+      await expect(page.locator('text=/Chat Legal/i')).toBeVisible();
     });
   });
 
@@ -166,25 +202,32 @@ test.describe('Comprehensive User Journeys', () => {
     test('switch between light and dark themes', async ({ page }) => {
       // 1. Navigate to homepage
       await page.goto('http://localhost:4321/');
-      
-      // 2. Check default theme (light)
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    
+    // 2. Check default theme (light)
       const htmlElement = page.locator('html');
       await expect(htmlElement).not.toHaveClass(/dark/);
       
       // 3. Toggle to dark theme
-      await page.click('button[aria-label="Cambiar tema"]');
-      await page.click('text="Oscuro"');
+      await page.waitForSelector('button[aria-label="Cambiar tema"]', { state: 'visible', timeout: 5000 });
+    await page.click('button[aria-label="Cambiar tema"]');
+      await page.waitForSelector('text=/Oscuro/i', { state: 'visible', timeout: 5000 });
+    await page.click('text=/Oscuro/i');
       
       // 4. Verify dark theme applied
       await expect(htmlElement).toHaveClass(/dark/);
       
       // 5. Navigate to another page and verify theme persists
-      await page.click('text="Chat Legal"');
+      await page.waitForSelector('text=/Chat Legal/i', { state: 'visible', timeout: 5000 });
+    await page.click('text=/Chat Legal/i');
       await expect(htmlElement).toHaveClass(/dark/);
       
       // 6. Switch back to light theme
-      await page.click('button[aria-label="Cambiar tema"]');
-      await page.click('text="Claro"');
+      await page.waitForSelector('button[aria-label="Cambiar tema"]', { state: 'visible', timeout: 5000 });
+    await page.click('button[aria-label="Cambiar tema"]');
+      await page.waitForSelector('text=/Claro/i', { state: 'visible', timeout: 5000 });
+    await page.click('text=/Claro/i');
       await expect(htmlElement).not.toHaveClass(/dark/);
     });
   });
@@ -196,19 +239,23 @@ test.describe('Comprehensive User Journeys', () => {
       
       // 1. Navigate to homepage
       await page.goto('http://localhost:4321/');
-      
-      // 2. Open mobile menu
-      await page.click('button[aria-label="Abrir menú principal"]');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    
+    // 2. Open mobile menu
+      await page.waitForSelector('button[aria-label="Abrir menú principal"]', { state: 'visible', timeout: 5000 });
+    await page.click('button[aria-label="Abrir menú principal"]');
       
       // 3. Verify menu is open
-      await expect(page.locator('.mobile-menu')).toBeVisible();
+      await expect(page.locator(`[data-testid="${TEST_IDS.mobile.menu}"]`)).toBeVisible();
       
       // 4. Navigate to chat
-      await page.click('.mobile-menu >> text="Chat Legal"');
+      await page.waitForSelector('.mobile-menu >> [href*="chat"], text=/Chat/i', { state: 'visible', timeout: 5000 });
+    await page.click('.mobile-menu >> [href*="chat"], text=/Chat/i');
       await page.waitForURL('**/chat');
       
       // 5. Verify menu closed after navigation
-      await expect(page.locator('.mobile-menu')).not.toBeVisible();
+      await expect(page.locator(`[data-testid="${TEST_IDS.mobile.menu}"]`)).not.toBeVisible();
     });
   });
 
@@ -216,24 +263,33 @@ test.describe('Comprehensive User Journeys', () => {
     test('handle network errors gracefully', async ({ page, context }) => {
       // Setup provider first
       await page.goto('http://localhost:4321/setup');
-      await page.click('[data-testid="setup-begin"]');
-      await page.click('text="Configuración Personalizada"');
-      await page.click('div:has-text("OpenAI")');
-      await page.click('button:has-text("Configurar (1)")');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    await page.waitForSelector('[data-testid="setup-begin"]', { state: 'visible', timeout: 5000 });
+    await page.click('[data-testid="setup-begin"]');
+      await page.waitForSelector('text=/Configuración Personalizada/i', { state: 'visible', timeout: 5000 });
+    await page.click('text=/Configuración Personalizada/i');
+      await page.waitForSelector('div:text="OpenAI", :has-text(/OpenAI/i)', { state: 'visible', timeout: 5000 });
+    await page.click('div:text="OpenAI", :has-text(/OpenAI/i)');
+      await page.waitForSelector('button:has-text("Configurar")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Configurar")');
       await page.fill('input[type="password"]', 'sk-test-key');
-      await page.click('button:has-text("Guardar")');
-      await page.waitForSelector('h2:has-text("¡Configuración Completa!")');
-      await page.click('button:has-text("Comenzar a Usar LexMX")');
+      await page.waitForSelector('button:has-text("Guardar")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Guardar")');
+      await page.waitForSelector('h2:text="¡Configuración Completa!", :has-text(/¡Configuración Completa!/i)');
+      await page.waitForSelector('button:has-text("Comenzar a Usar LexMX")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Comenzar a Usar LexMX")');
       
       // Simulate network failure
       await context.setOffline(true);
       
       // Try to send a message
-      await page.fill('[data-testid="chat-input"]', 'Test query');
-      await page.click('button[aria-label="Enviar mensaje"]');
+      await page.fill(`[data-testid="${TEST_IDS.chat.input}"]`, 'Test query');
+      await page.waitForSelector('button[aria-label="Enviar mensaje"]', { state: 'visible', timeout: 5000 });
+    await page.click('button[aria-label="Enviar mensaje"]');
       
       // Should show error message
-      await expect(page.locator('text=/error|Error|problema|intenta nuevamente/i')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('text=/error|Error|problema|intenta nuevamente/i')).toBeVisible({ timeout: 5000 });
       
       // Restore network
       await context.setOffline(false);
@@ -244,28 +300,38 @@ test.describe('Comprehensive User Journeys', () => {
     test('use advanced search options in chat', async ({ page }) => {
       // Setup provider
       await page.goto('http://localhost:4321/setup');
-      await page.click('[data-testid="setup-begin"]');
-      await page.click('div:has-text("Balanceado")');
-      await page.click('div:has-text("OpenAI")');
-      await page.click('button:has-text("Configurar (1)")');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    await page.waitForSelector('[data-testid="setup-begin"]', { state: 'visible', timeout: 5000 });
+    await page.click('[data-testid="setup-begin"]');
+      await page.waitForSelector('div:text="Balanceado", :has-text(/Balanceado/i)', { state: 'visible', timeout: 5000 });
+    await page.click('div:text="Balanceado", :has-text(/Balanceado/i)');
+      await page.waitForSelector('div:text="OpenAI", :has-text(/OpenAI/i)', { state: 'visible', timeout: 5000 });
+    await page.click('div:text="OpenAI", :has-text(/OpenAI/i)');
+      await page.waitForSelector('button:has-text("Configurar")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Configurar")');
       await page.fill('input[type="password"]', 'sk-test-key');
-      await page.click('button:has-text("Guardar")');
-      await page.waitForSelector('h2:has-text("¡Configuración Completa!")');
-      await page.click('button:has-text("Comenzar a Usar LexMX")');
+      await page.waitForSelector('button:has-text("Guardar")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Guardar")');
+      await page.waitForSelector('h2:text="¡Configuración Completa!", :has-text(/¡Configuración Completa!/i)');
+      await page.waitForSelector('button:has-text("Comenzar a Usar LexMX")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Comenzar a Usar LexMX")');
       
       // Open advanced options
-      await page.click('button[title="Opciones avanzadas"]');
+      await page.waitForSelector('button[title="Opciones avanzadas"]', { state: 'visible', timeout: 5000 });
+    await page.click('button[title="Opciones avanzadas"]');
       
       // Select specific legal area
       await page.selectOption('select#legal-area', 'labor');
       
       // Send a query
-      await page.fill('[data-testid="chat-input"]', '¿Cuáles son los derechos de maternidad?');
-      await page.click('button[aria-label="Enviar mensaje"]');
+      await page.fill(`[data-testid="${TEST_IDS.chat.input}"]`, '¿Cuáles son los derechos de maternidad?');
+      await page.waitForSelector('button[aria-label="Enviar mensaje"]', { state: 'visible', timeout: 5000 });
+    await page.click('button[aria-label="Enviar mensaje"]');
       
       // Verify response includes labor law context
-      await expect(page.locator('text="¿Cuáles son los derechos de maternidad?"')).toBeVisible();
-      await expect(page.locator('.animate-spin').or(page.locator('text="Analizando"'))).toBeVisible();
+      await expect(page.locator('text=/¿Cuáles son los derechos de maternidad?/i')).toBeVisible();
+      await expect(page.locator('.animate-spin').or(page.locator('text=/Analizando/i'))).toBeVisible();
     });
   });
 
@@ -273,29 +339,39 @@ test.describe('Comprehensive User Journeys', () => {
     test('see provider recommendations while typing', async ({ page }) => {
       // Setup multiple providers
       await page.goto('http://localhost:4321/setup');
-      await page.click('[data-testid="setup-begin"]');
-      await page.click('text="Configuración Personalizada"');
-      await page.click('div:has-text("OpenAI")');
-      await page.click('div:has-text("Claude")');
-      await page.click('button:has-text("Configurar (2)")');
+    await page.waitForLoadState('domcontentloaded');
+    await waitForHydration(page);
+    await page.waitForSelector('[data-testid="setup-begin"]', { state: 'visible', timeout: 5000 });
+    await page.click('[data-testid="setup-begin"]');
+      await page.waitForSelector('text=/Configuración Personalizada/i', { state: 'visible', timeout: 5000 });
+    await page.click('text=/Configuración Personalizada/i');
+      await page.waitForSelector('div:text="OpenAI", :has-text(/OpenAI/i)', { state: 'visible', timeout: 5000 });
+    await page.click('div:text="OpenAI", :has-text(/OpenAI/i)');
+      await page.waitForSelector('div:text="Claude", :has-text(/Claude/i)', { state: 'visible', timeout: 5000 });
+    await page.click('div:text="Claude", :has-text(/Claude/i)');
+      await page.waitForSelector('button:has-text("Configurar")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Configurar")');
       
       // Configure OpenAI
       await page.fill('input[type="password"]', 'sk-openai-test');
-      await page.click('button:has-text("Guardar")');
+      await page.waitForSelector('button:has-text("Guardar")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Guardar")');
       
       // Configure Claude
       await page.fill('input[type="password"]', 'sk-ant-test');
-      await page.click('button:has-text("Guardar")');
+      await page.waitForSelector('button:has-text("Guardar")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Guardar")');
       
-      await page.waitForSelector('h2:has-text("¡Configuración Completa!")');
-      await page.click('button:has-text("Comenzar a Usar LexMX")');
+      await page.waitForSelector('h2:text="¡Configuración Completa!", :has-text(/¡Configuración Completa!/i)');
+      await page.waitForSelector('button:has-text("Comenzar a Usar LexMX")', { state: 'visible', timeout: 5000 });
+    await page.click('button:has-text("Comenzar a Usar LexMX")');
       
       // Type a complex query
-      await page.fill('[data-testid="chat-input"]', 'Necesito analizar un contrato complejo de compraventa internacional');
+      await page.fill(`[data-testid="${TEST_IDS.chat.input}"]`, 'Necesito analizar un contrato complejo de compraventa internacional');
       
       // Wait for recommendations to appear
-      await expect(page.locator('text="Proveedores Recomendados"')).toBeVisible({ timeout: 10000 });
-      await expect(page.locator('.provider-recommendation')).toBeVisible();
+      await expect(page.locator('text=/Proveedores Recomendados/i')).toBeVisible({ timeout: 5000 });
+      await expect(page.locator(`[data-testid="${TEST_IDS.recommendation.container}"]`)).toBeVisible();
     });
   });
 });

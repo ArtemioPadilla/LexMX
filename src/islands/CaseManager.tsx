@@ -611,12 +611,12 @@ export default function CaseManager() {
                   </p>
                   <div className="flex items-center space-x-4 mt-2 text-sm">
                     {selectedCase.client && (
-                      <span className="text-gray-600 dark:text-gray-400">
+                      <span className="text-gray-600 dark:text-gray-400" data-field="client-info">
                         <strong>{t('cases.client')}:</strong> {selectedCase.client}
                       </span>
                     )}
                     {selectedCase.caseNumber && (
-                      <span className="text-gray-600 dark:text-gray-400">
+                      <span className="text-gray-600 dark:text-gray-400" data-field="case-number">
                         <strong>{t('cases.caseNumber')}:</strong> {selectedCase.caseNumber}
                       </span>
                     )}
@@ -630,6 +630,7 @@ export default function CaseManager() {
                     }}
                     className="px-3 py-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                     title={t('cases.editCase')}
+                    data-testid="edit-case-button"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -638,6 +639,7 @@ export default function CaseManager() {
                   <button
                     onClick={() => deleteCase(selectedCase.id)}
                     className="px-3 py-1 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                    data-testid="delete-case-button"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -652,6 +654,7 @@ export default function CaseManager() {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
+                    data-tab={tab}
                     className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
                       activeTab === tab
                         ? 'text-legal-600 dark:text-legal-400 border-legal-500'
@@ -670,7 +673,7 @@ export default function CaseManager() {
             {/* Tab Content */}
             <div className="flex-1 overflow-hidden flex flex-col">
               {activeTab === 'overview' && (
-                <div className="p-4 overflow-y-auto">
+                <div className="p-4 overflow-y-auto" data-tab-content="overview">
                   <div className="space-y-6">
                   {/* WebLLM Progress Indicator */}
                   {webllmProgress && (
@@ -816,7 +819,7 @@ export default function CaseManager() {
               )}
 
               {activeTab === 'documents' && (
-                <div className="p-4 overflow-y-auto">
+                <div className="p-4 overflow-y-auto" data-tab-content="documents">
                   {/* Upload Area */}
                   <div className="mb-4">
                     <label data-testid="upload-area" className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700">
@@ -870,13 +873,14 @@ export default function CaseManager() {
               )}
 
               {activeTab === 'notes' && (
-                <div className="p-4 overflow-y-auto">
+                <div className="p-4 overflow-y-auto" data-tab-content="notes">
                   {/* Add Note Form */}
                   <div className="mb-4">
                     <textarea
                       placeholder={t('cases.addNote')}
                       className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-legal-500"
                       rows={3}
+                      data-testid="notes-textarea"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
@@ -1003,7 +1007,7 @@ export default function CaseManager() {
       {/* Edit Case Modal */}
       {isEditingCase && editingCase && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4" data-testid="edit-case-modal">
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               {t('cases.editCase')}
             </h2>
@@ -1022,6 +1026,7 @@ export default function CaseManager() {
                   value={editingCase.title}
                   onChange={(e) => setEditingCase({...editingCase, title: e.target.value})}
                   className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-legal-500"
+                  data-testid="edit-title-input"
                   required
                 />
               </div>
@@ -1034,6 +1039,7 @@ export default function CaseManager() {
                   onChange={(e) => setEditingCase({...editingCase, description: e.target.value})}
                   className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-legal-500"
                   rows={3}
+                  data-testid="edit-description-textarea"
                 />
               </div>
               <div>
@@ -1045,6 +1051,7 @@ export default function CaseManager() {
                   value={editingCase.client || ''}
                   onChange={(e) => setEditingCase({...editingCase, client: e.target.value})}
                   className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-legal-500"
+                  data-testid="edit-client-input"
                 />
               </div>
               <div>
@@ -1055,6 +1062,7 @@ export default function CaseManager() {
                   value={editingCase.status}
                   onChange={(e) => setEditingCase({...editingCase, status: e.target.value as any})}
                   className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-legal-500"
+                  data-testid="edit-status-select"
                 >
                   <option value="active">{t('cases.statuses.active')}</option>
                   <option value="pending">{t('cases.statuses.pending')}</option>
@@ -1070,12 +1078,14 @@ export default function CaseManager() {
                     setEditingCase(null);
                   }}
                   className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                  data-testid="edit-cancel-button"
                 >
                   {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 bg-legal-500 text-white rounded-lg hover:bg-legal-600 transition-colors"
+                  data-testid="edit-save-button"
                 >
                   {t('common.save')}
                 </button>
@@ -1307,6 +1317,7 @@ function CaseCreationForm({
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-legal-500"
             placeholder={t('cases.exampleTitle')}
+            data-testid="case-title-input"
           />
         </div>
 
@@ -1320,6 +1331,7 @@ function CaseCreationForm({
             className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-legal-500 resize-none"
             rows={3}
             placeholder={t('cases.briefDescription')}
+            data-testid="case-description-input"
           />
         </div>
 
@@ -1333,6 +1345,7 @@ function CaseCreationForm({
             onChange={(e) => setFormData({ ...formData, client: e.target.value })}
             className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-legal-500"
             placeholder={t('cases.clientName')}
+            data-testid="case-client-input"
           />
         </div>
 
@@ -1346,6 +1359,7 @@ function CaseCreationForm({
             onChange={(e) => setFormData({ ...formData, caseNumber: e.target.value })}
             className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-legal-500"
             placeholder={t('cases.caseNumberExample')}
+            data-testid="case-number-input"
           />
         </div>
 
@@ -1357,6 +1371,7 @@ function CaseCreationForm({
             value={formData.legalArea}
             onChange={(e) => setFormData({ ...formData, legalArea: e.target.value as LegalArea })}
             className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-legal-500"
+            data-testid="case-legal-area-select"
           >
             <option value="civil">{t('chat.legalArea.civil')}</option>
             <option value="criminal">{t('chat.legalArea.criminal')}</option>
@@ -1373,12 +1388,14 @@ function CaseCreationForm({
             type="button"
             onClick={onCancel}
             className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            data-testid="case-cancel-button"
           >
             {t('common.cancel')}
           </button>
           <button
             type="submit"
             className="flex-1 px-4 py-2 bg-legal-500 text-white rounded-lg hover:bg-legal-600 transition-colors"
+            data-testid="case-submit-button"
           >
             {t('cases.createCase')}
           </button>
