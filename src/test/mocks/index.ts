@@ -2,6 +2,7 @@
  * Mock Infrastructure Index
  * Central export point for all mock utilities, factories, and helpers
  */
+import { vi } from 'vitest';
 
 // Export all factory functions
 export {

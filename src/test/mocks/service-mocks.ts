@@ -898,8 +898,7 @@ export function createMockLegalRAGEngine() {
     
     reloadCorpus: vi.fn().mockImplementation(async () => {
       // Progress events removed for simplicity in mocks
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
+      await new Promise(resolve => setTimeout(resolve, 200));
     }),
     
     clearCache: vi.fn().mockResolvedValue(undefined),

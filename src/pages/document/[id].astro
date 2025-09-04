@@ -5,8 +5,8 @@ import DocumentViewerWrapper from '../../islands/DocumentViewerWrapper.tsx';
 
 // Required for dynamic routes in static site generation
 export async function getStaticPaths() {
-  // Define all possible document IDs
-  const documents = [
+  // Only return static documents that we know exist
+  const staticDocuments = [
     { id: 'codigo-civil-federal', title: 'Código Civil Federal' },
     { id: 'cpeum', title: 'Constitución Política de los Estados Unidos Mexicanos' },
     { id: 'lft', title: 'Ley Federal del Trabajo' },
@@ -16,22 +16,53 @@ export async function getStaticPaths() {
     { id: 'ccf', title: 'Código Civil Federal' },
   ];
   
-  return documents.map(doc => ({
+  // For dynamic documents, let the 404.astro handle them
+  return staticDocuments.map(doc => ({
     params: { id: doc.id },
-    props: { title: doc.title }
+    props: { 
+      title: doc.title,
+      isStaticDocument: true 
+    }
   }));
 }
 
 // Get the document ID from the URL
 const { id } = Astro.params;
-const { title } = Astro.props;
+
+// Check if this is a pre-generated static document
+const staticDocuments = [
+  'codigo-civil-federal', 'cpeum', 'lft', 'cpf', 'cff', 'ccom', 'ccf'
+];
+
+const isStaticDocument = staticDocuments.includes(id);
+const isDynamicDocument = !isStaticDocument;
+
+// For dynamic documents, we need to determine title client-side
+let title = 'Document';
+if (isStaticDocument) {
+  // Get title from static paths
+  const staticTitleMap = {
+    'codigo-civil-federal': 'Código Civil Federal',
+    'cpeum': 'Constitución Política de los Estados Unidos Mexicanos',
+    'lft': 'Ley Federal del Trabajo',
+    'cpf': 'Código Penal Federal',
+    'cff': 'Código Fiscal de la Federación',
+    'ccom': 'Código de Comercio',
+    'ccf': 'Código Civil Federal'
+  };
+  title = staticTitleMap[id] || 'Document';
+}
 ---
 
-<BaseLayout title={`${title} - LexMX`}>
+<BaseLayout title={`${title || 'Document'} - LexMX`}>
   <main class="min-h-screen bg-white dark:bg-gray-900">
     <!-- Document Viewer Component -->
     <HydrationWrapper name="document-viewer">
-      <DocumentViewerWrapper documentId={id} documentTitle={title} client:load />
+      <DocumentViewerWrapper 
+        documentId={id} 
+        documentTitle={title}
+        client:load 
+      />
     </HydrationWrapper>
   </main>
 </BaseLayout>

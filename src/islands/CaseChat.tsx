@@ -7,7 +7,7 @@ import { providerManager } from '../lib/llm/provider-manager';
 import MessageContent from '../components/MessageContent';
 import ModelSelectorModal from '../components/ModelSelectorModal';
 import WebLLMProgress from '../components/WebLLMProgress';
-import { TEST_IDS } from '../utils/test-ids';
+import { TEST_IDS as _TEST_IDS } from '../utils/test-ids';
 
 export interface CaseChatMessage {
   id: string;

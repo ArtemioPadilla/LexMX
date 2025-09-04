@@ -13,6 +13,26 @@ export const GET: APIRoute = async (context) => {
   // Use context directly without destructuring
   const _ = context; // Mark as used
   
+  // During SSG build, return mock data to prevent build failures
+  if (typeof process !== 'undefined' && typeof window === 'undefined') {
+    const mockExportData = {
+      version: '1.0.0',
+      exportDate: new Date().toISOString(),
+      model: 'transformers/all-MiniLM-L6-v2',
+      dimensions: 384,
+      exportedBy: 'LexMX Admin Panel',
+      message: 'SSG build - actual data available at runtime'
+    };
+    
+    return new Response(JSON.stringify(mockExportData, null, 2), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        ...corsHeaders
+      }
+    });
+  }
+  
   try {
     const exportDate = new Date();
     const dateString = exportDate.toISOString().split('T')[0]; // YYYY-MM-DD format

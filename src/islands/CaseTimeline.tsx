@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '../i18n';
-import { TEST_IDS } from '../utils/test-ids';
+import { TEST_IDS as _TEST_IDS } from '../utils/test-ids';
 
 export interface CaseEvent {
   id: string;

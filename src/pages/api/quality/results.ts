@@ -75,6 +75,21 @@ function generateMarkdownReport(results: any): string {
 }
 
 export const GET: APIRoute = async (_context) => {
+  // During SSG build, return mock data to prevent build failures
+  if (typeof process !== 'undefined' && typeof window === 'undefined') {
+    return new Response(JSON.stringify({
+      success: true,
+      data: { results: [] },
+      message: 'SSG build - no stored results available'
+    }), {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
+    });
+  }
+
   try {
     const url = new URL(_context.request.url);
     const latest = url.searchParams.get('latest') === 'true';

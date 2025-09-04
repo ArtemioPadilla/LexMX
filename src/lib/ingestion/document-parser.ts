@@ -146,6 +146,7 @@ export class DocumentParser {
     
     let currentSection: ParsedSection | null = null;
     let sectionId = 0;
+    let foundStructuredContent = false;
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
@@ -154,6 +155,7 @@ export class DocumentParser {
       // Check for title
       const titleMatch = line.match(/^(?:TÍTULO|Título|TÍT\.?)\s+([IVXLCDM]+|\d+)/);
       if (titleMatch) {
+        foundStructuredContent = true;
         if (currentSection) {
           sections.push(currentSection);
         }
@@ -171,6 +173,7 @@ export class DocumentParser {
       // Check for chapter
       const chapterMatch = line.match(/^(?:CAPÍTULO|Capítulo|CAP\.?)\s+([IVXLCDM]+|\d+)/);
       if (chapterMatch) {
+        foundStructuredContent = true;
         if (currentSection) {
           sections.push(currentSection);
         }
@@ -188,6 +191,7 @@ export class DocumentParser {
       // Check for article
       const articleMatch = line.match(/^(?:Artículo|Art\.?)\s+(\d+(?:\s+bis)?(?:\s+[A-Z])?)/);
       if (articleMatch) {
+        foundStructuredContent = true;
         if (currentSection) {
           sections.push(currentSection);
         }
@@ -221,50 +225,106 @@ export class DocumentParser {
       sections.push(currentSection);
     }
     
+    // If no structured content was found, create logical sections from paragraphs
+    if (!foundStructuredContent && sections.length === 1 && sections[0].content.length > 500) {
+      return this.createSectionsFromPlainText(content);
+    }
+    
     return sections;
   }
 
   /**
-   * Build hierarchical structure from flat sections
+   * Create logical sections from unstructured plain text
+   */
+  private createSectionsFromPlainText(content: string): ParsedSection[] {
+    const sections: ParsedSection[] = [];
+    let sectionId = 0;
+    
+    // Split content into paragraphs
+    const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+    
+    // If very short content, return as single section
+    if (paragraphs.length <= 2) {
+      return [{
+        id: `section_${++sectionId}`,
+        type: 'paragraph',
+        content: content.trim(),
+        level: 1
+      }];
+    }
+    
+    // Group paragraphs into logical sections (every 3-5 paragraphs)
+    const sectionSize = Math.max(2, Math.min(5, Math.ceil(paragraphs.length / 4)));
+    
+    for (let i = 0; i < paragraphs.length; i += sectionSize) {
+      const sectionParagraphs = paragraphs.slice(i, i + sectionSize);
+      const sectionContent = sectionParagraphs.join('\n\n');
+      
+      // Try to extract a meaningful title from the first paragraph
+      const firstPara = sectionParagraphs[0];
+      const title = this.extractTitleFromParagraph(firstPara);
+      
+      sections.push({
+        id: `section_${++sectionId}`,
+        type: 'section',
+        number: `${sections.length + 1}`,
+        title: title,
+        content: sectionContent,
+        level: 2
+      });
+    }
+    
+    return sections;
+  }
+
+  /**
+   * Extract a title from a paragraph for unstructured content
+   */
+  private extractTitleFromParagraph(paragraph: string): string {
+    // Take first sentence or first 50 characters as title
+    const firstSentence = paragraph.split(/[.!?]/)[0].trim();
+    if (firstSentence.length > 10 && firstSentence.length < 80) {
+      return firstSentence;
+    }
+    
+    // Fallback to first 50 characters with ellipsis
+    const title = paragraph.substring(0, 50).trim();
+    return title.length === paragraph.length ? title : title + '...';
+  }
+
+  /**
+   * Build flat content structure with parent references (LegalDocument format)
    */
   private buildHierarchy(sections: ParsedSection[]): Array<Record<string, unknown>> {
-    const hierarchy: Array<Record<string, unknown>> = [];
-    const sectionMap = new Map<string, Record<string, unknown>>();
+    const flatContent: Array<Record<string, unknown>> = [];
     
-    // Create section objects compatible with LegalDocument content
-    for (const section of sections) {
-      const sectionObj = {
-        id: section.id,
-        type: section.type,
-        number: section.number,
-        title: section.title,
-        content: section.content,
-        level: section.level,
-        children: []
-      };
-      
-      sectionMap.set(section.id, sectionObj);
+    // Create flat content array with parent references
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i];
       
       // Find parent based on level
-      let parent = null;
-      for (let i = sections.indexOf(section) - 1; i >= 0; i--) {
-        if (sections[i].level < section.level) {
-          parent = sections[i];
+      let parentId: string | null = null;
+      for (let j = i - 1; j >= 0; j--) {
+        if (sections[j].level < section.level) {
+          parentId = sections[j].id;
           break;
         }
       }
       
-      if (parent) {
-        const parentObj = sectionMap.get(parent.id);
-        if (parentObj) {
-          parentObj.children.push(sectionObj);
-        }
-      } else {
-        hierarchy.push(sectionObj);
-      }
+      // Create content object compatible with LegalDocument format
+      const contentObj = {
+        id: section.id,
+        type: section.type,
+        number: section.number || null,
+        title: section.title || '',
+        content: section.content,
+        parent: parentId
+      };
+      
+      flatContent.push(contentObj);
     }
     
-    return hierarchy;
+    return flatContent;
   }
 
   /**

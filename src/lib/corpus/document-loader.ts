@@ -30,9 +30,14 @@ export class DocumentLoader {
 
   constructor() {
     // Get base path from import.meta.env or fall back to root
-    const basePath = typeof import.meta !== 'undefined' && import.meta.env 
+    let basePath = typeof import.meta !== 'undefined' && import.meta.env 
       ? import.meta.env.BASE_URL || '/' 
       : '/';
+    
+    // Ensure basePath ends with slash for proper concatenation
+    if (!basePath.endsWith('/')) {
+      basePath += '/';
+    }
     
     this.corpusPath = `${basePath}legal-corpus/`;
     this.embeddingsPath = `${basePath}embeddings/`;
@@ -42,13 +47,29 @@ export class DocumentLoader {
     if (typeof window !== 'undefined') {
       return new URL(path, window.location.origin).toString();
     }
-    // For SSG build, just return the path as-is
-    // The build process will handle it correctly
+    
+    // For SSG build, return the path as-is since we won't actually fetch
     return path;
+  }
+
+  private isSSGBuild(): boolean {
+    return typeof process !== 'undefined' && typeof window === 'undefined';
   }
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
+
+    // During SSG build, skip fetch operations and use empty corpus
+    if (this.isSSGBuild()) {
+      this.metadata = {
+        version: '1.0.0',
+        buildDate: new Date().toISOString(),
+        totalDocuments: 0,
+        documents: []
+      };
+      this.initialized = true;
+      return;
+    }
 
     try {
       // Load corpus metadata

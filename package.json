@@ -5,6 +5,7 @@
   "description": "Mexican Legal AI Assistant with RAG technology",
   "scripts": {
     "dev": "astro dev",
+    "dev:proxy": "node scripts/dev-proxy.js",
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
@@ -18,8 +19,9 @@
     "test:dev": "node scripts/test-local-dev.js",
     "test:all": "npm run test:unit && npm run test:e2e",
     "build:corpus": "node scripts/build-corpus.js",
-    "build:embeddings": "node scripts/generate-embeddings.js",
+    "build:embeddings": "node scripts/generate-embeddings.js", 
     "download:embeddings": "node scripts/download-embeddings.js",
+    "ingest:auto": "node scripts/auto-ingest-documents.js",
     "validate:deployment": "node scripts/validate-deployment.js",
     "validate:all": "npm run lint && npm run type-check && npm run validate:deployment",
     "demo:record": "npx tsx scripts/generate-demo.ts full",

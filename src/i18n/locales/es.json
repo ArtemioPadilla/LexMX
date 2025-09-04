@@ -52,6 +52,81 @@
       "embeddings": "Embeddings"
     }
   },
+  "corsGuidance": {
+    "title": {
+      "mexicanGovt": "Política CORS Bloquea Documento Gubernamental",
+      "general": "Solicitud Cross-Origin Bloqueada por Seguridad del Navegador"
+    },
+    "description": {
+      "mexicanGovt": "La seguridad del navegador bloquea el acceso directo a sitios gubernamentales externos. Esto es normal y esperado.",
+      "general": "La política CORS del navegador previene el acceso directo a este sitio web externo."
+    },
+    "environment": {
+      "development": {
+        "title": "Entorno de Desarrollo",
+        "proxyNotRunning": "No hay proxy CORS ejecutándose. Ejecuta \"make dev-full\" para habilitar la ingesta de URLs.",
+        "proxyDetected": "Proxy CORS detectado pero la solicitud aún fue bloqueada.",
+        "proxyAvailable": "Proxy CORS detectado y saludable"
+      },
+      "production": {
+        "title": "Entorno de Producción", 
+        "noProxy": "La ingesta de URLs no está disponible en producción - usa la subida de archivos en su lugar."
+      }
+    },
+    "quickFix": {
+      "development": "Abre una nueva terminal y ejecuta <code>make dev-full</code> para habilitar la ingesta de URLs.",
+      "production": "Usa el botón de subida de archivos arriba. Descarga el documento manualmente, luego selecciónalo desde tu computadora."
+    },
+    "steps": {
+      "title": "Acciones Recomendadas:",
+      "officialDocument": "Documento oficial del gobierno mexicano detectado",
+      "developmentEnvironment": "Entorno de desarrollo - proxy CORS no ejecutándose",
+      "enableUrlIngestion": "Habilitar ingesta de URLs: ejecuta \"make dev-full\" (inicia servidor dev + proxy CORS)",
+      "currentBasicServer": "Actual: \"make start\" (solo servidor dev básico)",
+      "alternativeDownload": "Alternativa: Método de descarga + subida",
+      "productionEnvironment": "Entorno GitHub Pages - proxy CORS no disponible",
+      "downloadMethod": "Método de descarga: Clic derecho en URL → \"Guardar enlace como\" → guardar en computadora",
+      "uploadMethod": "Método de subida: Usa el botón de subida de archivos arriba",
+      "automatedProcessing": "Procesamiento automático: Enviar solicitud de documento para futuras actualizaciones",
+      "pdfDetected": "PDF detectado - será procesado y hecho buscable una vez subido",
+      "fileUploadReliable": "La subida de archivos es a menudo más confiable que obtener URLs",
+      "crossOriginBlocked": "Solicitud cross-origin bloqueada por política de seguridad del navegador",
+      "downloadManually": "Descarga el documento manualmente y súbelo"
+    },
+    "actions": {
+      "clearAndTryAgain": "Limpiar e Intentar de Nuevo",
+      "recheckProxy": "Verificar Proxy Nuevamente", 
+      "requestDocument": "Solicitar este Documento",
+      "submitRequest": "Enviar Solicitud de Documento"
+    },
+    "documentQueue": {
+      "title": "Solicitud de Documento para la Comunidad",
+      "description": "Este documento puede ser procesado automáticamente para beneficiar a todos los usuarios.",
+      "benefits": [
+        "Disponible para todos los usuarios sin descarga manual",
+        "Completamente procesado y optimizado para búsquedas",
+        "Incluido en futuras actualizaciones del sitio",
+        "Contribuye al crecimiento del corpus legal mexicano"
+      ],
+      "howItWorks": "Cómo funciona:",
+      "steps": [
+        "Envías una solicitud de documento con la URL oficial",
+        "El documento se añade a la cola de procesamiento",
+        "GitHub Actions procesa automáticamente documentos semanalmente",
+        "El documento se hace disponible en la próxima actualización del sitio"
+      ],
+      "submitButton": "Solicitar Procesamiento Automático",
+      "or": "o",
+      "uploadNow": "Subir Documento Ahora"
+    },
+    "status": {
+      "analyzing": "Analizando URL...",
+      "corsBlocked": "Bloqueado por CORS",
+      "proxyHealthy": "Proxy saludable - ingesta de URL habilitada",
+      "proxyUnavailable": "Proxy no disponible",
+      "ready": "Listo para ingestar"
+    }
+  },
   "admin": {
     "documents": {
       "title": "Panel de Gestión de Documentos",

@@ -61,7 +61,7 @@ export class DocumentIngestionPipeline extends EventEmitter {
       preserveStructure: true,
       generateEmbeddings: true,
       validateSources: true,
-      batchSize: 10,
+      batchSize: 15, // Balanced for responsiveness vs performance
       ...config
     };
 
@@ -135,15 +135,21 @@ export class DocumentIngestionPipeline extends EventEmitter {
       stats.parseTime = Date.now() - parseStart;
       this.emitProgress('parsing', 100, `Parsed ${document.content?.length || 0} sections`);
 
-      // Stage 3: Generate chunks
+      // Stage 3: Generate chunks (with progress updates)
       this.emitProgress('chunking', 0, 'Creating contextual chunks...');
       const chunkStart = Date.now();
       
-      const chunks = await this.chunker.chunkDocument(document);
+      const chunks = await this.chunker.chunkDocument(document, (progress, message) => {
+        this.emitProgress('chunking', Math.round(progress * 0.8), message, {
+          chunkingProgress: progress,
+          chunkingMessage: message
+        });
+      });
       stats.chunkCount = chunks.length;
-      stats.tokenCount = chunks.reduce((sum, chunk) => 
-        sum + this.estimateTokens(chunk.content), 0
-      );
+      
+      // Async token counting to prevent blocking on large documents
+      this.emitProgress('chunking', 85, 'Calculating token counts...');
+      stats.tokenCount = await this.estimateTokensAsync(chunks);
       
       stats.chunkTime = Date.now() - chunkStart;
       this.emitProgress('chunking', 100, `Created ${chunks.length} chunks`);
@@ -373,14 +379,24 @@ export class DocumentIngestionPipeline extends EventEmitter {
     const embeddings = new Map<string, EmbeddingVector>();
     const batches = this.createBatches(chunks, this.config.batchSize);
     
+    console.log(`[DocumentIngestion] Starting embedding generation for ${chunks.length} chunks in ${batches.length} batches`);
+    
     for (let i = 0; i < batches.length; i++) {
       const batch = batches[i];
       const progress = Math.round((i / batches.length) * 100);
       
+      // Detailed progress with batch information
       this.emitProgress(
         'embedding', 
         progress, 
-        `Processing batch ${i + 1}/${batches.length}`
+        `Processing batch ${i + 1}/${batches.length} (${batch.length} chunks)`,
+        { 
+          currentBatch: i + 1,
+          totalBatches: batches.length,
+          batchSize: batch.length,
+          totalChunks: chunks.length,
+          processedChunks: i * this.config.batchSize
+        }
       );
       
       const texts = batch.map(chunk => chunk.content);
@@ -389,8 +405,33 @@ export class DocumentIngestionPipeline extends EventEmitter {
       for (let j = 0; j < batch.length; j++) {
         embeddings.set(batch[j].id, batchEmbeddings[j]);
       }
+      
+      // Critical: Yield control to the main thread to prevent UI blocking
+      // This allows the UI to update progress and remain responsive
+      if (i < batches.length - 1) { // Don't delay after the last batch
+        // More aggressive yielding for better responsiveness
+        await new Promise(resolve => setTimeout(resolve, 5)); // Small delay
+        
+        // Additionally, yield to the browser's rendering cycle
+        await new Promise(resolve => {
+          if (typeof requestAnimationFrame !== 'undefined') {
+            requestAnimationFrame(() => {
+              // Double RAF for smoother updates
+              requestAnimationFrame(resolve);
+            });
+          } else {
+            setTimeout(resolve, 32); // ~30fps fallback for more processing time
+          }
+        });
+        
+        // Add extra yield every 10 batches for very smooth experience
+        if (i % 10 === 0 && i > 0) {
+          await new Promise(resolve => setTimeout(resolve, 10));
+        }
+      }
     }
     
+    console.log(`[DocumentIngestion] Embedding generation complete: ${embeddings.size} embeddings created`);
     return embeddings;
   }
 
@@ -407,27 +448,29 @@ export class DocumentIngestionPipeline extends EventEmitter {
     chunks: LegalChunk[],
     embeddings?: Map<string, EmbeddingVector>
   ): Promise<void> {
-    // In production, this would store to a proper backend
-    // For now, we'll store in IndexedDB and update the corpus
-    
-    // Store document metadata
-    const metadata = {
-      id: document.id,
-      title: document.title,
-      type: document.type,
-      hierarchy: document.hierarchy,
-      primaryArea: document.primaryArea,
-      file: `${document.id}.json`,
-      chunks: chunks.length,
-      ingestionDate: new Date().toISOString()
-    };
-    
-    // Update corpus metadata (in production, this would be an API call)
-    console.log('Document stored:', metadata);
-    
-    // Store embeddings
-    if (embeddings) {
-      console.log(`Stored ${embeddings.size} embeddings`);
+    // Store document in enhanced offline storage for retrieval
+    try {
+      const storage = await import('../storage/enhanced-offline-storage');
+      const offlineStorage = storage.EnhancedOfflineStorage.getInstance();
+      
+      // Store the complete document
+      await offlineStorage.store('legal_documents', document.id, document);
+      
+      // Store chunks for RAG engine
+      for (const chunk of chunks) {
+        await offlineStorage.store('chunks', chunk.id, chunk);
+      }
+      
+      // Store embeddings
+      if (embeddings) {
+        for (const [chunkId, embedding] of embeddings.entries()) {
+          await offlineStorage.store('embeddings', chunkId, embedding);
+        }
+      }
+      
+    } catch (error) {
+      console.error('Failed to store document:', error);
+      throw error;
     }
   }
 
@@ -460,6 +503,21 @@ export class DocumentIngestionPipeline extends EventEmitter {
   private estimateTokens(text: string): number {
     // Rough estimation: 1 token ≈ 4 characters
     return Math.ceil(text.length / 4);
+  }
+
+  private async estimateTokensAsync(chunks: LegalChunk[]): Promise<number> {
+    let totalTokens = 0;
+    
+    for (let i = 0; i < chunks.length; i++) {
+      totalTokens += this.estimateTokens(chunks[i].content);
+      
+      // Yield control every 100 chunks to prevent blocking
+      if (i % 100 === 0 && i > 0) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    }
+    
+    return totalTokens;
   }
 
   private emitProgress(

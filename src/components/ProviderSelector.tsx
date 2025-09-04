@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { providerManager } from '../lib/llm/provider-manager';
 import { providerRegistry } from '../lib/llm/provider-registry';
 import WebLLMSelector from './WebLLMSelector';
@@ -41,7 +41,7 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
         console.warn('Provider initialization warning:', err);
       });
       
-      const configs = await providerManager.getEnabledProviders().catch(() => []);
+      const configs: any[] = await providerManager.getEnabledProviders().catch(() => []);
       
       // Always include WebLLM as a fallback
       if (configs.length === 0 || !configs.find(p => p.id === 'webllm')) {

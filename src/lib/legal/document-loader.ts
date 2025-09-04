@@ -1,5 +1,6 @@
 // Legal document loader
 import type { LegalDocument } from '../../types/legal';
+import { EnhancedOfflineStorage } from '../storage/enhanced-offline-storage';
 
 // Mock legal documents for now
 const MOCK_DOCUMENTS: Record<string, LegalDocument> = {
@@ -198,21 +199,50 @@ const MOCK_DOCUMENTS: Record<string, LegalDocument> = {
 
 export class DocumentLoader {
   static async loadDocument(documentId: string): Promise<LegalDocument | null> {
-    // In a real implementation, this would load from a database or API
-    // For now, return mock data
-    return MOCK_DOCUMENTS[documentId] || null;
+    // First check mock documents (static pre-generated documents)
+    if (MOCK_DOCUMENTS[documentId]) {
+      return MOCK_DOCUMENTS[documentId];
+    }
+    
+    // Then check enhanced offline storage for dynamically ingested documents
+    try {
+      const storage = EnhancedOfflineStorage.getInstance();
+      const document = await storage.getDocument(documentId);
+      
+      if (document) {
+        return document;
+      }
+    } catch (error) {
+      console.error('Failed to load document from storage:', error);
+    }
+    
+    return null;
   }
 
   static async searchDocuments(query: string): Promise<LegalDocument[]> {
-    // Simple search implementation
     const results: LegalDocument[] = [];
     const queryLower = query.toLowerCase();
 
+    // Search mock documents
     for (const doc of Object.values(MOCK_DOCUMENTS)) {
       if (doc.title.toLowerCase().includes(queryLower) ||
           doc.shortTitle?.toLowerCase().includes(queryLower)) {
         results.push(doc);
       }
+    }
+    
+    // Search documents from enhanced offline storage
+    try {
+      const storage = EnhancedOfflineStorage.getInstance();
+      const storedDocuments = await storage.getAllDocuments();
+      for (const doc of storedDocuments) {
+        if (doc.title.toLowerCase().includes(queryLower) ||
+            doc.shortTitle?.toLowerCase().includes(queryLower)) {
+          results.push(doc);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to search documents from storage:', error);
     }
 
     return results;

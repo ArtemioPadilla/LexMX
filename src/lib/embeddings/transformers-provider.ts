@@ -7,7 +7,7 @@ import type { ProgressEvent } from '@/types/common';
 
 // Configure Transformers.js for browser environment
 env.allowLocalModels = false; // Use CDN models
-env.backends.onnx.wasm.numThreads = 1; // Single thread for stability
+env.backends.onnx.wasm.numThreads = Math.min(4, navigator.hardwareConcurrency || 4); // Multi-threading for better performance
 
 export class TransformersEmbeddingProvider extends BaseEmbeddingProvider {
   type: EmbeddingProviderType = 'transformers';

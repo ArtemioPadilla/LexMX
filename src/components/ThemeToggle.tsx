@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from '../i18n';
-import { HydrationBoundary, LoadingStates } from './HydrationBoundary';
 // import { TEST_IDS } from '../utils/test-ids';
 
 type Theme = 'light' | 'dark' | 'system';
@@ -9,7 +8,6 @@ export function ThemeToggle() {
   const { t } = useTranslation();
   const [theme, setTheme] = useState<Theme>('system');
   const [isOpen, setIsOpen] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Apply theme to document
@@ -34,8 +32,6 @@ export function ThemeToggle() {
   // Initialize theme on mount
   useEffect(() => {
     try {
-      setIsHydrated(true);
-      
       // Only access browser APIs on client
       if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
         // Get theme from localStorage
@@ -115,15 +111,6 @@ export function ThemeToggle() {
   
   const currentTheme = themes.find(t => t.value === theme) || themes[2];
   
-  // Handle SSR/hydration
-  if (!isHydrated) {
-    return (
-      <HydrationBoundary 
-        fallback={<LoadingStates.ThemeToggle />}
-        testId="theme-toggle"
-      />
-    );
-  }
   
   if (error) {
     return (

@@ -45,6 +45,8 @@ help: ## Display this help message
 	@echo ""
 	@echo "$(BOLD)$(YELLOW)Examples:$(RESET)"
 	@echo "  make dev              # Start development server"
+	@echo "  make dev-full         # Dev server + CORS proxy"
+	@echo "  make corpus-auto      # Auto-ingest documents from queue"
 	@echo "  make build            # Build for production"
 	@echo "  make corpus           # Build complete legal corpus"
 	@echo "  make qa               # Run all quality checks"
@@ -52,7 +54,7 @@ help: ## Display this help message
 	@echo ""
 
 ##@ Development
-.PHONY: install dev start build preview clean-dist
+.PHONY: install dev start build preview clean-dist dev-proxy dev-full
 install: ## Install dependencies
 	@echo "$(BOLD)$(BLUE)📦 Installing dependencies...$(RESET)"
 	@npm install --legacy-peer-deps
@@ -64,6 +66,26 @@ dev: install ## Start development server with hot reload
 	@npm run dev
 
 start: dev ## Alias for dev command
+
+dev-proxy: install ## Start CORS proxy server for local development
+	@echo "$(BOLD)$(BLUE)🔧 Starting CORS proxy server...$(RESET)"
+	@echo "$(YELLOW)💡 Proxy running at: http://localhost:3001$(RESET)"
+	@echo "$(YELLOW)💡 Health check: http://localhost:3001/health$(RESET)"
+	@echo "$(CYAN)🔧 For URL ingestion in development environment$(RESET)"
+	@node $(SCRIPTS_DIR)/dev-proxy.js
+
+dev-full: install ## Start both development server and CORS proxy
+	@echo "$(BOLD)$(BLUE)🚀 Starting full development environment...$(RESET)"
+	@echo "$(YELLOW)💡 Dev server: http://localhost:4321$(RESET)"
+	@echo "$(YELLOW)💡 CORS proxy: http://localhost:3001$(RESET)"
+	@echo "$(CYAN)📋 Starting CORS proxy in background...$(RESET)"
+	@node $(SCRIPTS_DIR)/dev-proxy.js & \
+	echo $$! > .dev-proxy.pid; \
+	trap 'kill $$(cat .dev-proxy.pid) 2>/dev/null || true; rm -f .dev-proxy.pid' EXIT; \
+	sleep 2; \
+	echo "$(GREEN)✅ CORS proxy started (PID: $$(cat .dev-proxy.pid))$(RESET)"; \
+	echo "$(CYAN)📋 Starting development server...$(RESET)"; \
+	npm run dev
 
 build: install ## Build for production
 	@echo "$(BOLD)$(BLUE)🏗️  Building for production...$(RESET)"
@@ -131,9 +153,13 @@ qa: lint type-check test ## Run all quality assurance checks
 quality: qa ## Alias for qa command
 
 ##@ Legal Corpus Management
-.PHONY: corpus corpus-build corpus-embeddings corpus-clean corpus-stats corpus-validate
+.PHONY: corpus corpus-build corpus-embeddings corpus-clean corpus-stats corpus-validate corpus-ingest-auto corpus-ingest-queue corpus-ingest-init corpus-auto
 corpus: corpus-build corpus-embeddings ## Build complete legal corpus with embeddings
 	@echo "$(BOLD)$(GREEN)📚 Legal corpus build completed!$(RESET)"
+
+corpus-auto: corpus-ingest-auto corpus-embeddings ## Auto-ingest from queue + generate embeddings (complete workflow)
+	@echo "$(BOLD)$(GREEN)🚀 Automated corpus build completed!$(RESET)"
+	@$(MAKE) --no-print-directory corpus-stats
 
 corpus-build: ## Build legal document corpus
 	@echo "$(BOLD)$(BLUE)📖 Building legal corpus...$(RESET)"
@@ -199,6 +225,145 @@ corpus-validate: ## Validate legal corpus integrity
 	fi
 	@echo "$(GREEN)✅ Legal corpus validation passed$(RESET)"
 
+corpus-ingest-auto: install ## Auto-ingest documents from community queue
+	@echo "$(BOLD)$(BLUE)🚀 Auto-ingesting documents from queue...$(RESET)"
+	@if [ -f "$(PUBLIC_DIR)/document-requests.json" ]; then \
+		node $(SCRIPTS_DIR)/auto-ingest-documents.js; \
+		echo "$(GREEN)✅ Auto-ingestion completed$(RESET)"; \
+	else \
+		echo "$(YELLOW)⚠️  No document queue found. Creating sample queue...$(RESET)"; \
+		$(MAKE) --no-print-directory corpus-ingest-queue; \
+		node $(SCRIPTS_DIR)/auto-ingest-documents.js; \
+	fi
+
+corpus-ingest-queue: ## Initialize or show document request queue status
+	@echo "$(BOLD)$(CYAN)📋 Document Request Queue Status$(RESET)"
+	@echo "$(BOLD)====================================$(RESET)"
+	@if [ -f "$(PUBLIC_DIR)/document-requests.json" ]; then \
+		echo "$(BLUE)Queue file:$(RESET) $(PUBLIC_DIR)/document-requests.json"; \
+		echo "$(BLUE)Total documents:$(RESET) $$(jq -r '.documents | length' $(PUBLIC_DIR)/document-requests.json)"; \
+		echo "$(BLUE)Pending:$(RESET) $$(jq -r '[.documents[] | select(.status == "pending")] | length' $(PUBLIC_DIR)/document-requests.json)"; \
+		echo "$(BLUE)Completed:$(RESET) $$(jq -r '[.documents[] | select(.status == "completed")] | length' $(PUBLIC_DIR)/document-requests.json)"; \
+		echo ""; \
+		echo "$(BLUE)Recent pending documents:$(RESET)"; \
+		jq -r '.documents[] | select(.status == "pending") | "  - \(.title) (\(.priority) priority)"' $(PUBLIC_DIR)/document-requests.json | head -5; \
+	else \
+		echo "$(YELLOW)⚠️  Document queue not found. Run 'make corpus-ingest-init' to create it.$(RESET)"; \
+	fi
+
+corpus-ingest-init: ## Initialize document request queue with essential Mexican legal documents
+	@echo "$(BOLD)$(BLUE)🏗️  Initializing document request queue...$(RESET)"
+	@mkdir -p $(PUBLIC_DIR)
+	@echo '{\
+		"version": "1.0.0",\
+		"description": "Community document ingestion queue for Mexican legal corpus",\
+		"lastUpdated": "'$$(date -u +"%Y-%m-%dT%H:%M:%SZ")'",\
+		"documents": [\
+			{\
+				"id": "cpeum-2024",\
+				"title": "Constitución Política de los Estados Unidos Mexicanos",\
+				"url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf",\
+				"type": "constitution",\
+				"primaryArea": "constitutional",\
+				"hierarchy": 1,\
+				"priority": "high",\
+				"status": "pending"\
+			},\
+			{\
+				"id": "lft-2024",\
+				"title": "Ley Federal del Trabajo",\
+				"url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/125_110121.pdf",\
+				"type": "law",\
+				"primaryArea": "labor",\
+				"hierarchy": 3,\
+				"priority": "high",\
+				"status": "pending"\
+			},\
+			{\
+				"id": "cpf-2024",\
+				"title": "Código Penal Federal",\
+				"url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/9_230421.pdf",\
+				"type": "code",\
+				"primaryArea": "criminal",\
+				"hierarchy": 3,\
+				"priority": "high",\
+				"status": "pending"\
+			},\
+			{\
+				"id": "ccf-2024",\
+				"title": "Código Civil Federal",\
+				"url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/2_110121.pdf",\
+				"type": "code",\
+				"primaryArea": "civil",\
+				"hierarchy": 3,\
+				"priority": "medium",\
+				"status": "pending"\
+			},\
+			{\
+				"id": "cff-2024",\
+				"title": "Código Fiscal de la Federación",\
+				"url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/8_091221.pdf",\
+				"type": "code",\
+				"primaryArea": "tax",\
+				"hierarchy": 3,\
+				"priority": "medium",\
+				"status": "pending"\
+			},\
+			{\
+				"id": "lss-2024",\
+				"title": "Ley del Seguro Social",\
+				"url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/92_041220.pdf",\
+				"type": "law",\
+				"primaryArea": "social-security",\
+				"hierarchy": 3,\
+				"priority": "medium",\
+				"status": "pending"\
+			}\
+		]\
+	}' | jq '.' > $(PUBLIC_DIR)/document-requests.json
+	@echo "$(GREEN)✅ Document queue initialized with 6 essential Mexican legal documents$(RESET)"
+	@$(MAKE) --no-print-directory corpus-ingest-queue
+
+##@ Automated Document Ingestion
+.PHONY: ingest-start ingest-status ingest-queue ingest-init ingest-auto ingest-help
+ingest-start: corpus-ingest-init ## Initialize document ingestion system
+	@echo "$(BOLD)$(GREEN)📋 Document ingestion system ready!$(RESET)"
+	@echo "$(CYAN)💡 Next steps:$(RESET)"
+	@echo "  • Run 'make ingest-auto' to process queue"  
+	@echo "  • Run 'make dev-full' for local URL testing"
+	@echo "  • Visit /admin/documents for manual uploads"
+
+ingest-status: corpus-ingest-queue ## Show document queue status (alias)
+
+ingest-queue: corpus-ingest-queue ## Show document queue status (alias)
+
+ingest-init: corpus-ingest-init ## Initialize document queue (alias)
+
+ingest-auto: corpus-ingest-auto ## Auto-ingest documents (alias)
+
+ingest-help: ## Show ingestion system usage help
+	@echo "$(BOLD)$(CYAN)🚀 LexMX Document Ingestion System$(RESET)"
+	@echo "$(BOLD)====================================$(RESET)"
+	@echo ""
+	@echo "$(BOLD)$(YELLOW)Quick Start:$(RESET)"
+	@echo "  make ingest-start     # Initialize system + show next steps"
+	@echo "  make ingest-auto      # Process documents from queue"
+	@echo "  make dev-full         # Enable local URL testing"
+	@echo ""
+	@echo "$(BOLD)$(YELLOW)Queue Management:$(RESET)"
+	@echo "  make ingest-status    # Show queue status"
+	@echo "  make ingest-init      # Reset queue to defaults"
+	@echo ""
+	@echo "$(BOLD)$(YELLOW)Development:$(RESET)"
+	@echo "  make dev-proxy        # Start CORS proxy only"
+	@echo "  make dev-full         # Dev server + CORS proxy"
+	@echo "  make auto-start       # Complete automated setup"
+	@echo ""
+	@echo "$(BOLD)$(YELLOW)Production (GitHub Actions):$(RESET)"
+	@echo "  • Push to main branch for automated processing"
+	@echo "  • Manual trigger: GitHub → Actions → Legal Corpus Auto-Update"
+	@echo ""
+
 ##@ Deployment
 .PHONY: deploy deploy-dry-run build-stats
 deploy: build corpus ## Deploy to GitHub Pages
@@ -256,14 +421,20 @@ clean: clean-dist ## Clean build artifacts only
 
 clean-ports: ## Kill all dev servers and free up ports
 	@echo "$(BOLD)$(YELLOW)🔧 Cleaning up dev server ports...$(RESET)"
-	@node scripts/kill-dev-servers.js
+	@node scripts/kill-dev-servers.js || true
+	@if [ -f .dev-proxy.pid ]; then \
+		echo "$(YELLOW)🔧 Stopping CORS proxy...$(RESET)"; \
+		kill $$(cat .dev-proxy.pid) 2>/dev/null || true; \
+		rm -f .dev-proxy.pid; \
+	fi
 	@echo "$(GREEN)✅ Ports cleaned$(RESET)"
 
-clean-all: clean-dist corpus-clean ## Clean everything (build + corpus)
+clean-all: clean-dist corpus-clean clean-ports ## Clean everything (build + corpus + processes)
 	@echo "$(BOLD)$(YELLOW)🧹 Deep cleaning...$(RESET)"
 	@rm -rf node_modules
 	@rm -rf .astro
 	@rm -rf temp
+	@rm -f .dev-proxy.pid
 	@echo "$(GREEN)✅ Deep clean completed$(RESET)"
 
 update-deps: ## Update all dependencies
@@ -339,13 +510,21 @@ doctor: ## Run system health check
 		echo "  $(YELLOW)⚠️  Embeddings not generated (run 'make corpus-embeddings')$(RESET)"; \
 	fi
 
-##@ Quick Actions
-.PHONY: quick-start full-setup
+##@ Quick Actions  
+.PHONY: quick-start full-setup auto-start dev-start
 quick-start: install corpus dev ## Quick start for new developers
 	@echo "$(BOLD)$(GREEN)🎉 Quick start completed! Visit http://localhost:4321$(RESET)"
 
 full-setup: install corpus build qa ## Complete setup with all checks
 	@echo "$(BOLD)$(GREEN)🎉 Full setup completed successfully!$(RESET)"
+
+auto-start: install corpus-ingest-init dev-full ## Auto-setup with document queue and full dev environment
+	@echo "$(BOLD)$(GREEN)🚀 Automated development environment ready!$(RESET)"
+	@echo "$(CYAN)📋 Document queue initialized with Mexican legal documents$(RESET)"
+	@echo "$(CYAN)🔧 CORS proxy running for URL ingestion testing$(RESET)"
+	@echo "$(CYAN)💡 Visit http://localhost:4321/admin/documents to test ingestion$(RESET)"
+
+dev-start: dev-full ## Alias for dev-full (full development environment)
 
 # Hidden utility targets
 .PHONY: _check-node _check-npm

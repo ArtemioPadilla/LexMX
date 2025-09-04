@@ -1,181 +1,35 @@
 ---
 import BaseLayout from '../../components/layout/BaseLayout.astro';
-import DocumentViewer from '../../islands/DocumentViewer.tsx';
-import type { LegalDocument } from '../../types/legal';
+import HydrationWrapper from '../../components/HydrationWrapper.astro';
+import DocumentViewerWrapper from '../../islands/DocumentViewerWrapper.tsx';
 
+// This catch-all route handles all dynamic document routes
 export async function getStaticPaths() {
-  // Mock data for build - in production these would come from a CMS or API
-  const mockDocuments = [
-    { id: 'codigo-civil-federal', title: 'Código Civil Federal' },
-    { id: 'ley-federal-trabajo', title: 'Ley Federal del Trabajo' },
-    { id: 'codigo-penal-federal', title: 'Código Penal Federal' }
+  // Return a fallback path - this will be generated but all dynamic routes will fall through
+  return [
+    {
+      params: { slug: 'fallback' },
+      props: { isDynamic: true, title: 'Dynamic Document' }
+    }
   ];
-  
-  const paths: Array<{ params: { slug: string }, props: { documentId: string, section?: string } }> = [];
-  
-  for (const doc of mockDocuments) {
-    // Main document route
-    paths.push({
-      params: { slug: doc.id },
-      props: { 
-        documentId: doc.id,
-        view: 'main',
-        section: null
-      }
-    });
-    
-    // Different view modes
-    const views = ['text', 'pdf', 'chunks', 'metadata'];
-    for (const view of views) {
-      paths.push({
-        params: { slug: `${doc.id}/${view}` },
-        props: { 
-          documentId: doc.id,
-          view,
-          section: null
-        }
-      });
-    }
-    
-    // Sample article routes
-    for (let i = 1; i <= 5; i++) {
-      paths.push({
-        params: { slug: `${doc.id}/article/${i}` },
-        props: { 
-          documentId: doc.id,
-          view: 'article',
-          section: i.toString()
-        }
-      });
-    }
-  }
-  
-  return paths;
 }
 
-const { documentId, view, section } = Astro.props;
+// Extract document ID from slug
+const { slug } = Astro.params;
+const documentId = Array.isArray(slug) ? slug.join('/') : slug;
 
-// Mock document data for demonstration
-const mockDocuments: Record<string, LegalDocument> = {
-  'codigo-civil-federal': {
-    id: 'codigo-civil-federal',
-    type: 'code',
-    hierarchy: 3,
-    title: 'Código Civil Federal',
-    shortTitle: 'CCF',
-    publishedDate: '1928-05-26',
-    lastReform: '2024-01-18',
-    status: 'vigente',
-    territorialScope: 'federal',
-    primaryArea: 'civil',
-    secondaryAreas: ['property', 'family'],
-    authority: 'Congreso de la Unión',
-    officialURL: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/2.pdf',
-    pdfURL: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/2.pdf',
-    content: [
-      {
-        id: 'title-1',
-        type: 'title',
-        number: '1',
-        title: 'LIBRO PRIMERO - De las Personas',
-        content: 'LIBRO PRIMERO\nDe las Personas',
-        level: 0
-      },
-      {
-        id: 'chapter-1',
-        type: 'chapter',
-        number: '1',
-        title: 'CAPÍTULO I - De las Personas Físicas',
-        content: 'CAPÍTULO I\nDe las Personas Físicas',
-        parent: 'title-1',
-        level: 1
-      },
-      {
-        id: 'article-22',
-        type: 'article',
-        number: '22',
-        content: 'Artículo 22.- La capacidad jurídica de las personas físicas se adquiere por el nacimiento y se pierde por la muerte; pero desde el momento en que un individuo es concebido, entra bajo la protección de la ley y se le tiene por nacido para los efectos declarados en el presente Código.',
-        parent: 'chapter-1',
-        level: 2
-      }
-    ]
-  },
-  'ley-federal-trabajo': {
-    id: 'ley-federal-trabajo',
-    type: 'law',
-    hierarchy: 3,
-    title: 'Ley Federal del Trabajo',
-    shortTitle: 'LFT',
-    publishedDate: '1970-04-01',
-    lastReform: '2024-01-01',
-    status: 'vigente',
-    territorialScope: 'federal',
-    primaryArea: 'labor',
-    secondaryAreas: ['social-security'],
-    authority: 'Congreso de la Unión',
-    officialURL: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf',
-    pdfURL: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf',
-    content: []
-  },
-  'codigo-penal-federal': {
-    id: 'codigo-penal-federal',
-    type: 'code',
-    hierarchy: 3,
-    title: 'Código Penal Federal',
-    shortTitle: 'CPF',
-    publishedDate: '1931-08-14',
-    lastReform: '2024-02-09',
-    status: 'vigente',
-    territorialScope: 'federal',
-    primaryArea: 'criminal',
-    secondaryAreas: [],
-    authority: 'Congreso de la Unión',
-    officialURL: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CPF.pdf',
-    pdfURL: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CPF.pdf',
-    content: []
-  }
-};
-
-const document = mockDocuments[documentId];
-
-if (!document) {
-  return new Response(null, { status: 404, statusText: 'Document not found' });
-}
-
-const title = `${document.title} - LexMX`;
-const description = `Consulta ${document.title} en el sistema legal mexicano. Visualización completa con búsqueda, navegación y análisis.`;
+console.log(`[Dynamic Route] Handling document ID: ${documentId}`);
 ---
 
-<BaseLayout title={title} description={description}>
-  <DocumentViewer 
-    document={document}
-    initialView={view}
-    initialSection={section}
-    client:load 
-  />
+<BaseLayout title="Document - LexMX">
+  <main class="min-h-screen bg-white dark:bg-gray-900">
+    <!-- Document Viewer Component -->
+    <HydrationWrapper name="document-viewer">
+      <DocumentViewerWrapper 
+        documentId={documentId} 
+        documentTitle="Document"
+        client:load 
+      />
+    </HydrationWrapper>
+  </main>
 </BaseLayout>
-
-<style>
-  /* Custom styles for legal document display */
-  :global(.legal-document) {
-    font-family: 'Georgia', 'Times New Roman', serif;
-    line-height: 1.7;
-  }
-  
-  :global(.legal-article) {
-    margin: 2rem 0;
-    padding: 1rem;
-    border-left: 4px solid var(--color-legal-500);
-  }
-  
-  :global(.legal-citation) {
-    background: var(--color-legal-50);
-    border-radius: 0.375rem;
-    padding: 0.5rem;
-    font-weight: 600;
-  }
-  
-  :global(.dark .legal-citation) {
-    background: var(--color-legal-900);
-  }
-</style>

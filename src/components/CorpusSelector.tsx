@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from '../i18n/index';
 import type { LegalArea } from '../types/legal';
 import { TEST_IDS } from '../utils/test-ids';
@@ -158,7 +158,7 @@ export default function CorpusSelector({ onSelectionChange, className = '' }: Co
   }, [isOpen]);
 
   const selectedCount = selectedDocuments.size;
-  const _totalCount = CORPUS_DOCUMENTS.length;
+  // const _totalCount = CORPUS_DOCUMENTS.length;
 
   return (
     <div className={`relative corpus-selector ${className}`}>

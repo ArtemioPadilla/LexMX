@@ -18,10 +18,7 @@ const translationsScript = `
   // Extend Window interface for TypeScript
   declare global {
     interface Window {
-      __translations: {
-        es: any;
-        en: any;
-      };
+      __translations: Record<string, any>;
       applyTranslations: () => void;
     }
   }
@@ -58,7 +55,7 @@ const translationsScript = `
         lang = 'es';
       }
       
-      const translations = window.__translations[lang] || window.__translations.es;
+      const translations = window.__translations[lang as string] || window.__translations['es'];
       
       if (!translations) {
         console.error('Translations not found for language:', lang);

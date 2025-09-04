@@ -1,37 +1,28 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation, type Language } from '../i18n/index';
-import { HydrationBoundary, LoadingStates } from './HydrationBoundary';
 // import { TEST_IDS } from '../utils/test-ids';
 
 declare global {
   interface Window {
-    applyTranslations?: () => void;
+    applyTranslations: () => void;
   }
 }
 
 export function LanguageSelector() {
   const { language, setLanguage, t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Handle hydration
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
 
   // Initialize language on mount
   useEffect(() => {
-    if (isHydrated) {
-      try {
-        // The i18n system handles language persistence and initialization
-        document.documentElement.lang = language;
-      } catch (err) {
-        console.error('Error initializing language selector:', err);
-        setError('Failed to initialize language');
-      }
+    try {
+      // The i18n system handles language persistence and initialization
+      document.documentElement.lang = language;
+    } catch (err) {
+      console.error('Error initializing language selector:', err);
+      setError('Failed to initialize language');
     }
-  }, [language, isHydrated]);
+  }, [language]);
   
   // Handle language change
   const handleLanguageChange = useCallback((newLang: Language) => {
@@ -72,15 +63,6 @@ export function LanguageSelector() {
     en: { name: t('language.en'), flag: '🇺🇸' },
   };
   
-  // Handle SSR/hydration
-  if (!isHydrated) {
-    return (
-      <HydrationBoundary 
-        fallback={<LoadingStates.LanguageSelector />}
-        testId="language-selector"
-      />
-    );
-  }
 
   
   if (error) {

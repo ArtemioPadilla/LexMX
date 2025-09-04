@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LexMX - Sin conexión</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      padding: 1rem;
+    }
+    
+    .container {
+      text-align: center;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 1rem;
+      padding: 3rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .icon {
+      font-size: 5rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.9;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+    
+    .subtitle {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      margin-bottom: 2rem;
+    }
+    
+    p {
+      opacity: 0.8;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    
+    .features {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      text-align: left;
+    }
+    
+    .features h3 {
+      margin-bottom: 0.75rem;
+      font-size: 1.1rem;
+    }
+    
+    .features ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .features li {
+      padding: 0.25rem 0;
+      opacity: 0.9;
+    }
+    
+    .features li::before {
+      content: "✓ ";
+      color: #4ade80;
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+    
+    .btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+    
+    .btn-primary {
+      background: #3b82f6;
+      border-color: #2563eb;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    
+    .status {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid transparent;
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 0.5rem;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 2rem;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .actions {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">⚖️</div>
+    <h1>Sin conexión</h1>
+    <p class="subtitle">No hay conexión a internet disponible</p>
+    
+    <p>LexMX está funcionando sin conexión. Algunas funciones están disponibles usando datos almacenados localmente.</p>
+    
+    <div class="features">
+      <h3>Funciones disponibles sin conexión:</h3>
+      <ul>
+        <li>Consulta de documentos legales almacenados</li>
+        <li>Revisión de casos guardados</li>
+        <li>Búsqueda en corpus legal local</li>
+        <li>Trabajo con documentos ya descargados</li>
+      </ul>
+    </div>
+    
+    <div class="actions">
+      <button class="btn btn-primary" onclick="checkConnection()">
+        <span id="check-text">Verificar conexión</span>
+      </button>
+      <button class="btn" onclick="window.location.reload()">
+        Reintentar carga
+      </button>
+      <a href="/" class="btn">
+        Ir al inicio
+      </a>
+    </div>
+    
+    <div class="status" id="status">
+      Última actualización: <span id="last-update">Verificando...</span>
+    </div>
+  </div>
+
+  <script>
+    // Check connection status
+    async function checkConnection() {
+      const checkBtn = document.querySelector('#check-text');
+      const statusEl = document.querySelector('#status');
+      
+      checkBtn.innerHTML = '<span class="loading"></span>Verificando...';
+      
+      try {
+        // Try to fetch a small resource
+        const response = await fetch('/favicon.svg', { 
+          cache: 'no-cache',
+          signal: AbortSignal.timeout(5000)
+        });
+        
+        if (response.ok) {
+          statusEl.innerHTML = '✅ Conexión restaurada - Redirigiendo...';
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } else {
+          throw new Error('No connection');
+        }
+      } catch (error) {
+        statusEl.innerHTML = '❌ Sin conexión - Intenta nuevamente en unos momentos';
+        checkBtn.textContent = 'Verificar conexión';
+      }
+    }
+    
+    // Update last update time
+    function updateLastUpdate() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('es-MX', { 
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      document.querySelector('#last-update').textContent = timeString;
+    }
+    
+    // Check for online/offline events
+    window.addEventListener('online', () => {
+      document.querySelector('#status').innerHTML = '✅ Conexión restaurada';
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    });
+    
+    window.addEventListener('offline', () => {
+      document.querySelector('#status').innerHTML = '📴 Modo sin conexión activado';
+    });
+    
+    // Initialize
+    updateLastUpdate();
+    
+    // Check connection status periodically
+    setInterval(updateLastUpdate, 60000); // Update time every minute
+  </script>
+</body>
+</html>

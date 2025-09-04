@@ -23,11 +23,14 @@ export interface CorsAwareFetchResult {
  */
 export class CorsAwareFetch {
   private static readonly CORS_PROXIES = [
-    // Public CORS proxies (use with caution in production)
-    'https://api.codetabs.com/v1/proxy/?quest=',
-    'https://cors-anywhere.herokuapp.com/',
-    // Add your own deployed proxy here
-    // 'https://your-cors-proxy.vercel.app/api/proxy?url='
+    // Local development proxy (always include for localhost)
+    ...(typeof window !== 'undefined' && (
+      window.location.hostname.includes('localhost') || 
+      window.location.hostname.includes('127.0.0.1')
+    ) ? ['http://localhost:3001'] : []),
+    // Self-hosted proxies only - public proxies are unreliable
+    // Add your own deployed proxy here when available
+    // 'https://your-cors-proxy.vercel.app/api/proxy'
   ];
 
   private static readonly MEXICAN_GOVT_DOMAINS = [
@@ -49,28 +52,90 @@ export class CorsAwareFetch {
       ...fetchOptions
     } = options;
 
-    // First try direct fetch
+    // Immediate CORS detection for cross-origin requests
+    const isCrossOrigin = this.isCrossOrigin(url);
+    const isMexicanGovt = this.isMexicanGovtSite(url);
+    
+    console.log(`[CorsAwareFetch] Analyzing ${url}:`);
+    console.log(`- Cross-origin: ${isCrossOrigin}`);
+    console.log(`- Mexican govt: ${isMexicanGovt}`);
+
+    // For cross-origin Mexican government sites, check local proxy first
+    if (isCrossOrigin && isMexicanGovt) {
+      console.log(`[CorsAwareFetch] Cross-origin Mexican govt site detected, trying direct fetch first...`);
+      
+      const directResult = await this.tryDirectFetch(url, fetchOptions, timeout);
+      if (directResult.success) {
+        return directResult;
+      }
+
+      console.log(`[CorsAwareFetch] Direct fetch failed, checking for local proxy...`);
+      
+      // Check if local development proxy is available
+      const isLocalProxyAvailable = await this.isLocalProxyRunning();
+      console.log(`[CorsAwareFetch] Local proxy available: ${isLocalProxyAvailable}`);
+      
+      if (isLocalProxyAvailable && this.CORS_PROXIES.length > 0) {
+        console.log(`[CorsAwareFetch] Using local proxy for Mexican govt site...`);
+        
+        try {
+          // Add race condition with timeout to prevent infinite hanging
+          const proxyResult = await Promise.race([
+            this.tryFallbackStrategy(url, 'proxy', fetchOptions, timeout),
+            new Promise<CorsAwareFetchResult>((_, reject) => 
+              setTimeout(() => reject(new Error('Proxy request timeout')), timeout + 1000)
+            )
+          ]);
+          
+          if (proxyResult.success) {
+            return proxyResult;
+          }
+          console.log(`[CorsAwareFetch] Local proxy failed, providing user guidance`);
+        } catch (error) {
+          console.error(`[CorsAwareFetch] Proxy request failed with error:`, error);
+        }
+      } else {
+        console.log(`[CorsAwareFetch] No local proxy available, providing user guidance`);
+      }
+      
+      // Return CORS guidance only after trying available proxies
+      return {
+        success: false,
+        error: 'Cross-origin request blocked by browser CORS policy',
+        corsBlocked: true,
+        strategy: isLocalProxyAvailable ? 'proxy-failed' : 'no-proxy',
+        suggestions: this.generateSuggestions(url, true)
+      };
+    }
+
+    // For same-origin or non-Mexican sites, try normal fetch flow
     const directResult = await this.tryDirectFetch(url, fetchOptions, timeout);
     if (directResult.success) {
       return directResult;
     }
 
-    // If CORS blocked and it's a Mexican government site, try fallback strategies
-    if (directResult.corsBlocked && this.isMexicanGovtSite(url)) {
+    // If we have self-hosted proxies available, try them
+    if (directResult.corsBlocked && this.CORS_PROXIES.length > 0) {
+      console.log(`[CorsAwareFetch] Trying ${this.CORS_PROXIES.length} available proxies...`);
+      
       for (const strategy of fallbackStrategies) {
-        const fallbackResult = await this.tryFallbackStrategy(url, strategy, fetchOptions, timeout);
-        if (fallbackResult.success) {
-          return fallbackResult;
+        if (strategy === 'proxy') {
+          const fallbackResult = await this.tryFallbackStrategy(url, strategy, fetchOptions, timeout);
+          if (fallbackResult.success) {
+            return fallbackResult;
+          }
         }
       }
+    } else if (directResult.corsBlocked) {
+      console.log(`[CorsAwareFetch] No self-hosted proxies available, providing user guidance`);
     }
 
-    // All strategies failed, return comprehensive error information
+    // All strategies failed or no proxies available
     return {
       success: false,
       error: directResult.error || 'Failed to fetch document',
-      corsBlocked: directResult.corsBlocked,
-      suggestions: this.generateSuggestions(url, directResult.corsBlocked)
+      corsBlocked: directResult.corsBlocked || isCrossOrigin,
+      suggestions: this.generateSuggestions(url, directResult.corsBlocked || isCrossOrigin)
     };
   }
 
@@ -145,7 +210,10 @@ export class CorsAwareFetch {
   ): Promise<CorsAwareFetchResult> {
     for (const proxyBase of this.CORS_PROXIES) {
       try {
-        const proxyUrl = `${proxyBase}${encodeURIComponent(url)}`;
+        // Properly construct proxy URL with query parameter
+        const proxyUrl = `${proxyBase}/?url=${encodeURIComponent(url)}`;
+        console.log(`[CorsAwareFetch] Trying proxy URL: ${proxyUrl}`);
+        
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -161,13 +229,17 @@ export class CorsAwareFetch {
         clearTimeout(timeoutId);
 
         if (response.ok) {
+          console.log(`[CorsAwareFetch] Proxy fetch successful: ${response.status}`);
           return {
             success: true,
             data: response,
             strategy: 'proxy'
           };
+        } else {
+          console.warn(`[CorsAwareFetch] Proxy responded with ${response.status}: ${response.statusText}`);
         }
       } catch (error) {
+        console.error(`[CorsAwareFetch] Proxy ${proxyBase} failed:`, error);
         // Try next proxy
         continue;
       }
@@ -239,6 +311,23 @@ export class CorsAwareFetch {
     );
   }
 
+  private static isCrossOrigin(url: string): boolean {
+    try {
+      const targetUrl = new URL(url);
+      
+      // In browser environment, compare with current origin
+      if (typeof window !== 'undefined') {
+        const currentOrigin = new URL(window.location.href);
+        return targetUrl.origin !== currentOrigin.origin;
+      }
+      
+      // In Node.js environment, assume cross-origin for external URLs
+      return !targetUrl.hostname.includes('localhost') && !targetUrl.hostname.includes('127.0.0.1');
+    } catch {
+      return false;
+    }
+  }
+
   private static isMexicanGovtSite(url: string): boolean {
     try {
       const hostname = new URL(url).hostname.toLowerCase();
@@ -250,28 +339,62 @@ export class CorsAwareFetch {
     }
   }
 
+  /**
+   * Check if local development proxy is running
+   */
+  private static async isLocalProxyRunning(): Promise<boolean> {
+    if (typeof window === 'undefined' || this.CORS_PROXIES.length === 0) {
+      return false;
+    }
+    
+    try {
+      const response = await fetch('http://localhost:3001/health', { 
+        method: 'GET',
+        signal: AbortSignal.timeout(2000) // 2 second timeout
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
   private static generateSuggestions(url: string, corsBlocked: boolean): string[] {
     const suggestions: string[] = [];
+    const isLocalhost = typeof window !== 'undefined' && (
+      window.location.hostname.includes('localhost') || 
+      window.location.hostname.includes('127.0.0.1')
+    );
 
     if (corsBlocked) {
-      suggestions.push('Try downloading the document manually and uploading it instead');
-      
       if (this.isMexicanGovtSite(url)) {
-        suggestions.push('This is an official Mexican government document');
-        suggestions.push('Consider using a browser extension to bypass CORS');
-        suggestions.push('The document can be found in your browser\'s downloads folder');
+        // Specific guidance for Mexican government documents
+        suggestions.push('🏛️ This is an official Mexican government document');
+        suggestions.push('📥 Download manually: Right-click the link → "Save As" → save to your computer');
+        suggestions.push('📤 Then upload: Use the file upload button above to select the downloaded file');
+        suggestions.push('⚡ Automated ingestion: This document will be processed automatically in future updates');
+        
+        if (url.includes('.pdf')) {
+          suggestions.push('📄 PDF detected: The file will be processed and made searchable once uploaded');
+        }
+        
+        // Development-specific suggestions
+        if (isLocalhost) {
+          suggestions.push('🚀 Run local CORS proxy: `npm run dev:proxy` in another terminal');
+          suggestions.push('🔧 Alternative: Install a CORS browser extension like "CORS Unblock"');
+          suggestions.push('📊 Check proxy status: http://localhost:3001/health');
+        }
+      } else {
+        suggestions.push('📥 Download the document manually and upload it using the file upload option');
+        suggestions.push('🌐 Cross-origin requests are blocked by browser security policy');
       }
-
-      if (url.includes('.pdf')) {
-        suggestions.push('Right-click the link and "Save As" to download the PDF');
-        suggestions.push('Then use the file upload option in the admin interface');
-      }
-
-      suggestions.push('Contact the administrator to configure a CORS proxy');
+      
+      suggestions.push('💡 The upload method is often more reliable than URL fetching');
+      suggestions.push('📋 Submit document requests via GitHub Issues for automated processing');
     } else {
-      suggestions.push('Check your internet connection');
-      suggestions.push('Verify the document URL is correct');
-      suggestions.push('The document may be temporarily unavailable');
+      suggestions.push('🔍 Check your internet connection');
+      suggestions.push('🔗 Verify the document URL is correct and accessible');
+      suggestions.push('⏰ The document server may be temporarily unavailable');
+      suggestions.push('🔄 Try again in a few minutes');
     }
 
     return suggestions;
@@ -300,5 +423,47 @@ export function isLikelyCorsBlocked(url: string): boolean {
     return urlObj.origin !== currentOrigin;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Check if local development proxy is running
+ * Useful for UI components to show proxy status
+ */
+export async function checkLocalProxyStatus(): Promise<{
+  running: boolean;
+  url?: string;
+  error?: string;
+}> {
+  const isLocalhost = typeof window !== 'undefined' && (
+    window.location.hostname.includes('localhost') || 
+    window.location.hostname.includes('127.0.0.1')
+  );
+
+  if (!isLocalhost) {
+    return { running: false, error: 'Not in localhost environment' };
+  }
+
+  try {
+    const response = await fetch('http://localhost:3001/health', { 
+      method: 'GET',
+      signal: AbortSignal.timeout(3000)
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return { 
+        running: true, 
+        url: 'http://localhost:3001',
+        ...data 
+      };
+    } else {
+      return { running: false, error: `Proxy responded with ${response.status}` };
+    }
+  } catch (error) {
+    return { 
+      running: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
   }
 }

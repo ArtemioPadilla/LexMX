@@ -177,7 +177,7 @@ export const GET: APIRoute = async (context) => {
       browser: typeof navigator !== 'undefined' ? navigator.userAgent : 'Server'
     };
     
-    let responseData: any = {
+    const responseData: any = {
       overview,
       corpus: corpusStats,
       embeddings: embeddingsStats,

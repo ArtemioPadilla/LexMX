@@ -18,6 +18,18 @@ import { getUrl } from '../../utils/urls';
         </p>
       </div>
 
+      <!-- Debug Tools -->
+      <div class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+        <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">🔧 Debug Tools</h3>
+        <button 
+          id="debug-storage-btn"
+          class="px-3 py-1 text-xs bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors"
+        >
+          Check IndexedDB Storage
+        </button>
+        <div id="debug-output" class="mt-2 text-xs text-gray-600 dark:text-gray-400"></div>
+      </div>
+
       <!-- Navigation Tabs -->
       <div class="mb-8 border-b border-gray-200 dark:border-gray-700">
         <nav class="-mb-px flex space-x-8">
@@ -37,7 +49,24 @@ import { getUrl } from '../../utils/urls';
       </div>
 
       <!-- Quick Stats -->
-      <div class="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="mb-8 grid grid-cols-1 md:grid-cols-5 gap-4">
+        <!-- CORS Proxy Status -->
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg id="proxy-status-icon" class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+              </svg>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-500 dark:text-gray-400" data-i18n="admin.documents.stats.corsProxy">CORS Proxy</p>
+              <p class="text-sm font-semibold">
+                <span id="proxy-status" class="text-gray-500">Checking...</span>
+              </p>
+            </div>
+          </div>
+        </div>
+        
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           <div class="flex items-center">
             <div class="flex-shrink-0">
@@ -197,6 +226,52 @@ import { getUrl } from '../../utils/urls';
       }
     }
     
+    // Check CORS proxy status
+    async function checkProxyStatus() {
+      const statusElement = document.getElementById('proxy-status');
+      const iconElement = document.getElementById('proxy-status-icon');
+      
+      if (!statusElement || !iconElement) {
+        console.warn('[ProxyStatus] Required elements not found');
+        return;
+      }
+      
+      if (typeof window === 'undefined' || 
+          !window.location.hostname.includes('localhost') && 
+          !window.location.hostname.includes('127.0.0.1')) {
+        statusElement.textContent = 'Not Available';
+        statusElement.setAttribute('class', 'text-gray-500');
+        iconElement.setAttribute('class', 'h-6 w-6 text-gray-400');
+        return;
+      }
+      
+      try {
+        const response = await fetch('http://localhost:3001/health', { 
+          method: 'GET',
+          signal: AbortSignal.timeout(2000) // 2 second timeout
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          statusElement.textContent = `✅ Available${data.version ? ` (${data.version})` : ''}`;
+          statusElement.setAttribute('class', 'text-green-600 dark:text-green-400');
+          if (iconElement) iconElement.setAttribute('class', 'h-6 w-6 text-green-500');
+        } else {
+          throw new Error(`HTTP ${response.status}`);
+        }
+      } catch (error) {
+        statusElement.textContent = '❌ Offline';
+        statusElement.setAttribute('class', 'text-red-600 dark:text-red-400');
+        if (iconElement) iconElement.setAttribute('class', 'h-6 w-6 text-red-500');
+        
+        // Add helpful instruction
+        const instruction = document.createElement('div');
+        instruction.className = 'mt-1 text-xs text-gray-500';
+        instruction.textContent = 'Run: npm run dev:proxy';
+        statusElement.parentNode.appendChild(instruction);
+      }
+    }
+
     // Load corpus statistics
     async function loadStatistics() {
       try {
@@ -233,11 +308,43 @@ import { getUrl } from '../../utils/urls';
       }
     }
 
-    // Load statistics on page load
+    // Load statistics and proxy status on page load
     loadStatistics();
+    checkProxyStatus();
 
     // Refresh statistics every 30 seconds
     setInterval(loadStatistics, 30000);
+    
+    // Check proxy status every 10 seconds
+    setInterval(checkProxyStatus, 10000);
+
+    // Debug tools
+    document.getElementById('debug-storage-btn').addEventListener('click', async () => {
+      const output = document.getElementById('debug-output');
+      output.textContent = 'Checking storage...';
+      
+      try {
+        // Import storage
+        const { EnhancedOfflineStorage } = await import('/src/lib/storage/enhanced-offline-storage.js');
+        const storage = EnhancedOfflineStorage.getInstance();
+        
+        // Get all documents
+        const allDocs = await storage.getAllDocuments();
+        
+        output.innerHTML = `
+          <div class="font-mono">
+            <div class="font-bold">Storage Status:</div>
+            <div>Total documents: ${allDocs.length}</div>
+            ${allDocs.map(doc => `<div>• ${doc.id}: "${doc.title}"</div>`).join('')}
+          </div>
+        `;
+        
+        console.log('[Debug] All documents in storage:', allDocs);
+      } catch (error) {
+        output.textContent = `Error: ${error.message}`;
+        console.error('[Debug] Storage check failed:', error);
+      }
+    });
 
     // Handle ingestion completion
     window.addEventListener('ingestion-complete', (event) => {

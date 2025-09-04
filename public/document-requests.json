@@ -1,0 +1,67 @@
+{
+  "version": "1.0.0",
+  "description": "Community document ingestion queue for Mexican legal corpus",
+  "lastUpdated": "2025-08-25T19:52:32Z",
+  "documents": [
+    {
+      "id": "cpeum-2024",
+      "title": "Constitución Política de los Estados Unidos Mexicanos",
+      "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf",
+      "type": "constitution",
+      "primaryArea": "constitutional",
+      "hierarchy": 1,
+      "priority": "high",
+      "status": "pending"
+    },
+    {
+      "id": "lft-2024",
+      "title": "Ley Federal del Trabajo",
+      "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/125_110121.pdf",
+      "type": "law",
+      "primaryArea": "labor",
+      "hierarchy": 3,
+      "priority": "high",
+      "status": "pending"
+    },
+    {
+      "id": "cpf-2024",
+      "title": "Código Penal Federal",
+      "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/9_230421.pdf",
+      "type": "code",
+      "primaryArea": "criminal",
+      "hierarchy": 3,
+      "priority": "high",
+      "status": "pending"
+    },
+    {
+      "id": "ccf-2024",
+      "title": "Código Civil Federal",
+      "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/2_110121.pdf",
+      "type": "code",
+      "primaryArea": "civil",
+      "hierarchy": 3,
+      "priority": "medium",
+      "status": "pending"
+    },
+    {
+      "id": "cff-2024",
+      "title": "Código Fiscal de la Federación",
+      "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/8_091221.pdf",
+      "type": "code",
+      "primaryArea": "tax",
+      "hierarchy": 3,
+      "priority": "medium",
+      "status": "pending"
+    },
+    {
+      "id": "lss-2024",
+      "title": "Ley del Seguro Social",
+      "url": "https://www.diputados.gob.mx/LeyesBiblio/pdf/92_041220.pdf",
+      "type": "law",
+      "primaryArea": "social-security",
+      "hierarchy": 3,
+      "priority": "medium",
+      "status": "pending"
+    }
+  ]
+}

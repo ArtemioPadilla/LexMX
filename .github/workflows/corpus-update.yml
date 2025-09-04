@@ -1,4 +1,4 @@
-name: 📚 Legal Corpus Update
+name: 📚 Legal Corpus Auto-Update
 
 on:
   schedule:
@@ -12,22 +12,176 @@ on:
         default: false
         type: boolean
       source:
-        description: 'Corpus source'
+        description: 'Document source'
         required: false
-        default: 'official'
+        default: 'queue'
         type: choice
         options:
-          - official
-          - backup
-          - test
+          - queue
+          - manual
+          - all
+      max_documents:
+        description: 'Maximum documents to process (0 = no limit)'
+        required: false
+        default: '10'
+        type: string
 
 env:
   NODE_VERSION: '18'
 
 jobs:
-  check-updates:
-    name: 🔍 Check for Updates
+  auto-ingest-documents:
+    name: 🤖 Auto-Ingest Documents
     runs-on: ubuntu-latest
+    outputs:
+      documents_processed: ${{ steps.ingest.outputs.processed }}
+      documents_failed: ${{ steps.ingest.outputs.failed }}
+    steps:
+      - name: 📂 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Check document queue
+        id: check-queue
+        run: |
+          if [ -f "public/document-requests.json" ]; then
+            PENDING=$(node -e "
+              const fs = require('fs');
+              const data = JSON.parse(fs.readFileSync('public/document-requests.json', 'utf8'));
+              const pending = data.documents.filter(d => d.status === 'pending').length;
+              console.log(pending);
+            ")
+            echo "pending_documents=$PENDING" >> $GITHUB_OUTPUT
+            echo "📋 Found $PENDING pending documents in queue"
+          else
+            echo "pending_documents=0" >> $GITHUB_OUTPUT
+            echo "⚠️ Document queue not found"
+          fi
+
+      - name: 🚀 Auto-ingest documents
+        id: ingest
+        if: steps.check-queue.outputs.pending_documents > 0 || github.event.inputs.force_update == 'true'
+        run: |
+          echo "🤖 Starting auto-ingestion..."
+          
+          # Set max documents limit
+          MAX_DOCS="${{ github.event.inputs.max_documents || '10' }}"
+          
+          # Run auto-ingest script
+          node scripts/auto-ingest-documents.js --max-docs="$MAX_DOCS" 2>&1 | tee ingest.log
+          
+          # Extract results from log
+          PROCESSED=$(grep -o "Processed: [0-9]*" ingest.log | grep -o "[0-9]*" || echo "0")
+          FAILED=$(grep -o "Failed: [0-9]*" ingest.log | grep -o "[0-9]*" || echo "0")
+          
+          echo "processed=$PROCESSED" >> $GITHUB_OUTPUT
+          echo "failed=$FAILED" >> $GITHUB_OUTPUT
+          
+          echo "✅ Processed: $PROCESSED documents"
+          echo "❌ Failed: $FAILED documents"
+
+      - name: 📊 Update corpus metadata
+        if: steps.ingest.outputs.processed > 0
+        run: |
+          echo "📊 Updating corpus metadata..."
+          
+          # Update corpus metadata with build info
+          node -e "
+            const fs = require('fs');
+            const path = 'public/legal-corpus/metadata.json';
+            
+            try {
+              const metadata = JSON.parse(fs.readFileSync(path, 'utf8'));
+              metadata.lastAutoUpdate = new Date().toISOString();
+              metadata.autoIngestionRun = '${{ github.run_number }}';
+              metadata.processedInRun = ${{ steps.ingest.outputs.processed }};
+              fs.writeFileSync(path, JSON.stringify(metadata, null, 2));
+              console.log('✅ Corpus metadata updated');
+            } catch (error) {
+              console.log('⚠️ Could not update metadata:', error.message);
+            }
+          "
+
+      - name: 🧬 Generate embeddings
+        if: steps.ingest.outputs.processed > 0 && env.OPENAI_API_KEY != ''
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          echo "🧬 Generating embeddings for new documents..."
+          npm run build:embeddings || echo "⚠️ Embedding generation failed or skipped"
+
+      - name: 📤 Commit and push changes
+        if: steps.ingest.outputs.processed > 0
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # Add all corpus changes
+          git add public/legal-corpus/
+          git add public/embeddings/ || echo "No embeddings to add"
+          git add public/document-requests.json
+          
+          # Check if there are changes
+          if git diff --staged --quiet; then
+            echo "📭 No changes to commit"
+          else
+            # Create commit message
+            COMMIT_MSG="🤖 Auto-ingest: Add ${{ steps.ingest.outputs.processed }} legal documents
+
+            Processed ${{ steps.ingest.outputs.processed }} documents from queue
+            Failed: ${{ steps.ingest.outputs.failed }} documents
+            Run: ${{ github.run_number }}
+            
+            🤖 Generated with [Claude Code](https://claude.ai/code)
+            
+            Co-Authored-By: Claude <noreply@anthropic.com>"
+            
+            git commit -m "$COMMIT_MSG"
+            git push
+            
+            echo "✅ Changes committed and pushed"
+          fi
+
+      - name: 📋 Create summary
+        if: always()
+        run: |
+          echo "## 📚 Auto-Ingest Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 📄 **Processed**: ${{ steps.ingest.outputs.processed || '0' }} documents" >> $GITHUB_STEP_SUMMARY
+          echo "- ❌ **Failed**: ${{ steps.ingest.outputs.failed || '0' }} documents" >> $GITHUB_STEP_SUMMARY
+          echo "- 📋 **Queue**: ${{ steps.check-queue.outputs.pending_documents || '0' }} pending documents" >> $GITHUB_STEP_SUMMARY
+          echo "- 🏃 **Run**: #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.ingest.outputs.processed }}" -gt "0" ]; then
+            echo "✅ **Auto-ingestion completed successfully!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "New documents have been added to the corpus and are ready for deployment." >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.check-queue.outputs.pending_documents }}" -eq "0" ]; then
+            echo "📭 **No documents to process**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The document queue is empty. Add document requests via GitHub Issues or pull requests." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Auto-ingestion completed with issues**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the logs above for details on failed documents." >> $GITHUB_STEP_SUMMARY
+          fi
+
+  check-updates:
+    name: 🔍 Check for Updates (Legacy)
+    runs-on: ubuntu-latest
+    needs: auto-ingest-documents
+    if: false  # Disabled - replaced by auto-ingest-documents job
     outputs:
       has_updates: ${{ steps.check.outputs.has_updates }}
       update_summary: ${{ steps.check.outputs.summary }}

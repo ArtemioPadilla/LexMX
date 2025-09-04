@@ -22,19 +22,25 @@ export function HydrationBoundary({
     setIsHydrated(true);
   }, []);
 
-  // During SSR and initial client render, show fallback
-  if (!isHydrated) {
-    return (
-      <div data-testid={`${testId}-loading`} className="hydration-fallback">
-        {fallback}
-      </div>
-    );
-  }
-
-  // After hydration, show the actual content
+  // Always render the same structure to avoid hydration mismatches
+  // Just show/hide content with CSS
   return (
     <div data-testid={testId} className="hydration-boundary">
-      {children}
+      {/* Show fallback during SSR/initial load */}
+      <div 
+        data-testid={`${testId}-loading`} 
+        className={`hydration-fallback ${isHydrated ? 'hidden' : ''}`}
+      >
+        {fallback}
+      </div>
+      
+      {/* Show actual content after hydration */}
+      <div 
+        data-testid={`${testId}-content`}
+        className={`hydration-content ${!isHydrated ? 'hidden' : ''}`}
+      >
+        {children}
+      </div>
     </div>
   );
 }

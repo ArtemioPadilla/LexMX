@@ -52,6 +52,81 @@
       "embeddings": "Embeddings"
     }
   },
+  "corsGuidance": {
+    "title": {
+      "mexicanGovt": "Cross-Origin Policy Blocks Mexican Government Document",
+      "general": "Cross-Origin Request Blocked by Browser Security"
+    },
+    "description": {
+      "mexicanGovt": "Browser security blocks direct access to external government websites. This is normal and expected.",
+      "general": "Browser CORS policy prevents direct access to this external website."
+    },
+    "environment": {
+      "development": {
+        "title": "Development Environment",
+        "proxyNotRunning": "No CORS proxy running. Run \"make dev-full\" to enable URL ingestion.",
+        "proxyDetected": "CORS proxy detected but request still blocked.",
+        "proxyAvailable": "CORS proxy detected and healthy"
+      },
+      "production": {
+        "title": "Production Environment",
+        "noProxy": "URL ingestion not available in production - use file upload instead."
+      }
+    },
+    "quickFix": {
+      "development": "Open a new terminal and run <code>make dev-full</code> to enable URL ingestion.",
+      "production": "Use the file upload button above. Download the document manually, then select it from your computer."
+    },
+    "steps": {
+      "title": "Recommended Actions:",
+      "officialDocument": "Official Mexican government document detected",
+      "developmentEnvironment": "Development environment - CORS proxy not running",
+      "enableUrlIngestion": "Enable URL ingestion: run \"make dev-full\" (starts dev server + CORS proxy)",
+      "currentBasicServer": "Current: \"make start\" (basic dev server only)",
+      "alternativeDownload": "Alternative: Download + upload method",
+      "productionEnvironment": "GitHub Pages environment - CORS proxy not available",
+      "downloadMethod": "Download method: Right-click URL → \"Save Link As\" → save to computer",
+      "uploadMethod": "Upload method: Use the file upload button above",
+      "automatedProcessing": "Automated processing: Submit document request for future updates",
+      "pdfDetected": "PDF detected - will be processed and made searchable once uploaded",
+      "fileUploadReliable": "File upload is often more reliable than URL fetching",
+      "crossOriginBlocked": "Cross-origin request blocked by browser security policy",
+      "downloadManually": "Download the document manually and upload it"
+    },
+    "actions": {
+      "clearAndTryAgain": "Clear and Try Again",
+      "recheckProxy": "Recheck Proxy",
+      "requestDocument": "Request this Document",
+      "submitRequest": "Submit Document Request"
+    },
+    "documentQueue": {
+      "title": "Community Document Request",
+      "description": "This document can be automatically processed to benefit all users.",
+      "benefits": [
+        "Available for all users without manual download",
+        "Fully processed and optimized for search",
+        "Included in future site updates",
+        "Contributes to the growth of Mexican legal corpus"
+      ],
+      "howItWorks": "How it works:",
+      "steps": [
+        "You submit a document request with the official URL",
+        "The document is added to the processing queue",
+        "GitHub Actions automatically processes documents weekly",
+        "The document becomes available in the next site update"
+      ],
+      "submitButton": "Request Automatic Processing",
+      "or": "or",
+      "uploadNow": "Upload Document Now"
+    },
+    "status": {
+      "analyzing": "Analyzing URL...",
+      "corsBlocked": "Blocked by CORS",
+      "proxyHealthy": "Proxy healthy - URL ingestion enabled",
+      "proxyUnavailable": "Proxy unavailable",
+      "ready": "Ready to ingest"
+    }
+  },
   "admin": {
     "documents": {
       "title": "Document Management Dashboard",

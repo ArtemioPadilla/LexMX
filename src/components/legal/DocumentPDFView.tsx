@@ -22,34 +22,41 @@ export function DocumentPDFView({ document, currentSection: _currentSection }: D
       setError(null);
 
       try {
-        // Check for PDF in different possible locations
+        // For dynamically ingested documents (those with generated IDs), skip PDF lookup
+        const isDynamicDocument = document.id.startsWith('document-from-url') || 
+                                document.id.includes('-') && document.id.length > 20;
+        
+        if (isDynamicDocument) {
+          // Skip PDF lookup for dynamic documents to avoid 404 errors
+          setError('PDF no disponible para documentos importados');
+          setLoading(false);
+          return;
+        }
+
+        // Check for PDF in different possible locations (only for static documents)
         const possibleUrls = [
           `/legal-corpus/pdf/${document.id}.pdf`,
           `/legal-corpus/${document.id}.pdf`,
-          document.officialUrl,
+          document.officialUrl && document.officialUrl.endsWith('.pdf') ? document.officialUrl : null,
         ].filter(Boolean);
 
         let foundUrl = null;
         for (const url of possibleUrls) {
           try {
             const response = await fetch(url!, { method: 'HEAD' });
-            if (response.ok) {
+            if (response.ok && response.headers.get('content-type')?.includes('pdf')) {
               foundUrl = url;
               break;
             }
           } catch (_e) {
-            void _e;
-            // Continue to next URL
+            // Silently continue to next URL (no console errors)
           }
         }
 
         if (foundUrl) {
           setPdfUrl(foundUrl);
         } else {
-          // Generate PDF from text content if no PDF found
-          const pdfBlob = await generatePDFFromContent(document);
-          const blobUrl = URL.createObjectURL(pdfBlob);
-          setPdfUrl(blobUrl);
+          setError('PDF no encontrado para este documento');
         }
       } catch (err) {
         setError('Error al cargar el documento PDF');

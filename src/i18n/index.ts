@@ -1,4 +1,4 @@
-import { useReducer, useEffect } from 'react';
+import { useReducer, useEffect, useState } from 'react';
 import esTranslations from './locales/es.json';
 import enTranslations from './locales/en.json';
 import type { TranslationValue, TranslationParams } from '../types/common';
@@ -145,22 +145,79 @@ class I18n {
 // Export singleton instance
 export const i18n = new I18n();
 
+// Safe hook wrapper that avoids React context issues
+function useSafeState<T>(initialValue: T): [T, (value: T) => void] {
+  try {
+    return useState(initialValue);
+  } catch {
+    // If useState fails (e.g., no React context), return safe defaults
+    return [initialValue, () => {}];
+  }
+}
+
+function useSafeReducer<T>(
+  reducer: (state: T, action: any) => T, 
+  initialState: T
+): [T, (action: any) => void] {
+  try {
+    return useReducer(reducer, initialState);
+  } catch {
+    // If useReducer fails, return safe defaults
+    return [initialState, () => {}];
+  }
+}
+
+function useSafeEffect(effect: () => void | (() => void), deps?: any[]): void {
+  try {
+    return useEffect(effect, deps);
+  } catch {
+    // If useEffect fails, just ignore it
+    return;
+  }
+}
+
 // Export hook for React components
 export function useTranslation() {
-  const [, forceUpdate] = useReducer(x => x + 1, 0);
+  // Use safe hooks to avoid React context issues during SSR/hydration
+  const [isClient, setIsClient] = useSafeState(false);
+  const [, forceUpdate] = useSafeReducer((x: number) => x + 1, 0);
 
-  useEffect(() => {
+  // Ensure we're client-side before setting up subscriptions
+  useSafeEffect(() => {
+    setIsClient(true);
+    
     const unsubscribe = i18n.onChange(() => {
-      forceUpdate();
+      forceUpdate(0);
     });
     return unsubscribe;
   }, []);
 
+  // Always return safe functions, regardless of hydration state
   return {
-    t: i18n.t.bind(i18n),
-    language: i18n.language,
-    setLanguage: i18n.setLanguage.bind(i18n),
-    getSection: i18n.getSection.bind(i18n)
+    t: (key: string, params?: TranslationParams) => {
+      try {
+        return i18n.t(key, params);
+      } catch {
+        return key;
+      }
+    },
+    language: (isClient ? i18n.language : 'es') as Language,
+    setLanguage: (lang: Language) => {
+      if (isClient) {
+        try {
+          i18n.setLanguage(lang);
+        } catch {
+          // Ignore errors during hydration
+        }
+      }
+    },
+    getSection: (section: string) => {
+      try {
+        return i18n.getSection(section);
+      } catch {
+        return {};
+      }
+    }
   };
 }
 
