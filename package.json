@@ -72,7 +72,7 @@
     "eslint-plugin-react": "^7.36.1",
     "eslint-plugin-react-hooks": "^5.0.0",
     "glob": "^11.0.3",
-    "jsdom": "^26.1.0",
+    "jsdom": "^27.0.0",
     "node-fetch": "^3.3.2",
     "sharp": "^0.34.3",
     "typescript-eslint": "^8.0.0",
