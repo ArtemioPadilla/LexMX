@@ -111,7 +111,7 @@ describe('DocumentFetcher', () => {
           isOfficial: false
         }],
         status: 'pending',
-        priority: 5,
+        priority: 'medium',
         requestedBy: 'user',
         createdAt: new Date().toISOString(),
         hierarchy: 3,
@@ -144,7 +144,7 @@ describe('DocumentFetcher', () => {
           isOfficial: false
         }],
         status: 'pending',
-        priority: 5,
+        priority: 'medium',
         requestedBy: 'user',
         createdAt: new Date().toISOString(),
         hierarchy: 3,
@@ -162,7 +162,7 @@ describe('DocumentFetcher', () => {
         type: 'law',
         sources: [],
         status: 'pending',
-        priority: 5,
+        priority: 'medium',
         requestedBy: 'user',
         createdAt: new Date().toISOString(),
         hierarchy: 3,

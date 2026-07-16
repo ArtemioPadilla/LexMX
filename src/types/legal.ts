@@ -249,6 +249,7 @@ export interface DocumentSource {
   fileSize?: number;
   fileType?: string;
   uploadedAt?: string;
+  content?: string; // Raw text/base64 content for pdf_upload sources
   verified: boolean;
   isOfficial: boolean;
   metadata?: {
