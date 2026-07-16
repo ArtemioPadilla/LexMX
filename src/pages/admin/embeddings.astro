@@ -192,28 +192,36 @@ import { getUrl } from '../../utils/urls';
         if (embeddingsResponse.ok) {
           const metadata = await embeddingsResponse.json();
           
-          document.getElementById('total-vectors').textContent = metadata.totalVectors || '0';
-          document.getElementById('vector-dimensions').textContent = metadata.dimensions || '384';
+          const totalVectorsEl = document.getElementById('total-vectors');
+          const vectorDimensionsEl = document.getElementById('vector-dimensions');
+          if (totalVectorsEl) totalVectorsEl.textContent = metadata.totalVectors || '0';
+          if (vectorDimensionsEl) vectorDimensionsEl.textContent = metadata.dimensions || '384';
           
           // Calculate storage size (rough estimate)
           const vectors = parseInt(metadata.totalVectors || '0');
           const dims = parseInt(metadata.dimensions || '384');
           const sizeInBytes = vectors * dims * 4; // 4 bytes per float32
           const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(2);
-          document.getElementById('storage-size').textContent = `${sizeInMB} MB`;
+          const storageSizeEl = document.getElementById('storage-size');
+          if (storageSizeEl) storageSizeEl.textContent = `${sizeInMB} MB`;
         }
         
         // Check IndexedDB for vector store
         if ('indexedDB' in window) {
           const dbRequest = indexedDB.open('LexMX-VectorStore');
-          dbRequest.onsuccess = function(event) {
-            const db = event.target.result;
+          dbRequest.onsuccess = function(event: Event) {
+            const db = (event.target as IDBOpenDBRequest).result;
+            const indexStatusEl = document.getElementById('index-status');
             if (db.objectStoreNames.contains('vectors')) {
-              document.getElementById('index-status').textContent = 'Ready';
-              document.getElementById('index-status').className = 'text-green-600 dark:text-green-400';
+              if (indexStatusEl) {
+                indexStatusEl.textContent = 'Ready';
+                indexStatusEl.className = 'text-green-600 dark:text-green-400';
+              }
             } else {
-              document.getElementById('index-status').textContent = 'Not Initialized';
-              document.getElementById('index-status').className = 'text-yellow-600 dark:text-yellow-400';
+              if (indexStatusEl) {
+                indexStatusEl.textContent = 'Not Initialized';
+                indexStatusEl.className = 'text-yellow-600 dark:text-yellow-400';
+              }
             }
             db.close();
           };
@@ -225,7 +233,8 @@ import { getUrl } from '../../utils/urls';
 
     // Button handlers
     document.getElementById('generate-embeddings')?.addEventListener('click', async () => {
-      const button = document.getElementById('generate-embeddings');
+      const button = document.getElementById('generate-embeddings') as HTMLButtonElement | null;
+      if (!button) return;
       button.disabled = true;
       button.textContent = 'Generating...';
       
@@ -238,7 +247,8 @@ import { getUrl } from '../../utils/urls';
     });
 
     document.getElementById('rebuild-index')?.addEventListener('click', async () => {
-      const button = document.getElementById('rebuild-index');
+      const button = document.getElementById('rebuild-index') as HTMLButtonElement | null;
+      if (!button) return;
       button.disabled = true;
       button.textContent = 'Rebuilding...';
       
