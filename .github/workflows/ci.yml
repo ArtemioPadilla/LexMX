@@ -14,7 +14,7 @@ on:
         type: boolean
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'
   CACHE_KEY_PREFIX: 'lexmx-v1'
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
     
     strategy:
       matrix:
-        node-version: [18, 20]
+        node-version: [20, 22]
         
     steps:
       - name: 📥 Checkout code
