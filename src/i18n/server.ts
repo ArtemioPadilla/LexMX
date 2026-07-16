@@ -25,10 +25,10 @@ export function getTranslation(url: URL) {
   
   return function t(key: string, params?: TranslationParams): string {
     const keys = key.split('.');
-    let value: TranslationValue | undefined = translations[lang];
+    let value: string | string[] | TranslationValue | undefined = translations[lang];
     
     for (const k of keys) {
-      if (typeof value === 'object' && value !== null && k in value) {
+      if (typeof value === 'object' && value !== null && !Array.isArray(value) && k in value) {
         value = value[k];
       } else {
         value = undefined;
@@ -36,9 +36,9 @@ export function getTranslation(url: URL) {
       
       if (value === undefined) {
         // Fallback to Spanish if key not found
-        let fallbackValue: TranslationValue | undefined = translations.es;
+        let fallbackValue: string | string[] | TranslationValue | undefined = translations.es;
         for (const k2 of keys) {
-          if (typeof fallbackValue === 'object' && fallbackValue !== null && k2 in fallbackValue) {
+          if (typeof fallbackValue === 'object' && fallbackValue !== null && !Array.isArray(fallbackValue) && k2 in fallbackValue) {
             fallbackValue = fallbackValue[k2];
           } else {
             console.warn(`Translation key not found: ${key}`);
@@ -79,10 +79,10 @@ export function getTranslations(lang: Language = 'es') {
  */
 export function hasTranslation(key: string, lang: Language = 'es'): boolean {
   const keys = key.split('.');
-  let value: TranslationValue | undefined = translations[lang];
+  let value: string | string[] | TranslationValue | undefined = translations[lang];
   
   for (const k of keys) {
-    if (typeof value === 'object' && value !== null && k in value) {
+    if (typeof value === 'object' && value !== null && !Array.isArray(value) && k in value) {
       value = value[k];
     } else {
       return false;
