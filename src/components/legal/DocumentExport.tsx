@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import type { LegalDocument } from '../../types/legal';
-import type { DocumentContentArray } from '../../types/common';
+import type { LegalDocument, LegalContent } from '../../types/legal';
+
+type DocumentContentArray = LegalContent[];
 
 interface DocumentExportProps {
   document: LegalDocument;
@@ -8,7 +9,7 @@ interface DocumentExportProps {
   currentSection?: string | null;
 }
 
-export function DocumentExport({ document, currentView, currentSection }: DocumentExportProps) {
+export function DocumentExport({ document: legalDoc, currentView, currentSection }: DocumentExportProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -60,7 +61,7 @@ export function DocumentExport({ document, currentView, currentSection }: Docume
 
   // Generate filename based on document and options
   const generateFilename = (format: string, section?: string) => {
-    const baseFilename = document.id.replace(/[^a-zA-Z0-9]/g, '_');
+    const baseFilename = legalDoc.id.replace(/[^a-zA-Z0-9]/g, '_');
     const sectionSuffix = section ? `_seccion_${section}` : '';
     const timestamp = new Date().toISOString().split('T')[0];
     
@@ -78,8 +79,8 @@ export function DocumentExport({ document, currentView, currentSection }: Docume
       
       // Filter content based on current section if applicable
       const contentToExport = currentSection 
-        ? document.content?.filter(c => c.id === currentSection || c.parent === currentSection)
-        : document.content;
+        ? legalDoc.content?.filter(c => c.id === currentSection || c.parent === currentSection)
+        : legalDoc.content;
 
       switch (format) {
         case 'txt':
@@ -89,7 +90,7 @@ export function DocumentExport({ document, currentView, currentSection }: Docume
         
         case 'json':
           content = JSON.stringify({
-            ...document,
+            ...legalDoc,
             content: contentToExport,
             exportInfo: {
               exportedAt: new Date().toISOString(),
@@ -102,21 +103,21 @@ export function DocumentExport({ document, currentView, currentSection }: Docume
           break;
         
         case 'html':
-          content = generateHTMLContent(document, contentToExport || []);
+          content = generateHTMLContent(legalDoc, contentToExport || []);
           mimeType = 'text/html';
           break;
         
         case 'markdown':
-          content = generateMarkdownContent(document, contentToExport || []);
+          content = generateMarkdownContent(legalDoc, contentToExport || []);
           mimeType = 'text/markdown';
           break;
         
         case 'pdf':
-          await exportToPDF(document, contentToExport || []);
+          await exportToPDF(legalDoc, contentToExport || []);
           return;
         
         case 'docx':
-          await exportToDocx(document, contentToExport || []);
+          await exportToDocx(legalDoc, contentToExport || []);
           return;
         
         default:
@@ -126,12 +127,12 @@ export function DocumentExport({ document, currentView, currentSection }: Docume
       // Create and download file
       const blob = new Blob([content], { type: mimeType });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
       a.download = generateFilename(format, currentSection || undefined);
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
     } catch (error) {
@@ -144,20 +145,20 @@ export function DocumentExport({ document, currentView, currentSection }: Docume
 
   // Generate plain text content
   const generateTextContent = (content: DocumentContentArray): string => {
-    let text = `${document.title}\n`;
-    text += `${'='.repeat(document.title.length)}\n\n`;
+    let text = `${legalDoc.title}\n`;
+    text += `${'='.repeat(legalDoc.title.length)}\n\n`;
     
-    if (document.shortTitle) {
-      text += `${document.shortTitle}\n\n`;
+    if (legalDoc.shortTitle) {
+      text += `${legalDoc.shortTitle}\n\n`;
     }
     
-    text += `Tipo: ${document.type}\n`;
-    text += `Jerarquía: Nivel ${document.hierarchy}\n`;
-    text += `Área legal: ${document.primaryArea}\n`;
-    text += `Estado: ${document.status}\n`;
+    text += `Tipo: ${legalDoc.type}\n`;
+    text += `Jerarquía: Nivel ${legalDoc.hierarchy}\n`;
+    text += `Área legal: ${legalDoc.primaryArea}\n`;
+    text += `Estado: ${legalDoc.status}\n`;
     
-    if (document.lastReform) {
-      text += `Última reforma: ${new Date(document.lastReform).toLocaleDateString('es-MX')}\n`;
+    if (legalDoc.lastReform) {
+      text += `Última reforma: ${new Date(legalDoc.lastReform).toLocaleDateString('es-MX')}\n`;
     }
     
     text += `\nExportado desde LexMX el ${new Date().toLocaleDateString('es-MX')}\n`;
@@ -371,8 +372,8 @@ export function DocumentExport({ document, currentView, currentSection }: Docume
   // Copy citation to clipboard
   const copyCitation = async () => {
     const citation = currentSection 
-      ? `${document.title}, Artículo ${currentSection}`
-      : document.title;
+      ? `${legalDoc.title}, Artículo ${currentSection}`
+      : legalDoc.title;
     
     try {
       await navigator.clipboard.writeText(citation);
@@ -380,12 +381,12 @@ export function DocumentExport({ document, currentView, currentSection }: Docume
     } catch (err) {
       console.error('Failed to copy citation:', err);
       // Fallback for older browsers
-      const textArea = document.createElement('textarea');
+      const textArea = window.document.createElement('textarea');
       textArea.value = citation;
-      document.body.appendChild(textArea);
+      window.document.body.appendChild(textArea);
       textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
+      window.document.execCommand('copy');
+      window.document.body.removeChild(textArea);
       alert('Cita copiada al portapapeles');
     }
   };

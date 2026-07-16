@@ -77,7 +77,7 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
   };
 
   const handleProfileSelect = (profile: UserProfile) => {
-    setSelectedProfile(profile);
+    _setSelectedProfile(profile);
     setSelectedProviders(profile.providers);
     setStep('providers');
   };
@@ -140,22 +140,22 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
   };
 
   const _testProviderConnection = async (providerId: string) => {
-    setTestingConnection(true);
-    setConnectionStatus(prev => ({ ...prev, [providerId]: 'testing' }));
+    _setTestingConnection(true);
+    _setConnectionStatus(prev => ({ ...prev, [providerId]: 'testing' }));
     
     try {
       const provider = providerManager.getProvider(providerId);
       if (provider && provider.testConnection) {
         const success = await provider.testConnection();
-        setConnectionStatus(prev => ({ ...prev, [providerId]: success ? 'success' : 'error' }));
+        _setConnectionStatus(prev => ({ ...prev, [providerId]: success ? 'success' : 'error' }));
       } else {
-        setConnectionStatus(prev => ({ ...prev, [providerId]: 'error' }));
+        _setConnectionStatus(prev => ({ ...prev, [providerId]: 'error' }));
       }
     } catch (error) {
       console.error(`Failed to test connection for ${providerId}:`, error);
-      setConnectionStatus(prev => ({ ...prev, [providerId]: 'error' }));
+      _setConnectionStatus(prev => ({ ...prev, [providerId]: 'error' }));
     } finally {
-      setTestingConnection(false);
+      _setTestingConnection(false);
     }
   };
 
@@ -164,8 +164,8 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
     setShowPreloadConfirm(false);
     
     try {
-      setIsPreloading(true);
-      setPreloadProgress({ progress: 0, message: t('setup.wizard.webllm.downloading') });
+      _setIsPreloading(true);
+      _setPreloadProgress({ progress: 0, message: t('setup.wizard.webllm.downloading') });
       
       // Create a temporary WebLLM provider to trigger download
       const webllmConfig = providerConfigs.get('webllm') || {
@@ -173,9 +173,11 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
         name: 'WebLLM',
         type: 'local' as const,
         enabled: true,
+        priority: 1,
+        createdAt: Date.now(),
         model: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
         initProgressCallback: (progress: number, message: string) => {
-          setPreloadProgress({ progress, message });
+          _setPreloadProgress({ progress, message });
         }
       };
       
@@ -184,17 +186,17 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
       const provider = new WebLLMProvider(webllmConfig);
       await provider.initialize();
       
-      setPreloadProgress({ progress: 100, message: t('setup.wizard.webllm.downloadSuccess') });
+      _setPreloadProgress({ progress: 100, message: t('setup.wizard.webllm.downloadSuccess') });
       setTimeout(() => {
-        setPreloadProgress(null);
-        setIsPreloading(false);
+        _setPreloadProgress(null);
+        _setIsPreloading(false);
       }, 2000);
       
     } catch (error) {
       console.error('Error preloading WebLLM:', error);
       setError(t('setup.wizard.webllm.downloadError'));
-      setIsPreloading(false);
-      setPreloadProgress(null);
+      _setIsPreloading(false);
+      _setPreloadProgress(null);
     }
   };
 
@@ -246,7 +248,6 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
 
       <div className="flex flex-col space-y-3">
         <button
-          data-testid="setup-webllm"
           onClick={() => {
             // Skip to WebLLM configuration
             setSelectedProviders(['webllm']);
@@ -488,7 +489,9 @@ export default function ProviderSetup({ onComplete }: ProviderSetupProps) {
       <_HydrationBoundary 
         fallback={<_LoadingStates.ProviderSetup />} 
         testId={TEST_IDS.provider.container}
-      />
+      >
+        {null}
+      </_HydrationBoundary>
     );
   }
 
@@ -691,7 +694,7 @@ function _LegacyProviderConfigForm({
   
   // Get models for the provider
   const getModels = (): LLMModel[] => {
-    const dummyConfig: ProviderConfig = { id: provider.id, name: provider.name, enabled: true };
+    const dummyConfig: ProviderConfig = { id: provider.id, name: provider.name, type: provider.type, enabled: true, priority: 1, createdAt: Date.now() };
     
     switch (provider.id) {
       case 'openai':
