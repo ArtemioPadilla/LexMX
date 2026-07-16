@@ -148,9 +148,22 @@ export interface LegalChunk {
     hierarchy: LegalHierarchy;
     legalArea: LegalArea;
     chunkIndex?: number;
+    documentId?: string;
+    documentTitle?: string;
+    documentType?: string;
+    authority?: string;
+    publicationDate?: string;
+    originalId?: string;
+    partNumber?: number;
+    isComplete?: boolean;
+    startParagraph?: number;
+    endParagraph?: number;
+    totalParts?: number;
+    isLastPart?: boolean;
   };
   embedding?: number[];
   keywords: string[];
+  relatedChunks?: string[];
 }
 
 // Mexican legal citation formats
