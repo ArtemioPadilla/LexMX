@@ -3,7 +3,7 @@
 
 import type { DocumentRequest, DocumentSource } from '@/types/legal';
 import { contentExtractor, type ExtractionOptions } from './document-content-extractors';
-import { corsAwareFetch, isLikelyCorsBlocked } from '../utils/cors-aware-fetch';
+import { corsAwareFetch } from '../utils/cors-aware-fetch';
 
 /**
  * Custom error for CORS-blocked requests with detailed information

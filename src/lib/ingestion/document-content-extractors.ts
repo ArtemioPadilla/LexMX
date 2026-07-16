@@ -51,7 +51,6 @@ export class PDFExtractor {
     options: ExtractionOptions = {}
   ): Promise<ExtractionResult> {
     const {
-      preserveFormatting = true,
       includeMetadata = true,
       maxPages = 500 // Reasonable limit for legal documents
     } = options;

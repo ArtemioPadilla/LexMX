@@ -162,7 +162,6 @@ describe('Corpus List API Endpoint', () => {
       mockContext.request = new Request(mockContext.url.toString());
 
       const response = await GET(mockContext);
-      const data = await response.json();
 
       // Should either ignore invalid value or return error
       expect(response.status).toBeGreaterThanOrEqual(200);

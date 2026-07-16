@@ -254,7 +254,6 @@ describe('URL Ingestion Integration Tests', () => {
 
     it('should detect and handle different character encodings', async () => {
       const textWithSpecialChars = 'Artículo 1º.- Ñoño José María';
-      const mockArrayBuffer = new ArrayBuffer(8);
       
       mockFetch.mockResolvedValue({
         ok: true,

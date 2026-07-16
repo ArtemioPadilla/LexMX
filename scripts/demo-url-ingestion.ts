@@ -6,15 +6,12 @@
  */
 
 import { DocumentFetcher } from '../src/lib/ingestion/document-fetcher';
-import { DocumentIngestionPipeline } from '../src/lib/ingestion/document-ingestion-pipeline';
-import { contentExtractor } from '../src/lib/ingestion/document-content-extractors';
 
 async function demoURLIngestion() {
   console.log('🚀 LexMX Enhanced URL Ingestion Demo');
   console.log('=====================================\n');
 
   const fetcher = new DocumentFetcher();
-  const pipeline = new DocumentIngestionPipeline();
 
   console.log('📋 Supported Mexican Government Sources:');
   console.log('----------------------------------------');

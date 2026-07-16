@@ -48,10 +48,9 @@ export const GET: APIRoute = async (context) => {
     
     if (detailed) {
       // Get detailed stats from both services
-      let serviceStats, adminStats;
-      serviceStats = await embeddingsService.getStats();
+      const serviceStats = await embeddingsService.getStats();
       
-      adminStats = await adminDataService.getEmbeddingsStats();
+      const adminStats = await adminDataService.getEmbeddingsStats();
       
       // Transform service stats to expected format - use actual service stats but add missing fields
       const transformedServiceStats = {

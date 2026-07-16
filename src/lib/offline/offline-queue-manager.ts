@@ -3,8 +3,6 @@
  * Handles queuing and syncing of legal queries when offline
  */
 
-import { IndexedDBVectorStore } from '../storage/indexeddb-vector-store';
-
 export interface OfflineQuery {
   id: string;
   query: string;

@@ -93,25 +93,25 @@ const replacements = [
 const specificFixes = [
   // Fix the waitForSelector patterns
   {
-    pattern: /await page\.waitForSelector\('text=\/([^\/]+)\/i', \{ state: 'visible', timeout: 5000 \}\)/g,
+    pattern: /await page\.waitForSelector\('text=\/([^/]+)\/i', \{ state: 'visible', timeout: 5000 \}\)/g,
     replacement: "await page.waitForSelector('text=/$1/i', { state: 'visible', timeout: 5000 })",
     description: 'Fix waitForSelector regex patterns'
   },
   // Fix div:has-text patterns
   {
-    pattern: /div:text="([^"]+)", has-text\(\/([^\/]+)\/i\):text="([^"]+)", has-text\(\/([^\/]+)\/i\)/g,
+    pattern: /div:text="([^"]+)", has-text\(\/([^/]+)\/i\):text="([^"]+)", has-text\(\/([^/]+)\/i\)/g,
     replacement: 'div:has-text("$1"):has-text(/$2/i)',
     description: 'Simplify complex div selectors'
   },
   // Fix h2 patterns
   {
-    pattern: /h2:text="([^"]+)", has-text\(\/([^\/]+)\/i\)/g,
+    pattern: /h2:text="([^"]+)", has-text\(\/([^/]+)\/i\)/g,
     replacement: 'h2:has-text("$1")',
     description: 'Simplify h2 selectors'
   },
   // Fix OR patterns in selectors
   {
-    pattern: /h2:text="([^"]+)", has-text\(\/([^\/]+)\/i\), h2:text="([^"]+)", has-text\(\/([^\/]+)\/i\)/g,
+    pattern: /h2:text="([^"]+)", has-text\(\/([^/]+)\/i\), h2:text="([^"]+)", has-text\(\/([^/]+)\/i\)/g,
     replacement: 'h2:has-text(/$2|$4/i)',
     description: 'Simplify OR patterns in h2'
   }

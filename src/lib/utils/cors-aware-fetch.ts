@@ -46,8 +46,6 @@ export class CorsAwareFetch {
   static async fetch(url: string, options: CorsAwareFetchOptions = {}): Promise<CorsAwareFetchResult> {
     const {
       timeout = 30000,
-      maxRetries = 2,
-      useProxy = true,
       fallbackStrategies = ['proxy', 'no-cors'],
       ...fetchOptions
     } = options;
@@ -286,7 +284,7 @@ export class CorsAwareFetch {
     }
   }
 
-  private static async tryIframeFetch(url: string): Promise<CorsAwareFetchResult> {
+  private static async tryIframeFetch(_url: string): Promise<CorsAwareFetchResult> {
     // This is a placeholder for iframe-based fetching
     // In practice, this would require postMessage communication
     return {

@@ -81,21 +81,24 @@ export default function DevDashboard() {
 
   const generateMockData = async (type: string) => {
     switch (type) {
-      case 'corpus':
+      case 'corpus': {
         const corpusData = DevData.generateCorpusDocuments(10);
         console.log('Generated mock corpus data:', corpusData);
         alert('Datos de corpus generados. Revisa la consola para ver los detalles.');
         break;
-      case 'quality':
+      }
+      case 'quality': {
         const qualityData = DevData.generateQualityMetrics();
         console.log('Generated mock quality data:', qualityData);
         alert('Métricas de calidad generadas. Revisa la consola para ver los detalles.');
         break;
-      case 'cases':
+      }
+      case 'cases': {
         const casesData = DevData.generateCases(5);
         console.log('Generated mock cases data:', casesData);
         alert('Casos de ejemplo generados. Revisa la consola para ver los detalles.');
         break;
+      }
     }
   };
 

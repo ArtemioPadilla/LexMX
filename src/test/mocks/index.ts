@@ -157,7 +157,7 @@ export const testAssertions = {
   assertConsistentStructure<T>(results: T[], requiredKeys: (keyof T)[]) {
     expect(results.length).toBeGreaterThan(0);
     
-    results.forEach((result, index) => {
+    results.forEach((result) => {
       requiredKeys.forEach(key => {
         expect(result).toHaveProperty(key);
       });
