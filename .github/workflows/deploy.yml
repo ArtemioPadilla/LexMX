@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'
   CACHE_KEY_PREFIX: 'lexmx-deploy-v1'
 
 jobs:

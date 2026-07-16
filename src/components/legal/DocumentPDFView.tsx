@@ -48,7 +48,7 @@ export function DocumentPDFView({ document, currentSection: _currentSection }: D
               foundUrl = url;
               break;
             }
-          } catch (_e) {
+          } catch {
             // Silently continue to next URL (no console errors)
           }
         }
@@ -77,82 +77,6 @@ export function DocumentPDFView({ document, currentSection: _currentSection }: D
   }, [document]);
 
   // Generate PDF from document content using browser APIs
-  const generatePDFFromContent = async (document: LegalDocument): Promise<Blob> => {
-    // This is a simplified PDF generation
-    // In production, you'd want to use a proper PDF library like jsPDF
-    const content = document.content?.map(c => c.content).join('\n\n') || '';
-    
-    // Create a simple text-based PDF-like content
-    const pdfContent = `
-%PDF-1.4
-1 0 obj
-<<
-/Type /Catalog
-/Pages 2 0 R
->>
-endobj
-
-2 0 obj
-<<
-/Type /Pages
-/Kids [3 0 R]
-/Count 1
->>
-endobj
-
-3 0 obj
-<<
-/Type /Page
-/Parent 2 0 R
-/MediaBox [0 0 612 792]
-/Contents 4 0 R
-/Resources <<
-  /Font <<
-    /F1 <<
-      /Type /Font
-      /Subtype /Type1
-      /BaseFont /Times-Roman
-    >>
-  >>
->>
->>
-endobj
-
-4 0 obj
-<<
-/Length ${content.length + 100}
->>
-stream
-BT
-/F1 12 Tf
-50 742 Td
-(${document.title}) Tj
-0 -20 Td
-(${content.replace(/\n/g, ') Tj 0 -14 Td (')}) Tj
-ET
-endstream
-endobj
-
-xref
-0 5
-0000000000 65535 f 
-0000000009 00000 n 
-0000000058 00000 n 
-0000000115 00000 n 
-0000000247 00000 n 
-trailer
-<<
-/Size 5
-/Root 1 0 R
->>
-startxref
-${400 + content.length}
-%%EOF
-`;
-
-    return new Blob([pdfContent], { type: 'application/pdf' });
-  };
-
   const zoomIn = () => setScale(prev => Math.min(prev + 0.25, 3.0));
   const zoomOut = () => setScale(prev => Math.max(prev - 0.25, 0.5));
   const resetZoom = () => setScale(1.0);

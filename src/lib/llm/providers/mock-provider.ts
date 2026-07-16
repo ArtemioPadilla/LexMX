@@ -257,7 +257,7 @@ export class MockProvider implements LLMProvider {
     };
   }
 
-  validateConfig(config: any): boolean {
+  validateConfig(_config: any): boolean {
     // Mock provider accepts any config for testing
     return true;
   }

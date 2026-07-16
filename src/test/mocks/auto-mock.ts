@@ -302,7 +302,7 @@ export function createSequenceMock<T>(
   const mockObj = {} as any;
 
   methods.forEach(method => {
-    mockObj[method] = vi.fn().mockImplementation((...args: any[]) => {
+    mockObj[method] = vi.fn().mockImplementation((..._args: any[]) => {
       callSequence.push(method);
       return Promise.resolve(undefined);
     });
@@ -383,7 +383,7 @@ function getAllPropertyNames(obj: any): string[] {
   return Array.from(props);
 }
 
-function inferReturnValue(methodName: string, args: any[]): any {
+function inferReturnValue(methodName: string, _args: any[]): any {
   // Boolean methods
   if (methodName.startsWith('is') || methodName.startsWith('has') || methodName.startsWith('can')) {
     return true;

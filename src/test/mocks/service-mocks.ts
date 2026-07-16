@@ -78,7 +78,7 @@ export function createMockCorpusService() {
       return Promise.resolve(metrics);
     }),
 
-    deleteDocument: vi.fn().mockImplementation((id: string) => {
+    deleteDocument: vi.fn().mockImplementation((_id: string) => {
       return Promise.resolve().then(() => {
         // Progress events simulation removed for simplicity in mocks
       });

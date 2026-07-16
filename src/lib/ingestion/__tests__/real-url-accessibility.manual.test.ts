@@ -81,7 +81,7 @@ describe('Real URL Accessibility Tests (Manual)', () => {
           const result = await fetcher.fetchFromDOF(dateStr);
           expect(result).toBeTruthy();
           expect(result.length).toBeGreaterThan(100);
-        } catch (error) {
+        } catch {
           // DOF might not have publications every day, so this is acceptable
           console.warn('No DOF publication found for date:', dateStr);
         }

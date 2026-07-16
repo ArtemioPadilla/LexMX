@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MockProvider } from '../mock-provider';
-import type { ChatCompletionOptions, ChatCompletionResponse } from '../../types';
+import type { ChatCompletionOptions } from '../../types';
 
 describe('MockProvider', () => {
   let provider: MockProvider;
@@ -161,7 +161,6 @@ describe('MockProvider', () => {
         stream: true
       };
 
-      const startTime = Date.now();
       const response = await provider.complete(options);
       
       if (response.stream) {
@@ -221,8 +220,6 @@ describe('MockProvider', () => {
         ]
       };
 
-      const startTime = Date.now();
-      
       // Start the async operation
       const responsePromise = provider.complete(options);
       
@@ -348,10 +345,10 @@ describe('MockProvider', () => {
         ]
       };
 
-      const response1 = await provider.complete(options);
+      await provider.complete(options);
       const usage1 = provider.getTotalUsage();
       
-      const response2 = await provider.complete(options);
+      await provider.complete(options);
       const usage2 = provider.getTotalUsage();
       
       expect(usage2.totalTokens).toBeGreaterThan(usage1.totalTokens);

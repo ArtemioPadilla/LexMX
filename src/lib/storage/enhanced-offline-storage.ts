@@ -3,8 +3,6 @@
  * Provides comprehensive offline data management with sync capabilities
  */
 
-import { IndexedDBVectorStore } from './indexeddb-vector-store';
-
 export interface OfflineStorageConfig {
   maxStorageSize: number; // in bytes
   cacheTimeout: number; // in milliseconds

@@ -284,8 +284,8 @@ export default function DocumentIngestionPipeline({
       // Perform pre-flight CORS analysis with i18n support
       const corsAnalysis = await CorsDetector.analyzeCorsRequirements(url, allTranslations);
       
-      // Validate URL format (already done in CORS analysis, but get the parsed URL)
-      const parsedUrl = new URL(url);
+      // Validate URL format (already done in CORS analysis, but throws if the URL is malformed)
+      new URL(url);
       
       // Detect format from URL extension
       let detectedFormat = 'Web Page';
@@ -340,7 +340,7 @@ export default function DocumentIngestionPipeline({
               `${Math.round(parseInt(contentLength) / 1024)} KB` : 
               undefined;
           }
-        } catch (fetchError) {
+        } catch {
           // HEAD request failed, but that's okay - we have URL-based detection
           console.log('HEAD request failed, using URL-based detection');
         }

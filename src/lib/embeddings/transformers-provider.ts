@@ -7,7 +7,11 @@ import type { ProgressEvent } from '@/types/common';
 
 // Configure Transformers.js for browser environment
 env.allowLocalModels = false; // Use CDN models
-env.backends.onnx.wasm.numThreads = Math.min(4, navigator.hardwareConcurrency || 4); // Multi-threading for better performance
+// `navigator` is a browser global; it does not exist during Astro's SSG build (Node).
+// Guard the access so importing this module in a Node build context doesn't throw.
+const hardwareConcurrency =
+  typeof navigator !== 'undefined' ? navigator.hardwareConcurrency : undefined;
+env.backends.onnx.wasm.numThreads = Math.min(4, hardwareConcurrency || 4); // Multi-threading for better performance
 
 export class TransformersEmbeddingProvider extends BaseEmbeddingProvider {
   type: EmbeddingProviderType = 'transformers';

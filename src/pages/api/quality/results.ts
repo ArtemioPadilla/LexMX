@@ -17,13 +17,8 @@ const STORAGE_KEY = 'lexmx_quality_test_results';
 function getStoredResults(): any[] {
   // Use qualityTestSuite if available (for testing)
   if (qualityTestSuite && typeof qualityTestSuite.getStoredResults === 'function') {
-    try {
-      const results = qualityTestSuite.getStoredResults();
-      return results || [];
-    } catch (error) {
-      // If it's a service error (in tests), propagate it
-      throw error;
-    }
+    const results = qualityTestSuite.getStoredResults();
+    return results || [];
   }
   
   if (typeof globalThis !== 'undefined' && typeof globalThis.localStorage === 'undefined') {
@@ -437,7 +432,7 @@ export const DELETE: APIRoute = async (_context) => {
         'Content-Type': 'application/json'
       }
     });
-  } catch (error) {
+  } catch {
     // Always return success for DELETE, even if there are errors
     return new Response(JSON.stringify({
       success: true,

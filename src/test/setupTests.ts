@@ -178,7 +178,9 @@ vi.mock('../lib/admin/data-service', () => {
 // Extend Vitest's expect with jest-dom matchers
 // Using module declaration instead of namespace
 declare module 'vitest' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intentional declaration merging for jest-dom matchers
   interface Assertion<T = any> extends jest.Matchers<void, T> {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intentional declaration merging for jest-dom matchers
   interface AsymmetricMatchersContaining extends jest.AsymmetricMatchers {}
 }
 

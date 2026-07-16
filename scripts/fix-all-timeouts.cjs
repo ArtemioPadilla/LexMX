@@ -54,7 +54,7 @@ const replacements = [
     replacement: 'button:has-text("$1")'
   },
   {
-    pattern: /text=\/\/([^\/]+)\/i\/i/g,
+    pattern: /text=\/\/([^/]+)\/i\/i/g,
     replacement: 'text=/$1/i'
   },
   

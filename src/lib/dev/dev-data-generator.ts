@@ -3,7 +3,6 @@
  * Provides realistic test data for development environment
  */
 
-import type { LegalDocument } from '../../types/legal';
 import type { CorpusDocument } from '../../types/corpus';
 import type { QualityMetrics, QualityTestResult } from '../../types/quality';
 import type { CaseData } from '../../types/case-management';
