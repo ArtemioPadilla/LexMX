@@ -100,11 +100,15 @@ export default function DocumentIngestionPipeline({
             priority: 'high',
             requestedBy: 'moderator',
             createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
             hierarchy: 3,
             primaryArea: 'civil',
+            secondaryAreas: [],
+            territorialScope: 'federal',
             votes: 10,
             voters: [],
-            comments: []
+            comments: [],
+            verified: false
           };
           setLoadedRequest(mockRequest);
         } catch (error) {
@@ -385,7 +389,6 @@ export default function DocumentIngestionPipeline({
         isValid: false,
         isOfficial: false,
         detectedFormat: 'unknown',
-        corsWarning: false,
         isAnalyzing: false
       });
       return;
@@ -562,7 +565,7 @@ export default function DocumentIngestionPipeline({
                             <p className="text-xs text-green-600 dark:text-green-400">
                               ✓ Document is accessible and ready for ingestion
                             </p>
-                            {urlAnalysis.corsWarning && (
+                            {urlAnalysis.corsAnalysis && (
                               <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
                                 ⚠️ CORS may block direct access - fallback strategies available
                               </p>

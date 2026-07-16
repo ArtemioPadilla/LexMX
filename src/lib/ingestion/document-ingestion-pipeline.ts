@@ -18,11 +18,23 @@ export interface IngestionPipelineConfig {
   batchSize?: number;
 }
 
+export interface IngestionProgressDetails {
+  chunkingProgress?: number;
+  chunkingMessage?: string;
+  currentBatch?: number;
+  totalBatches?: number;
+  batchSize?: number;
+  totalChunks?: number;
+  processedChunks?: number;
+  stats?: unknown;
+  [key: string]: unknown;
+}
+
 export interface IngestionProgress {
   stage: 'fetching' | 'parsing' | 'chunking' | 'embedding' | 'storing' | 'complete' | 'error';
   progress: number; // 0-100
   message: string;
-  details?: unknown;
+  details?: IngestionProgressDetails;
   timestamp: number;
 }
 
@@ -127,8 +139,7 @@ export class DocumentIngestionPipeline extends EventEmitter {
           type: request.type,
           hierarchy: request.hierarchy,
           primaryArea: request.primaryArea,
-          authority: request.authority,
-          requestId: request.id
+          authority: request.authority
         }
       });
       
@@ -225,11 +236,11 @@ export class DocumentIngestionPipeline extends EventEmitter {
       
       // Generate embeddings
       this.emitProgress('embedding', 50, 'Generating embeddings...');
-      const embeddings = new Map<string, number[]>();
+      const embeddings = new Map<string, EmbeddingVector>();
       
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
-        const embedding = await this.embeddingManager.generateEmbedding(chunk.content);
+        const embedding = await this.embeddingManager.embed(chunk.content);
         embeddings.set(chunk.id, embedding);
         
         this.emitProgress(
@@ -255,11 +266,11 @@ export class DocumentIngestionPipeline extends EventEmitter {
           embeddingTime: Date.now() - startTime,
           totalTime: Date.now() - startTime,
           chunkCount: chunks.length,
-          tokenCount: this.estimateTokens(document.fullText || '')
+          tokenCount: this.estimateTokens(document.content?.map(c => c.content).join(' ') || '')
         }
       };
     } catch (error) {
-      this.emitProgress('error', 0, 'Ingestion failed', error);
+      this.emitProgress('error', 0, 'Ingestion failed', { error: error instanceof Error ? error.message : String(error) });
       return {
         success: false,
         stats: {
@@ -317,6 +328,7 @@ export class DocumentIngestionPipeline extends EventEmitter {
    * Ingest a document from a URL
    */
   async ingestFromUrl(url: string, metadata?: Partial<LegalDocument>): Promise<IngestionResult> {
+    const { content: _metadataContent, status: _metadataStatus, ...restMetadata } = metadata || {};
     const request: Partial<DocumentRequest> = {
       title: metadata?.title || 'Document from URL',
       type: metadata?.type || 'law',
@@ -327,7 +339,7 @@ export class DocumentIngestionPipeline extends EventEmitter {
         verified: false,
         isOfficial: this.isOfficialSource(url)
       }],
-      ...metadata
+      ...restMetadata
     };
 
     return await this.ingestFromRequest(request as DocumentRequest);
@@ -524,7 +536,7 @@ export class DocumentIngestionPipeline extends EventEmitter {
     stage: IngestionProgress['stage'],
     progress: number,
     message: string,
-    details?: unknown
+    details?: IngestionProgressDetails
   ): void {
     const event: IngestionProgress = {
       stage,

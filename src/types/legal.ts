@@ -39,6 +39,8 @@ export interface LegalDocument {
   authority: string;
   publicationDate: string;
   lastReform?: string;
+  lastUpdated?: string;
+  version?: string;
   status: 'active' | 'repealed' | 'suspended';
   
   // Scope
@@ -47,6 +49,8 @@ export interface LegalDocument {
   
   // Content
   content: LegalContent[];
+  fullText?: string;
+  citations?: string[];
   
   // Metadata
   officialUrl?: string;
@@ -143,6 +147,7 @@ export interface LegalChunk {
     title?: string;
     hierarchy: LegalHierarchy;
     legalArea: LegalArea;
+    chunkIndex?: number;
   };
   embedding?: number[];
   keywords: string[];
