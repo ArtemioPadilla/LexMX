@@ -29,7 +29,7 @@ export default function DocumentViewer({
   const { t } = useTranslation();
   const [isHydrated, setIsHydrated] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>(initialView as ViewMode);
-  const [currentSection, setCurrentSection] = useState<string | null>(initialSection);
+  const [currentSection, setCurrentSection] = useState<string | null>(initialSection ?? null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -110,7 +110,7 @@ export default function DocumentViewer({
           switch (e.key) {
             case 'f':
               e.preventDefault();
-              document.getElementById('document-search')?.focus();
+              window.document.getElementById('document-search')?.focus();
               break;
             case '1':
               e.preventDefault();
@@ -149,7 +149,9 @@ export default function DocumentViewer({
       <_HydrationBoundary 
         fallback={<_LoadingStates.DocumentViewer />} 
         testId="document-viewer"
-      />
+      >
+        {null}
+      </_HydrationBoundary>
     );
   }
 

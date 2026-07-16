@@ -3,10 +3,10 @@
  * Provides custom render function with providers and common test helpers
  */
 
-import React, { ReactElement, Suspense } from 'react';
-import { render, RenderOptions, screen, waitFor } from '@testing-library/react';
+import React, { type ReactElement, Suspense } from 'react';
+import { render, type RenderOptions, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { vi, expect } from 'vitest';
 import { act } from 'react';
 
 // Mock i18n system for tests

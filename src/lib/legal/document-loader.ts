@@ -9,27 +9,28 @@ const MOCK_DOCUMENTS: Record<string, LegalDocument> = {
     title: 'Constitución Política de los Estados Unidos Mexicanos',
     shortTitle: 'CPEUM',
     type: 'constitution',
-    jurisdiction: 'federal',
-    status: 'vigente',
+    territorialScope: 'federal',
+    status: 'active',
     hierarchy: 1,
     lastReform: '2024-01-15',
     publicationDate: '1917-02-05',
-    effectiveDate: '1917-05-01',
     officialUrl: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf',
-    metadata: {
-      source: 'Cámara de Diputados',
-      lastUpdated: '2024-01-15',
-      version: '2024.1',
-      reforms: 256
-    },
+    authority: 'Cámara de Diputados',
+    lastUpdated: '2024-01-15',
+    version: '2024.1',
+    primaryArea: 'constitutional',
+    secondaryAreas: [],
+    applicability: 'Nacional',
+    relatedDependencies: [],
+    importance: 'critical',
+    updateFrequency: 'medium',
     content: [
       {
         id: 'cpeum-title-1',
         type: 'title',
         number: 'I',
         title: 'De los Derechos Humanos y sus Garantías',
-        content: '',
-        parent: null
+        content: ''
       },
       {
         id: 'cpeum-chapter-1',
@@ -50,7 +51,6 @@ const MOCK_DOCUMENTS: Record<string, LegalDocument> = {
       {
         id: 'cpeum-art-1-p2',
         type: 'paragraph',
-        number: null,
         title: '',
         content: 'Las normas relativas a los derechos humanos se interpretarán de conformidad con esta Constitución y con los tratados internacionales de la materia favoreciendo en todo tiempo a las personas la protección más amplia.',
         parent: 'cpeum-art-1'
@@ -58,7 +58,6 @@ const MOCK_DOCUMENTS: Record<string, LegalDocument> = {
       {
         id: 'cpeum-art-1-p3',
         type: 'paragraph',
-        number: null,
         title: '',
         content: 'Todas las autoridades, en el ámbito de sus competencias, tienen la obligación de promover, respetar, proteger y garantizar los derechos humanos de conformidad con los principios de universalidad, interdependencia, indivisibilidad y progresividad. En consecuencia, el Estado deberá prevenir, investigar, sancionar y reparar las violaciones a los derechos humanos, en los términos que establezca la ley.',
         parent: 'cpeum-art-1'
@@ -102,27 +101,28 @@ const MOCK_DOCUMENTS: Record<string, LegalDocument> = {
     title: 'Ley Federal del Trabajo',
     shortTitle: 'LFT',
     type: 'law',
-    jurisdiction: 'federal',
-    status: 'vigente',
+    territorialScope: 'federal',
+    status: 'active',
     hierarchy: 3,
     lastReform: '2023-12-29',
     publicationDate: '1970-04-01',
-    effectiveDate: '1970-05-01',
     officialUrl: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf',
-    metadata: {
-      source: 'Cámara de Diputados',
-      lastUpdated: '2023-12-29',
-      version: '2023.12',
-      reforms: 48
-    },
+    authority: 'Cámara de Diputados',
+    lastUpdated: '2023-12-29',
+    version: '2023.12',
+    primaryArea: 'labor',
+    secondaryAreas: [],
+    applicability: 'Nacional',
+    relatedDependencies: [],
+    importance: 'high',
+    updateFrequency: 'medium',
     content: [
       {
         id: 'lft-title-1',
         type: 'title',
         number: 'Primero',
         title: 'Principios Generales',
-        content: '',
-        parent: null
+        content: ''
       },
       {
         id: 'lft-art-1',
@@ -155,27 +155,28 @@ const MOCK_DOCUMENTS: Record<string, LegalDocument> = {
     title: 'Código Civil Federal',
     shortTitle: 'CCF',
     type: 'code',
-    jurisdiction: 'federal',
-    status: 'vigente',
+    territorialScope: 'federal',
+    status: 'active',
     hierarchy: 3,
     lastReform: '2024-01-11',
     publicationDate: '1928-08-30',
-    effectiveDate: '1932-09-01',
     officialUrl: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CCF.pdf',
-    metadata: {
-      source: 'Cámara de Diputados',
-      lastUpdated: '2024-01-11',
-      version: '2024.1',
-      reforms: 89
-    },
+    authority: 'Cámara de Diputados',
+    lastUpdated: '2024-01-11',
+    version: '2024.1',
+    primaryArea: 'civil',
+    secondaryAreas: [],
+    applicability: 'Nacional',
+    relatedDependencies: [],
+    importance: 'high',
+    updateFrequency: 'medium',
     content: [
       {
         id: 'ccf-preliminary',
         type: 'title',
         number: 'Preliminar',
         title: 'Disposiciones Preliminares',
-        content: '',
-        parent: null
+        content: ''
       },
       {
         id: 'ccf-art-1',
@@ -253,7 +254,7 @@ export class DocumentLoader {
   }
 
   static async getDocumentsByJurisdiction(jurisdiction: string): Promise<LegalDocument[]> {
-    return Object.values(MOCK_DOCUMENTS).filter(doc => doc.jurisdiction === jurisdiction);
+    return Object.values(MOCK_DOCUMENTS).filter(doc => doc.territorialScope === jurisdiction);
   }
 
   static async getAllDocuments(): Promise<LegalDocument[]> {

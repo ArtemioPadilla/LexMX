@@ -174,7 +174,9 @@ export default function GovernmentStructure() {
       <_HydrationBoundary 
         fallback={<_LoadingStates.GovernmentStructure />} 
         testId="government-structure"
-      />
+      >
+        {null}
+      </_HydrationBoundary>
     );
   }
 

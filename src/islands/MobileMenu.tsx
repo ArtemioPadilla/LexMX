@@ -59,7 +59,9 @@ export default function MobileMenu() {
       <_HydrationBoundary 
         fallback={<_LoadingStates.MobileMenu />} 
         testId="mobile-menu"
-      />
+      >
+        {null}
+      </_HydrationBoundary>
     );
   }
 

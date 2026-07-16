@@ -10,7 +10,9 @@ import type {
   SmartFormState,
   DocumentSuggestion,
   DuplicateDetectionResult,
-  OfficialSourceValidation,
+  OfficialSourceValidation
+} from '../types/legal';
+import { 
   ALLOWED_FILE_TYPES,
   MAX_FILE_SIZE 
 } from '../types/legal';
@@ -304,7 +306,9 @@ export default function DocumentRequestForm({ onSubmit, onSuggestionsUpdate }: D
       <_HydrationBoundary 
         fallback={<_LoadingStates.DocumentRequestForm />} 
         testId="document-request-form"
-      />
+      >
+        {null}
+      </_HydrationBoundary>
     );
   }
 

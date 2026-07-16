@@ -1,8 +1,7 @@
 // Secure storage manager with client-side encryption
 
-import type { SecureStorage, EncryptedData as _EncryptedData, PrivacySettings } from '../../types/security';
+import type { SecureStorage, EncryptedData, PrivacySettings } from '../../types/security';
 import type { ProviderConfig, LLMResponse } from '../../types/llm';
-import type { JsonValue } from '../../types/common';
 import { cryptoManager, ClientCryptoManager } from './encryption';
 
 export class SecureStorageManager implements SecureStorage {
@@ -50,7 +49,7 @@ export class SecureStorageManager implements SecureStorage {
     }
   }
 
-  async store(key: string, data: JsonValue): Promise<void> {
+  async store(key: string, data: unknown): Promise<void> {
     const storageKey = this.prefix + key;
     
     // Ensure we're initialized
@@ -129,7 +128,7 @@ export class SecureStorageManager implements SecureStorage {
       if (storedData.encrypted && this.cryptoAvailable) {
         try {
           // Decrypt encrypted data
-          const decrypted = await cryptoManager.decrypt(storedData.data);
+          const decrypted = await cryptoManager.decrypt(storedData.data as EncryptedData);
           return JSON.parse(decrypted);
         } catch (decryptError) {
           console.warn('Decryption failed, clearing corrupted data:', decryptError);
@@ -140,7 +139,7 @@ export class SecureStorageManager implements SecureStorage {
       } else if (storedData.encoded) {
         // Decode base64 encoded data
         try {
-          const decoded = decodeURIComponent(atob(storedData.data));
+          const decoded = decodeURIComponent(atob(storedData.data as string));
           return JSON.parse(decoded);
         } catch (decodeError) {
           console.error('Base64 decode failed:', decodeError);
@@ -266,7 +265,7 @@ export class SecureStorageManager implements SecureStorage {
   }
 
   // Utility methods
-  private shouldEncryptData(key: string, data: JsonValue): boolean {
+  private shouldEncryptData(key: string, data: unknown): boolean {
     // Always encrypt provider configurations (contain API keys)
     if (key.startsWith('provider_')) return true;
     
@@ -283,7 +282,7 @@ export class SecureStorageManager implements SecureStorage {
     return false;
   }
 
-  private storeInBrowser(key: string, data: JsonValue): void {
+  private storeInBrowser(key: string, data: unknown): void {
     if (!this.isBrowser) {
       throw new Error('Browser storage not available');
     }
@@ -346,7 +345,7 @@ export class SecureStorageManager implements SecureStorage {
     }
   }
 
-  private retrieveFromBrowser(key: string): JsonValue | null {
+  private retrieveFromBrowser(key: string): Record<string, unknown> | null {
     if (!this.isBrowser) return null;
     
     try {
@@ -434,19 +433,20 @@ export class SecureStorageManager implements SecureStorage {
   }
 
   // Data export for user control
-  async exportData(): Promise<any> {
-    const exportData: Record<string, JsonValue> = {
+  async exportData(): Promise<Record<string, unknown>> {
+    const exportData: Record<string, unknown> = {
       version: 1,
       timestamp: Date.now(),
       privacySettings: this.privacySettings,
-      providers: {},
+      providers: {} as Record<string, unknown>,
       queries: {}
     };
 
     // Export provider configs (encrypted)
     const configs = await this.getAllProviderConfigs();
+    const providers = exportData.providers as Record<string, unknown>;
     configs.forEach(config => {
-      exportData.providers[config.id] = {
+      providers[config.id] = {
         ...config,
         apiKey: config.apiKey ? '[ENCRYPTED]' : undefined
       };

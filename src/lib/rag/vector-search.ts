@@ -98,15 +98,15 @@ export class VectorSearch {
 
     // Process each content section
     for (const content of document.content) {
-      if (!content.content || content.type === 'metadata') continue;
+      if (!content.content) continue;
 
       const text = content.content;
       const metadata = {
         title: document.title,
         article: content.type === 'article' ? content.number : undefined,
         section: content.type === 'section' ? content.title : undefined,
-        legalArea: document.metadata?.legalArea,
-        hierarchy: document.metadata?.hierarchy,
+        legalArea: document.primaryArea,
+        hierarchy: document.hierarchy,
         position: 0,
         length: text.length
       };

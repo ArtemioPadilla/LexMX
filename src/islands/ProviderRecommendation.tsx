@@ -109,7 +109,9 @@ export default function ProviderRecommendation({
       <_HydrationBoundary 
         fallback={<_LoadingStates.ProviderRecommendation />} 
         testId="provider-recommendation"
-      />
+      >
+        {null}
+      </_HydrationBoundary>
     );
   }
 

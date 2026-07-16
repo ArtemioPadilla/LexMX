@@ -2,12 +2,22 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '../i18n';
 import type { RAGProgressEvent, RAGSearchResult } from '../types/embeddings';
 
+interface RAGStageModelProgress {
+  file?: string;
+  progress?: number;
+}
+
+interface RAGStageDetails {
+  modelProgress?: RAGStageModelProgress;
+  [key: string]: unknown;
+}
+
 interface RAGStage {
   id: string;
   name: string;
   description?: string;
   status: 'pending' | 'active' | 'completed' | 'error';
-  details?: string | Record<string, unknown>;
+  details?: string | RAGStageDetails;
   startTime?: number;
   endTime?: number;
   progress?: number;
@@ -91,7 +101,7 @@ export default function RAGProgressIndicator({
         updatedStages[stageIndex] = {
           ...updatedStages[stageIndex],
           status: event.status,
-          details: event.details,
+          details: event.details as string | RAGStageDetails | undefined,
           progress: event.progress,
           startTime: event.status === 'active' ? event.timestamp : updatedStages[stageIndex].startTime,
           endTime: event.status === 'completed' ? event.timestamp : updatedStages[stageIndex].endTime
@@ -275,15 +285,15 @@ export default function RAGProgressIndicator({
                     </div>
                     
                     {/* Stage-specific details */}
-                    {stage.status === 'active' && stage.details?.modelProgress && (
+                    {stage.status === 'active' && typeof stage.details !== 'string' && stage.details?.modelProgress && (
                       <div className="mt-1">
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {stage.details.modelProgress.file}: {Math.round(stage.details.modelProgress.progress)}%
+                          {stage.details.modelProgress.file}: {Math.round(stage.details.modelProgress.progress ?? 0)}%
                         </div>
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1 mt-1">
                           <div
                             className="bg-legal-400 h-1 rounded-full transition-all"
-                            style={{ width: `${stage.details.modelProgress.progress}%` }}
+                            style={{ width: `${stage.details.modelProgress.progress ?? 0}%` }}
                           />
                         </div>
                       </div>
