@@ -157,8 +157,8 @@ export interface SourceValidation {
   trustScore: number; // 0-1
   validationDate: Date;
   validationMethod: 'domain_check' | 'ssl_verification' | 'content_analysis';
-  warnings?: string[];
-  errors?: string[];
+  warnings: string[];
+  errors: string[];
 }
 
 // Document change detection

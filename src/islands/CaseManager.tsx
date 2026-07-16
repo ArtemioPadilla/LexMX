@@ -474,7 +474,9 @@ export default function CaseManager() {
       <_HydrationBoundary 
         fallback={<_LoadingStates.CaseManager />} 
         testId="case-manager"
-      />
+      >
+        {null}
+      </_HydrationBoundary>
     );
   }
 

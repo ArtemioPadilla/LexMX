@@ -2,7 +2,13 @@
  * Mock Infrastructure Index
  * Central export point for all mock utilities, factories, and helpers
  */
-import { vi } from 'vitest';
+import { vi, expect } from 'vitest';
+import {
+  createMockDocument,
+  createMockQueryMetrics,
+  createMockTestResult
+} from './factories';
+import { resetAllMocks } from './auto-mock';
 
 // Export all factory functions
 export {
@@ -159,7 +165,7 @@ export const testAssertions = {
     
     results.forEach((result) => {
       requiredKeys.forEach(key => {
-        expect(result).toHaveProperty(key);
+        expect(result).toHaveProperty(key as string);
       });
     });
   },

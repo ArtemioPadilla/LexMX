@@ -149,7 +149,9 @@ export default function DocumentViewer({
       <_HydrationBoundary 
         fallback={<_LoadingStates.DocumentViewer />} 
         testId="document-viewer"
-      />
+      >
+        {null}
+      </_HydrationBoundary>
     );
   }
 

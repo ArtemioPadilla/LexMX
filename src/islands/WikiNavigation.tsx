@@ -121,7 +121,9 @@ export default function WikiNavigation() {
       <_HydrationBoundary 
         fallback={<_LoadingStates.WikiNavigation />} 
         testId="wiki-navigation"
-      />
+      >
+        {null}
+      </_HydrationBoundary>
     );
   }
 

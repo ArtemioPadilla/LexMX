@@ -52,7 +52,9 @@ export default function DocumentViewerWrapper({ documentId, documentTitle }: Doc
       <_HydrationBoundary 
         fallback={<_LoadingStates.DocumentViewerWrapper />} 
         testId="document-viewer-wrapper"
-      />
+      >
+        {null}
+      </_HydrationBoundary>
     );
   }
 

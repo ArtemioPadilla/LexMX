@@ -388,7 +388,9 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
       <_HydrationBoundary 
         fallback={<_LoadingStates.ChatInterface />} 
         testId={TEST_IDS.chat.container}
-      />
+      >
+        {null}
+      </_HydrationBoundary>
     );
   }
 

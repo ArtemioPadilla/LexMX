@@ -172,7 +172,9 @@ export default function LegalGlossary() {
       <_HydrationBoundary 
         fallback={<_LoadingStates.LegalGlossary />} 
         testId="legal-glossary"
-      />
+      >
+        {null}
+      </_HydrationBoundary>
     );
   }
 
