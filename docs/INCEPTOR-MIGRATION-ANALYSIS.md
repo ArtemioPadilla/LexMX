@@ -1,11 +1,11 @@
 # LexMX → Inceptor: análisis de migración
 
-Fecha: 2026-09-13, revisión 4: validación adversarial (§8), estado del arte comercial y ecosistema abierto (§9). Alcance:
+Fecha: 2026-09-13, revisión 5: validación adversarial (§8), mercado (§9), cobertura (§10) y programa LATAM de paridad total (§11). Alcance:
 estado real de LexMX hoy, qué ofrece Inceptor, opciones comparadas y un plan
 por fases. No se modificó código de producto; todos los números se midieron en
 este entorno (Node 22, `npm ci` limpio) sobre `main` de ambos repos.
 
-## 1. Veredicto en cinco líneas
+## 1. Veredicto en seis líneas
 
 - **LexMX sí funciona en producción** (https://artemiop.com/LexMX/ responde 200
   y el build local pasa), pero con deuda seria: 584 errores de tipos, CI en
@@ -28,6 +28,12 @@ este entorno (Node 22, `npm ci` limpio) sobre `main` de ambos repos.
   cita verificable a un clic, derogadas excluidas. LexMX no compite ahí hoy. Su
   cuña es lo que un SaaS en la nube no puede ofrecer: local-first, sin que el
   expediente salga de la máquina, con corpus y evaluación abiertos.
+- **Decisión del equipo (§11): el objetivo es paridad total con todo el
+  mercado, más los diferenciadores propios, a escala LATAM.** Eso convierte
+  el plan en un programa de tres horizontes con un núcleo local intacto y un
+  servidor opcional autoalojable para lo que un sitio estático no puede hacer.
+  México sigue siendo el primer país; la paridad y LATAM son metas del
+  programa, no del primer release.
 
 ## 2. Estado real de LexMX (medido)
 
@@ -694,3 +700,214 @@ Si más adelante hay tracción, los países con datos abiertos que hacen viable
 el mismo pipeline son Chile (Ley Chile de la BCN tiene API pública),
 Argentina (InfoLEG y SAIJ), Colombia (SUIN-Juriscol) y Perú (SPIJ). Cada uno
 sería un `jurisdictions/<país>/` nuevo más un diccionario, no una reescritura.
+
+## 11. Programa LexMX LATAM: paridad total más diferenciadores
+
+### 11.0 Decisión y supuestos
+
+Decisión del equipo: el objetivo del proyecto es tener **todo lo que ofrece
+cualquier competidor** (§9 y §10), **más todo lo que solo LexMX puede
+ofrecer** (local-first, corpus y evaluación abiertos, trae tu modelo,
+código abierto), **para toda Latinoamérica**. Las reservas de §10 quedan
+registradas; lo que sigue es el plan para cumplir esa decisión.
+
+Supuestos explícitos:
+
+1. **Se acepta un servidor opcional.** Cuentas de equipo, facturación,
+   canalización a abogados, monitoreo de tribunales y notificaciones push no
+   existen sin backend. Se construye como servicio autoalojable de código
+   abierto (arquetipo `server-node` de Inceptor, ADR 0006, detrás de
+   `PUBLIC_API_BASE`). El núcleo local no depende de él: sin servidor,
+   LexMX sigue siendo el producto local-first completo.
+2. **La paridad se mide por capacidad, no por implementación.** "Predicción
+   de sentencias" se cumple como analítica de criterios por órgano con
+   compuerta ética, no como oráculo.
+3. **Es un programa, no un proyecto.** Se organiza en siete líneas de
+   trabajo y tres horizontes; cada horizonte entrega un producto usable.
+4. **Portugués es un idioma de primer nivel** desde el diseño (Brasil es la
+   mitad del mercado LATAM), aunque se implemente en el horizonte 3.
+5. **Los tamaños son en personas-mes** y suponen agentes de código
+   (prometeo/forja/centinela) como multiplicador, no como sustituto de
+   revisión humana en lo jurídico.
+
+### 11.1 Arquitectura de dos niveles
+
+| Nivel | Qué es | Dónde corre | Qué vive ahí |
+|---|---|---|---|
+| **Núcleo local** | El LexMX actual, saneado (Fases 0-5) y ampliado (Fases 6-9 y §10) | Navegador (PWA), Escritorio (Tauri), Android/iOS (Tauri) | Corpus por jurisdicción en el dispositivo, RAG, embeddings, chat, citas, documentos, OCR, comparación, tabular, redacción y exportación, calculadoras, voz, expedientes, novedades al abrir, MCP local |
+| **Servidor opcional** | Servicio autoalojable de código abierto; también ofrecido hospedado ("LexMX Servidor") como modelo de sostenimiento | Cualquier nube o servidor propio; residencia de datos por país | Identidad (OAuth, MFA), organizaciones y asientos, consumo y facturación, bitácora de auditoría, canalización a abogados, monitoreo de tribunales y boletines, push y correo, bot de WhatsApp, complemento de Word con estado compartido, API pública |
+
+Regla de oro: **ninguna consulta ni documento pasa por el servidor salvo que
+el usuario active una función que lo requiera**, y cada una lo dice. El
+servidor almacena metadatos de cuenta y suscripciones de monitoreo, no
+expedientes, salvo que la organización lo elija explícitamente. Así la
+promesa de privacidad sobrevive a la paridad.
+
+### 11.2 Jurisdicción como dimensión de primer nivel
+
+Cada país es un módulo `src/jurisdictions/<cc>/` con el mismo contrato:
+
+```
+jurisdictions/mx/
+  sources.ts        # adaptadores: legislación, jurisprudencia, gaceta, fiscal
+  hierarchy.ts      # pirámide normativa y reglas de precedencia
+  citation.ts       # formato y parser de citas ("Artículo 123 constitucional", "Tesis 1a./J. 15/2019")
+  calculators/      # laboral, fiscal, plazos procesales
+  prompts.{es,pt}.ts
+  dictionary.{es,pt}.ts
+  eval/             # preguntas con respuesta y cita esperada
+  legal.ts          # aviso de privacidad aplicable, disclaimer, autoridad de datos
+  entities.ts       # estados / provincias / regiones para el filtro jurisdiccional
+```
+
+Shards de corpus indexados por `{país, entidad, materia, versión}`; el
+cliente instala solo lo que elige. `document-loader.ts` ya tiene el campo
+`jurisdiction`; se convierte en obligatorio. Nada mexicano fuera de
+`jurisdictions/mx/`.
+
+### 11.3 Mapa de fuentes abiertas por país (verificado 2026-09-13)
+
+| País | Legislación | Jurisprudencia | Gaceta / reformas | Acceso | Nota |
+|---|---|---|---|---|---|
+| **México** | API SCOW (SCJN) vía LegalIA; LeyesBiblio | Repositorio SCJN CSV/JSON; sjf2 | SIDOF datos abiertos y alertas | Abierto, sin llave | Vigencia por artículo de origen |
+| **Chile** | Ley Chile (BCN): XML público sin registro, todos los códigos; datos enlazados W3C | 29 000+ sentencias de la Corte Suprema enlazadas a normas; API REST de dictámenes de Contraloría (50 000+) | Diario Oficial vía BCN | Abierto | Existe un proyecto open source con 55 herramientas MCP para Chile: reutilizar |
+| **Argentina** | InfoLEG y SAIJ (900 000+ documentos); dataset en datos.jus.gob.ar **CC-BY 4.0**; APIs REST JSON de terceros para leyes y reformas | SAIJ (fallos CSJN y tribunales) | Boletín Oficial vía InfoLEG | Abierto con licencia explícita | La mejor licencia de la región |
+| **Colombia** | SUIN-Juriscol (normas desde 1864) con **OData** en datos.gov.co; descarga en Word | Corte Constitucional y Consejo de Estado en SUIN; relatoría | Diario Oficial | Abierto | Vigencia y afectaciones normativas incluidas |
+| **Perú** | SPIJ: parte libre, parte con licencia de pago; datasets de normas y jurisprudencia en datosabiertos.gob.pe desde 2023 | Tribunal Constitucional y vinculantes en SPIJ | El Peruano | Parcial | Revisar qué queda fuera de la parte libre |
+| **Brasil** (pt) | LexML del Senado: API SRU en XML, acervo en datos abiertos | API pública DataJud (CNJ) para metadatos de procesos; STF/STJ datos abiertos | Diário Oficial da União | Abierto, DataJud con llave pública | Un servidor MCP abierto sobre 8 APIs brasileñas ya existe: reutilizar |
+| **Uruguay** | IMPO: bases completas en **JSON** de uso libre desde 2018 | Base de jurisprudencia del Poder Judicial (por verificar acceso programático) | Diario Oficial (IMPO) | Abierto | |
+| **Ecuador** | Registro Oficial; portal datosabiertos.gob.ec | Corte Constitucional (portal) | Registro Oficial | Por verificar | Sin API confirmada |
+| **Costa Rica** | SCIJ (PGR) | Nexus PJ | La Gaceta | Por verificar | Lista comunitaria de APIs abiertas del país |
+| **Panamá** | Gaceta Oficial; ANTAI datos abiertos | Órgano Judicial | Gaceta | Por verificar | |
+| Resto (GT, HN, SV, NI, DO, BO, PY, VE) | Por relevar | Por relevar | | | Oleada final; relevamiento de 1 semana por país antes de comprometer |
+
+### 11.4 Líneas de trabajo
+
+**A. Plataforma y calidad** (Fases 0-5 de §5, sin cambios). 3-4 personas-mes.
+
+**B. Corpus multi-jurisdicción.** Pipeline genérico en GitHub Actions con
+adaptadores por país; shards versionados en Releases o bucket; vigencia,
+materia y entidad como datos; detección de reformas; evaluación de
+cobertura publicada por país. Oleadas: MX → CL, AR, CO, PE → BR → UY, EC,
+CR, PA → resto. 2 personas-mes por país en la primera oleada, 1 después;
+más 2 de pipeline común. Estados/provincias: cola larga permanente con
+cobertura publicada.
+
+**C. Producto local-first.** Chat con cita verificable y modo grounded;
+modos Pregunta e Investiga; filtro jurisdiccional explícito; Biblioteca
+(corpus instalado, tamaño, fecha, actualizar); documentos con OCR
+(Tesseract.js); comparación en navegador; extracción tabular; **redacción
+con plantillas por país** (demanda, contestación, contrato, recurso) anclada
+al corpus y **exportación a Word/PDF**; calculadoras por país (laboral,
+fiscal, plazos); notas de voz y transcripción local (Whisper vía
+transformers.js); novedades desde la última visita; expedientes en IndexedDB
+con documentos, comparaciones, tablas y notas; historial y búsqueda.
+6-8 personas-mes.
+
+**D. Servidor opcional.** Identidad (OAuth Google/Microsoft/Apple, MFA);
+organizaciones, asientos y roles; consumo y facturación (por asiento o por
+créditos, con proveedor de pagos por país); bitácora de auditoría
+inmutable; canalización a abogados con directorio verificado por materia y
+entidad; monitoreo de tribunales y boletines por expediente (adaptadores por
+país: OAJ/CJF y boletines estatales en MX, PJUD en CL, etc.); notificaciones
+push y correo; bot de WhatsApp; residencia de datos por país; consola de
+administración. Todo autoalojable con un `docker compose`; versión hospedada
+como servicio. 6-9 personas-mes.
+
+**E. Canales.** PWA instalable; Escritorio con Tauri (corpus completo y
+modelo local en disco); Android e iOS con Tauri 2; complemento de Word
+(página web más manifiesto, con estado compartido vía servidor cuando hay
+organización); servidor MCP "LexMX como fuente" local y hospedado; API
+pública documentada (OpenAPI, ya en el arquetipo de Inceptor).
+3-4 personas-mes.
+
+**F. Inteligencia.** Enrutador multi-modelo por complejidad y costo (ya
+existe, sanear); catálogo de modelos locales por idioma y tamaño de equipo;
+embeddings afinados en español y portugués jurídico (punto de partida: el
+framework de evaluación de Justicio); agentes con herramientas
+(calculadoras, búsqueda, comparación) para "investiga, redacta y calcula";
+**analítica de criterios**: distribución de sentido de resolución por órgano
+y materia sobre corpus de sentencias abiertas, con compuerta ética
+(`docs/ETHICS.md`, análisis de partes interesadas obligatorio, nunca
+"probabilidad de ganar" sobre un juez nombrado); benchmark abierto LATAM por
+país con leaderboard público. 4-6 personas-mes.
+
+**G. Confianza, legal y comunidad.** Página de seguridad que demuestra la
+arquitectura; para el servidor, camino a ISO 27001 y alineación con ISO
+42001; privacidad por país (LFPDPPP en MX, LGPD en BR, Ley 19.628 en CL, Ley
+1581 en CO, Ley 29733 en PE, Ley 25.326 en AR, Ley 18.331 en UY); términos y
+disclaimer en cada respuesta; marca por país; programa de despachos aliados
+y de estudiantes; benchmark comunitario; guía de contribución por
+jurisdicción. 2-3 personas-mes más asesoría legal externa.
+
+### 11.5 Matriz de paridad
+
+| Capacidad (de §9 y §10) | Línea | Nivel |
+|---|---|---|
+| Corpus federal/nacional, subnacional, jurisprudencia, gaceta, fiscal | B | local |
+| Vigencia, derogadas excluidas, filtro jurisdiccional | B, C | local |
+| Cita verificable, modo grounded, dos modos | C | local |
+| Documentos subidos con OCR, comparación, tabular | C | local |
+| Redacción de escritos y contratos, exportación | C | local |
+| Calculadoras laborales, fiscales y de plazos | C | local |
+| Voz y transcripción | C | local |
+| Biblioteca y novedades | B, C | local |
+| Expedientes y gestión de casos | C | local (+ compartido vía D) |
+| Alertas de reformas y monitoreo de tribunales y boletines | D | servidor |
+| Canalización a abogados y directorio | D | servidor |
+| Organizaciones, asientos, facturación, consumo por usuario | D | servidor |
+| MFA, bitácora de auditoría, residencia de datos | D | servidor |
+| WhatsApp | D | servidor |
+| Complemento de Word y Outlook | E (+D) | ambos |
+| Apps iOS y Android, Escritorio | E | local |
+| Servidor MCP y API pública | E | ambos |
+| Multi-modelo, BYOK, modelo local | F | local |
+| Agentes que investigan, redactan y calculan | F | local |
+| Analítica de criterios (paridad con "predicción") | F | local, con compuerta ética |
+| Benchmark abierto y evaluación pública | F, G | público |
+| Seguridad demostrable, certificaciones, privacidad por país | G | ambos |
+| Programa de estudiantes y despachos aliados | G | comunidad |
+| **Diferenciadores propios**: local-first, corpus abierto, código abierto, trae tu modelo, evaluación pública, MCP | B, C, E, F | local |
+
+Nada de §9 queda fuera. Lo único que cambia de forma es "predicción de
+sentencias", que se entrega como analítica con compuerta ética.
+
+### 11.6 Horizontes, criterios de salida y tamaño
+
+| Horizonte | Alcance | Criterio de salida | Tamaño |
+|---|---|---|---|
+| **H1 · 0-6 meses · México completo y paridad local** | A completa; B para MX (federal, SJF, DOF, fiscal, 4-8 estados); C completa para MX; E: PWA, Escritorio, MCP local; F: enrutador y catálogo de modelos, evaluación MX; G: seguridad, privacidad MX, términos, 3-5 despachos piloto | Un despacho mexicano usa LexMX a diario sin nube; evaluación pública de precisión de cita; `check` verde | 12-16 personas-mes |
+| **H2 · 6-12 meses · Servidor y cono sur** | D completo con adaptadores MX; E: Word, Android, iOS; B y C para CL, AR, CO, PE; F: embeddings es-jurídico, agentes; G: privacidad de 4 países, ISO 27001 en marcha | Organizaciones pagando la versión hospedada o autoalojando; 5 países con corpus evaluado | 14-18 personas-mes |
+| **H3 · 12-24 meses · Brasil, resto y analítica** | B y C para BR (pt), UY, EC, CR, PA, resto; D con monitoreo de tribunales por país; F: analítica de criterios, benchmark LATAM con leaderboard; G: marca y programas por país | Cobertura publicada por país; benchmark LATAM con al menos tres participantes externos | 14-20 personas-mes |
+
+Total del programa: **40-54 personas-mes**. Con una persona y agentes, tres
+a cuatro años; con un equipo de tres o cuatro, 12-18 meses. Los horizontes
+existen para que cada uno sea un producto completo por sí mismo si el
+siguiente no llega.
+
+### 11.7 Riesgos del alcance ampliado
+
+| Riesgo | Mitigación |
+|---|---|
+| El servidor diluye la promesa de privacidad | Núcleo local intacto; servidor opcional, autoalojable y con residencia por país; cada función que lo usa lo declara en la UI |
+| Paridad como meta lleva a construir de todo y terminar nada | Horizontes con criterio de salida; H1 no incluye servidor ni segundo país |
+| Mantener N pipelines de corpus | Contrato de adaptador único, monitor de cobertura por país, aliados locales (los proyectos abiertos de Chile y Brasil ya existen) |
+| Fuentes parcialmente cerradas (Perú) o sin API (Ecuador, Panamá, resto) | Relevamiento de una semana por país antes de comprometer fecha; cobertura publicada, no prometida |
+| Analítica de criterios usada como predicción | Compuerta ética obligatoria, sin nombres de jueces, con tamaño de muestra y advertencia en cada gráfica |
+| Portugués y variantes del español jurídico | Diccionarios y prompts por país desde el diseño; evaluación por idioma |
+| Modelo local insuficiente en algún idioma | Catálogo por idioma; BYOK como respaldo declarado |
+| Capital: competidores financiados cierran el hueco local-first con una edición on-premise | Llegar antes y abierto; el corpus y el benchmark abiertos son el foso, no las features |
+| Marco legal en 10+ países | Asesoría externa por país en G; términos y privacidad por jurisdicción en el módulo |
+
+### 11.8 Cómo gestionarlo
+
+- El orden no cambia: **México primero, local primero, servidor después**.
+  Paridad y LATAM son el destino del programa, no del primer release.
+- Cada línea de trabajo tiene un dueño y una épica por horizonte en GitHub;
+  prometeo descompone por épica, forja implementa por issue, centinela
+  valida; el ratchet de §5 aplica a todo el programa.
+- Cada país entra con un relevamiento de fuentes de una semana, un módulo
+  `jurisdictions/<cc>/` con evaluación propia, y un aliado local (despacho,
+  facultad o proyecto abierto) antes de anunciar cobertura.
+- Se publica un tablero de cobertura por país y capacidad; lo que no está
+  verde no se promete.
