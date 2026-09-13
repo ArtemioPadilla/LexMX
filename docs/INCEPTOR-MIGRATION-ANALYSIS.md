@@ -1,6 +1,6 @@
 # LexMX → Inceptor: análisis de migración
 
-Fecha: 2026-09-13, revisión 5: validación adversarial (§8), mercado (§9), cobertura (§10) y programa LATAM de paridad total (§11). Alcance:
+Fecha: 2026-09-13, revisión 6: validación adversarial (§8), mercado (§9), cobertura (§10), programa LATAM (§11) y backend en Supabase (§11.9). Alcance:
 estado real de LexMX hoy, qué ofrece Inceptor, opciones comparadas y un plan
 por fases. No se modificó código de producto; todos los números se midieron en
 este entorno (Node 22, `npm ci` limpio) sobre `main` de ambos repos.
@@ -715,10 +715,13 @@ Supuestos explícitos:
 
 1. **Se acepta un servidor opcional.** Cuentas de equipo, facturación,
    canalización a abogados, monitoreo de tribunales y notificaciones push no
-   existen sin backend. Se construye como servicio autoalojable de código
-   abierto (arquetipo `server-node` de Inceptor, ADR 0006, detrás de
-   `PUBLIC_API_BASE`). El núcleo local no depende de él: sin servidor,
-   LexMX sigue siendo el producto local-first completo.
+   existen sin backend. **Decisión: el backend es Supabase** (Postgres con
+   RLS, Auth, Storage, Edge Functions, Realtime, pg_cron, pgvector),
+   siguiendo las recetas ya validadas de Inceptor (`docs/recipes/
+   auth-supabase.md` y `supabase-migrations-ci.md`). Es autoalojable con
+   `docker compose`, así que la promesa de código abierto se mantiene. Ver
+   §11.9. El núcleo local no depende de él: sin servidor, LexMX sigue siendo
+   el producto local-first completo.
 2. **La paridad se mide por capacidad, no por implementación.** "Predicción
    de sentencias" se cumple como analítica de criterios por órgano con
    compuerta ética, no como oráculo.
@@ -735,7 +738,7 @@ Supuestos explícitos:
 | Nivel | Qué es | Dónde corre | Qué vive ahí |
 |---|---|---|---|
 | **Núcleo local** | El LexMX actual, saneado (Fases 0-5) y ampliado (Fases 6-9 y §10) | Navegador (PWA), Escritorio (Tauri), Android/iOS (Tauri) | Corpus por jurisdicción en el dispositivo, RAG, embeddings, chat, citas, documentos, OCR, comparación, tabular, redacción y exportación, calculadoras, voz, expedientes, novedades al abrir, MCP local |
-| **Servidor opcional** | Servicio autoalojable de código abierto; también ofrecido hospedado ("LexMX Servidor") como modelo de sostenimiento | Cualquier nube o servidor propio; residencia de datos por país | Identidad (OAuth, MFA), organizaciones y asientos, consumo y facturación, bitácora de auditoría, canalización a abogados, monitoreo de tribunales y boletines, push y correo, bot de WhatsApp, complemento de Word con estado compartido, API pública |
+| **Servidor opcional** | Proyecto Supabase (hospedado por Supabase u autoalojado con `docker compose`); también ofrecido como "LexMX Servidor" hospedado como modelo de sostenimiento | Región de Supabase más cercana (São Paulo para el cono sur; para México verificar disponibilidad de región o autoalojar); residencia de datos por país | Identidad (OAuth, MFA), organizaciones y asientos, consumo y facturación, bitácora de auditoría, canalización a abogados, monitoreo de tribunales y boletines, push y correo, bot de WhatsApp, complemento de Word con estado compartido, API pública |
 
 Regla de oro: **ninguna consulta ni documento pasa por el servidor salvo que
 el usuario active una función que lo requiera**, y cada una lo dice. El
@@ -804,15 +807,20 @@ transformers.js); novedades desde la última visita; expedientes en IndexedDB
 con documentos, comparaciones, tablas y notas; historial y búsqueda.
 6-8 personas-mes.
 
-**D. Servidor opcional.** Identidad (OAuth Google/Microsoft/Apple, MFA);
-organizaciones, asientos y roles; consumo y facturación (por asiento o por
-créditos, con proveedor de pagos por país); bitácora de auditoría
-inmutable; canalización a abogados con directorio verificado por materia y
-entidad; monitoreo de tribunales y boletines por expediente (adaptadores por
-país: OAJ/CJF y boletines estatales en MX, PJUD en CL, etc.); notificaciones
-push y correo; bot de WhatsApp; residencia de datos por país; consola de
-administración. Todo autoalojable con un `docker compose`; versión hospedada
-como servicio. 6-9 personas-mes.
+**D. Servidor opcional sobre Supabase.** Identidad (Supabase Auth con OAuth
+Google/Microsoft/Apple y MFA TOTP); organizaciones, asientos y roles en
+Postgres con RLS; consumo y facturación (Stripe y un proveedor local por
+país vía Edge Functions con webhooks); bitácora de auditoría inmutable por
+triggers a tabla append-only; canalización a abogados con directorio
+verificado por materia y entidad; monitoreo de tribunales y boletines por
+expediente (adaptadores por país corriendo como Edge Functions programadas
+con pg_cron o como jobs de GitHub Actions que escriben en Postgres);
+notificaciones push (Web Push) y correo; bot de WhatsApp (webhook de Meta
+Cloud API en una Edge Function); residencia de datos por región de
+Supabase o autoalojado; consola de administración como isla del mismo
+sitio. Sin servidor propio que mantener: el frontend habla con Supabase
+con la sesión del usuario y RLS aísla; la service key no sale de las Edge
+Functions. 4-6 personas-mes (antes 6-9).
 
 **E. Canales.** PWA instalable; Escritorio con Tauri (corpus completo y
 modelo local en disco); Android e iOS con Tauri 2; complemento de Word
@@ -877,7 +885,7 @@ sentencias", que se entrega como analítica con compuerta ética.
 | Horizonte | Alcance | Criterio de salida | Tamaño |
 |---|---|---|---|
 | **H1 · 0-6 meses · México completo y paridad local** | A completa; B para MX (federal, SJF, DOF, fiscal, 4-8 estados); C completa para MX; E: PWA, Escritorio, MCP local; F: enrutador y catálogo de modelos, evaluación MX; G: seguridad, privacidad MX, términos, 3-5 despachos piloto | Un despacho mexicano usa LexMX a diario sin nube; evaluación pública de precisión de cita; `check` verde | 12-16 personas-mes |
-| **H2 · 6-12 meses · Servidor y cono sur** | D completo con adaptadores MX; E: Word, Android, iOS; B y C para CL, AR, CO, PE; F: embeddings es-jurídico, agentes; G: privacidad de 4 países, ISO 27001 en marcha | Organizaciones pagando la versión hospedada o autoalojando; 5 países con corpus evaluado | 14-18 personas-mes |
+| **H2 · 6-12 meses · Servidor y cono sur** | D completo sobre Supabase con adaptadores MX; E: Word, Android, iOS; B y C para CL, AR, CO, PE; F: embeddings es-jurídico, agentes; G: privacidad de 4 países, ISO 27001 en marcha | Organizaciones pagando la versión hospedada o autoalojando; 5 países con corpus evaluado | 14-18 personas-mes |
 | **H3 · 12-24 meses · Brasil, resto y analítica** | B y C para BR (pt), UY, EC, CR, PA, resto; D con monitoreo de tribunales por país; F: analítica de criterios, benchmark LATAM con leaderboard; G: marca y programas por país | Cobertura publicada por país; benchmark LATAM con al menos tres participantes externos | 14-20 personas-mes |
 
 Total del programa: **40-54 personas-mes**. Con una persona y agentes, tres
@@ -889,7 +897,8 @@ siguiente no llega.
 
 | Riesgo | Mitigación |
 |---|---|
-| El servidor diluye la promesa de privacidad | Núcleo local intacto; servidor opcional, autoalojable y con residencia por país; cada función que lo usa lo declara en la UI |
+| El servidor diluye la promesa de privacidad | Núcleo local intacto; Supabase opcional y autoalojable; RLS por usuario y organización; documentos solo con cifrado en cliente antes de subir; cada función que lo usa lo declara en la UI |
+| Dependencia de un proveedor (Supabase) | Todo es Postgres estándar y funciones Deno; el `docker compose` oficial de Supabase permite autoalojar sin cambios de código |
 | Paridad como meta lleva a construir de todo y terminar nada | Horizontes con criterio de salida; H1 no incluye servidor ni segundo país |
 | Mantener N pipelines de corpus | Contrato de adaptador único, monitor de cobertura por país, aliados locales (los proyectos abiertos de Chile y Brasil ya existen) |
 | Fuentes parcialmente cerradas (Perú) o sin API (Ecuador, Panamá, resto) | Relevamiento de una semana por país antes de comprometer fecha; cobertura publicada, no prometida |
@@ -911,3 +920,94 @@ siguiente no llega.
   facultad o proyecto abierto) antes de anunciar cobertura.
 - Se publica un tablero de cobertura por país y capacidad; lo que no está
   verde no se promete.
+
+### 11.9 Backend en Supabase: diseño
+
+Decisión del equipo: Supabase. Encaja con un sitio estático en GitHub Pages
+porque el navegador habla directo con Supabase usando la sesión del usuario
+y la *anon key* pública; no hay servidor propio que desplegar ni mantener.
+Inceptor ya documenta el patrón (`docs/recipes/auth-supabase.md`,
+`supabase-migrations-ci.md`), validado en otro producto del mismo autor.
+
+#### Qué pieza de Supabase cubre qué capacidad
+
+| Capacidad (línea D) | Pieza de Supabase | Notas |
+|---|---|---|
+| Identidad, OAuth Google/Microsoft/Apple, MFA | **Auth** (MFA TOTP nativo) | Sesión en un Nano Store `$session`, adaptada a `GuardUser` una sola vez para `route-guard.tsx` |
+| Organizaciones, asientos, roles, invitaciones | **Postgres + RLS** | Tablas `orgs`, `org_members(role)`, `invites`; políticas por `auth.uid()` y pertenencia; roles en `app_metadata` como allowlist |
+| Consumo por usuario y facturación | **Edge Functions + Stripe** (más un proveedor local por país: OXXO/SPEI en MX, Mercado Pago en AR/CL/CO/PE/UY, Pix en BR) | Webhooks a una Edge Function que actualiza `subscriptions` y `usage`; el frontend solo lee su propio consumo vía RLS |
+| Bitácora de auditoría inmutable | **Triggers** a una tabla append-only sin política de `update`/`delete` | Equivale al audit log que el mercado anuncia |
+| Canalización a abogados y directorio verificado | **Postgres + RLS + Storage** (cédulas o credenciales, cifradas) | Verificación manual en la consola; el usuario final solo ve el resultado del emparejamiento |
+| Monitoreo de tribunales y boletines por expediente | **pg_cron + Edge Functions** para fuentes con API; **GitHub Actions** como worker para scraping largo, escribiendo en Postgres | Adaptadores por país; resultados en `court_events` con RLS por expediente |
+| Alertas de reformas sobre leyes seguidas | **pg_cron** sobre la tabla de reformas que ya produce el pipeline de corpus | La suscripción es del usuario; el corpus sigue siendo abierto |
+| Push y correo | **Realtime** para sesiones abiertas; **Web Push** desde una Edge Function; correo con el proveedor SMTP de Supabase o Resend | El service worker de `@vite-pwa/astro` recibe el push |
+| Bot de WhatsApp | **Edge Function** como webhook de Meta Cloud API | Solo para cuentas que lo activan; la conversación se responde con el mismo RAG, ejecutado en la función con la llave del usuario u organización |
+| Complemento de Word con estado compartido | **Postgres** para historial y plantillas de organización | El add-in es la misma página web; sin organización funciona solo en local |
+| API pública y MCP hospedado | **Edge Functions** (Deno, TypeScript, mismo código de búsqueda) sobre **pgvector** con los mismos shards del corpus abierto | Opcional: quien no quiera nube usa el MCP local |
+| Distribución de shards de corpus | **Storage** con CDN como alternativa a GitHub Releases | Los shards siguen siendo públicos y versionados |
+| Residencia de datos | **Región del proyecto** (São Paulo para el cono sur) o **autoalojado** con el `docker compose` oficial | Para México, verificar disponibilidad de región al iniciar H2; si no existe, autoalojar en un proveedor con centro de datos en México para los clientes que lo exijan |
+
+#### Reglas que protegen la promesa local-first
+
+1. **La service key nunca sale de las Edge Functions.** El frontend usa solo
+   la anon key; RLS es la única frontera (receta de Inceptor).
+2. **Ningún expediente ni consulta llega a Supabase por defecto.** Solo
+   metadatos de cuenta, organización, suscripciones y eventos de monitoreo.
+3. **Si una organización elige guardar documentos compartidos en Storage,
+   se cifran en el cliente** con `lib/security` (AES-GCM, PBKDF2) antes de
+   subir; Supabase guarda bytes que no puede leer. La llave vive en la
+   organización, no en Supabase.
+4. **Cada función que use el servidor lo dice en la UI** con
+   `AIOutputLabel` o un aviso equivalente: "esta acción usa LexMX Servidor".
+5. **Todo es Postgres estándar y funciones Deno.** El `docker compose`
+   oficial de Supabase permite autoalojar sin cambiar código; es lo que hace
+   creíble "código abierto" también para el servidor.
+
+#### Estructura en el repo
+
+```
+supabase/
+  config.toml
+  migrations/
+    0001_orgs_members.sql       # tablas + RLS
+    0002_subscriptions_usage.sql
+    0003_audit_log.sql          # append-only + triggers
+    0004_lawyers_directory.sql
+    0005_court_events.sql
+    0006_corpus_vectors.sql     # pgvector, opcional
+  functions/
+    stripe-webhook/
+    payments-<país>/
+    whatsapp-webhook/
+    court-monitor-<país>/
+    web-push/
+    search/                     # API pública y MCP hospedado
+.github/workflows/supabase.yml  # migraciones por CI (receta de Inceptor)
+src/lib/supabase.ts             # cliente guardado: null si faltan env
+src/stores/auth.ts              # $session, $authReady
+src/schemas/*.ts                # Zod compartido entre frontend y funciones
+```
+
+`PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY` entran al build como
+*Actions Variables* (son públicas); `SUPABASE_ACCESS_TOKEN` y
+`SUPABASE_DB_PASSWORD` como *Secrets* para el workflow de migraciones.
+Sin esas variables el build sigue pasando y la UI muestra "servidor no
+configurado", que es exactamente el modo local-first.
+
+#### Costo y tamaño
+
+Plan gratuito de Supabase para desarrollo y pilotos; plan Pro (del orden de
+25 USD al mes por proyecto) cuando haya organizaciones. Un proyecto por
+región cuando la residencia lo exija. La línea D baja de 6-9 a **4-6
+personas-mes** porque desaparecen el servidor propio, su despliegue, su
+auth y su ORM.
+
+#### Lo que Supabase no resuelve
+
+- **Scraping largo de tribunales sin API**: las Edge Functions tienen límite
+  de tiempo; esos adaptadores corren en GitHub Actions o en un contenedor
+  pequeño y escriben en Postgres.
+- **Región en México**: no confirmada al escribir esto; verificar en H2.
+- **Inferencia de LLM del lado servidor** (WhatsApp, MCP hospedado): la
+  función llama al proveedor con la llave de la organización; no hay modelo
+  local en el servidor. Coherente con "trae tu propio modelo".
