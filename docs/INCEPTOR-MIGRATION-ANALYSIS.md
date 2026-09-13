@@ -1,11 +1,11 @@
 # LexMX → Inceptor: análisis de migración
 
-Fecha: 2026-09-13, revisión 2 tras validación adversarial (ver §8). Alcance:
+Fecha: 2026-09-13, revisión 3: validación adversarial (§8) y comparación con el estado del arte comercial (§9). Alcance:
 estado real de LexMX hoy, qué ofrece Inceptor, opciones comparadas y un plan
 por fases. No se modificó código de producto; todos los números se midieron en
 este entorno (Node 22, `npm ci` limpio) sobre `main` de ambos repos.
 
-## 1. Veredicto en cuatro líneas
+## 1. Veredicto en cinco líneas
 
 - **LexMX sí funciona en producción** (https://artemiop.com/LexMX/ responde 200
   y el build local pasa), pero con deuda seria: 584 errores de tipos, CI en
@@ -23,6 +23,11 @@ este entorno (Node 22, `npm ci` limpio) sobre `main` de ambos repos.
 - El mayor riesgo del producto **no es el framework, es el contenido**: 3
   documentos de muestra y 14 vectores. Ninguna migración lo arregla; el corpus
   real necesita su propia fase.
+- **Las plataformas comerciales de IA legal en México fijan el listón** (§9):
+  corpus federal + 32 estados + jurisprudencia SCJN + DOF actualizado a diario,
+  cita verificable a un clic, derogadas excluidas. LexMX no compite ahí hoy. Su
+  cuña es lo que un SaaS en la nube no puede ofrecer: local-first, sin que el
+  expediente salga de la máquina, con corpus y evaluación abiertos.
 
 ## 2. Estado real de LexMX (medido)
 
@@ -379,3 +384,184 @@ aceptados y corregidos arriba:
 Hallazgos no aceptados: ninguno. Diferencia de conteo de tests (481/504 aquí
 vs 491/514 en la corrida del revisor) atribuida a entorno; se reporta la
 corrida propia.
+
+## 9. Estado del arte comercial y complemento al plan
+
+Se revisaron las páginas públicas, fichas de tiendas de apps y documentación
+de seguridad de varias plataformas comerciales de IA legal orientadas al
+mercado mexicano (consulta: 2026-09-13). No se nombra a ninguna: el objetivo es
+fijar el listón de capacidades que un usuario ya da por hecho, no comparar
+marcas. No se encontraron reseñas independientes con sustancia; lo que sigue
+es lo que las propias plataformas publican.
+
+### 9.1 Qué ofrece hoy el mercado
+
+Patrón común: SaaS en la nube con suscripción mensual medida en tokens o
+consultas, y dos segmentos claramente separados:
+
+| Segmento | Qué hace | Modelo de acceso |
+|---|---|---|
+| **Público general** | Preguntas en lenguaje llano sobre trabajo, renta, familia, consumo y deudas; cada respuesta cita artículo y ley con enlace al documento oficial; notas de voz; subir contratos o recibos para que los explique; canalización a un abogado cuando el caso lo amerita | Nivel gratuito con cupo mensual de preguntas y documentos; suscripción de cientos de pesos al mes para uso ilimitado; apps iOS y Android |
+| **Abogados y despachos** | Investigación con jurisprudencia y tesis (registro digital, época, instancia); lectura de expedientes completos con OCR; redacción de escritos y cálculos desde una conversación; complemento para Word; biblioteca de leyes; control de cambios entre versiones de un documento, comparado en el navegador sin subirlo; extracción de datos de decenas de documentos a una tabla; conexión con sistemas de tribunales; cuentas de organización con facturación única y consumo por usuario | De cientos a un par de miles de pesos al mes según cupo de tokens y módulos; precio reducido para estudiantes y académicos |
+
+Corpus declarado por las plataformas líderes: legislación federal y de los 32
+estados, Semanario Judicial de la Federación (tesis y jurisprudencia SCJN con
+registro digital, época e instancia), DOF revisado varias veces al día,
+tribunales administrativos y autoridades fiscales; reformas recientes
+(laboral 2019, judicial 2024) integradas; legislación derogada excluida de
+resultados; decenas de miles de documentos.
+
+Infraestructura declarada: modelo de un solo proveedor, alojado en nube de
+Estados Unidos; documentos del usuario almacenados en la nube del proveedor;
+cifrado en reposo, MFA, bitácora de auditoría; certificaciones SOC 2 / ISO
+27001 "en curso"; residencia de datos en México solo para contratos
+enterprise.
+
+Otras señales: iniciativas de benchmark legal mexicano anotado por la
+comunidad, anunciadas pero sin datos publicados todavía; programas de
+"design partners" con despachos; encuestas de adopción en LATAM.
+
+### 9.2 Qué tienen ellos que nosotros no
+
+| Capacidad | Mercado | LexMX hoy | Brecha |
+|---|---|---|---|
+| Corpus real y actualizado | Federal + 32 estados + SJF + DOF diario | 3 docs de muestra, solo federal | **La brecha que define todo lo demás** |
+| Jurisprudencia | Tesis con registro, época, instancia, enlace a sjf2.scjn.gob.mx | Ninguna; `source-validator.ts` ya conoce el patrón de URL de sjf2 | Alta |
+| Cita verificable a un clic | Artículo + ley + enlace al documento oficial | Cita desde chunks mock, sin enlace a fuente | Alta, y barata de cerrar una vez haya corpus |
+| Vigencia | Derogadas excluidas; reformas integradas | `lib/legal/version-manager.ts` existe pero sin datos | Media |
+| Dos modos de uso | Lenguaje llano para público vs técnico para abogados | Un chat genérico | Media; `systemPrompts.specializations` ya da la base |
+| Documentos del usuario | Expedientes completos, OCR, comparación en navegador, extracción tabular | Ingestion solo para admin; `CaseManager` en localStorage | Alta |
+| Redacción y cálculos | El asistente redacta escritos y calcula (finiquitos, indemnizaciones) | Nada | Alta |
+| Canales | Web, iOS, Android, complemento de Word, notas de voz | Web (PWA al 40 %) | Media; Tauri y PWA cubren móvil |
+| Abogado humano | Canalización por materia y estado | Nada | No aplica a un sitio estático |
+| Equipos y facturación | Organizaciones, consumo por usuario | Nada | No aplica sin backend |
+| Confianza institucional | Página de seguridad detallada, MFA, audit log, certificaciones en curso | Página de privacidad; la arquitectura client-side no está demostrada ni documentada | Media; distinta naturaleza |
+| Evaluación | Benchmarks comunitarios anunciados, aún sin datos | `quality-test-suite` con datos mock | Media; oportunidad de llegar antes |
+| Academia | Precio reducido para estudiantes, alianzas con despachos | Nada | Baja |
+
+### 9.3 Dónde LexMX puede ganar (no copiar)
+
+Todo lo que apareció en la búsqueda es SaaS en la nube: los expedientes se
+suben a servidores de terceros fuera de México, el modelo lo elige el
+proveedor, el corpus es cerrado y el precio es una suscripción mensual. No
+encontré ninguna plataforma local-first ni de código abierto. Ahí está la
+cuña:
+
+1. **El expediente nunca sale de la máquina.** RAG, embeddings y, con WebLLM o
+   Tauri, la inferencia corren en el dispositivo. Para secreto profesional,
+   datos de menores, asuntos penales o despachos sin política de nube esto no
+   es una preferencia sino un requisito. En el mercado, la residencia de datos
+   en México es un extra enterprise.
+2. **Corpus y evaluación abiertos.** Publicar el pipeline de corpus y los
+   shards versionados (federal, SJF, DOF) como datos abiertos reutilizables,
+   y publicar resultados de evaluación. Los benchmarks comunitarios todavía
+   no existen; LexMX puede tener uno corriendo primero y en público.
+3. **Trae tu propio modelo.** Multi-proveedor, incluido local con Ollama y
+   WebLLM. El mercado ofrece un modelo fijo.
+4. **Gratis para estudiantes de verdad**, no con descuento: mismo corpus,
+   mismo código.
+
+Lo que no hay que perseguir desde un sitio estático: canalización a abogados,
+cuentas de organización con facturación, conexiones a tribunales. Un
+complemento de Word sí es viable (un add-in de Office es una página web más
+un manifiesto; puede vivir en el mismo deploy), pero después de tener corpus.
+
+### 9.4 Complemento al plan
+
+Las fases 0-5 de §5 no cambian. La Fase 6 deja de ser "abierta" y se
+convierte en el producto; se añaden las capacidades del mercado que sí
+encajan con la arquitectura, en el orden en que dependen unas de otras.
+
+#### Fase 6 — Corpus real, concreto (4-8 semanas, en paralelo desde la Fase 3)
+
+Fuentes con acceso abierto verificado:
+
+| Fuente | Acceso | Uso |
+|---|---|---|
+| Leyes federales | `diputados.gob.mx/LeyesBiblio` (PDF/DOC con fecha de última reforma; ya en `document-fetcher.ts`) | Corpus federal completo (~300 leyes) |
+| Jurisprudencia y tesis | Repositorio SCJN con descarga en formatos abiertos (CSV y API JSON, 1-100 documentos por consulta, filtros por época, instancia, materia, tipo); detalle público en `sjf2.scjn.gob.mx/detalle/tesis/{registro}` | Colección de tesis con registro digital, época, instancia, materia; enlace de verificación |
+| DOF | SIDOF datos abiertos y API de alertas (`sidof.segob.gob.mx`) | Detección diaria de reformas; disparador de re-ingesta |
+| Legislación estatal | Congresos estatales y `ordenjuridico.gob.mx`; heterogénea | Por oleadas: CDMX, Edomex, Jalisco, Nuevo León primero |
+
+Diseño:
+
+- **Pipeline en GitHub Actions** (`corpus-update.yml` ya existe, nunca
+  validado): descarga, parseo con `lib/ingestion`, chunking con
+  `contextual-chunker`, embeddings en build, y publicación de **shards
+  versionados por materia y jurisdicción** en GitHub Releases (o un bucket),
+  no en `public/`: decenas de miles de documentos no caben en un sitio de
+  Pages ni en IndexedDB de golpe.
+- **Carga diferida en el cliente**: el usuario elige materias y estados; el
+  cliente descarga solo esos shards y los cachea en `lexmx_vectors`. Pantalla
+  de "corpus instalado" con tamaño, fecha de última reforma y botón de
+  actualizar.
+- **Vigencia como dato**: cada documento lleva `vigente`,
+  `fecha_ultima_reforma`, `abrogada_por`; el buscador excluye derogadas por
+  defecto y lo muestra cuando el usuario las pide.
+- **Licencias**: revisar términos de uso del repositorio SCJN y de SIDOF antes
+  de redistribuir shards; las leyes federales y las tesis son documentos
+  oficiales públicos, pero el empaquetado debe citar origen.
+
+#### Fase 7 — Cita verificable y dos modos (1-2 semanas, con la Fase 4 de chat)
+
+- `CitationList` de Inceptor con enlace directo a la fuente oficial: página
+  del PDF de diputados para artículos, `sjf2.scjn.gob.mx/detalle/tesis/{registro}`
+  para tesis. Es la función más visible del mercado y la más barata una vez
+  hay corpus.
+- **Modo grounded**: la respuesta solo puede citar fragmentos recuperados; un
+  validador post-respuesta marca cualquier cita que no exista en el corpus y
+  la muestra como "no verificada". `AIOutputLabel` con `confidence: 'low'`
+  cuando no hubo recuperación.
+- **Modo Pregunta / Modo Investiga**: dos presets de prompt y de UI (lenguaje
+  llano con "qué significa para ti" vs técnico con registro, época e
+  instancia) sobre `systemPrompts.specializations`, que ya existe.
+- Estado "sin fuentes": el chat dice explícitamente cuándo responde sin
+  corpus, en vez del fallback silencioso a mock de hoy.
+
+#### Fase 8 — Herramientas sobre documentos del usuario (2-4 semanas)
+
+- **Control de cambios en navegador**: `pdfjs` y `mammoth` ya extraen texto;
+  añadir un diff (por ejemplo `diff` de npm) y una vista lado a lado con
+  explicación del impacto legal por cambio. En LexMX es la única forma de
+  hacerlo, y coincide con la promesa de privacidad.
+- **Revisión tabular**: extracción de campos de N documentos a una `DataTable`
+  de Inceptor con exportación (`download-trigger`), con esquema definido por
+  el usuario (partes, fechas, montos, cláusulas).
+- **Calculadoras laborales deterministas** (finiquito, indemnización
+  constitucional, prima de antigüedad, vacaciones, aguinaldo: LFT arts. 48,
+  50, 76, 80, 87, 162) como funciones puras con tests, expuestas como
+  herramientas al modelo. Más barato y más confiable que dejar que el LLM
+  calcule.
+- `CaseManager` reescrito (Fase 5) pasa a ser el contenedor de todo esto:
+  expediente = documentos + comparaciones + tablas + notas, en IndexedDB.
+
+#### Fase 9 — Evaluación abierta y confianza (2-3 semanas)
+
+- Reemplazar `quality-test-suite` (mock) por un **conjunto de evaluación
+  propio** de preguntas con respuesta y cita esperada, por materia, versionado
+  en el repo; correrlo en CI contra el corpus con recuperación real y
+  publicar precisión de cita y tasa de "no verificada". Adherirse a los
+  benchmarks comunitarios en cuanto publiquen datos.
+- Página `/seguridad` propia que demuestre, no solo afirme, la arquitectura:
+  qué sale de la máquina y a dónde (solo la llamada al proveedor elegido, o
+  nada con WebLLM), cómo se cifran las llaves, cómo borrar todo. La ventaja
+  estructural está del lado de LexMX.
+- **LexMX Escritorio** con Tauri (script de Inceptor): corpus completo y
+  modelo local en disco; el producto para despachos que no pueden usar nube.
+
+#### Después, si hay tracción
+
+Complemento de Word (página web + manifiesto, mismo deploy), Tauri Android,
+apps en tiendas. Nunca: canalización a abogados, facturación de equipos,
+conexiones a tribunales, salvo que aparezca un backend y un modelo de negocio
+que los justifique.
+
+### 9.5 Riesgos específicos de esta parte
+
+| Riesgo | Mitigación |
+|---|---|
+| Redistribuir tesis y leyes sin revisar términos | Revisión de términos de SCJN y SIDOF antes de la Fase 6; citar origen en cada shard |
+| Corpus estatal inabarcable | Oleadas por estado y materia; publicar cobertura explícita |
+| Shards demasiado grandes para el cliente | Cuantizar embeddings, shard por materia; medir en un equipo de gama media |
+| Construir herramientas antes que corpus | Fase 7 y 8 dependen de la 6; no adelantar UI sobre mock |
+| Competir en features con empresas financiadas | No competir en amplitud; competir en local-first, apertura y costo cero |
