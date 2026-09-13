@@ -8,7 +8,7 @@ export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
 
 // Translation system types
 export interface TranslationValue {
-  [key: string]: string | TranslationValue;
+  [key: string]: string | string[] | TranslationValue;
 }
 
 export interface TranslationDict {

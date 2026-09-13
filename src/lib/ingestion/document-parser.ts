@@ -1,7 +1,7 @@
 // Document parser for extracting structured content from legal documents
 // Handles various formats and preserves legal document structure
 
-import type { LegalDocument, DocumentType, LegalArea } from '@/types/legal';
+import type { LegalDocument, DocumentType, LegalArea, LegalContent } from '@/types/legal';
 
 export interface ParseOptions {
   documentType?: DocumentType;
@@ -79,12 +79,13 @@ export class DocumentParser {
       this.extractCitations(normalizedContent) : [];
     
     // Generate document ID
-    const documentId = this.generateDocumentId(metadata.title || extractedMetadata.title);
+    const documentId = this.generateDocumentId(metadata.title || extractedMetadata.title || 'untitled');
     
     // Create legal document
     const document: LegalDocument = {
       id: documentId,
       title: metadata.title || extractedMetadata.title || 'Untitled Document',
+      shortTitle: metadata.shortTitle || metadata.title || extractedMetadata.title || 'Untitled Document',
       type: documentType,
       hierarchy: this.getHierarchyLevel(documentType) as 1 | 2 | 3 | 4 | 5 | 6 | 7,
       primaryArea: metadata.primaryArea || this.detectLegalArea(normalizedContent),
@@ -95,6 +96,10 @@ export class DocumentParser {
       version: '1.0',
       status: 'active',
       territorialScope: 'federal',
+      applicability: metadata.applicability || '',
+      relatedDependencies: metadata.relatedDependencies || [],
+      importance: metadata.importance || 'medium',
+      updateFrequency: metadata.updateFrequency || 'medium',
       content: hierarchicalSections,
       fullText: normalizedContent,
       citations,
@@ -295,15 +300,15 @@ export class DocumentParser {
   /**
    * Build flat content structure with parent references (LegalDocument format)
    */
-  private buildHierarchy(sections: ParsedSection[]): Array<Record<string, unknown>> {
-    const flatContent: Array<Record<string, unknown>> = [];
+  private buildHierarchy(sections: ParsedSection[]): LegalContent[] {
+    const flatContent: LegalContent[] = [];
     
     // Create flat content array with parent references
     for (let i = 0; i < sections.length; i++) {
       const section = sections[i];
       
       // Find parent based on level
-      let parentId: string | null = null;
+      let parentId: string | undefined;
       for (let j = i - 1; j >= 0; j--) {
         if (sections[j].level < section.level) {
           parentId = sections[j].id;
@@ -312,10 +317,10 @@ export class DocumentParser {
       }
       
       // Create content object compatible with LegalDocument format
-      const contentObj = {
+      const contentObj: LegalContent = {
         id: section.id,
         type: section.type,
-        number: section.number || null,
+        number: section.number,
         title: section.title || '',
         content: section.content,
         parent: parentId
@@ -330,8 +335,8 @@ export class DocumentParser {
   /**
    * Extract metadata from content
    */
-  private extractMetadata(content: string): Record<string, unknown> {
-    const metadata: Record<string, unknown> = {};
+  private extractMetadata(content: string): { title?: string; date?: string; authority?: string } {
+    const metadata: { title?: string; date?: string; authority?: string } = {};
     
     // Try to extract title from first lines
     const lines = content.split('\n').slice(0, 10);
@@ -470,7 +475,6 @@ export class DocumentParser {
       code: 3,
       regulation: 4,
       norm: 5,
-      agreement: 7,
       jurisprudence: 7,
       format: 7
     };

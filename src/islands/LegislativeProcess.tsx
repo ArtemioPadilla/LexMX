@@ -182,7 +182,9 @@ export default function LegislativeProcess() {
       <_HydrationBoundary 
         fallback={<_LoadingStates.LegislativeProcess />} 
         testId="legislative-process"
-      />
+      >
+        {null}
+      </_HydrationBoundary>
     );
   }
 

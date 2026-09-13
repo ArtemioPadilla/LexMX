@@ -116,7 +116,9 @@ export default function NotificationCenter({ userId, className = '' }: Notificat
       <_HydrationBoundary 
         fallback={<_LoadingStates.NotificationCenter />} 
         testId="notification-center"
-      />
+      >
+        {null}
+      </_HydrationBoundary>
     );
   }
 

@@ -10,11 +10,10 @@ import type {
   LegalArea, 
   DocumentType, 
   LegalHierarchy,
-  LegalContent,
-  QueryMetrics,
-  PerformanceReport,
-  DocumentMetrics
+  LegalContent
 } from '@/types';
+import type { QueryMetrics, PerformanceReport } from '@/lib/admin/query-analyzer';
+import type { DocumentMetrics } from '@/lib/admin/corpus-service';
 
 // Import the correct types from quality-test-suite
 import type {
@@ -167,17 +166,16 @@ export function createMockTestResult(overrides: Partial<TestResult> = {}): TestR
       answer: 'Test response about Mexican legal provisions',
       confidence: 0.85,
       sources: [{
-        id: 'doc1',
+        documentId: 'doc1',
         title: 'Constitution',
         excerpt: 'Test excerpt',
         relevanceScore: 0.9,
-        metadata: { documentTitle: 'Constitution', legalArea: 'constitutional' }
+        hierarchy: 1
       }],
       legalArea: 'constitutional' as LegalArea,
       queryType: 'citation',
       fromCache: false,
-      processingTime: 150,
-      timestamp: Date.now()
+      processingTime: 150
     }
   };
 
@@ -270,6 +268,7 @@ export function createMockPerformanceReport(overrides: Partial<PerformanceReport
     },
     totalQueries,
     successfulQueries,
+    failedQueries: totalQueries - successfulQueries,
     
     // Performance metrics
     averageLatency: 150 + Math.random() * 100,

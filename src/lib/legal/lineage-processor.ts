@@ -129,7 +129,7 @@ export class LineageProcessor {
       
       // Check if it's an official domain
       const domain = urlObj.hostname.toLowerCase();
-      const isOfficial = this.OFFICIAL_DOMAINS.some(official => 
+      const isOfficial = LineageProcessor.OFFICIAL_DOMAINS.some((official: string) => 
         domain.endsWith(official)
       );
 
@@ -157,7 +157,7 @@ export class LineageProcessor {
       }
 
     } catch (error) {
-      validation.errors.push(`Invalid URL: ${error.message}`);
+      validation.errors.push(`Invalid URL: ${error instanceof Error ? error.message : String(error)}`);
       validation.trustScore = 0;
     }
 
@@ -203,7 +203,7 @@ export class LineageProcessor {
       notes.push('No content found');
     }
 
-    if (!document.metadata?.sourceUrl) {
+    if (!document.officialUrl) {
       completenessScore -= 0.1;
       notes.push('Missing source URL');
     }
@@ -215,7 +215,7 @@ export class LineageProcessor {
 
     // Check for empty sections
     const emptySections = document.content.filter(c => 
-      !c.text || c.text.trim().length === 0
+      !c.content || c.content.trim().length === 0
     );
     if (emptySections.length > 0) {
       completenessScore -= 0.2;
@@ -289,7 +289,7 @@ export class LineageProcessor {
     if (!url) return 'manual';
     
     const urlLower = url.toLowerCase();
-    if (this.OFFICIAL_DOMAINS.some(d => urlLower.includes(d))) {
+    if (LineageProcessor.OFFICIAL_DOMAINS.some((d: string) => urlLower.includes(d))) {
       return 'official';
     }
     

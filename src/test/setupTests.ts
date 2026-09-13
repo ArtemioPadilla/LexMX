@@ -4,8 +4,33 @@
  */
 
 import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import { vi, beforeEach, afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
+
+declare global {
+  // eslint-disable-next-line no-var -- required for global augmentation in test setup
+  var Astro: {
+    url: URL;
+    params: Record<string, string | undefined>;
+    request: Request;
+    site?: URL;
+    generator: string;
+    slots: Record<string, unknown>;
+  } | undefined;
+  // eslint-disable-next-line no-var
+  var __astro_client_only: (() => void) | undefined;
+  // eslint-disable-next-line no-var
+  var __astro_client_load: (() => void) | undefined;
+  // eslint-disable-next-line no-var
+  var __astro_client_idle: (() => void) | undefined;
+  // eslint-disable-next-line no-var
+  var __astro_client_visible: (() => void) | undefined;
+  // eslint-disable-next-line no-var
+  var __astro_client_media: (() => void) | undefined;
+  // eslint-disable-next-line no-var
+  var scheduler: { postTask: (callback: () => void) => { abort: () => void } } | undefined;
+}
 
 // Mock admin services globally - must be at top level
 vi.mock('../lib/admin/embeddings-service', () => {
@@ -175,14 +200,7 @@ vi.mock('../lib/admin/data-service', () => {
   };
 });
 
-// Extend Vitest's expect with jest-dom matchers
-// Using module declaration instead of namespace
-declare module 'vitest' {
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intentional declaration merging for jest-dom matchers
-  interface Assertion<T = any> extends jest.Matchers<void, T> {}
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intentional declaration merging for jest-dom matchers
-  interface AsymmetricMatchersContaining extends jest.AsymmetricMatchers {}
-}
+// jest-dom matchers are extended via '@testing-library/jest-dom/vitest' import above
 
 // Mock global fetch for Node.js environment
 global.fetch = vi.fn((_url, _options) => {
@@ -196,7 +214,7 @@ global.fetch = vi.fn((_url, _options) => {
     blob: () => Promise.resolve(new Blob(['mocked blob'])),
     headers: new Headers(),
   } as Response);
-}) as jest.MockedFunction<typeof fetch>;
+}) as ReturnType<typeof vi.fn> & typeof fetch;
 
 // Mock Astro-specific globals and features
 beforeEach(() => {
@@ -339,8 +357,8 @@ beforeEach(() => {
   }
 
   // Mock Blob with proper constructor handling
-  global.Blob = vi.fn().mockImplementation((parts, options = {}) => ({
-    size: parts ? parts.reduce((acc, part) => acc + (part?.length || 0), 0) : 0,
+  global.Blob = vi.fn().mockImplementation((parts: (string | ArrayBuffer | ArrayBufferView)[], options: { type?: string } = {}) => ({
+    size: parts ? parts.reduce((acc: number, part) => acc + (typeof part === 'string' ? part.length : 0), 0) : 0,
     type: options.type || 'text/plain',
     text: () => Promise.resolve(parts ? parts.join('') : ''),
     arrayBuffer: () => Promise.resolve(new ArrayBuffer(0))
@@ -394,7 +412,7 @@ beforeEach(() => {
 
   // Mock requestIdleCallback for React 18 concurrent features
   global.requestIdleCallback = vi.fn((callback) => {
-    return setTimeout(() => callback({ didTimeout: false, timeRemaining: () => 50 }), 0);
+    return setTimeout(() => callback({ didTimeout: false, timeRemaining: () => 50 }), 0) as unknown as number;
   });
   global.cancelIdleCallback = vi.fn();
 

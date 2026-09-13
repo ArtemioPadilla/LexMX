@@ -74,16 +74,20 @@ export class PDFExtractor {
       if (includeMetadata) {
         try {
           const metadata = await pdfDoc.getMetadata();
+          // pdfjs-dist types the raw PDF info dictionary as `Object`; the actual
+          // shape (Title/Author/etc.) is defined by the PDF spec, not by pdfjs-dist's
+          // types, so a narrow cast is the only reasonable option here.
+          const info = metadata.info as Record<string, string | undefined>;
           documentMetadata = {
-            title: metadata.info?.Title || '',
-            author: metadata.info?.Author || '',
-            subject: metadata.info?.Subject || '',
-            creator: metadata.info?.Creator || '',
-            producer: metadata.info?.Producer || '',
-            creationDate: metadata.info?.CreationDate || '',
-            modificationDate: metadata.info?.ModDate || '',
+            title: info?.Title || '',
+            author: info?.Author || '',
+            subject: info?.Subject || '',
+            creator: info?.Creator || '',
+            producer: info?.Producer || '',
+            creationDate: info?.CreationDate || '',
+            modificationDate: info?.ModDate || '',
             pages: numPages,
-            keywords: metadata.info?.Keywords || ''
+            keywords: info?.Keywords || ''
           };
         } catch (error) {
           console.warn('Could not extract PDF metadata:', error);
@@ -95,8 +99,7 @@ export class PDFExtractor {
         try {
           const page = await pdfDoc.getPage(pageNum);
           const textContent = await page.getTextContent({
-            includeMarkedContent: true,
-            disableCombineTextItems: false
+            includeMarkedContent: true
           });
 
           // Build text with proper spacing and formatting
@@ -215,19 +218,13 @@ export class DOCExtractor {
     buffer: ArrayBuffer,
     options: ExtractionOptions = {}
   ): Promise<ExtractionResult> {
-    const { preserveFormatting = true, includeMetadata = true } = options;
+    const { includeMetadata = true } = options;
 
     try {
-      const result = await mammoth.extractRawText(
-        { arrayBuffer: buffer },
-        {
-          includeDefaultStyleMap: preserveFormatting,
-          ignoreEmptyParagraphs: true,
-          convertImage: options.extractImages ? mammoth.images.imgElement(img => {
-            return { src: img.contentType ? `data:${img.contentType};base64,${img.read('base64')}` : '' };
-          }) : undefined
-        }
-      );
+      // mammoth's extractRawText only accepts the input document; style-map and
+      // image-conversion options only apply to convertToHtml, so they are not
+      // passed here.
+      const result = await mammoth.extractRawText({ arrayBuffer: buffer });
 
       // Get plain text
       let text = result.value;

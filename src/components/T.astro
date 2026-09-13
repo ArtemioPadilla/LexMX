@@ -20,19 +20,20 @@ const translations: Record<string, TranslationValue> = { es, en };
 
 function getTranslation(lang: string, key: string, params?: Record<string, string>): string {
   const keys = key.split('.');
-  let value: TranslationValue | undefined = translations[lang];
+  let value: string | string[] | TranslationValue | undefined = translations[lang];
   
   for (const k of keys) {
-    value = value?.[k];
+    value = typeof value === 'object' && value !== null ? value[k] : undefined;
     if (value === undefined) {
       // Fallback to Spanish if key not found
-      value = translations.es;
+      let fallbackValue: string | string[] | TranslationValue | undefined = translations.es;
       for (const k2 of keys) {
-        value = value?.[k2];
-        if (value === undefined) {
+        fallbackValue = typeof fallbackValue === 'object' && fallbackValue !== null ? fallbackValue[k2] : undefined;
+        if (fallbackValue === undefined) {
           return key; // Return key if not found
         }
       }
+      value = fallbackValue;
       break;
     }
   }

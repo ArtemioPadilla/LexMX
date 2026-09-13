@@ -88,6 +88,7 @@ export interface RAGSearchResult {
     legalArea?: string;
     hierarchy?: number;
     lastUpdated?: string;
+    excerpt?: string;
   };
   highlights?: Array<{
     text: string;

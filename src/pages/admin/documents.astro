@@ -200,7 +200,8 @@ import { getUrl } from '../../utils/urls';
       const alert = document.getElementById('process-request-alert');
       if (alert) {
         alert.classList.remove('hidden');
-        document.getElementById('request-id').textContent = processRequestId;
+        const requestIdEl = document.getElementById('request-id');
+        if (requestIdEl) requestIdEl.textContent = processRequestId;
       }
       
       // Pass request ID to the ingestion component
@@ -217,7 +218,7 @@ import { getUrl } from '../../utils/urls';
       window.history.replaceState({}, document.title, url.pathname);
       
       // Hide alert
-      document.getElementById('process-request-alert').classList.add('hidden');
+      document.getElementById('process-request-alert')?.classList.add('hidden');
       
       // Clear request ID from component
       const ingestionComponent = document.querySelector('[name="document-ingestion-pipeline"]');
@@ -268,7 +269,7 @@ import { getUrl } from '../../utils/urls';
         const instruction = document.createElement('div');
         instruction.className = 'mt-1 text-xs text-gray-500';
         instruction.textContent = 'Run: npm run dev:proxy';
-        statusElement.parentNode.appendChild(instruction);
+        statusElement.parentNode?.appendChild(instruction);
       }
     }
 
@@ -279,7 +280,8 @@ import { getUrl } from '../../utils/urls';
         const metadataResponse = await fetch(`${basePath}legal-corpus/metadata.json`);
         if (metadataResponse.ok) {
           const metadata = await metadataResponse.json();
-          document.getElementById('total-documents').textContent = metadata.totalDocuments || '0';
+          const totalDocumentsEl = document.getElementById('total-documents');
+          if (totalDocumentsEl) totalDocumentsEl.textContent = metadata.totalDocuments || '0';
           
           // Calculate total chunks
           let totalChunks = 0;
@@ -288,19 +290,26 @@ import { getUrl } from '../../utils/urls';
               totalChunks += doc.chunks || 0;
             }
           }
-          document.getElementById('total-chunks').textContent = totalChunks.toString();
+          const totalChunksEl = document.getElementById('total-chunks');
+          if (totalChunksEl) totalChunksEl.textContent = totalChunks.toString();
         }
 
         const embeddingsResponse = await fetch(`${basePath}embeddings/embeddings-metadata.json`);
         if (embeddingsResponse.ok) {
           const embeddingsMeta = await embeddingsResponse.json();
-          document.getElementById('total-embeddings').textContent = 
-            embeddingsMeta.corpus?.processedChunks || '0';
+          const totalEmbeddingsEl = document.getElementById('total-embeddings');
+          if (totalEmbeddingsEl) {
+            totalEmbeddingsEl.textContent = 
+              embeddingsMeta.corpus?.processedChunks || '0';
+          }
           
           if (embeddingsMeta.buildDate) {
             const date = new Date(embeddingsMeta.buildDate);
-            document.getElementById('last-update').textContent = 
-              date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            const lastUpdateEl = document.getElementById('last-update');
+            if (lastUpdateEl) {
+              lastUpdateEl.textContent = 
+                date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            }
           }
         }
       } catch (error) {
@@ -319,12 +328,14 @@ import { getUrl } from '../../utils/urls';
     setInterval(checkProxyStatus, 10000);
 
     // Debug tools
-    document.getElementById('debug-storage-btn').addEventListener('click', async () => {
+    document.getElementById('debug-storage-btn')?.addEventListener('click', async () => {
       const output = document.getElementById('debug-output');
+      if (!output) return;
       output.textContent = 'Checking storage...';
       
       try {
         // Import storage
+        // @ts-expect-error - dynamic import of runtime JS path without type declarations
         const { EnhancedOfflineStorage } = await import('/src/lib/storage/enhanced-offline-storage.js');
         const storage = EnhancedOfflineStorage.getInstance();
         
@@ -335,24 +346,25 @@ import { getUrl } from '../../utils/urls';
           <div class="font-mono">
             <div class="font-bold">Storage Status:</div>
             <div>Total documents: ${allDocs.length}</div>
-            ${allDocs.map(doc => `<div>• ${doc.id}: "${doc.title}"</div>`).join('')}
+            ${allDocs.map((doc: { id: string; title: string }) => `<div>• ${doc.id}: "${doc.title}"</div>`).join('')}
           </div>
         `;
         
         console.log('[Debug] All documents in storage:', allDocs);
       } catch (error) {
-        output.textContent = `Error: ${error.message}`;
+        output.textContent = `Error: ${error instanceof Error ? error.message : String(error)}`;
         console.error('[Debug] Storage check failed:', error);
       }
     });
 
     // Handle ingestion completion
-    window.addEventListener('ingestion-complete', (event) => {
+    window.addEventListener('ingestion-complete', () => {
       // Reload statistics
       loadStatistics();
       
       // Add to activity list
       const activityList = document.getElementById('activity-list');
+      if (!activityList) return;
       const newActivity = document.createElement('li');
       newActivity.className = 'px-6 py-4 bg-green-50 dark:bg-green-900/20';
       newActivity.innerHTML = `
@@ -377,7 +389,7 @@ import { getUrl } from '../../utils/urls';
       activityList.insertBefore(newActivity, activityList.firstChild);
       
       // Remove old activities if more than 10
-      while (activityList.children.length > 10) {
+      while (activityList.children.length > 10 && activityList.lastChild) {
         activityList.removeChild(activityList.lastChild);
       }
     });

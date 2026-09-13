@@ -39,6 +39,8 @@ export interface LegalDocument {
   authority: string;
   publicationDate: string;
   lastReform?: string;
+  lastUpdated?: string;
+  version?: string;
   status: 'active' | 'repealed' | 'suspended';
   
   // Scope
@@ -47,6 +49,8 @@ export interface LegalDocument {
   
   // Content
   content: LegalContent[];
+  fullText?: string;
+  citations?: string[];
   
   // Metadata
   officialUrl?: string;
@@ -143,9 +147,23 @@ export interface LegalChunk {
     title?: string;
     hierarchy: LegalHierarchy;
     legalArea: LegalArea;
+    chunkIndex?: number;
+    documentId?: string;
+    documentTitle?: string;
+    documentType?: string;
+    authority?: string;
+    publicationDate?: string;
+    originalId?: string;
+    partNumber?: number;
+    isComplete?: boolean;
+    startParagraph?: number;
+    endParagraph?: number;
+    totalParts?: number;
+    isLastPart?: boolean;
   };
   embedding?: number[];
   keywords: string[];
+  relatedChunks?: string[];
 }
 
 // Mexican legal citation formats
@@ -244,6 +262,7 @@ export interface DocumentSource {
   fileSize?: number;
   fileType?: string;
   uploadedAt?: string;
+  content?: string; // Raw text/base64 content for pdf_upload sources
   verified: boolean;
   isOfficial: boolean;
   metadata?: {

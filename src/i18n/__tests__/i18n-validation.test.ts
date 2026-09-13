@@ -38,9 +38,9 @@ describe('i18n Translation Files Validation', () => {
             seenKeys.add(key);
             
             // Recursively check nested objects
-            if (typeof obj[key] === 'object' && obj[key] !== null) {
+            if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
               const newPath = path ? `${path}.${key}` : key;
-              checkDuplicates(obj[key], newPath);
+              checkDuplicates(obj[key] as TranslationValue, newPath);
             }
           }
         }
@@ -131,8 +131,8 @@ describe('i18n Translation Files Validation', () => {
           if (obj[key].trim() === '') {
             emptyPaths.push(fullPath);
           }
-        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-          emptyPaths.push(...checkForEmptyValues(obj[key], fullPath));
+        } else if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
+          emptyPaths.push(...checkForEmptyValues(obj[key] as TranslationValue, fullPath));
         }
       }
       
@@ -287,8 +287,8 @@ describe('i18n Translation Files Validation', () => {
       
       if (esTemplates) {
         Object.keys(esTemplates).forEach(key => {
-          const matches = esTemplates[key].matchAll(placeholderPattern);
-          esPlaceholders[key] = new Set(Array.from(matches).map(m => m[1]));
+          const matches: RegExpMatchArray[] = Array.from(esTemplates[key].matchAll(placeholderPattern));
+          esPlaceholders[key] = new Set(matches.map((m) => m[1]));
         });
       }
       
@@ -300,8 +300,8 @@ describe('i18n Translation Files Validation', () => {
         
         if (templates) {
           Object.keys(templates).forEach(key => {
-            const matches = templates[key].matchAll(placeholderPattern);
-            const placeholders = new Set(Array.from(matches).map(m => m[1]));
+            const matches: RegExpMatchArray[] = Array.from(templates[key].matchAll(placeholderPattern));
+            const placeholders = new Set(matches.map((m) => m[1]));
             
             // Should have the same placeholders as Spanish
             if (esPlaceholders[key]) {

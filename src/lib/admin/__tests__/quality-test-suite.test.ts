@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { EventEmitter as _EventEmitter } from 'events';
-import type { QualityTest as _QualityTest, TestResult as _TestResult, TestSuiteResult } from '../quality-test-suite';
+import type { QualityTest, TestSuiteResult } from '../quality-test-suite';
 import { createMockLegalRAGEngine, createMockQualityTestSuite, testResultsFixture as _testResultsFixture } from '../../../test/mocks';
 
 // Mock the RAG engine before importing QualityTestSuite
@@ -94,7 +94,7 @@ describe('QualityTestSuite', () => {
 
   describe('getAvailableTests', () => {
     it('should return all available tests', () => {
-      const tests = mockSuite.getAvailableTests();
+      const tests: QualityTest[] = mockSuite.getAvailableTests();
       
       expect(tests).toBeInstanceOf(Array);
       expect(tests.length).toBeGreaterThan(0);
@@ -105,7 +105,7 @@ describe('QualityTestSuite', () => {
     });
 
     it('should include tests from all categories', () => {
-      const tests = mockSuite.getAvailableTests();
+      const tests: QualityTest[] = mockSuite.getAvailableTests();
       const categories = new Set(tests.map(t => t.category));
       
       expect(categories.has('citation')).toBe(true);
@@ -117,7 +117,7 @@ describe('QualityTestSuite', () => {
 
   describe('runTest', () => {
     it('should run a single test successfully', async () => {
-      const tests = mockSuite.getAvailableTests();
+      const tests: QualityTest[] = mockSuite.getAvailableTests();
       const testId = tests[0].id;
       
       const result = await mockSuite.runTest(testId);
@@ -148,7 +148,7 @@ describe('QualityTestSuite', () => {
         legalArea: 'labor'
       });
       
-      const tests = mockSuite.getAvailableTests();
+      const tests: QualityTest[] = mockSuite.getAvailableTests();
       const citationTest = tests.find(t => t.category === 'citation');
       
       if (citationTest) {
@@ -175,7 +175,7 @@ describe('QualityTestSuite', () => {
         legalArea: 'labor'
       });
       
-      const tests = mockSuite.getAvailableTests();
+      const tests: QualityTest[] = mockSuite.getAvailableTests();
       const semanticTest = tests.find(t => t.category === 'semantic');
       
       if (semanticTest) {
@@ -188,7 +188,7 @@ describe('QualityTestSuite', () => {
     });
 
     it('should track performance metrics', async () => {
-      const tests = mockSuite.getAvailableTests();
+      const tests: QualityTest[] = mockSuite.getAvailableTests();
       const perfTest = tests.find(t => t.category === 'performance');
       
       if (perfTest) {
@@ -233,7 +233,7 @@ describe('QualityTestSuite', () => {
       // Make one test fail
       mockRagEngine.search.mockRejectedValueOnce(new Error('Search failed'));
       
-      const result = await mockSuite.runAllTests();
+      const result: TestSuiteResult = await mockSuite.runAllTests();
       
       const failedTests = result.results.filter(r => !r.passed).length;
       expect(failedTests).toBeGreaterThanOrEqual(0);
@@ -243,10 +243,10 @@ describe('QualityTestSuite', () => {
 
   describe('runTestsByCategory', () => {
     it('should run only tests from specified category', async () => {
-      const result = await mockSuite.runTestsByCategory('citation');
+      const result: TestSuiteResult = await mockSuite.runTestsByCategory('citation');
       
       expect(result.results.every(r => {
-        const test = mockSuite.getAvailableTests().find(t => t.id === r.testId);
+        const test = mockSuite.getAvailableTests().find((t: QualityTest) => t.id === r.testId);
         return test?.category === 'citation';
       })).toBe(true);
     });
@@ -364,7 +364,7 @@ describe('QualityTestSuite', () => {
 
   describe('test evaluation logic', () => {
     it('should correctly evaluate citation tests', async () => {
-      const tests = mockSuite.getAvailableTests();
+      const tests: QualityTest[] = mockSuite.getAvailableTests();
       const citationTest = tests.find(t => 
         t.query.includes('Artículo 123 constitucional')
       );
@@ -390,7 +390,7 @@ describe('QualityTestSuite', () => {
     });
 
     it('should correctly evaluate cross-reference tests', async () => {
-      const tests = mockSuite.getAvailableTests();
+      const tests: QualityTest[] = mockSuite.getAvailableTests();
       const crossRefTest = tests.find(t => 
         t.category === 'cross-reference'
       );
@@ -413,7 +413,7 @@ describe('QualityTestSuite', () => {
     });
 
     it('should correctly evaluate contradiction tests', async () => {
-      const tests = mockSuite.getAvailableTests();
+      const tests: QualityTest[] = mockSuite.getAvailableTests();
       const contradictionTest = tests.find(t => 
         t.category === 'contradiction'
       );
@@ -434,7 +434,7 @@ describe('QualityTestSuite', () => {
         return { ...mockSearchResult, processingTime: 100 };
       });
       
-      const tests = mockSuite.getAvailableTests();
+      const tests: QualityTest[] = mockSuite.getAvailableTests();
       const perfTest = tests.find(t => t.category === 'performance');
       
       if (perfTest) {

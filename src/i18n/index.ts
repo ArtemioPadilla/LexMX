@@ -59,10 +59,10 @@ class I18n {
   t(key: string, params?: TranslationParams, language?: Language): string {
     const keys = key.split('.');
     const lang = language || this.currentLanguage;
-    let value: TranslationValue | undefined = translations[lang];
+    let value: string | string[] | TranslationValue | undefined = translations[lang];
 
     for (const k of keys) {
-      if (typeof value === 'object' && value !== null && k in value) {
+      if (typeof value === 'object' && value !== null && !Array.isArray(value) && k in value) {
         value = value[k];
       } else {
         value = undefined;
@@ -70,9 +70,9 @@ class I18n {
       
       if (value === undefined) {
         // Fallback to Spanish if translation not found
-        let fallbackValue: TranslationValue | undefined = translations.es;
+        let fallbackValue: string | string[] | TranslationValue | undefined = translations.es;
         for (const fallbackKey of keys) {
-          if (typeof fallbackValue === 'object' && fallbackValue !== null && fallbackKey in fallbackValue) {
+          if (typeof fallbackValue === 'object' && fallbackValue !== null && !Array.isArray(fallbackValue) && fallbackKey in fallbackValue) {
             fallbackValue = fallbackValue[fallbackKey];
           } else {
             fallbackValue = undefined;
@@ -95,7 +95,7 @@ class I18n {
 
     // Replace parameters if provided
     if (params) {
-      return value.replace(/\{\{(\w+)\}\}/g, (match, param) => {
+      return value.replace(/\{\{(\w+)\}\}/g, (match: string, param: string) => {
         return params[param]?.toString() || match;
       });
     }
@@ -116,10 +116,10 @@ class I18n {
   getSection(section: string, language?: Language): Record<string, TranslationValue> {
     const keys = section.split('.');
     const lang = language || this.currentLanguage;
-    let value: TranslationValue | undefined = translations[lang];
+    let value: string | string[] | TranslationValue | undefined = translations[lang];
 
     for (const k of keys) {
-      if (typeof value === 'object' && value !== null && k in value) {
+      if (typeof value === 'object' && value !== null && !Array.isArray(value) && k in value) {
         value = value[k];
       } else {
         return {};

@@ -177,7 +177,9 @@ export default function ModerationPanel({
       <_HydrationBoundary 
         fallback={<_LoadingStates.ModerationPanel />} 
         testId="moderation-panel"
-      />
+      >
+        {null}
+      </_HydrationBoundary>
     );
   }
 

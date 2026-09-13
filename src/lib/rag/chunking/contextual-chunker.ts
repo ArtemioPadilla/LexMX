@@ -272,6 +272,8 @@ export class ContextualChunker {
               chunkIndex,
               documentTitle: document.title,
               type: 'contextual',
+              hierarchy: document.hierarchy,
+              legalArea: document.primaryArea,
               isComplete: true
             },
             keywords: this.extractKeywords(currentChunk),
@@ -295,6 +297,8 @@ export class ContextualChunker {
           chunkIndex,
           documentTitle: document.title,
           type: 'contextual',
+          hierarchy: document.hierarchy,
+          legalArea: document.primaryArea,
           isComplete: true
         },
         keywords: this.extractKeywords(currentChunk),

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from '../../i18n';
 
-export type ViewMode = 'text' | 'pdf' | 'chunks' | 'metadata';
+export type ViewMode = 'text' | 'pdf' | 'chunks' | 'metadata' | 'article';
 
 interface ViewModeSelectorProps {
   currentMode: ViewMode;

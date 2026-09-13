@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ContextualChunker } from '../contextual-chunker';
-import type { LegalDocument } from '@/types/legal';
+import type { LegalDocument, LegalChunk } from '@/types/legal';
 
 describe('ContextualChunker', () => {
   let chunker: ContextualChunker;
@@ -30,6 +30,7 @@ describe('ContextualChunker', () => {
       const document: LegalDocument = {
         id: 'test-doc',
         title: 'Test Legal Document',
+        shortTitle: 'Test Legal Document',
         type: 'law',
         hierarchy: 3,
         primaryArea: 'civil',
@@ -38,6 +39,10 @@ describe('ContextualChunker', () => {
         publicationDate: '2024-01-01',
         status: 'active',
         territorialScope: 'federal',
+        applicability: 'General',
+        relatedDependencies: [],
+        importance: 'medium',
+        updateFrequency: 'medium',
         content: [
           {
             id: 'section-1',
@@ -69,6 +74,7 @@ describe('ContextualChunker', () => {
       const document: LegalDocument = {
         id: 'test-doc-2',
         title: 'Unstructured Document',
+        shortTitle: 'Unstructured Document',
         type: 'law',
         hierarchy: 3,
         primaryArea: 'civil',
@@ -77,6 +83,10 @@ describe('ContextualChunker', () => {
         publicationDate: '2024-01-01',
         status: 'active',
         territorialScope: 'federal',
+        applicability: 'General',
+        relatedDependencies: [],
+        importance: 'medium',
+        updateFrequency: 'medium',
         content: [],
         citations: []
       };
@@ -91,6 +101,7 @@ describe('ContextualChunker', () => {
       const document: LegalDocument = {
         id: 'test-doc-3',
         title: 'Metadata Test Document',
+        shortTitle: 'Metadata Test Document',
         type: 'code',
         hierarchy: 3,
         primaryArea: 'criminal',
@@ -99,6 +110,10 @@ describe('ContextualChunker', () => {
         publicationDate: '2024-01-01',
         status: 'active',
         territorialScope: 'federal',
+        applicability: 'General',
+        relatedDependencies: [],
+        importance: 'medium',
+        updateFrequency: 'medium',
         content: [{
           id: 'section-1',
           type: 'article',
@@ -156,7 +171,7 @@ describe('ContextualChunker', () => {
       const text = 'Según la Ley Federal del Trabajo y el Código Civil Federal.';
       const keywords = (chunker as any).extractKeywords(text);
       
-      const lawKeywords = keywords.filter(k => k.startsWith('ley_'));
+      const lawKeywords = keywords.filter((k: string) => k.startsWith('ley_'));
       expect(lawKeywords.length).toBeGreaterThan(0);
     });
   });
@@ -183,6 +198,7 @@ describe('ContextualChunker', () => {
       const document: LegalDocument = {
         id: 'long-doc',
         title: 'Long Document',
+        shortTitle: 'Long Document',
         type: 'law',
         hierarchy: 3,
         primaryArea: 'civil',
@@ -191,6 +207,10 @@ describe('ContextualChunker', () => {
         publicationDate: '2024-01-01',
         status: 'active',
         territorialScope: 'federal',
+        applicability: 'General',
+        relatedDependencies: [],
+        importance: 'medium',
+        updateFrequency: 'medium',
         content: [{
           id: 'section-1',
           type: 'article',
@@ -212,6 +232,7 @@ describe('ContextualChunker', () => {
       const document: LegalDocument = {
         id: 'short-doc',
         title: 'Short Document',
+        shortTitle: 'Short Document',
         type: 'law',
         hierarchy: 3,
         primaryArea: 'civil',
@@ -220,6 +241,10 @@ describe('ContextualChunker', () => {
         publicationDate: '2024-01-01',
         status: 'active',
         territorialScope: 'federal',
+        applicability: 'General',
+        relatedDependencies: [],
+        importance: 'medium',
+        updateFrequency: 'medium',
         content: [{
           id: 'section-1',
           type: 'article',
@@ -237,19 +262,19 @@ describe('ContextualChunker', () => {
 
   describe('cross-references', () => {
     it('should add cross-references between chunks', () => {
-      const chunks = [
+      const chunks: LegalChunk[] = [
         {
           id: 'chunk-1',
           documentId: 'doc',
           content: 'Según el artículo 2 de esta ley',
-          metadata: { article: '1' },
+          metadata: { article: '1', type: 'article', hierarchy: 3, legalArea: 'civil' },
           keywords: []
         },
         {
           id: 'chunk-2',
           documentId: 'doc',
           content: 'El contenido del artículo segundo',
-          metadata: { article: '2' },
+          metadata: { article: '2', type: 'article', hierarchy: 3, legalArea: 'civil' },
           keywords: []
         }
       ];
