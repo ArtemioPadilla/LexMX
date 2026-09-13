@@ -1,23 +1,28 @@
 # LexMX → Inceptor: análisis de migración
 
-Fecha: 2026-09-13. Alcance: estado real de LexMX hoy, qué ofrece Inceptor como
-destino, y una recomendación con plan por fases. No se modificó código de
-producto para este análisis; todos los números se midieron en este entorno
-(Node 22) sobre `main` de ambos repos.
+Fecha: 2026-09-13, revisión 2 tras validación adversarial (ver §8). Alcance:
+estado real de LexMX hoy, qué ofrece Inceptor, opciones comparadas y un plan
+por fases. No se modificó código de producto; todos los números se midieron en
+este entorno (Node 22, `npm ci` limpio) sobre `main` de ambos repos.
 
-## 1. Veredicto en tres líneas
+## 1. Veredicto en cuatro líneas
 
-- **LexMX sí funciona en producción** (https://artemiop.com/LexMX/ responde 200 y
-  el build local pasa), pero está en deuda técnica seria: 584 errores de tipos,
-  CI en rojo desde julio, 25 vulnerabilidades de npm, y el RAG corre sobre un
+- **LexMX sí funciona en producción** (https://artemiop.com/LexMX/ responde 200
+  y el build local pasa), pero con deuda seria: 584 errores de tipos, CI en
+  rojo desde julio, 25 vulnerabilidades de npm, y un RAG que corre sobre un
   corpus de juguete con fallback silencioso a datos mock.
-- **Migrar a Inceptor conviene**, pero no como "actualizar en sitio" ni como
-  "copiar todo LexMX dentro de Inceptor". La ruta con mejor relación
-  esfuerzo/riesgo es **repo nuevo desde el template + portar módulo por módulo
-  con compuerta de calidad** (patrón *strangler*). Así la deuda no cruza.
+- **Adoptar Inceptor conviene**, pero la ruta más barata y segura **no es un
+  repo nuevo**: es actualizar LexMX en sitio (Astro 5, React 19, Tailwind 4,
+  que resultan casi gratis una vez borradas las rutas API), traer la capa de
+  proceso y las compuertas de Inceptor con un *ratchet* de calidad, y sanear
+  módulo por módulo dentro del mismo repo.
+- Un repo nuevo (patrón *strangler*) sigue siendo válido si se quiere historial
+  limpio, pero en GitHub Pages implica renombrar repos, stubs de redirección y
+  un contrato de compatibilidad de datos que la primera versión de este
+  documento no había considerado.
 - El mayor riesgo del producto **no es el framework, es el contenido**: 3
-  documentos de muestra y 14 vectores. La migración no lo arregla; hay que
-  planear el corpus real como fase propia.
+  documentos de muestra y 14 vectores. Ninguna migración lo arregla; el corpus
+  real necesita su propia fase.
 
 ## 2. Estado real de LexMX (medido)
 
@@ -25,23 +30,21 @@ producto para este análisis; todos los números se midieron en este entorno
 
 | Métrica | Valor | Fuente |
 |---|---|---|
-| Último commit en `main` | 2026-07-15 (`5f629a2`) | git log |
-| Commits totales | 25 | git rev-list |
+| Último commit en `main` | 2026-07-15 (`5f629a2`), 25 commits | git log |
 | `npm run build` | ✅ 27 páginas, 48 s | local |
-| `tsc --noEmit` | ❌ 526 errores; `astro check` reporta 584 | local |
-| `vitest run` | 481 ✅ / 14 ❌ / 9 skipped (504) | local (2 de los 14 son por vars AWS del entorno) |
+| `tsc --noEmit` / `astro check` | ❌ 526 / 584 errores | local |
+| `vitest run` | 481 ✅ / 14 ❌ / 9 skipped en esta corrida | local |
+| Dónde fallan los tests | 12 en `lib/ingestion/__tests__/url-ingestion-integration.test.ts` (mocks de pdfjs/mammoth); 2 en `env-config.test.ts` por variables AWS del entorno | local |
 | `eslint` | 0 errores / 495 warnings (casi todos `no-explicit-any`) | local |
 | `npm audit` | 25 vulns (3 critical, 15 high) | local |
-| CI en `main` | ❌ `ci.yml`, `quality.yml`, `validate-deployment.yml` fallan en type-check; `deploy.yml` ✅ | GitHub Actions |
-| PRs abiertos | 12 (11 de Dependabot desde 2025-08, más #73) | GitHub |
-| Issues abiertos | 0 | GitHub |
-| Sitio en vivo | ✅ `/`, `/chat/` responden 200 vía redirect a artemiop.com | curl |
+| CI en `main` | ❌ `ci.yml`, `quality.yml`, `validate-deployment.yml` caen en type-check; `deploy.yml` ✅ | GitHub Actions |
+| PRs / issues abiertos | 12 PRs (11 Dependabot desde 2025-08, más #73) / 0 issues | GitHub |
+| Sitio en vivo | ✅ `/` y `/chat/` responden 200 vía redirect a artemiop.com | curl |
 
-El PR #73 (`fix/typescript-errors`) baja los errores de tipos de 584 a 252 y
-documenta que el intento de subir Astro 4→7 rompe con `NoAdapterInstalled`:
-las 13 rutas en `src/pages/api/**` declaran `prerender = false` en un sitio
-`output: 'static'` sin adapter. Ese es el bloqueo concreto para cualquier
-upgrade de Astro, y esas rutas no existen en producción de todas formas.
+El PR #73 baja los errores de tipos de 584 a 252 y documenta que subir Astro
+4→7 falla con `NoAdapterInstalled`: 13 archivos en `src/pages/api/**` declaran
+`prerender = false` en un sitio `output: 'static'` sin adapter. Ese es el
+bloqueo de cualquier upgrade de Astro, y esas rutas no existen en producción.
 
 ### 2.2 Tamaño y forma
 
@@ -49,235 +52,330 @@ upgrade de Astro, y esas rutas no existen en producción de todas formas.
 |---|---|---|
 | LOC `src/` (sin tests) | ~58.8k | ~25.5k |
 | Astro / React / Tailwind | 4.16 / 18.3 / 3.4 | 5.18 / 19.2 / 4.3 |
-| TypeScript / Node | 5.9 / ≥20 | 6.0 / ≥22 |
+| TypeScript / Node | 5.9 instalado (`^5.6`) / ≥20 | 6.0 / ≥22 |
 | Librería UI | ninguna: 33 componentes a mano (~9k LOC) | Base UI + shadcn: 91 archivos en `ui/` |
 | Islas React | 23 archivos, 11.6k LOC | 52 |
-| Tests | 30 vitest + 42 Playwright (integración+e2e) | 158 vitest + 7 Playwright (visual, a11y, teclado) |
-| JS en `dist/` | 9.2 MB; chunk mayor 5.4 MB (transformers.js importado estático) | presupuesto Lighthouse: 150 KB script / ruta |
+| Tests | 30 vitest + 42 Playwright | 158 vitest + 7 Playwright (visual, axe, teclado) |
+| JS en `dist/` | 9.2 MB; chunk mayor 5.4 MB (transformers.js importado estático) | presupuesto Lighthouse 150 KB/ruta, **solo local** (ver §3.1) |
 
 ### 2.3 Qué está vivo, qué está muerto
 
-**Vivo y con valor real** (lo que hay que portar):
+**Vivo y con valor real** (se conserva y se sanea):
 
-- `lib/llm/` (8.5k LOC): registry de 10 proveedores (mock, WebLLM, OpenAI,
-  Anthropic, Gemini, Ollama, OpenAI-compatible, Bedrock, Azure, Vertex),
-  `provider-manager`, `intelligent-selector`, `prompt-builder`.
-- `lib/rag/` (2.9k): `engine`, `contextual-chunker`, `hybrid-search`,
-  `vector-search`.
-- `lib/storage/` (1.4k) y `lib/security/` (750): IndexedDB vector store,
-  metadata store, cifrado AES-GCM + PBKDF2 con WebCrypto.
-- `lib/legal/` (1.4k), `lib/corpus/`, `lib/ingestion/` (3k, parser real con
-  pdfjs y mammoth), `lib/utils/cors-*`.
-- Islas: `ChatInterface` (735), `ProviderSetup` (869), `CaseManager` (1405,
-  incluye `CaseChat` y `CaseTimeline`), `DocumentViewer*`, `DocumentRequest*`,
-  las 5 islas del wiki.
-- Diccionarios i18n: `src/i18n/locales/{es,en}.json`, 1 234 claves cada uno.
+| Módulo | LOC sin tests | Tests | Errores tsc | Nota |
+|---|---|---|---|---|
+| `lib/llm/` | 7 867 | 2 | 61 | registry de 10 proveedores, `provider-manager`, `intelligent-selector`, `prompt-builder`; 4 pares duplicados |
+| `lib/rag/` | 2 597 | 1 | 38 | `engine`, `contextual-chunker`, `hybrid-search`, `vector-search` |
+| `lib/ingestion/` | 1 852 | 4 | 34 | parser real con pdfjs y mammoth; **sus tests de integración son los que fallan** |
+| `lib/storage/` | 1 388 | 0 | 9 | vector store y metadata en IndexedDB |
+| `lib/legal/` | 1 379 | 0 | 30 | |
+| `lib/embeddings/` | 992 | 0 | 24 | 3 adaptadores de 35 líneas hechos para tests |
+| `lib/security/` | 750 | 0 | 11 | AES-GCM + PBKDF2 con WebCrypto |
+| `lib/corpus/` | 380 | 0 | 2 | |
+| Islas vivas | 11.6k | 1 | ~45 | ChatInterface 735, ProviderSetup 869 (23 errores), CaseManager 1 405 (+CaseChat 615, +CaseTimeline 403), DocumentViewer*, DocumentRequest*, 5 del wiki |
+| Diccionarios i18n | ~1 300 claves hoja por idioma | 1 | | `systemPrompts` ocupa 4.4 KB de los 75 KB de `es.json` |
 
-**Muerto, duplicado o no desplegable** (no se porta):
+Cinco de los ocho módulos de `lib/` **no tienen tests**. "Portar con sus
+tests" significa escribirlos: es el grueso del trabajo, no un pie de página.
 
-- 13 rutas `src/pages/api/**` con `prerender = false` y los ~5.7k LOC de
-  `lib/admin/` que las respaldan. Nunca corren en GitHub Pages.
+**Vivo pero acoplado a lo que se va a borrar** (corrección de la revisión 1):
+
+- `lib/admin/` (2 992 LOC sin tests) **no está muerto**: `BaseLayout.astro:138`
+  monta `<APIAdapter />` en cada página, que carga `lib/api/client-api.ts`, que
+  importa `CorpusService`, `EmbeddingsService`, `AdminDataService` y los dos
+  `Quality*Service`. `CorpusManager.tsx` y `QualityMetrics.tsx` importan
+  `lib/admin/*` directamente y además hacen `fetch(getUrl('api/...'))` que el
+  adapter atiende en el navegador. Las rutas API sí están muertas; los
+  servicios detrás, no.
+
+**Muerto, duplicado o no desplegable** (se borra):
+
+- 13 rutas `src/pages/api/**` (`prerender = false`), `src/lib/api/`,
+  `APIAdapter.astro`.
 - Islas sin montar en ninguna página: `ModerationPanel`, `NotificationCenter`,
-  `admin/EmbeddingsManager` (~1 455 LOC).
-- Proveedores LLM duplicados: `openai.ts`+`openai-provider.ts`,
-  `claude.ts`+`claude-provider.ts`, `gemini.ts`+`gemini-provider.ts`,
-  `ollama.ts`+`ollama-provider.ts`, más `webllm-provider.old.ts` (import
-  estático de web-llm, 431 LOC).
+  `admin/EmbeddingsManager` (~1 455 LOC; las dos primeras solo aparecen en el
+  mapa de fallbacks de `HydrationBoundary.tsx`).
+- Proveedores LLM duplicados con cero importadores: `openai.ts`, `claude.ts`,
+  `gemini.ts`, `ollama.ts` (`providers/index.ts` solo usa los `*-provider.ts`),
+  más `webllm-provider.old.ts` (import estático de web-llm) y `webllm-mock.ts`.
 - `src/context/I18nProvider.tsx` y `src/stores/theme.ts`: cero importadores.
-  Segundo sistema i18n (`src/i18n/translations/`, `ClientTranslations.astro`,
-  `T.astro`) casi vestigial.
+  Segundo sistema i18n (`src/i18n/translations/`, `ClientTranslations.astro`
+  montado en cada página, `T.astro` que hace fetch de JSON en runtime).
 - `astro.config.mjs` `manualChunks` referencia 6 paquetes no instalados
   (`pdf-parse`, `idb`, `i18next`, `react-i18next`, `chart.js`,
-  `react-chartjs-2`) y 2 rutas equivocadas.
-- Basura en raíz: 9 capturas PNG, `test-results.json` (904 KB y no es JSON),
-  12 markdowns post-mortem de E2E que describen archivos que ya no existen,
-  `docs/demo/` con 7.7 MB de GIF/MP4 regenerados por `update-demo.yml`,
-  ~24 codemods de una sola vez en `scripts/`.
+  `react-chartjs-2`) y 3 rutas equivocadas.
+- Basura en raíz: 9 PNG, `test-results.json` (904 KB, no es JSON), 12
+  post-mortem de E2E que describen archivos que ya no existen, `docs/demo/` con
+  7.7 MB de GIF/MP4 regenerados por `update-demo.yml`, ~24 codemods en
+  `scripts/`.
 
 ### 2.4 El punto incómodo: el RAG es demo
 
 - `public/legal-corpus/`: 3 JSON de ~2 KB (Constitución, CCF, LFT), un solo
-  chunk cada uno.
-- `public/embeddings/`: 14 vectores de 384 dimensiones.
-- `rag/engine.ts` intenta embeddings reales al inicializar y, si falla, cae a
-  mock; `embedding-manager.ts` hace lo mismo con `console.warn`. Con corpus
-  vacío el engine responde con `mockDocuments` hardcodeados (líneas 638-697).
-- El chat sí funciona si el usuario configura un proveedor (BYOK) o WebLLM,
-  pero las "citas" salen de ese índice mínimo.
-
-Conclusión: "no puedo asegurar que sirva" es correcto a medias. La app carga,
-el chat conversa, pero el valor prometido (RAG sobre el corpus mexicano) no
-está respaldado por datos.
+  chunk cada uno. `public/embeddings/`: 14 vectores de 384 dimensiones.
+- `rag/engine.ts` intenta embeddings reales al inicializar (línea 114) y, si
+  falla, `useRealEmbeddings = false`; `embedding-manager.ts:93-96` cae al
+  proveedor mock con un `console.warn`. Con corpus vacío el engine responde con
+  `mockDocuments` hardcodeados (líneas 638-697).
+- El chat conversa si el usuario configura un proveedor (BYOK) o WebLLM, pero
+  las citas salen de ese índice mínimo.
+- `CLAUDE.md` describe un `lib/case-management/` que no existe: los casos viven
+  en `localStorage['lexmx_cases']` dentro de `CaseManager.tsx`.
 
 ## 3. Qué da Inceptor y qué no
 
 ### 3.1 Lo que resuelve directamente
 
-- **Subpath de GitHub Pages**: `ASTRO_BASE` en `astro.config.mjs` + `withBase()`
-  en `src/lib/href.ts`, con el deploy ya cableado. Equivale al `getUrl()` de
-  LexMX (25 archivos lo usan): reemplazo mecánico.
-- **Compuertas de calidad que LexMX nunca tuvo verdes**: `npm run check` corre
-  en paralelo `astro check`, `tsc`, vitest, eslint y el chequeo de pragmas, y
-  luego build. Playwright visual light/dark, axe WCAG AA, recorrido de teclado.
-  CI de Inceptor está verde hoy (últimos 5 runs).
+- **Subpath de GitHub Pages**: `ASTRO_BASE` + `withBase()` en `src/lib/href.ts`.
+  Equivale al `getUrl()` de LexMX (25 archivos): reemplazo mecánico.
+- **Compuertas en CI**: `npm run check` corre en paralelo `astro check`, `tsc`,
+  vitest, eslint y `check-ts-pragmas`, luego build. Playwright visual
+  light/dark, axe WCAG AA y recorrido de teclado en `visual.yml`. CI verde hoy.
+  **Lighthouse y los budgets no están en CI**: `ci.yml:70-77` los difiere a
+  local hasta tener staging; `lighthouse-budgets.json` es una sola regla `/*`.
 - **Capa de proceso**: agentes `prometeo` / `forja` / `centinela`, `doctor`,
-  `ship`, `monday`, triage de issues con Claude (`claude.yml` con modelo de
-  amenazas de prompt injection), `FeedbackFAB` + `ErrorBoundary` +
-  `HydrationCanary` que pre-llenan issues. Esto es lo que hace viable
-  "retomar" el proyecto en modo issue → PR con agentes.
-- **Primitivas de IA** (`src/components/ui/ai/`): `ChatMessage`/`ChatThread`
-  con auto-scroll, `PromptInput` (Enter envía, Stop mientras streamea),
+  `ship`, `monday`, triage de issues con Claude (`claude.yml`), `FeedbackFAB` +
+  `ErrorBoundary` + `HydrationCanary` que pre-llenan issues. Esto es lo que
+  hace viable retomar en modo issue → PR con agentes.
+- **Primitivas de IA** (`ui/ai/`): `ChatThread` con auto-scroll, `PromptInput`,
   `StreamingText`, `ThinkingIndicator`, `CitationRef`/`CitationList`,
-  `AIOutputLabel` (disclosure exigido por `docs/ETHICS.md`), `AIFeedback`.
-  `CitationList` + `AIOutputLabel` + el panel dividido de `AppLayoutIsland`
-  son exactamente la UI que un RAG legal necesita.
-- **Shell de aplicación**: `AppLayoutIsland` (nav lateral, acciones, split
-  panel), `WizardIsland` (para reemplazar `ProviderSetup`), `DetailsPage*`,
-  `DataTable` con TanStack (para `CaseManager`, corpus, solicitudes).
+  `AIOutputLabel` (exigido por `docs/ETHICS.md`), `AIFeedback`. Con el split
+  panel de `AppLayoutIsland` es la UI que un RAG legal necesita.
+- **Shells**: `AppLayoutIsland`, `WizardIsland` (para reemplazar
+  `ProviderSetup`), `DetailsPage*`, `DataTable` con TanStack.
 - **PWA** con `@vite-pwa/astro`, stores `$online`/`$installPrompt`,
-  `OfflineBanner`, `UpdateToast`.
-- **Tauri desktop y Android** en un script (`add-tauri.mjs`). Para un
-  asistente legal offline con modelos locales esto es relevante: el corpus y
-  el modelo WebLLM pueden vivir en disco en vez de IndexedDB.
-- Disciplina documentada: sin Context entre islas, `createDisposer()`,
-  `useClientPreference`, `route-guard` deny-by-default.
+  `OfflineBanner`, `UpdateToast`. **Tauri** desktop y Android en un script.
+- **Todo esto se puede adoptar pieza por pieza**: `registry.json` (shadcn, 25
+  items) y `mcp-server/` sirven componentes individuales; agentes, checklists,
+  `forbidden-imports.json` y workflows son archivos que se copian.
 
 ### 3.2 Lo que NO trae y hay que construir
 
-1. **No hay ruta brownfield.** `scripts/init.mjs` se niega a correr sobre un
-   directorio existente y además genera un proyecto recortado (sin PWA, sin
-   i18n, sin Playwright/Lighthouse). `SETUP.md` documenta el fork completo con
-   `gh repo create --template`. No existe doc de "adoptar Inceptor en una app
-   existente". La vía de cherry-pick es `registry.json` (shadcn) y el
-   `mcp-server/`.
-2. **i18n para islas no existe.** El sistema de Inceptor es compile-time y
-   tipado (`es: typeof en`) pero solo lo usan 3 páginas `.astro`; cero islas
-   traducen. LexMX necesita `useTranslation()` en ~30 componentes. Hay que
-   construir un store Nano + carga diferida del diccionario. Además los
-   `systemPrompts` de LexMX viven dentro de los JSON de locale (75 KB que hoy
-   se mandan a cada cliente): deben salir a `lib/llm/prompts/`.
+1. **No hay ruta brownfield documentada.** `init.mjs` se niega sobre un
+   directorio existente (`:37-38`) y genera un proyecto sin PWA, i18n ni
+   Playwright. Adoptar en sitio es copiar archivos y usar el registry.
+2. **i18n para islas no existe en Inceptor.** Su sistema es compile-time y
+   tipado pero solo lo usan 3 páginas `.astro`; cero islas traducen. LexMX ya
+   tiene un singleton sin Context (`src/i18n/index.ts`, set de listeners en
+   líneas 107-112): se conserva y se envuelve en `useSyncExternalStore`. No
+   hay que construir un sistema nuevo.
 3. **Sin renderizado de Markdown en el chat.** `ChatMessage` solo hace
-   `whitespace-pre-wrap`. LexMX usa `react-markdown` + `remark-gfm`; se lleva.
-4. **IndexedDB solo como caché de TanStack Query.** No hay abstracción de
-   object stores ni almacenamiento de vectores. Se portan los de LexMX.
+   `whitespace-pre-wrap`. Se conserva `react-markdown` + `remark-gfm`.
+4. **IndexedDB solo como caché de TanStack Query.** Los stores de LexMX se
+   conservan.
 5. **El backend de IA asumido es servidor BYOK** (`docs/recipes/ai-byok.md`),
-   lo contrario de la inferencia en navegador de LexMX. No es un conflicto,
-   pero los recipes no aplican tal cual.
-6. **Presupuesto de 150 KB de script vs 5.4 MB de transformers.js**, y
-   precaching de Workbox vs modelos de varios GB de WebLLM. Hay que importar
-   transformers.js de forma diferida (hoy es estático en
-   `transformers-provider.ts:3`), excluir modelos de `globPatterns`, y
-   definir presupuesto por ruta para `/chat`.
-7. **TS 6 + `noUncheckedIndexedAccess`** generarán errores nuevos al portar
-   código que ya trae 584. Por eso no se porta "tal cual".
+   lo contrario de la inferencia en navegador. No es conflicto, pero los
+   recipes no aplican tal cual.
+6. **Presupuesto de 150 KB vs 5.4 MB de transformers.js.** Workbox no
+   precachea `.onnx/.wasm/.bin` (no están en `globPatterns`), pero el chunk JS
+   de 5.4 MB supera el límite por defecto de 2 MiB y queda fuera del precache
+   en silencio: funciona online, falla offline. Hay que importar
+   transformers.js diferido (hoy estático en `transformers-provider.ts:3`;
+   web-llm ya es diferido) y fijar `maximumFileSizeToCacheInBytes` a
+   propósito.
+7. **TS 6 con `noUncheckedIndexedAccess`** genera errores nuevos sobre código
+   que ya trae 526. Adoptar la config de Inceptor solo sobre módulos ya
+   saneados (ver ratchet en §5).
 
 ## 4. Opciones comparadas
 
+Datos que cambian la comparación (medidos para la revisión 2):
+
+- React 18→19: cero usos de `ReactDOM.render`, `defaultProps`, `forwardRef`,
+  string refs o `react-dom/test-utils`; `@testing-library/react` ya es `^16.3`.
+  **React 19 es gratis.**
+- Astro 4→5: el único bloqueo es `prerender = false` en 13 archivos. Borrar
+  `src/pages/api`, `src/lib/api`, `APIAdapter.astro` y `/admin/quality` lo
+  elimina. `astro-compress` y `@astrojs/sitemap` tienen versiones para Astro 5.
+- Tailwind 3→4: `tailwind.config.mjs` no tiene plugins (comentados), 4 archivos
+  usan `@apply`, 3 paletas custom pasan a `@theme`. **Cambio pequeño.**
+- GitHub Pages: no hay `CNAME` en el repo; `artemiop.com` está ligado a la
+  cuenta, así que **el subpath lo dicta el nombre del repo**. Un repo nuevo
+  vive en `/<nombre-nuevo>/`; quedarse en `/LexMX/` exige renombrar dos repos.
+- Datos de usuario en el mismo origen: IndexedDB `lexmx_metadata`,
+  `lexmx_vectors`, `LexMX_Enhanced_Storage`, `LexMX_OfflineQueue`;
+  localStorage `lexmx_openai_key`, `lexmx_claude_key`, `lexmx_gemini_key`,
+  `lexmx_cases`, `language`, `webllm_loaded_models`. Cualquier cambio de
+  nombre, `version` o parámetros de derivación de clave (PBKDF2) los deja
+  ilegibles.
+
 | Opción | Qué implica | Pros | Contras |
 |---|---|---|---|
-| **A. Rescatar en sitio** | Mergear #73, cerrar 252 errores, borrar rutas API, subir Astro 5, React 19, TW 4 | Sin repo nuevo, historial intacto | Sigues sin librería UI, sin gates, sin proceso de agentes; arrastras 58k LOC de los cuales ~10k son muertos; TW3→4 y React 19 se hacen igual |
-| **B. Copiar LexMX dentro de un fork de Inceptor** | Fork template, volcar `src/` de LexMX encima | Rápido de arrancar | `npm run check` queda rojo desde el día 1 (584+ errores, imports estáticos pesados, `any` masivo); el gate se vuelve decorativo y se termina desactivando |
-| **C. Repo nuevo + strangler (recomendada)** | Fork template, podar vitrina, portar módulo por módulo con `check` verde como compuerta | Cada módulo entra limpio; el código muerto se queda atrás; se rediseña UI sobre Base UI en vez de portar 9k LOC a mano | Más disciplina; hay que mantener LexMX viejo en vivo hasta el cutover |
+| **A+. Actualizar en sitio + adoptar Inceptor por piezas (recomendada)** | Borrar rutas API y adapter, subir Astro 5 / React 19 / TW 4, copiar agentes, gates y workflows de Inceptor, instalar componentes vía registry, sanear módulo por módulo con ratchet | Sin repo nuevo, sin renombrar, sin migración de datos, sin URLs rotas, historial intacto; gates activos desde la semana 2 | El saneamiento ocurre en el mismo árbol; el ratchet exige disciplina para no relajarlo |
+| **C. Repo nuevo + strangler** | Fork del template, podar vitrina, portar módulo por módulo con `check` verde como compuerta | Historial limpio; cada módulo entra limpio | Doble renombre de repos o cambio de subpath; stubs de redirección para 8 rutas; contrato de datos y limpieza del SW viejo; dos repos vivos varias semanas; el trabajo de saneamiento es el mismo |
+| **B. Copiar LexMX dentro de un fork** | Volcar `src/` encima del template | Arranque rápido | `check` rojo desde el día 1; el gate se vuelve decorativo |
 
-Recomendación: **C**, con `main` de LexMX congelado (solo deploy) hasta que el
-nuevo alcance a paridad de `/chat` y `/setup`.
+La revisión 1 recomendaba C con el argumento de que "TW 4 y React 19 se hacen
+igual" y que las compuertas no serían aplicables en sitio. Lo primero es
+cierto pero barato; lo segundo se resuelve con un ratchet (§5, Fase 2). C
+queda como alternativa si se prefiere historial limpio y se aceptan los
+contras de la tabla.
 
-## 5. Plan por fases (para prometeo/forja/centinela)
+## 5. Plan por fases (opción A+)
 
-Cada fase termina con `npm run check` verde y deploy a Pages bajo
-`ASTRO_BASE=/LexMX` (o al subpath que se decida). Los tamaños son estimados
-para una persona con agentes; tómalos como orden de magnitud.
+Cada fase termina con build verde y deploy a `/LexMX/`. El sitio nunca deja de
+servir. Tamaños en orden de magnitud para una persona con agentes.
 
-### Fase 0 — Congelar y limpiar LexMX (1-2 días)
+### Fase 0 — Congelar y limpiar (1-2 días)
 
-- Mergear #73 (o al menos su parte de `overrides` de `onnxruntime-web`).
-- Cerrar los 11 PRs de Dependabot: no aplican a lo que se va a portar.
-- Quitar del repo: PNGs de raíz, `test-results.json`, los 12 post-mortem de
-  E2E, `docs/demo/` y `update-demo.yml`, codemods en `scripts/`.
-- Poner `README` con aviso "en migración a `<repo nuevo>`".
+- Mergear #73 (baja 584→252 errores) o al menos su `overrides` de
+  `onnxruntime-web`.
+- Cerrar los 11 PRs de Dependabot; pausar `dependabot.yml`, `corpus-update.yml`
+  (cron semanal), `update-demo.yml`, `release.yml`, `validate-deployment.yml`.
+- Borrar: PNGs de raíz, `test-results.json`, los 12 post-mortem de E2E,
+  `docs/demo/`, codemods en `scripts/`, `Makefile`, `Dockerfile`, `nginx.conf`,
+  `docker-compose.yml`, `.playwright-mcp/`.
+- Borrar código muerto listado en §2.3 (islas sin montar, proveedores
+  duplicados, `src/context`, `src/stores/theme.ts`, `wiki.css`, `test.astro`,
+  `document/[...slug].astro`).
 
-### Fase 1 — Esqueleto Inceptor (2-3 días)
+### Fase 1 — Upgrade de plataforma en sitio (3-5 días)
 
-- `gh repo create lexmx-next --template ArtemioPadilla/inceptor` (no usar
-  `init.mjs`: pierde PWA, i18n y Playwright).
-- Re-brand: `site-meta.ts`, `site.config.mjs`, `PUBLIC_REPO_SLUG`,
-  `robots.txt`, manifest PWA, `ASTRO_BASE`.
-- Podar vitrina: `pages/gallery`, `blocks`, `showcase`, `demos`, `blog`,
-  `docs` (contenido MDX de Inceptor), y los tests que los cubren
-  (`route-parity`, gallery, search). Conservar `ui/`, `islands/` de
-  infraestructura, `lib/`, layouts, workflows.
-- Tokens de diseño: llevar las paletas `legal`, `document`, `hierarchy.1-7` de
-  `tailwind.config.mjs` a `@theme` en `global.css`.
-- Decidir ruta i18n: `/` español (default) y `/en/`, invirtiendo el default de
-  Inceptor. Crear `src/i18n/{es,en}.ts` tipados a partir de los JSON de LexMX
-  (sin `systemPrompts`) y un store Nano `$locale` + hook `useT()` para islas
-  con `import()` diferido del diccionario.
+- Borrar `src/pages/api/**`, `src/lib/api/`, `APIAdapter.astro`,
+  `pages/admin/quality.astro` + `QualityMetrics.tsx` y los servicios de
+  `lib/admin` que solo ellos usan (`quality-*`, `query-analyzer`). Conservar
+  `corpus-service`, `embeddings-service`, `admin-data-service` para
+  `CorpusManager`, llamados directo sin `fetch`.
+- `astro@5`, `@astrojs/react@5`, `react@19`, `@tailwindcss/vite` en lugar de
+  `@astrojs/tailwind`; paletas `legal`, `document`, `hierarchy.1-7` a `@theme`
+  en `global.css`; quitar `manualChunks` rotos; `vitest@4`; Node 22 con
+  `.nvmrc`; `engines` ≥22.
+- `ClientTranslations.astro` y `T.astro` fuera de `BaseLayout`; el singleton de
+  `src/i18n/index.ts` se queda.
+- Compatibilidad de datos como contrato escrito: nombres de DB y stores,
+  `version`, parámetros PBKDF2/AES-GCM y claves `lexmx_*` no cambian.
+- Build verde y deploy. Nada cambia para el usuario.
 
-### Fase 2 — Núcleo sin UI (1-2 semanas)
+### Fase 2 — Capa Inceptor y ratchet (2-3 días)
 
-Portar en este orden, cada uno con sus tests y sin `any` nuevo:
+- Copiar `.claude/agents/`, `.claude/checklists/`, `scripts/{doctor,ship,
+  monday,new-issue}.sh`, `check-ts-pragmas.mjs`, `forbidden-imports.test.ts`,
+  `ci.yml` (con actionlint), `deploy-failure-issue.yml`, `claude.yml`.
+  Reescribir `CLAUDE.md` con las convenciones de Inceptor.
+- Instalar vía registry: `ErrorBoundary`, `HydrationCanary`, `FeedbackFAB`,
+  `report-issue`, `disposer`, `use-client-preference`, `href`, `flags`.
+  `getUrl()` → `withBase()`.
+- **Ratchet**: `tsconfig.strict.json` con la config de Inceptor
+  (`noUncheckedIndexedAccess`) cuyo `include` empieza vacío y crece por
+  módulo saneado; script en CI que falla si el conteo de errores de `tsc`
+  global o de warnings `no-explicit-any` sube respecto a un baseline
+  versionado. `npm run check` queda verde desde aquí y solo puede mejorar.
 
-1. `lib/security/` (WebCrypto) y `lib/storage/` (IndexedDB).
-2. `lib/llm/`: registry + **una** implementación por proveedor (borrar los
-   pares duplicados, `.old`, `webllm-mock`); `prompt-builder` leyendo prompts
-   desde `lib/llm/prompts/{es,en}.ts`.
-3. `lib/embeddings/` con `transformers-provider` cargado por `import()`
-   diferido; quitar los 3 adaptadores de 35 líneas hechos para tests.
-4. `lib/rag/` y `lib/legal/`, `lib/corpus/`.
-5. `lib/ingestion/` (parser, chunker, fetcher, cors-*). Dejar el pipeline de
-   admin para la fase 4.
-6. Configurar Workbox: excluir `*.onnx`, `*.wasm`, `*.bin` del precache;
-   `runtimeCaching` CacheFirst para modelos con `rangeRequests`.
+### Fase 3 — Saneamiento del núcleo (3-5 semanas)
 
-### Fase 3 — Chat y configuración (1 semana)
+~13.4k LOC de `lib/` con ~210 errores de tipos, ~70 `any` y casi sin tests.
+Orden por dependencia; cada módulo entra al `include` estricto con tests
+nuevos y sin `any`:
 
-- `/chat` reescrito sobre `ChatThread` + `PromptInput` + `StreamingText` +
-  `CitationList` + `AIOutputLabel` + `AIFeedback`, con `react-markdown` para
-  el cuerpo. Estado compartido por Nano Stores. Envuelto en `ErrorBoundary`.
-- `/setup` sobre `WizardIsland` + `Form` (react-hook-form + zod) reemplazando
-  las 869 líneas de `ProviderSetup` y los 4 componentes de `providers/`.
-- Presupuesto Lighthouse por ruta para `/chat`.
-- Cutover: apuntar el dominio/subpath al repo nuevo. LexMX viejo se archiva.
+1. `lib/security` y `lib/storage` (contrato de datos como tests).
+2. `lib/llm`: una implementación por proveedor; prompts a `lib/llm/prompts/`
+   (por claridad, no por peso).
+3. `lib/embeddings`: transformers.js por `import()` diferido; borrar los 3
+   adaptadores de 35 líneas; `maximumFileSizeToCacheInBytes` en Workbox.
+4. `lib/rag`, `lib/legal`, `lib/corpus`.
+5. `lib/ingestion`: reescribir o borrar `url-ingestion-integration.test.ts`
+   (los 12 tests rojos).
 
-### Fase 4 — Resto de funcionalidad (1-2 semanas)
+### Fase 4 — Chat y configuración sobre primitivas Inceptor (1-2 semanas)
 
-- Wiki: las 5 islas son contenido casi estático → páginas `.astro` +
-  `Accordion`/`Tabs`; solo `LegalGlossary` amerita isla (búsqueda).
-- `document/[id]` y `requests/*` sobre `DetailsPage*` + `DataTable` + `Form`.
-- `CaseManager` (1.4k LOC): última, porque es la más grande y la menos
-  validada; `DataTable` + `Timeline` + `Splitter` de Inceptor cubren la UI.
-- Admin: solo `corpus` e `ingestion` como islas client-side; nada de rutas
-  API.
+- `/chat` con `ChatThread`, `PromptInput`, `StreamingText`, `CitationList`,
+  `AIOutputLabel`, `AIFeedback` y `react-markdown`; estado en Nano Stores;
+  `useTranslation` envuelto en `useSyncExternalStore`.
+- `/setup` con `WizardIsland` + `Form` (react-hook-form + zod) en lugar de
+  `ProviderSetup` (869 LOC, 23 errores) y los 4 componentes de `providers/`.
+- Segunda regla en `lighthouse-budgets.json` para `/chat`; medir con
+  `npm run lighthouse` en local.
 
-### Fase 5 — Corpus real (abierta, independiente del framework)
+### Fase 5 — Resto de UI (1-2 semanas)
 
-- Definir fuente y licencia por documento (DOF, Diputados) y el proceso de
-  actualización (`corpus-update.yml` existe pero depende de red y nunca se
-  validó).
-- Generar embeddings reales en build o pre-generados y distribuidos por
-  release; hoy hay 14 vectores.
-- Considerar Tauri desktop para el caso "corpus completo + modelo local".
+- Wiki: 4 de 5 islas son contenido estático → `.astro` con `Accordion`/`Tabs`;
+  `LegalGlossary` sigue siendo isla.
+- `document/[id]` (conservar el hack de `404.astro` para `/document/*` hasta
+  tener `getStaticPaths` completo) y `requests/*` sobre `DetailsPage*`,
+  `DataTable`, `Form`.
+- `/admin/corpus`: reescritura de `CorpusManager` sobre `DataTable`.
+- `CaseManager` + `CaseChat` + `CaseTimeline` (2 423 LOC, sin capa de
+  storage): reescritura con `DataTable`, `Timeline`, `Splitter`; migrar
+  `localStorage['lexmx_cases']` a IndexedDB con lectura del formato viejo.
+- Sustituir `public/sw.js` por `@vite-pwa/astro`: el SW nuevo debe borrar los
+  caches `lexmx-*` y fijar `manifest.id` explícito para no reinstalar la PWA.
+
+### Fase 6 — Corpus real (abierta, independiente del framework)
+
+- Fuente y licencia por documento (DOF, Diputados) y proceso de actualización;
+  `corpus-update.yml` existe pero nunca se validó.
+- Embeddings reales generados en build o distribuidos por release.
+- Tauri desktop para el caso "corpus completo + modelo local".
+
+Total a paridad: del orden de 2 a 3 meses, sin contar el corpus.
+
+### Si se elige C (repo nuevo) de todos modos
+
+Añadir a lo anterior: (1) construir bajo `/lexmx-next/` y cortar solo al
+terminar la Fase 5, o hacer el doble renombre y publicar stubs de redirección
+para `/casos`, `/wiki`, `/requests/*`, `/document/*`, `/about`, `/legal`,
+`/privacy`, `/offline`; (2) actualizar los enlaces hardcodeados a GitHub en
+`AboutContent.tsx:179-198` y `MobileMenu.tsx:211`; (3) el mismo contrato de
+datos y limpieza de SW de la Fase 5, porque el origen es el mismo.
 
 ## 6. Riesgos y mitigaciones
 
 | Riesgo | Mitigación |
 |---|---|
-| Portar archivos con `any` y errores de tipo "para avanzar" | `check-ts-pragmas` y `tsc` estricto son gate; centinela rechaza |
-| Bundle de `/chat` explota el presupuesto | Import diferido de transformers.js y web-llm; presupuesto por ruta; medir con `npm run lighthouse` |
-| SW precachea modelos o rompe descargas grandes | `globPatterns` sin binarios, `runtimeCaching` con range requests, probar offline en Playwright |
-| Islas con listeners pierden cleanup con View Transitions (activas en Inceptor) | `createDisposer()` obligatorio; `HydrationCanary` detecta mismatches |
-| Base UI en `1.0.0-rc.0` | Ya hay allowlist de axe en `tests/visual/a11y.spec.ts`; no mezclar con Radix |
-| Dos repos vivos durante semanas | Congelar LexMX en Fase 0; cutover al final de Fase 3, no antes |
-| Migrar mucho y seguir sin corpus | Fase 5 se planea en paralelo desde Fase 2; el chat nuevo debe mostrar claramente cuándo responde sin fuentes |
+| Relajar el ratchet "para avanzar" | Baseline versionado en el repo; subirlo requiere PR y centinela lo rechaza |
+| Bundle de `/chat` fuera de presupuesto y fuera del precache | Import diferido de transformers.js; `maximumFileSizeToCacheInBytes` explícito; regla de budget para `/chat` |
+| Cambiar nombres/versiones de IndexedDB o parámetros de cifrado | Contrato de datos de la Fase 1 convertido en tests en la Fase 3 |
+| SW viejo (`lexmx-v2`) y manifest sin `id` | Limpieza de caches `lexmx-*` en el SW nuevo; `manifest.id` fijo |
+| Base UI en `1.0.0-rc.0` | Allowlist de axe ya existe en `tests/visual/a11y.spec.ts`; no mezclar con Radix |
+| Sanear mucho y seguir sin corpus | Fase 6 se planea en paralelo desde la Fase 3; el chat muestra cuándo responde sin fuentes |
+| Cinco módulos sin tests | Escribirlos es parte del alcance de la Fase 3, no un extra |
 
-## 7. Qué NO migrar (lista explícita)
+Retirado respecto a la revisión 1: "View Transitions activas en Inceptor". Su
+`global.css` usa `@view-transition { navigation: auto }`, que es
+cross-document: la página se recarga completa y los listeners no sobreviven.
+La disciplina `createDisposer()` sigue siendo buena práctica, no una
+mitigación de ese riesgo.
 
-`src/pages/api/**`, `src/lib/admin/**`, `src/islands/ModerationPanel.tsx`,
-`src/islands/NotificationCenter.tsx`, `src/islands/admin/EmbeddingsManager.tsx`,
-`src/lib/llm/providers/{openai,claude,gemini,ollama}.ts` (duplicados),
-`webllm-provider.old.ts`, `webllm-mock.ts`, `src/context/`, `src/stores/theme.ts`,
-`src/i18n/translations/**`, `ClientTranslations.astro`, `T.astro`,
-`src/styles/wiki.css`, `src/pages/test.astro`, `document/[...slug].astro`
-(duplica `[id]`), `Makefile`, `Dockerfile`/`nginx.conf`/`docker-compose.yml`
-(no aplican a Pages), `scripts/fix-*`, `migrate-tests*`, `update-test-*`,
-`docs/demo/**`, `update-demo.yml`, `release.yml` (rehacer cuando haya releases).
+## 7. Qué se borra (lista explícita)
+
+`src/pages/api/**`, `src/lib/api/**`, `APIAdapter.astro`,
+`src/lib/admin/{quality-test-suite,quality-test-service,quality-results-service,query-analyzer}.ts`,
+`src/pages/admin/quality.astro`, `src/islands/admin/QualityMetrics.tsx`,
+`src/islands/ModerationPanel.tsx`, `src/islands/NotificationCenter.tsx`,
+`src/islands/admin/EmbeddingsManager.tsx`,
+`src/lib/llm/providers/{openai,claude,gemini,ollama}.ts`,
+`webllm-provider.old.ts`, `webllm-mock.ts`, `src/context/`,
+`src/stores/theme.ts`, `src/i18n/translations/**`, `ClientTranslations.astro`,
+`T.astro`, `src/styles/wiki.css`, `src/pages/test.astro`,
+`document/[...slug].astro`, `Makefile`, `Dockerfile`, `nginx.conf`,
+`docker-compose.yml`, `scripts/fix-*`, `migrate-tests*`, `update-test-*`,
+`docs/demo/**`, `update-demo.yml`, `release.yml`, `validate-deployment.yml`,
+`quality.yml`.
+
+Se conserva aunque parezca admin: `lib/admin/{corpus-service,embeddings-service,admin-data-service}.ts`
+(los usa `CorpusManager`) y el hack de `404.astro` para `/document/*`.
+
+## 8. Validación adversarial (qué cambió entre la revisión 1 y la 2)
+
+Un agente revisor con acceso a ambos repos intentó tumbar el plan. Hallazgos
+aceptados y corregidos arriba:
+
+1. **`lib/admin` no está muerto** (bloqueante): corre en el navegador vía
+   `APIAdapter` en cada página. Reclasificado; LOC corregidas de 5.7k a 2 992.
+2. **El cutover "apuntar el subpath" no existe en Pages** (bloqueante): el
+   subpath lo dicta el nombre del repo. Motivó cambiar la recomendación a A+.
+3. **Migración de datos no considerada** (mayor): mismo origen, 4 bases
+   IndexedDB y ~15 claves `lexmx_*`; añadido contrato de datos y limpieza de SW.
+4. **"Portar con sus tests" era vacío** (mayor): 5 de 8 módulos sin tests; los
+   tests rojos son justo los de ingestion. Fase de núcleo re-estimada de 1-2 a
+   3-5 semanas.
+5. **Opción A subestimada** (mayor): React 19 sin rupturas, Astro 5 bloqueado
+   solo por 13 archivos, Tailwind 4 trivial. Tabla de opciones reescrita.
+6. **"View Transitions activas" era falso** (mayor): retirado.
+7. **Lighthouse no está en CI**, `systemPrompts` pesa 4.4 KB y no 75, LOC de
+   `llm`/`ingestion`/CaseManager sobreestimadas, 3 rutas rotas en
+   `manualChunks` y no 2: corregidos.
+
+Hallazgos no aceptados: ninguno. Diferencia de conteo de tests (481/504 aquí
+vs 491/514 en la corrida del revisor) atribuida a entorno; se reporta la
+corrida propia.
