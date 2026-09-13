@@ -602,3 +602,95 @@ que los justifique.
 | Shards demasiado grandes para el cliente | Cuantizar embeddings, shard por materia; medir en un equipo de gama media |
 | Construir herramientas antes que corpus | Fase 7 y 8 dependen de la 6; no adelantar UI sobre mock |
 | Competir en features con empresas financiadas | No competir en amplitud; competir en local-first, apertura y costo cero |
+
+## 10. Cobertura frente al mercado y alcance geográfico
+
+Respuesta corta: **no, el plan no da "todo lo de la competencia"**, y no
+debería intentarlo. Cubre el piso del mercado con cinco huecos concretos, deja
+fuera a propósito lo que exige backend, y es **solo México**. Detalle:
+
+### 10.1 Matriz de cobertura
+
+| Capacidad del mercado | Fase | Cobertura | Nota |
+|---|---|---|---|
+| Legislación federal vigente con vigencia | 6 | ✅ | vía SCOW/LegalIA |
+| Jurisprudencia SCJN con registro | 6 | ✅ | repositorio abierto |
+| DOF con detección de reformas | 6 | ✅ | SIDOF |
+| Legislación de los 32 estados | 6 | ⚠️ parcial | 4 estados en la primera oleada; sin API común, es cola larga de meses. Vigencia estatal no la da ninguna fuente abierta |
+| Fiscal: SAT, RMF, criterios normativos, TFJA | — | ❌ | añadir como oleada de la Fase 6; la fuente fiscal es la más pedida por despachos mixtos |
+| Sentencias CJF y tribunales estatales | — | ❌ | fuera; solo tesis |
+| Cita verificable a un clic | 7 | ✅ | |
+| Derogadas excluidas | 6 | ✅ federal | |
+| Modo público / modo abogado | 7 | ✅ | |
+| Filtro jurisdiccional por estado | 6 | ✅ implícito | shards por estado; hacerlo explícito en la UI |
+| Análisis de documentos subidos | 8 | ⚠️ | solo PDF con capa de texto y Word. **Sin OCR**: añadir Tesseract.js en navegador para escaneos |
+| Comparación de documentos sin subir | 8 | ✅ | |
+| Extracción tabular | 8 | ✅ | |
+| **Redacción de escritos y contratos** | — | ❌ | **Es piso del mercado y no está en el plan.** Añadir Fase 8b: plantillas por tipo (demanda, contestación, contrato, amparo) + generación anclada al corpus + exportación |
+| Exportar a Word/PDF | — | ❌ | trivial con `docx` en cliente; sin esto la redacción no sirve |
+| Calculadoras | 8 | ⚠️ | solo laborales; fiscales (ISR, IVA, recargos) no |
+| Notas de voz / transcripción | — | ❌ | Web Speech API o Whisper vía transformers.js, local; encaja con la cuña |
+| Alertas de reformas sobre leyes que sigo | — | ❌ | sin servidor no hay push; sí "novedades desde tu última visita" al abrir |
+| Captura automática de acuerdos de tribunales y boletines | — | ❌ web / ⚠️ Escritorio | requiere polling por expediente; viable solo en la versión Tauri |
+| Gestión completa de despacho (finanzas, portal de clientes) | — | ❌ | fuera de alcance; `CaseManager` da expedientes, no un ERP |
+| Predicción de sentencias | — | ❌ a propósito | necesita corpus de sentencias y plantea problemas éticos; no perseguir |
+| Complemento de Word | después | ⏳ | viable desde el mismo deploy |
+| Apps iOS/Android | después | ⏳ | Tauri Android en Inceptor; iOS no cubierto |
+| Canalización a abogados, equipos, facturación | — | ❌ a propósito | exige backend y modelo de negocio |
+| Seguridad demostrable | 9 | ✅ | la ventaja estructural |
+| Evaluación pública | 9 | ✅ | nadie la tiene |
+| Multi-modelo, BYOK, local | ya | ✅ | diferenciador existente |
+
+Con las cinco adiciones (fiscal, OCR, redacción + exportación, voz, novedades
+al abrir) el plan cubre el piso completo. Lo excluido queda excluido por
+arquitectura, no por olvido.
+
+### 10.2 Lo que falta y no es una feature
+
+- **Calidad del modelo local.** Los modelos por defecto de WebLLM en LexMX son
+  Llama 3.2 de 1B y 3B y Phi 3.5 mini: débiles en razonamiento jurídico en
+  español. La cuña local-first vale si la recuperación es tan buena que un
+  modelo pequeño responde bien con las citas correctas, o si el usuario trae
+  su llave. Medirlo en la Fase 9 con el conjunto de evaluación es obligatorio;
+  si el modelo local no alcanza, la promesa es "tus documentos no salen, tu
+  pregunta sí va a tu proveedor", que sigue siendo mejor que el mercado pero
+  hay que decirlo así. Los embeddings ya son `multilingual-e5-small`, correcto
+  para español.
+- **Validación con usuarios.** Nadie ha hablado con un despacho. El mercado
+  usa programas de "design partners"; LexMX necesita 3-5 despachos o
+  estudiantes de derecho que prueben el chat con corpus real antes de la
+  Fase 8.
+- **Marco legal propio.** Aviso de privacidad LFPDPPP, términos de uso,
+  disclaimer de "no es asesoría" en cada respuesta, revisión de marca
+  "LexMX" ante el IMPI, y licencia de redistribución del corpus. Todas las
+  plataformas revisadas tienen términos y privacidad publicados.
+- **Sostenibilidad del corpus.** Minutos de Actions, tamaño de shards en
+  Releases y quién revisa cuando SCOW o SIDOF cambian de formato. Aliado
+  natural: el grupo de la UNAM que mantiene LegalIA.
+- **Métricas sin rastreo.** LexMX promete cero analítica; sin ninguna señal no
+  se puede priorizar. Inceptor trae analítica opcional por flag; decidir un
+  mínimo agregado y anónimo, o aceptar priorizar a ciegas.
+- **iOS.** Ni PWA instalable con modelos grandes ni Tauri iOS están en el
+  plan.
+
+### 10.3 México o LATAM
+
+**El plan es solo México.** Fuentes (SCJN, DOF, diputados), jerarquía
+normativa, formato de citas, prompts, calculadoras (LFT) y el nombre son
+mexicanos. La hoja de ruta antigua de LexMX prometía "expansión LATAM 2026";
+este plan no la incluye, y la recomendación es no incluirla hasta que el
+corpus mexicano sea real y evaluado. Un competidor regional con capital ya
+opera en siete países; competir en cobertura geográfica es la peor batalla
+posible para un proyecto abierto.
+
+Lo que sí conviene hacer ahora, porque es barato y evita un rediseño:
+
+- **Jurisdicción como dimensión de primer nivel**: shards, prompts,
+  formato de cita, calculadoras y diccionarios indexados por
+  `{país, entidad}`; `document-loader.ts` ya tiene el campo `jurisdiction`.
+- Nada de constantes mexicanas fuera de un módulo `jurisdictions/mx/`.
+
+Si más adelante hay tracción, los países con datos abiertos que hacen viable
+el mismo pipeline son Chile (Ley Chile de la BCN tiene API pública),
+Argentina (InfoLEG y SAIJ), Colombia (SUIN-Juriscol) y Perú (SPIJ). Cada uno
+sería un `jurisdictions/<país>/` nuevo más un diccionario, no una reescritura.
