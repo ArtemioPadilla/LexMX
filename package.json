@@ -22,14 +22,7 @@
     "build:embeddings": "node scripts/generate-embeddings.js",
     "download:embeddings": "node scripts/download-embeddings.js",
     "ingest:auto": "node scripts/auto-ingest-documents.js",
-    "validate:deployment": "node scripts/validate-deployment.js",
-    "validate:all": "npm run lint && npm run type-check && npm run validate:deployment",
-    "demo:record": "npx tsx scripts/generate-demo.ts full",
-    "demo:quick": "npx tsx scripts/generate-demo.ts quick",
-    "demo:chat": "npx tsx scripts/generate-demo.ts chat",
-    "demo:screenshots": "npx tsx scripts/generate-demo.ts --screenshots",
-    "demo:update": "npm run demo:record && npm run demo:screenshots",
-    "demo:headed": "npx tsx scripts/generate-demo.ts full --headed"
+    "validate:all": "npm run lint && npm run type-check"
   },
   "dependencies": {
     "@astrojs/react": "^3.6.2",

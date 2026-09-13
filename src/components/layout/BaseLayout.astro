@@ -3,7 +3,6 @@
 import { ThemeToggle } from '../ThemeToggle';
 import { LanguageSelector } from '../LanguageSelector';
 import MobileMenu from '../../islands/MobileMenu';
-import ClientTranslations from '../ClientTranslations.astro';
 import APIAdapter from '../APIAdapter.astro';
 import HydrationWrapper from '../HydrationWrapper.astro';
 import { getTranslation } from '../../i18n/utils';
@@ -134,7 +133,6 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 </head>
 
 <body class="h-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans antialiased">
-  <ClientTranslations />
   <APIAdapter />
   <!-- Skip to main content for accessibility -->
   <a 

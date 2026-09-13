@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderAsync, screen, waitFor } from '@/test/test-utils';
 import CorpusManager from '../CorpusManager';
-import EmbeddingsManager from '../EmbeddingsManager';
 import QualityMetrics from '../QualityMetrics';
 
 // Mock documents data
@@ -387,35 +386,6 @@ describe('Admin Components', () => {
       // Check action buttons
       expect(screen.getByText('Validate Corpus')).toBeInTheDocument();
       expect(screen.getByText('Export Corpus')).toBeInTheDocument();
-    });
-  });
-
-  describe('EmbeddingsManager', () => {
-    it('should render and display embeddings statistics', async () => {
-      const { container } = await renderAsync(<EmbeddingsManager />);
-      
-      await waitFor(
-        () => {
-          expect(screen.getByText('Total Vectors')).toBeInTheDocument();
-        },
-        { timeout: 5000 }
-      );
-      
-      // Verify component rendered content
-      expect(container.innerHTML).not.toBe('<body />');
-    });
-
-    it('should display action buttons', async () => {
-      await renderAsync(<EmbeddingsManager />);
-      
-      await waitFor(() => {
-        expect(screen.getByText('Total Vectors')).toBeInTheDocument();
-      }, { timeout: 5000 });
-      
-      // Check for embeddings action buttons (using actual text from translation)
-      expect(screen.getByText('Generate All')).toBeInTheDocument();
-      expect(screen.getByText('Clear Cache')).toBeInTheDocument();
-      expect(screen.getByText('Rebuild Index')).toBeInTheDocument();
     });
   });
 

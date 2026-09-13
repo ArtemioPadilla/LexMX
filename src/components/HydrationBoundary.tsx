@@ -196,13 +196,6 @@ export const LoadingStates = {
     </div>
   ),
 
-  NotificationCenter: () => (
-    <div className="p-4 space-y-2">
-      <LoadingSkeleton height="40px" />
-      <LoadingSkeleton height="60px" />
-      <LoadingSkeleton height="60px" />
-    </div>
-  ),
 
   DocumentRequestList: () => (
     <div className="p-4 space-y-3">
@@ -239,13 +232,6 @@ export const LoadingStates = {
     </div>
   ),
 
-  ModerationPanel: () => (
-    <div className="p-4 space-y-4">
-      <LoadingSkeleton height="40px" />
-      <LoadingSkeleton height="100px" />
-      <LoadingSkeleton height="100px" />
-    </div>
-  ),
 
   ProviderRecommendation: () => (
     <div className="p-2">

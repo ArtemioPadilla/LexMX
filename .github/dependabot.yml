@@ -7,7 +7,7 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "04:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0  # pausado durante la modernización (docs/INCEPTOR-MIGRATION-ANALYSIS.md, Fase 0)
     reviewers:
       - "artemiopadilla"
     labels:
@@ -45,6 +45,7 @@ updates:
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
+    open-pull-requests-limit: 0
     schedule:
       interval: "weekly"
       day: "monday"
@@ -56,20 +57,4 @@ updates:
       - "automated"
     commit-message:
       prefix: "🔧"
-      include: "scope"
-
-  # Docker dependencies
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "04:00"
-    reviewers:
-      - "artemiopadilla"
-    labels:
-      - "docker"
-      - "automated"
-    commit-message:
-      prefix: "🐳"
       include: "scope"
