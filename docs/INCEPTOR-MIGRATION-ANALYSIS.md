@@ -1,6 +1,6 @@
 # LexMX → Inceptor: análisis de migración
 
-Fecha: 2026-09-13, revisión 3: validación adversarial (§8) y comparación con el estado del arte comercial (§9). Alcance:
+Fecha: 2026-09-13, revisión 4: validación adversarial (§8), estado del arte comercial y ecosistema abierto (§9). Alcance:
 estado real de LexMX hoy, qué ofrece Inceptor, opciones comparadas y un plan
 por fases. No se modificó código de producto; todos los números se midieron en
 este entorno (Node 22, `npm ci` limpio) sobre `main` de ambos repos.
@@ -387,12 +387,16 @@ corrida propia.
 
 ## 9. Estado del arte comercial y complemento al plan
 
-Se revisaron las páginas públicas, fichas de tiendas de apps y documentación
-de seguridad de varias plataformas comerciales de IA legal orientadas al
-mercado mexicano (consulta: 2026-09-13). No se nombra a ninguna: el objetivo es
-fijar el listón de capacidades que un usuario ya da por hecho, no comparar
-marcas. No se encontraron reseñas independientes con sustancia; lo que sigue
-es lo que las propias plataformas publican.
+Se revisaron las páginas públicas, planes, fichas de tiendas de apps y
+documentación de seguridad de **12 plataformas comerciales mexicanas** de IA
+legal, **2 plataformas regionales de LATAM** con entrada anunciada a México,
+**3 editoriales jurídicas incumbentes** con asistente de IA, y **6 proyectos
+open source o de datos abiertos** relevantes (consulta: 2026-09-13). Las
+plataformas comerciales no se nombran: el objetivo es fijar el listón de
+capacidades que un usuario ya da por hecho, no comparar marcas. Los proyectos
+abiertos sí se nombran, porque la intención es reutilizarlos con atribución.
+No se encontraron reseñas independientes con sustancia; lo que sigue es lo que
+las propias plataformas publican.
 
 ### 9.1 Qué ofrece hoy el mercado
 
@@ -420,6 +424,38 @@ enterprise.
 Otras señales: iniciativas de benchmark legal mexicano anotado por la
 comunidad, anunciadas pero sin datos publicados todavía; programas de
 "design partners" con despachos; encuestas de adopción en LATAM.
+
+**Bandas de precio observadas** (suscripción individual, MXN al mes): desde
+$79-$170 en las plataformas de consumo con uso ilimitado, $399-$499 en el
+plan de entrada para abogados, $999 en el intermedio con complemento de Word,
+$1 999 en el superior con agentes y módulos de documentos; planes corporativos
+a medida. Dos jugadores ofrecen nivel gratuito con cupo. Los incumbentes
+editoriales no publican precio.
+
+**Capacidades que ya son piso** (aparecen en la mayoría): búsqueda de
+jurisprudencia SCJN con cita al registro; legislación federal y estatal;
+redacción de escritos y contratos; análisis de documentos subidos; enlace a la
+fuente oficial. **Diferenciadores que solo tienen uno o dos**: predicción de
+sentencias, comparación de documentos sin subirlos, extracción tabular,
+captura automática de acuerdos de tribunales (OAJ/CJF y boletines estatales),
+gestión completa del despacho (expedientes, finanzas, portal de clientes),
+multi-modelo (el usuario elige entre varios LLM), certificación ISO 42001.
+
+**Lo que nadie ofrece**: procesamiento local sin que el documento salga del
+equipo, corpus abierto reutilizable, código abierto, o modelo local. Todas las
+plataformas revisadas son SaaS en nube; dos declaran explícitamente que los
+documentos del usuario se almacenan en nube de terceros fuera de México.
+
+**Ecosistema abierto que sí existe y conviene reutilizar**:
+
+| Proyecto | Qué es | Por qué importa para LexMX |
+|---|---|---|
+| **LegalIA** (INGEOTEC, UNAM; Apache-2.0) | Monorepo Python con clientes para la API JSON de SIDOF (DOF) y para la API **SCOW** de `legislacion.scjn.gob.mx`, reconstrucción del texto vigente de cada ley a partir de sus reformas, conversión a Markdown/Akoma Ntoso, embeddings de leyes federales | Resuelve la mitad de la Fase 6: la API SCOW devuelve por ley `materia` y `vigencia` (VIGENTE, ABROGADO, DEROGADO, SIN EFECTO…), historial de reformas con exposición de motivos, y versión por artículo con fecha. Es la fuente correcta para "vigencia como dato" |
+| **Dataset de leyes federales en Hugging Face** (justicedao) | 884 k filas, 169 MB, parquet, un registro por artículo con `law_id`, `article_number`, título y texto | Semilla inmediata para el corpus federal mientras se monta el pipeline propio; verificar licencia antes de redistribuir |
+| **Repositorio SCJN de descarga en formatos abiertos** | CSV y API JSON de tesis y jurisprudencia del SJF con filtros por época, instancia, materia y tipo | Fuente de jurisprudencia; enlace de verificación en `sjf2.scjn.gob.mx/detalle/tesis/{registro}` |
+| **Justicio** (España, MIT, ~150 estrellas) | Asistente RAG sobre el BOE: ingesta diaria, chunks de ~1 200 caracteres, embeddings Sentence-BERT en español afinados, Qdrant, FastAPI, y un **framework de evaluación** publicado | Arquitectura de referencia para un RAG legal abierto en español y, sobre todo, para la Fase 9 de evaluación |
+| **Servidores MCP sobre datos legales abiertos** (Brasil, Indonesia, EUR-Lex) | Patrón: un servidor MCP sin llaves sobre APIs públicas de legislación y jurisprudencia | Canal de distribución adicional: "LexMX como fuente" para cualquier agente; Inceptor ya trae un `mcp-server/` como plantilla |
+| Asistentes locales genéricos (doc-haus, legal-document-chat) | Chat con documentos propios sobre Ollama, 100 % offline, sin corpus jurídico | Confirman la demanda del nicho local-first, y que nadie lo ha hecho con corpus mexicano |
 
 ### 9.2 Qué tienen ellos que nosotros no
 
@@ -478,7 +514,7 @@ Fuentes con acceso abierto verificado:
 
 | Fuente | Acceso | Uso |
 |---|---|---|
-| Leyes federales | `diputados.gob.mx/LeyesBiblio` (PDF/DOC con fecha de última reforma; ya en `document-fetcher.ts`) | Corpus federal completo (~300 leyes) |
+| Leyes federales, texto vigente y vigencia | API SCOW de `legislacion.scjn.gob.mx` vía el cliente `scjn` de LegalIA (materia, vigencia, historial de reformas, versión por artículo); `diputados.gob.mx/LeyesBiblio` como respaldo (ya en `document-fetcher.ts`) | Corpus federal completo (~300 leyes) con `vigente` y `fecha_ultima_reforma` de origen, no inferidos |
 | Jurisprudencia y tesis | Repositorio SCJN con descarga en formatos abiertos (CSV y API JSON, 1-100 documentos por consulta, filtros por época, instancia, materia, tipo); detalle público en `sjf2.scjn.gob.mx/detalle/tesis/{registro}` | Colección de tesis con registro digital, época, instancia, materia; enlace de verificación |
 | DOF | SIDOF datos abiertos y API de alertas (`sidof.segob.gob.mx`) | Detección diaria de reformas; disparador de re-ingesta |
 | Legislación estatal | Congresos estatales y `ordenjuridico.gob.mx`; heterogénea | Por oleadas: CDMX, Edomex, Jalisco, Nuevo León primero |
@@ -486,8 +522,9 @@ Fuentes con acceso abierto verificado:
 Diseño:
 
 - **Pipeline en GitHub Actions** (`corpus-update.yml` ya existe, nunca
-  validado): descarga, parseo con `lib/ingestion`, chunking con
-  `contextual-chunker`, embeddings en build, y publicación de **shards
+  validado): descarga con los clientes `dofjson` y `scjn` de LegalIA (Python,
+  en un job aparte) o con un port mínimo a TypeScript de sus llamadas; parseo
+  con `lib/ingestion`, chunking con `contextual-chunker`, embeddings en build, y publicación de **shards
   versionados por materia y jurisdicción** en GitHub Releases (o un bucket),
   no en `public/`: decenas de miles de documentos no caben en un sitio de
   Pages ni en IndexedDB de golpe.
