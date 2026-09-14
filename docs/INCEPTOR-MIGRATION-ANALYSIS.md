@@ -408,9 +408,10 @@ Rama `claude/lex-inceptor-migration-analysis-qmg92a`. Cada fase se cierra con
 | 2 Capa Inceptor y ratchet | ✅ | Agentes, checklists, scripts, ErrorBoundary/HydrationCanary/FeedbackFAB, `ratchet.mjs`, `tsconfig.strict.json`, `ci.yml`, CLAUDE.md nuevo |
 | 3 Saneamiento del núcleo | ✅ | Ola 1 (security, storage, legal, corpus, embeddings, utils) y ola 2 (llm, rag, admin, ingestion, document-requests, document-viewer, offline, notifications, pwa, config, dev, i18n, infraestructura de tests) en estricto con tests reales. Los 32 errores de `tsc` que quedan viven en islas y componentes que reescriben las Fases 4 y 5 |
 | 4 Chat y configuración | 🔄 | Tokens semánticos shadcn/Inceptor y utilidades (`scroll-fade-y`, `shimmer`) en `global.css`; kit UI y primitivas de IA se instalan al cerrar la ola 2 |
-| 5 Resto de UI | ⏳ | |
+| 5 Resto de UI | 🔄 | Wiki estático (4 islas → Astro), SW Workbox vía `@vite-pwa/astro` con `manifest.id` fijo y limpieza de caches `lexmx-*`; pendientes: `document/[id]`, `requests/*`, `CorpusManager`, `CaseManager` |
 | 6 Corpus real | 🔄 | Importador desde LegalIA (`src/pipeline/legalia.ts`, `scripts/corpus/*`) probado con la LFT real; `corpus-update.yml` publica el release `corpus-latest` y `deploy.yml` lo consume; embeddings por documento (layout 2.1) y `CorpusInstaller` en el cliente: instala por shard, reanuda, omite la red si la versión ya está en IndexedDB y reporta progreso en `$corpusInstall` |
-| 7-9 | ⏳ | |
+| 7 Modo grounded y evaluación | 🔄 | Chat muestra `grounded` y fuentes con enlace oficial; benchmark de recuperación (`evals/`, 43 casos): documento recall@5 = 1.00, artículo recall@5 = 0.79, recall@10 = 0.93 tras corregir el parser; `evals/baseline.json` fija el mínimo |
+| 8-9 | ⏳ | |
 | 11.2 Jurisdicción | 🔄 | `src/jurisdictions/` (contrato + módulo México: entidades, jerarquía, fuentes, citas) en estricto con tests; falta cablear `LegalDocument.jurisdiction` y los demás países |
 | 11.9 Supabase | 🔄 | `supabase/` (6 migraciones con RLS, 4 Edge Functions, `supabase.yml`, test de invariantes); falta `src/lib/supabase.ts`, `$session` y las islas de cuenta |
 

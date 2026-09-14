@@ -1,0 +1,1502 @@
+{
+  "summary": {
+    "model": "Xenova/multilingual-e5-small",
+    "corpusDocuments": 14,
+    "chunks": 16102,
+    "cases": 43,
+    "scored": 43,
+    "missing": [],
+    "document": {
+      "recallAt1": 0.8604651162790697,
+      "recallAt5": 1,
+      "recallAt10": 1,
+      "mrr": 0.9193798449612403
+    },
+    "article": {
+      "recallAt1": 0.4186046511627907,
+      "recallAt5": 0.7906976744186046,
+      "recallAt10": 0.9302325581395349,
+      "mrr": 0.5862310815799187
+    },
+    "byArea": {
+      "labor": {
+        "cases": 14,
+        "articleRecall5": 0.857
+      },
+      "constitutional": {
+        "cases": 5,
+        "articleRecall5": 1
+      },
+      "tax": {
+        "cases": 10,
+        "articleRecall5": 0.6
+      },
+      "civil": {
+        "cases": 4,
+        "articleRecall5": 0.75
+      },
+      "criminal": {
+        "cases": 4,
+        "articleRecall5": 1
+      },
+      "commercial": {
+        "cases": 3,
+        "articleRecall5": 1
+      },
+      "consumer": {
+        "cases": 1,
+        "articleRecall5": 1
+      },
+      "administrative": {
+        "cases": 2,
+        "articleRecall5": 0
+      }
+    },
+    "ranAt": "2026-09-14T01:48:55.731Z"
+  },
+  "results": [
+    {
+      "id": "cpeum-123",
+      "area": "labor",
+      "status": "ok",
+      "docRank": 2,
+      "articleRank": 9,
+      "top": [
+        {
+          "doc": "lft",
+          "article": "6",
+          "score": 0.885
+        },
+        {
+          "doc": "cpeum",
+          "article": "115",
+          "score": 0.877
+        },
+        {
+          "doc": "lft",
+          "article": "1",
+          "score": 0.877
+        },
+        {
+          "doc": "lft",
+          "score": 0.87
+        },
+        {
+          "doc": "lft",
+          "article": "331 Ter",
+          "score": 0.866
+        }
+      ]
+    },
+    {
+      "id": "cpeum-1",
+      "area": "constitutional",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "cpeum",
+          "article": "1",
+          "score": 0.868
+        },
+        {
+          "doc": "cpeum",
+          "article": "29",
+          "score": 0.862
+        },
+        {
+          "doc": "cpeum",
+          "article": "2",
+          "score": 0.86
+        },
+        {
+          "doc": "lgtaip",
+          "article": "10",
+          "score": 0.854
+        },
+        {
+          "doc": "lft",
+          "article": "3",
+          "score": 0.852
+        }
+      ]
+    },
+    {
+      "id": "cpeum-14",
+      "area": "constitutional",
+      "status": "ok",
+      "docRank": 2,
+      "articleRank": 2,
+      "top": [
+        {
+          "doc": "ccf",
+          "article": "5",
+          "score": 0.901
+        },
+        {
+          "doc": "cpeum",
+          "article": "14",
+          "score": 0.865
+        },
+        {
+          "doc": "ccom",
+          "article": "29",
+          "score": 0.864
+        },
+        {
+          "doc": "lgsm",
+          "article": "2",
+          "score": 0.861
+        },
+        {
+          "doc": "ccom",
+          "article": "2",
+          "score": 0.859
+        }
+      ]
+    },
+    {
+      "id": "cpeum-16",
+      "area": "constitutional",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "cpeum",
+          "article": "16",
+          "score": 0.9
+        },
+        {
+          "doc": "ccf",
+          "article": "1801",
+          "score": 0.883
+        },
+        {
+          "doc": "ccf",
+          "article": "2562",
+          "score": 0.881
+        },
+        {
+          "doc": "cpf",
+          "article": "263",
+          "score": 0.88
+        },
+        {
+          "doc": "lft",
+          "article": "352",
+          "score": 0.879
+        }
+      ]
+    },
+    {
+      "id": "cpeum-8",
+      "area": "constitutional",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "cpeum",
+          "article": "8",
+          "score": 0.887
+        },
+        {
+          "doc": "lgtaip",
+          "article": "8",
+          "score": 0.871
+        },
+        {
+          "doc": "ccom",
+          "article": "1172",
+          "score": 0.87
+        },
+        {
+          "doc": "lgtaip",
+          "article": "188",
+          "score": 0.869
+        },
+        {
+          "doc": "cff",
+          "article": "34",
+          "score": 0.866
+        }
+      ]
+    },
+    {
+      "id": "cpeum-31",
+      "area": "tax",
+      "status": "ok",
+      "docRank": 2,
+      "articleRank": 2,
+      "top": [
+        {
+          "doc": "cff",
+          "article": "1",
+          "score": 0.914
+        },
+        {
+          "doc": "cpeum",
+          "article": "31",
+          "score": 0.895
+        },
+        {
+          "doc": "lisr",
+          "article": "206",
+          "score": 0.892
+        },
+        {
+          "doc": "lisr",
+          "article": "151",
+          "score": 0.891
+        },
+        {
+          "doc": "lisr",
+          "article": "90",
+          "score": 0.888
+        }
+      ]
+    },
+    {
+      "id": "cpeum-107",
+      "area": "constitutional",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 2,
+      "top": [
+        {
+          "doc": "cpeum",
+          "article": "Tercero",
+          "score": 0.884
+        },
+        {
+          "doc": "cpeum",
+          "article": "107",
+          "score": 0.882
+        },
+        {
+          "doc": "cpeum",
+          "article": "6",
+          "score": 0.878
+        },
+        {
+          "doc": "cpeum",
+          "article": "Segundo",
+          "score": 0.876
+        },
+        {
+          "doc": "ccom",
+          "article": "1345 Bis 2",
+          "score": 0.874
+        }
+      ]
+    },
+    {
+      "id": "lft-47",
+      "area": "labor",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 4,
+      "top": [
+        {
+          "doc": "lft",
+          "article": "46",
+          "score": 0.91
+        },
+        {
+          "doc": "lft",
+          "article": "185",
+          "score": 0.909
+        },
+        {
+          "doc": "lft",
+          "article": "255",
+          "score": 0.907
+        },
+        {
+          "doc": "lft",
+          "article": "47",
+          "score": 0.905
+        },
+        {
+          "doc": "lft",
+          "article": "51",
+          "score": 0.904
+        }
+      ]
+    },
+    {
+      "id": "lft-48",
+      "area": "labor",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 2,
+      "top": [
+        {
+          "doc": "lft",
+          "article": "50",
+          "score": 0.874
+        },
+        {
+          "doc": "lft",
+          "article": "48",
+          "score": 0.868
+        },
+        {
+          "doc": "lft",
+          "article": "500",
+          "score": 0.867
+        },
+        {
+          "doc": "lft",
+          "article": "407",
+          "score": 0.866
+        },
+        {
+          "doc": "lft",
+          "article": "501",
+          "score": 0.866
+        }
+      ]
+    },
+    {
+      "id": "lft-51",
+      "area": "labor",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 5,
+      "top": [
+        {
+          "doc": "lft",
+          "article": "255",
+          "score": 0.914
+        },
+        {
+          "doc": "lft",
+          "score": 0.911
+        },
+        {
+          "doc": "lft",
+          "article": "264",
+          "score": 0.91
+        },
+        {
+          "doc": "lft",
+          "article": "47",
+          "score": 0.908
+        },
+        {
+          "doc": "lft",
+          "article": "51",
+          "score": 0.903
+        }
+      ]
+    },
+    {
+      "id": "lft-87",
+      "area": "labor",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "lft",
+          "article": "87",
+          "score": 0.902
+        },
+        {
+          "doc": "lss",
+          "article": "142",
+          "score": 0.88
+        },
+        {
+          "doc": "lss",
+          "article": "300",
+          "score": 0.876
+        },
+        {
+          "doc": "lft",
+          "article": "25",
+          "score": 0.874
+        },
+        {
+          "doc": "lft",
+          "article": "50",
+          "score": 0.873
+        }
+      ]
+    },
+    {
+      "id": "lft-76",
+      "area": "labor",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 2,
+      "top": [
+        {
+          "doc": "lft",
+          "article": "199",
+          "score": 0.915
+        },
+        {
+          "doc": "lft",
+          "article": "76",
+          "score": 0.912
+        },
+        {
+          "doc": "lft",
+          "article": "77",
+          "score": 0.911
+        },
+        {
+          "doc": "lft",
+          "article": "78",
+          "score": 0.906
+        },
+        {
+          "doc": "lft",
+          "article": "79",
+          "score": 0.9
+        }
+      ]
+    },
+    {
+      "id": "lft-80",
+      "area": "labor",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "lft",
+          "article": "80",
+          "score": 0.93
+        },
+        {
+          "doc": "lft",
+          "article": "259",
+          "score": 0.885
+        },
+        {
+          "doc": "lft",
+          "article": "77",
+          "score": 0.884
+        },
+        {
+          "doc": "lft",
+          "article": "179",
+          "score": 0.881
+        },
+        {
+          "doc": "lss",
+          "article": "211",
+          "score": 0.88
+        }
+      ]
+    },
+    {
+      "id": "lft-162",
+      "area": "labor",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 2,
+      "top": [
+        {
+          "doc": "lft",
+          "article": "5",
+          "score": 0.914
+        },
+        {
+          "doc": "lft",
+          "article": "162",
+          "score": 0.907
+        },
+        {
+          "doc": "lft",
+          "article": "40",
+          "score": 0.89
+        },
+        {
+          "doc": "lft",
+          "article": "81",
+          "score": 0.889
+        },
+        {
+          "doc": "lft",
+          "article": "80",
+          "score": 0.887
+        }
+      ]
+    },
+    {
+      "id": "lft-61",
+      "area": "labor",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 2,
+      "top": [
+        {
+          "doc": "lft",
+          "article": "60",
+          "score": 0.926
+        },
+        {
+          "doc": "lft",
+          "article": "61",
+          "score": 0.925
+        },
+        {
+          "doc": "lft",
+          "article": "59",
+          "score": 0.892
+        },
+        {
+          "doc": "lft",
+          "article": "225",
+          "score": 0.882
+        },
+        {
+          "doc": "lft",
+          "article": "333",
+          "score": 0.872
+        }
+      ]
+    },
+    {
+      "id": "lft-132",
+      "area": "labor",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 7,
+      "top": [
+        {
+          "doc": "lft",
+          "score": 0.927
+        },
+        {
+          "doc": "lft",
+          "score": 0.916
+        },
+        {
+          "doc": "lft",
+          "article": "504",
+          "score": 0.916
+        },
+        {
+          "doc": "lft",
+          "article": "324",
+          "score": 0.914
+        },
+        {
+          "doc": "lft",
+          "score": 0.911
+        }
+      ]
+    },
+    {
+      "id": "lft-170",
+      "area": "labor",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "lft",
+          "article": "170",
+          "score": 0.925
+        },
+        {
+          "doc": "cpeum",
+          "article": "123",
+          "score": 0.917
+        },
+        {
+          "doc": "cpeum",
+          "article": "123",
+          "score": 0.911
+        },
+        {
+          "doc": "lss",
+          "article": "237-E",
+          "score": 0.903
+        },
+        {
+          "doc": "lft",
+          "article": "283 Ter",
+          "score": 0.903
+        }
+      ]
+    },
+    {
+      "id": "lft-25",
+      "area": "labor",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 4,
+      "top": [
+        {
+          "doc": "lft",
+          "article": "318",
+          "score": 0.919
+        },
+        {
+          "doc": "lft",
+          "article": "24",
+          "score": 0.915
+        },
+        {
+          "doc": "lft",
+          "article": "194",
+          "score": 0.891
+        },
+        {
+          "doc": "lft",
+          "article": "25",
+          "score": 0.89
+        },
+        {
+          "doc": "lft",
+          "article": "184",
+          "score": 0.881
+        }
+      ]
+    },
+    {
+      "id": "cff-17-h",
+      "area": "tax",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 7,
+      "top": [
+        {
+          "doc": "cff",
+          "article": "17-H Bis",
+          "score": 0.887
+        },
+        {
+          "doc": "cff",
+          "article": "17-H Bis",
+          "score": 0.885
+        },
+        {
+          "doc": "cff",
+          "article": "17-D",
+          "score": 0.882
+        },
+        {
+          "doc": "cff",
+          "article": "29",
+          "score": 0.882
+        },
+        {
+          "doc": "cff",
+          "article": "17-H Bis",
+          "score": 0.881
+        }
+      ]
+    },
+    {
+      "id": "cff-29",
+      "area": "tax",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "cff",
+          "article": "29",
+          "score": 0.932
+        },
+        {
+          "doc": "cff",
+          "article": "29",
+          "score": 0.925
+        },
+        {
+          "doc": "lisr",
+          "article": "113-G",
+          "score": 0.922
+        },
+        {
+          "doc": "cff",
+          "article": "83",
+          "score": 0.918
+        },
+        {
+          "doc": "cff",
+          "article": "17-H Bis",
+          "score": 0.915
+        }
+      ]
+    },
+    {
+      "id": "cff-67",
+      "area": "tax",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 2,
+      "top": [
+        {
+          "doc": "cff",
+          "article": "65",
+          "score": 0.924
+        },
+        {
+          "doc": "cff",
+          "article": "67",
+          "score": 0.914
+        },
+        {
+          "doc": "cff",
+          "article": "Segundo",
+          "score": 0.908
+        },
+        {
+          "doc": "cff",
+          "article": "46-A",
+          "score": 0.904
+        },
+        {
+          "doc": "cff",
+          "article": "50",
+          "score": 0.903
+        }
+      ]
+    },
+    {
+      "id": "cff-6",
+      "area": "tax",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "cff",
+          "article": "6",
+          "score": 0.923
+        },
+        {
+          "doc": "cff",
+          "article": "Segundo",
+          "score": 0.897
+        },
+        {
+          "doc": "cff",
+          "article": "2",
+          "score": 0.895
+        },
+        {
+          "doc": "cff",
+          "article": "Segundo",
+          "score": 0.894
+        },
+        {
+          "doc": "liva",
+          "article": "Tercero",
+          "score": 0.894
+        }
+      ]
+    },
+    {
+      "id": "lisr-93",
+      "area": "tax",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": null,
+      "top": [
+        {
+          "doc": "lisr",
+          "article": "100",
+          "score": 0.908
+        },
+        {
+          "doc": "liva",
+          "article": "43",
+          "score": 0.903
+        },
+        {
+          "doc": "lisr",
+          "article": "1",
+          "score": 0.901
+        },
+        {
+          "doc": "lisr",
+          "article": "Segundo",
+          "score": 0.896
+        },
+        {
+          "doc": "lisr",
+          "article": "Noveno",
+          "score": 0.894
+        }
+      ]
+    },
+    {
+      "id": "lisr-151",
+      "area": "tax",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "lisr",
+          "article": "151",
+          "score": 0.909
+        },
+        {
+          "doc": "lisr",
+          "article": "131",
+          "score": 0.901
+        },
+        {
+          "doc": "lisr",
+          "article": "115",
+          "score": 0.898
+        },
+        {
+          "doc": "lisr",
+          "article": "103",
+          "score": 0.894
+        },
+        {
+          "doc": "lisr",
+          "article": "94",
+          "score": 0.894
+        }
+      ]
+    },
+    {
+      "id": "lisr-9",
+      "area": "tax",
+      "status": "ok",
+      "docRank": 2,
+      "articleRank": 9,
+      "top": [
+        {
+          "doc": "cff",
+          "article": "Segundo",
+          "score": 0.916
+        },
+        {
+          "doc": "lisr",
+          "article": "Tercero",
+          "score": 0.912
+        },
+        {
+          "doc": "lisr",
+          "article": "145",
+          "score": 0.907
+        },
+        {
+          "doc": "lisr",
+          "article": "74",
+          "score": 0.907
+        },
+        {
+          "doc": "lisr",
+          "article": "72",
+          "score": 0.906
+        }
+      ]
+    },
+    {
+      "id": "liva-1",
+      "area": "tax",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 10,
+      "top": [
+        {
+          "doc": "liva",
+          "article": "18-K",
+          "score": 0.891
+        },
+        {
+          "doc": "liva",
+          "article": "Octavo",
+          "score": 0.89
+        },
+        {
+          "doc": "liva",
+          "article": "Decimo Septimo",
+          "score": 0.885
+        },
+        {
+          "doc": "liva",
+          "article": "1-A Bis",
+          "score": 0.883
+        },
+        {
+          "doc": "liva",
+          "article": "3",
+          "score": 0.881
+        }
+      ]
+    },
+    {
+      "id": "liva-2-a",
+      "area": "tax",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "liva",
+          "article": "2-A",
+          "score": 0.904
+        },
+        {
+          "doc": "liva",
+          "article": "15",
+          "score": 0.899
+        },
+        {
+          "doc": "liva",
+          "article": "2-A",
+          "score": 0.896
+        },
+        {
+          "doc": "cff",
+          "article": "16",
+          "score": 0.882
+        },
+        {
+          "doc": "liva",
+          "article": "Unico",
+          "score": 0.88
+        }
+      ]
+    },
+    {
+      "id": "ccf-1910",
+      "area": "civil",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "ccf",
+          "article": "1910",
+          "score": 0.938
+        },
+        {
+          "doc": "ccf",
+          "article": "1882",
+          "score": 0.902
+        },
+        {
+          "doc": "ccf",
+          "article": "1911",
+          "score": 0.898
+        },
+        {
+          "doc": "ccf",
+          "article": "1076",
+          "score": 0.896
+        },
+        {
+          "doc": "ccf",
+          "article": "1120",
+          "score": 0.896
+        }
+      ]
+    },
+    {
+      "id": "ccf-2398",
+      "area": "civil",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 6,
+      "top": [
+        {
+          "doc": "ccf",
+          "score": 0.897
+        },
+        {
+          "doc": "ccf",
+          "score": 0.895
+        },
+        {
+          "doc": "ccf",
+          "score": 0.893
+        },
+        {
+          "doc": "ccf",
+          "score": 0.893
+        },
+        {
+          "doc": "ccf",
+          "article": "2483",
+          "score": 0.892
+        }
+      ]
+    },
+    {
+      "id": "ccf-1792",
+      "area": "civil",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "ccf",
+          "article": "1792",
+          "score": 0.954
+        },
+        {
+          "doc": "ccf",
+          "article": "1793",
+          "score": 0.897
+        },
+        {
+          "doc": "lft",
+          "article": "312",
+          "score": 0.879
+        },
+        {
+          "doc": "lisr",
+          "article": "90",
+          "score": 0.876
+        },
+        {
+          "doc": "ccom",
+          "article": "1390 Bis 50",
+          "score": 0.875
+        }
+      ]
+    },
+    {
+      "id": "ccf-1135",
+      "area": "civil",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "ccf",
+          "article": "1135",
+          "score": 0.956
+        },
+        {
+          "doc": "ccf",
+          "article": "1136",
+          "score": 0.906
+        },
+        {
+          "doc": "ccf",
+          "article": "1156",
+          "score": 0.903
+        },
+        {
+          "doc": "lisr",
+          "article": "130",
+          "score": 0.891
+        },
+        {
+          "doc": "ccf",
+          "article": "1137",
+          "score": 0.884
+        }
+      ]
+    },
+    {
+      "id": "cpf-367",
+      "area": "criminal",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 2,
+      "top": [
+        {
+          "doc": "cpf",
+          "article": "376 Ter",
+          "score": 0.882
+        },
+        {
+          "doc": "cpf",
+          "article": "367",
+          "score": 0.873
+        },
+        {
+          "doc": "cpf",
+          "article": "1",
+          "score": 0.873
+        },
+        {
+          "doc": "cpf",
+          "article": "368",
+          "score": 0.869
+        },
+        {
+          "doc": "cpf",
+          "article": "371",
+          "score": 0.869
+        }
+      ]
+    },
+    {
+      "id": "cpf-302",
+      "area": "criminal",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "cpf",
+          "article": "302",
+          "score": 0.958
+        },
+        {
+          "doc": "cpf",
+          "score": 0.9
+        },
+        {
+          "doc": "cpf",
+          "article": "343 Bis",
+          "score": 0.883
+        },
+        {
+          "doc": "cpf",
+          "article": "325",
+          "score": 0.882
+        },
+        {
+          "doc": "cpf",
+          "score": 0.882
+        }
+      ]
+    },
+    {
+      "id": "cpf-386",
+      "area": "criminal",
+      "status": "ok",
+      "docRank": 3,
+      "articleRank": 3,
+      "top": [
+        {
+          "doc": "ccf",
+          "article": "2177",
+          "score": 0.885
+        },
+        {
+          "doc": "ccf",
+          "article": "2179",
+          "score": 0.883
+        },
+        {
+          "doc": "cpf",
+          "article": "386",
+          "score": 0.882
+        },
+        {
+          "doc": "cpf",
+          "article": "367",
+          "score": 0.875
+        },
+        {
+          "doc": "cpf",
+          "score": 0.872
+        }
+      ]
+    },
+    {
+      "id": "cnpp-146",
+      "area": "criminal",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "cnpp",
+          "article": "146",
+          "score": 0.934
+        },
+        {
+          "doc": "cnpp",
+          "article": "148",
+          "score": 0.883
+        },
+        {
+          "doc": "cnpp",
+          "article": "152",
+          "score": 0.882
+        },
+        {
+          "doc": "cnpp",
+          "article": "149",
+          "score": 0.88
+        },
+        {
+          "doc": "cnpp",
+          "article": "140",
+          "score": 0.877
+        }
+      ]
+    },
+    {
+      "id": "lss-15",
+      "area": "labor",
+      "status": "ok",
+      "docRank": 5,
+      "articleRank": 5,
+      "top": [
+        {
+          "doc": "lft",
+          "score": 0.909
+        },
+        {
+          "doc": "lft",
+          "article": "337",
+          "score": 0.906
+        },
+        {
+          "doc": "lft",
+          "article": "291-K",
+          "score": 0.905
+        },
+        {
+          "doc": "lft",
+          "score": 0.904
+        },
+        {
+          "doc": "lss",
+          "article": "15",
+          "score": 0.899
+        }
+      ]
+    },
+    {
+      "id": "lss-12",
+      "area": "labor",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "lss",
+          "article": "12",
+          "score": 0.899
+        },
+        {
+          "doc": "lss",
+          "article": "13",
+          "score": 0.899
+        },
+        {
+          "doc": "lss",
+          "article": "6",
+          "score": 0.894
+        },
+        {
+          "doc": "lss",
+          "article": "11",
+          "score": 0.894
+        },
+        {
+          "doc": "lss",
+          "article": "177",
+          "score": 0.889
+        }
+      ]
+    },
+    {
+      "id": "ccom-75",
+      "area": "commercial",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "ccom",
+          "article": "75",
+          "score": 0.907
+        },
+        {
+          "doc": "ccom",
+          "article": "3",
+          "score": 0.893
+        },
+        {
+          "doc": "lgsm",
+          "article": "4",
+          "score": 0.891
+        },
+        {
+          "doc": "ccom",
+          "article": "273",
+          "score": 0.883
+        },
+        {
+          "doc": "ccom",
+          "article": "6 Bis",
+          "score": 0.877
+        }
+      ]
+    },
+    {
+      "id": "lgsm-87",
+      "area": "commercial",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 2,
+      "top": [
+        {
+          "doc": "lgsm",
+          "article": "111",
+          "score": 0.918
+        },
+        {
+          "doc": "lgsm",
+          "article": "87",
+          "score": 0.908
+        },
+        {
+          "doc": "lgsm",
+          "score": 0.893
+        },
+        {
+          "doc": "lgsm",
+          "article": "89",
+          "score": 0.892
+        },
+        {
+          "doc": "lgsm",
+          "score": 0.891
+        }
+      ]
+    },
+    {
+      "id": "lgsm-6",
+      "area": "commercial",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 5,
+      "top": [
+        {
+          "doc": "lgsm",
+          "article": "90",
+          "score": 0.891
+        },
+        {
+          "doc": "ccf",
+          "article": "2690",
+          "score": 0.887
+        },
+        {
+          "doc": "lgsm",
+          "article": "91",
+          "score": 0.886
+        },
+        {
+          "doc": "lgsm",
+          "article": "4",
+          "score": 0.882
+        },
+        {
+          "doc": "lgsm",
+          "article": "6",
+          "score": 0.881
+        }
+      ]
+    },
+    {
+      "id": "lfpc-1",
+      "area": "consumer",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": 1,
+      "top": [
+        {
+          "doc": "lfpc",
+          "article": "1",
+          "score": 0.925
+        },
+        {
+          "doc": "lfpc",
+          "article": "1",
+          "score": 0.901
+        },
+        {
+          "doc": "lfpc",
+          "article": "24",
+          "score": 0.9
+        },
+        {
+          "doc": "cfpc",
+          "article": "578",
+          "score": 0.881
+        },
+        {
+          "doc": "lgtaip",
+          "article": "2",
+          "score": 0.879
+        }
+      ]
+    },
+    {
+      "id": "lgtaip-113",
+      "area": "administrative",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": null,
+      "top": [
+        {
+          "doc": "lgtaip",
+          "article": "5",
+          "score": 0.909
+        },
+        {
+          "doc": "lgtaip",
+          "article": "112",
+          "score": 0.907
+        },
+        {
+          "doc": "lgtaip",
+          "article": "102",
+          "score": 0.893
+        },
+        {
+          "doc": "lgtaip",
+          "article": "115",
+          "score": 0.891
+        },
+        {
+          "doc": "lgtaip",
+          "article": "170",
+          "score": 0.89
+        }
+      ]
+    },
+    {
+      "id": "lgtaip-116",
+      "area": "administrative",
+      "status": "ok",
+      "docRank": 1,
+      "articleRank": null,
+      "top": [
+        {
+          "doc": "lgtaip",
+          "article": "115",
+          "score": 0.921
+        },
+        {
+          "doc": "lgtaip",
+          "score": 0.901
+        },
+        {
+          "doc": "ccom",
+          "score": 0.898
+        },
+        {
+          "doc": "lgtaip",
+          "score": 0.892
+        },
+        {
+          "doc": "lgtaip",
+          "article": "119",
+          "score": 0.892
+        }
+      ]
+    }
+  ]
+}
