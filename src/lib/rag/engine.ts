@@ -15,6 +15,8 @@ import { EmbeddingManager } from '@/lib/embeddings/embedding-manager';
 import { VectorSearch } from './vector-search';
 import { EventEmitter } from 'events';
 import { documentLoader } from '@/lib/corpus/document-loader';
+import { CorpusInstaller } from '@/lib/corpus/corpus-installer';
+import { reportCorpusInstall } from '@/stores/corpus';
 
 export interface RAGEngineConfig extends RAGConfig {
   enableCache: boolean;
@@ -133,16 +135,23 @@ export class LegalRAGEngine extends EventEmitter {
         console.warn('Vector store initialization warning:', err);
       });
 
-      // Load documents into vector store
+      // Install the published corpus shard by shard (Fase 6): skips the
+      // network when IndexedDB already holds this corpus version, resumes
+      // partial installs, and reports progress to the $corpusInstall store.
       try {
-        const vectorDocuments = await documentLoader.convertToVectorDocuments();
-        if (vectorDocuments.length > 0) {
-          for (const doc of vectorDocuments) {
-            await this.vectorStore.addDocument(doc);
-          }
-          this.useRealEmbeddings = true;
+        const installer = new CorpusInstaller(documentLoader, this.vectorStore, reportCorpusInstall);
+        const result = await installer.ensureInstalled();
+        if (result.status === 'real') {
+          this.useRealEmbeddings = !result.mockEmbeddings;
           this.corpusStatus = 'real';
-          this.documentCount = vectorDocuments.length;
+          this.documentCount = result.chunks;
+          if (result.mockEmbeddings) {
+            this.emitProgress(
+              'document_search',
+              'error',
+              'Some corpus chunks have no published embeddings; those chunks use mock vectors and answers built on them are not grounded.'
+            );
+          }
         } else {
           this.useRealEmbeddings = false;
           this.corpusStatus = 'empty';

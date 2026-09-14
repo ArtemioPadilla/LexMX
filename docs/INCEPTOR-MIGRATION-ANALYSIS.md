@@ -409,7 +409,7 @@ Rama `claude/lex-inceptor-migration-analysis-qmg92a`. Cada fase se cierra con
 | 3 Saneamiento del núcleo | 🔄 | Ola 1 (security, storage, legal, corpus, embeddings, utils) ✅ con tests y estricto; ola 2 (llm, rag, admin, ingestion, módulos menores, infraestructura de tests) en curso |
 | 4 Chat y configuración | 🔄 | Tokens semánticos shadcn/Inceptor y utilidades (`scroll-fade-y`, `shimmer`) en `global.css`; kit UI y primitivas de IA se instalan al cerrar la ola 2 |
 | 5 Resto de UI | ⏳ | |
-| 6 Corpus real | 🔄 | Importador desde LegalIA (`src/pipeline/legalia.ts`, `scripts/corpus/*`) probado con la LFT real; `corpus-update.yml` publica el release `corpus-latest` y `deploy.yml` lo consume |
+| 6 Corpus real | 🔄 | Importador desde LegalIA (`src/pipeline/legalia.ts`, `scripts/corpus/*`) probado con la LFT real; `corpus-update.yml` publica el release `corpus-latest` y `deploy.yml` lo consume; embeddings por documento (layout 2.1) y `CorpusInstaller` en el cliente: instala por shard, reanuda, omite la red si la versión ya está en IndexedDB y reporta progreso en `$corpusInstall` |
 | 7-9 | ⏳ | |
 | 11.2 Jurisdicción | 🔄 | `src/jurisdictions/` (contrato + módulo México: entidades, jerarquía, fuentes, citas) en estricto con tests; falta cablear `LegalDocument.jurisdiction` y los demás países |
 | 11.9 Supabase | 🔄 | `supabase/` (6 migraciones con RLS, 4 Edge Functions, `supabase.yml`, test de invariantes); falta `src/lib/supabase.ts`, `$session` y las islas de cuenta |

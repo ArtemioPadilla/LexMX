@@ -13,9 +13,16 @@ export interface RAGConfig {
 export interface VectorStore {
   initialize(config: RAGConfig): Promise<void>;
   addDocument(document: VectorDocument): Promise<void>;
+  /** Bulk insert; implementations should use one transaction per batch. */
+  addDocuments?(documents: VectorDocument[]): Promise<void>;
   search(query: number[], options: SearchOptions): Promise<SearchResult[]>;
   getDocument(id: string): Promise<VectorDocument | null>;
   clear(): Promise<void>;
+  /** Number of stored chunks. */
+  count?(): Promise<number>;
+  /** Collection-level metadata (installed corpus version, installed documents…). */
+  getMeta?<T = unknown>(key: string): Promise<T | null>;
+  setMeta?(key: string, value: unknown): Promise<void>;
 }
 
 export interface VectorDocument {

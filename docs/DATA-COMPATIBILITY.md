@@ -15,10 +15,25 @@ anterior. Este contrato se convierte en tests en la Fase 3 del plan
 
 | Base | Versión | Object stores | Dónde |
 |---|---|---|---|
-| `lexmx_vectors` | ver `src/lib/storage/indexeddb-vector-store.ts` | vectores y metadatos de embeddings | `src/lib/storage/indexeddb-vector-store.ts` |
+| `lexmx_vectors` | 1 | `documents`, `embeddings`, `metadata` (claves `corpusVersion`: `version|buildDate|checksum` del corpus instalado; `installedDocuments`: ids instalados, para reanudar) | `src/lib/storage/indexeddb-vector-store.ts`, `src/lib/corpus/corpus-installer.ts` |
 | `lexmx_metadata` | ver `src/lib/storage/metadata-store.ts` | `lineages`, `audits`, `changeDetection`, `ragMetadata` | `src/lib/storage/metadata-store.ts` |
 | `LexMX_Enhanced_Storage` | 4 | almacenamiento offline y caché | `src/lib/storage/enhanced-offline-storage.ts` |
 | `LexMX_OfflineQueue` | 2 | cola de operaciones offline | `src/lib/offline/offline-queue-manager.ts` |
+
+### Corpus publicado (`public/legal-corpus/`, `public/embeddings/`)
+
+| Archivo | Contrato |
+|---|---|
+| `legal-corpus/metadata.json` | `version`, `buildDate`, `totalDocuments`, `checksum`, `documents[]` (`id`, `title`, `type`, `hierarchy`, `primaryArea`, `size`, `lastUpdated`) |
+| `legal-corpus/<id>.json` | un `LegalDocument`; cada `content[i]` es el chunk `${id}_chunk_${i}` |
+| `embeddings/index.json` | layout `per-document` (2.1): `documents[id] = { file, count }`; layout legado: `batchFiles` con `embeddings-NNN.json` |
+| `embeddings/by-document/<id>.json` | `[{ id, embedding, metadata }]` de ese documento |
+
+El cliente instala documento por documento (`CorpusInstaller`), guarda el
+progreso en `lexmx_vectors.metadata` y **borra los vectores** cuando cambia
+`corpusVersion`. Un cambio de modelo de embeddings (`Xenova/multilingual-e5-small`,
+384 dimensiones) exige cambiar `version` en `index.json` para forzar la
+reinstalación.
 
 ## localStorage / sessionStorage
 

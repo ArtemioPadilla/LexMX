@@ -91,3 +91,48 @@ describe('corpus DocumentLoader', () => {
     );
   });
 });
+
+describe('corpus DocumentLoader · embeddings layouts', () => {
+  beforeEach(() => {
+    vi.mocked(global.fetch).mockReset();
+  });
+
+  it('fetches one shard per document with the per-document layout', async () => {
+    const loader = new DocumentLoader();
+    vi.mocked(global.fetch)
+      .mockResolvedValueOnce(jsonResponse({ version: '2.1.0', layout: 'per-document', batchFiles: 0, documents: { cpeum: { file: 'by-document/cpeum.json', count: 1 } } }))
+      .mockResolvedValueOnce(jsonResponse([{ id: 'cpeum_chunk_0', embedding: [0.1, 0.2] }]));
+
+    const embeddings = await loader.loadDocumentEmbeddings('cpeum');
+    expect([...embeddings.keys()]).toEqual(['cpeum_chunk_0']);
+    expect(vi.mocked(global.fetch).mock.calls.map(([url]) => String(url))).toEqual([
+      expect.stringMatching(/embeddings\/index\.json$/),
+      expect.stringMatching(/embeddings\/by-document\/cpeum\.json$/),
+    ]);
+
+    // The index is cached and a document without a shard costs no fetch.
+    expect((await loader.loadDocumentEmbeddings('lft')).size).toBe(0);
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('falls back to loading legacy batches and filtering by document prefix', async () => {
+    const loader = new DocumentLoader();
+    vi.mocked(global.fetch)
+      .mockResolvedValueOnce(jsonResponse({ version: '1.0.0', batchFiles: 1 }))
+      .mockResolvedValueOnce(jsonResponse([
+        { id: 'cpeum_chunk_0', embedding: [1] },
+        { id: 'lft_chunk_0', embedding: [2] },
+      ]));
+
+    const embeddings = await loader.loadDocumentEmbeddings('lft');
+    expect([...embeddings.entries()]).toEqual([['lft_chunk_0', [2]]]);
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('builds a corpus version from version, buildDate and checksum', async () => {
+    const loader = new DocumentLoader();
+    vi.mocked(global.fetch).mockResolvedValueOnce(jsonResponse({ ...sampleMetadata, checksum: 'abc123' }));
+    await loader.initialize();
+    expect(loader.getCorpusVersion()).toBe('1.0.0|2025-08-18T19:47:39.874Z|abc123');
+  });
+});

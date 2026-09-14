@@ -20,10 +20,28 @@ export interface CorpusMetadata {
   }>;
 }
 
+/** `embeddings/index.json`. Layout 2.1 ships one shard per document. */
+export interface EmbeddingsIndex {
+  version: string;
+  layout?: 'batches' | 'per-document';
+  provider?: string;
+  dimensions?: number;
+  totalEmbeddings?: number;
+  batchFiles?: number;
+  documents?: Record<string, { file: string; count: number }>;
+  buildDate?: string;
+}
+
+interface EmbeddingRecord {
+  id: string;
+  embedding: number[];
+}
+
 export class DocumentLoader {
   private corpusPath: string;
   private embeddingsPath: string;
   private metadata: CorpusMetadata | null = null;
+  private embeddingsIndex: EmbeddingsIndex | null | undefined;
   private documentsCache = new Map<string, LegalDocument>();
   private embeddingsCache = new Map<string, number[]>();
   private initialized = false;
@@ -99,6 +117,65 @@ export class DocumentLoader {
       };
       this.initialized = true;
     }
+  }
+
+  /**
+   * Identity of the served corpus. Changes whenever the pipeline republishes
+   * (buildDate) or the document set differs (checksum/count), so the client
+   * can tell an installed corpus from a stale one.
+   */
+  getCorpusVersion(): string | null {
+    if (!this.metadata) return null;
+    const m = this.metadata as CorpusMetadata & { checksum?: string };
+    return [m.version, m.buildDate, m.checksum ?? String(m.totalDocuments)].join('|');
+  }
+
+  async loadEmbeddingsIndex(): Promise<EmbeddingsIndex | null> {
+    if (this.embeddingsIndex !== undefined) return this.embeddingsIndex;
+    try {
+      const response = await fetch(this.getFullUrl(`${this.embeddingsPath}index.json`));
+      this.embeddingsIndex = response.ok ? ((await response.json()) as EmbeddingsIndex) : null;
+    } catch (error) {
+      console.error('Failed to load embeddings index:', error);
+      this.embeddingsIndex = null;
+    }
+    return this.embeddingsIndex;
+  }
+
+  /**
+   * Embeddings for one document. With the per-document layout this is a
+   * single fetch of that document's shard; with the legacy batch layout it
+   * loads every batch once (cached) and filters by chunk-id prefix.
+   */
+  async loadDocumentEmbeddings(documentId: string): Promise<Map<string, number[]>> {
+    const index = await this.loadEmbeddingsIndex();
+    const shard = index?.documents?.[documentId];
+    const result = new Map<string, number[]>();
+    if (shard) {
+      try {
+        const response = await fetch(this.getFullUrl(`${this.embeddingsPath}${shard.file}`));
+        if (!response.ok) {
+          console.warn(`Embeddings shard for ${documentId} not found`);
+          return result;
+        }
+        const records = (await response.json()) as EmbeddingRecord[];
+        for (const item of records) {
+          result.set(item.id, item.embedding);
+          this.embeddingsCache.set(item.id, item.embedding);
+        }
+      } catch (error) {
+        console.error(`Failed to load embeddings shard for ${documentId}:`, error);
+      }
+      return result;
+    }
+    if (this.embeddingsCache.size === 0 && (index?.batchFiles ?? 0) > 0) {
+      await this.loadAllEmbeddings();
+    }
+    const prefix = `${documentId}_chunk_`;
+    for (const [id, embedding] of this.embeddingsCache) {
+      if (id.startsWith(prefix)) result.set(id, embedding);
+    }
+    return result;
   }
 
   async loadDocument(documentId: string): Promise<LegalDocument | null> {
@@ -188,25 +265,28 @@ export class DocumentLoader {
     const allEmbeddings = new Map<string, number[]>();
 
     try {
-      // Load embeddings index to know how many batches exist
-      const indexUrl = this.getFullUrl(`${this.embeddingsPath}index.json`);
-      const indexResponse = await fetch(indexUrl);
-      if (!indexResponse.ok) {
+      const index = await this.loadEmbeddingsIndex();
+      if (!index) {
         console.warn('Embeddings index not found');
         return allEmbeddings;
       }
 
-      const index = await indexResponse.json();
-      const batchCount = index.batchFiles || 0;
+      if (index.documents) {
+        for (const documentId of Object.keys(index.documents)) {
+          for (const [id, embedding] of await this.loadDocumentEmbeddings(documentId)) {
+            allEmbeddings.set(id, embedding);
+          }
+        }
+        return allEmbeddings;
+      }
 
-      // Load all batches
+      const batchCount = index.batchFiles || 0;
       for (let i = 0; i < batchCount; i++) {
         const batchEmbeddings = await this.loadEmbeddings(i);
         for (const [id, embedding] of batchEmbeddings) {
           allEmbeddings.set(id, embedding);
         }
       }
-
     } catch (error) {
       console.error('Failed to load embeddings:', error);
     }
@@ -243,37 +323,33 @@ export class DocumentLoader {
   async convertToVectorDocuments(): Promise<VectorDocument[]> {
     const documents = await this.loadAllDocuments();
     const embeddings = await this.loadAllEmbeddings();
-    const vectorDocs: VectorDocument[] = [];
+    return documents.flatMap((doc) => this.toVectorDocuments(doc, embeddings));
+  }
 
-    for (const doc of documents) {
-      // Convert document to chunks
-      const chunks = this.documentToChunks(doc);
-      
-      for (const chunk of chunks) {
-        const embedding = embeddings.get(chunk.id) || this.generateMockEmbedding();
-        
-        vectorDocs.push({
-          id: chunk.id,
-          content: chunk.content,
-          embedding,
-          metadata: {
-            title: doc.title,
-            type: doc.type,
-            legalArea: doc.primaryArea,
-            hierarchy: doc.hierarchy,
-            lastUpdated: doc.publicationDate,
-            article: chunk.metadata?.article,
-            url: undefined,
-            sourceInstitution: doc.authority,
-            publicationDate: doc.publicationDate,
-            confidence: 0.95,
-            version: '1.0'
-          }
-        });
+  /**
+   * Chunks of one document paired with their embeddings. Chunks without a
+   * real vector get a mock one so search still runs (and `grounded` stays
+   * honest upstream because the engine reports embeddings as mock).
+   */
+  toVectorDocuments(doc: LegalDocument, embeddings: Map<string, number[]>): VectorDocument[] {
+    return this.documentToChunks(doc).map((chunk) => ({
+      id: chunk.id,
+      content: chunk.content,
+      embedding: embeddings.get(chunk.id) || this.generateMockEmbedding(),
+      metadata: {
+        title: doc.title,
+        type: doc.type,
+        legalArea: doc.primaryArea,
+        hierarchy: doc.hierarchy,
+        lastUpdated: doc.publicationDate,
+        article: chunk.metadata?.article,
+        url: undefined,
+        sourceInstitution: doc.authority,
+        publicationDate: doc.publicationDate,
+        confidence: 0.95,
+        version: '1.0'
       }
-    }
-
-    return vectorDocs;
+    }));
   }
 
   private documentToChunks(document: LegalDocument): LegalChunk[] {
@@ -360,6 +436,7 @@ export class DocumentLoader {
   clearCache(): void {
     this.documentsCache.clear();
     this.embeddingsCache.clear();
+    this.embeddingsIndex = undefined;
   }
 
   async clearDocument(documentId: string): Promise<void> {

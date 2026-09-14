@@ -110,13 +110,48 @@ export class IndexedDBVectorStore implements VectorStore {
       if (typeof indexedDB === 'undefined') return; // Skip during SSG
       throw new Error('Vector store not initialized');
     }
+    if (documents.length === 0) return;
 
-    // Process in batches to avoid overwhelming IndexedDB
-    const batchSize = 100;
+    // One readwrite transaction per batch: thousands of chunks per law would
+    // otherwise mean thousands of transactions (the pre-Fase 6 behaviour).
+    const batchSize = 500;
     for (let i = 0; i < documents.length; i += batchSize) {
       const batch = documents.slice(i, i + batchSize);
-      await Promise.all(batch.map(doc => this.addDocument(doc)));
+      const transaction = this.db.transaction([this.STORES.DOCUMENTS, this.STORES.EMBEDDINGS], 'readwrite');
+      const documentsStore = transaction.objectStore(this.STORES.DOCUMENTS);
+      const embeddingsStore = transaction.objectStore(this.STORES.EMBEDDINGS);
+      for (const document of batch) {
+        const record: VectorStoreRecord = { id: document.id, content: document.content, metadata: document.metadata };
+        documentsStore.put(record);
+        const embeddingRecord: EmbeddingStoreRecord = {
+          documentId: document.id,
+          embedding: this.compressEmbedding(document.embedding),
+          dimension: document.embedding.length
+        };
+        embeddingsStore.put(embeddingRecord);
+      }
+      await this.promisifyTransaction(transaction);
     }
+  }
+
+  async count(): Promise<number> {
+    if (!this.db) return 0;
+    const store = this.db.transaction([this.STORES.DOCUMENTS]).objectStore(this.STORES.DOCUMENTS);
+    return this.promisifyRequest(store.count());
+  }
+
+  async getMeta<T = unknown>(key: string): Promise<T | null> {
+    if (!this.db) return null;
+    const store = this.db.transaction([this.STORES.METADATA]).objectStore(this.STORES.METADATA);
+    const record = await this.promisifyRequest<{ key: string; value: T } | undefined>(store.get(key));
+    return record ? record.value : null;
+  }
+
+  async setMeta(key: string, value: unknown): Promise<void> {
+    if (!this.db) return;
+    const transaction = this.db.transaction([this.STORES.METADATA], 'readwrite');
+    transaction.objectStore(this.STORES.METADATA).put({ key, value });
+    await this.promisifyTransaction(transaction);
   }
 
   async search(queryEmbedding: number[], options: SearchOptions = {}): Promise<SearchResult[]> {

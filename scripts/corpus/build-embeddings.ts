@@ -11,7 +11,7 @@
  * Lee cada `<corpus>/<slug>.json`, recorre `content[]` en orden y genera un
  * vector por elemento con el id `${doc.id}_chunk_${i}`: exactamente el id y el
  * texto que `src/lib/corpus/document-loader.ts` (`documentToChunks`) produce en
- * el cliente. Escribe `embeddings-NNN.json` (lotes), `index.json` y
+ * el cliente. Escribe `by-document/<id>.json` (un shard por documento), `index.json` y
  * `embeddings-metadata.json` en el formato que `loadEmbeddings` espera.
  *
  * Los vectores se redondean a 5 decimales (float32 no aporta más precisión útil
@@ -57,7 +57,6 @@ function arg(name: string, fallback?: string): string | undefined {
 
 const corpusDir = resolve(arg('corpus', 'public/legal-corpus')!);
 const outDir = resolve(arg('out', 'public/embeddings')!);
-const batchSize = Number(arg('batch', '1000'));
 const limit = Number(arg('limit', '0'));
 const cacheDir = resolve(arg('cache', join(homedir(), '.cache', 'lexmx-hf'))!);
 mkdirSync(outDir, { recursive: true });
@@ -116,15 +115,27 @@ async function main() {
     if (limit && totalChunks >= limit) break;
   }
 
-  const batches = Math.ceil(records.length / batchSize);
-  for (let b = 0; b < batches; b++) {
-    const name = `embeddings-${String(b).padStart(3, '0')}.json`;
-    writeFileSync(join(outDir, name), JSON.stringify(records.slice(b * batchSize, (b + 1) * batchSize)));
+  // Layout 2.1: one file per document so the client installs the corpus in
+  // shards (plan Fase 6, "carga perezosa por shard"). `batchFiles: 0` tells old
+  // loaders there are no monolithic batches; `documents` maps id -> file.
+  const byDocument = new Map<string, EmbeddingRecord[]>();
+  for (const r of records) {
+    const list = byDocument.get(r.metadata.documentId) ?? [];
+    list.push(r);
+    byDocument.set(r.metadata.documentId, list);
   }
+  mkdirSync(join(outDir, 'by-document'), { recursive: true });
+  const documents: Record<string, { file: string; count: number }> = {};
+  for (const [docId, list] of byDocument) {
+    const file = `by-document/${docId}.json`;
+    writeFileSync(join(outDir, file), JSON.stringify(list));
+    documents[docId] = { file, count: list.length };
+  }
+  const batches = 0;
   const buildDate = new Date().toISOString();
   writeFileSync(
     join(outDir, 'index.json'),
-    JSON.stringify({ version: '2.0.0', provider: MODEL, dimensions: DIMENSIONS, totalEmbeddings: records.length, batchFiles: batches, buildDate }, null, 2),
+    JSON.stringify({ version: '2.1.0', layout: 'per-document', provider: MODEL, dimensions: DIMENSIONS, totalEmbeddings: records.length, batchFiles: batches, documents, buildDate }, null, 2),
   );
   writeFileSync(
     join(outDir, 'embeddings-metadata.json'),
@@ -134,7 +145,7 @@ async function main() {
         buildDate,
         provider: { model: MODEL, dimensions: DIMENSIONS, maxTokens: 512, pooling: 'mean', normalized: true },
         corpus: { totalDocuments: files.length, totalChunks: records.length, processedChunks: records.length, skippedChunks: 0 },
-        processing: { chunking: 'one vector per content section (matches document-loader.documentToChunks)', batchSize, embedBatch: 32, rounding: 5 },
+        processing: { chunking: 'one vector per content section (matches document-loader.documentToChunks)', layout: 'per-document', embedBatch: 32, rounding: 5 },
         usage: { totalTokens: records.reduce((s, r) => s + r.tokens, 0), estimatedCost: 0 },
         quality: { successRate: 100, errors: 0 },
         durationMs: Date.now() - started,
@@ -143,8 +154,8 @@ async function main() {
       2,
     ),
   );
-  const bytes = readdirSync(outDir).filter((f) => f.startsWith('embeddings-') && f.endsWith('.json')).reduce((s, f) => s + readFileSync(join(outDir, f)).byteLength, 0);
-  console.log(`\n${records.length} vectores en ${batches} lote(s), ${(bytes / 1024 / 1024).toFixed(1)} MB, ${((Date.now() - started) / 1000).toFixed(0)}s → ${outDir}`);
+  const bytes = Object.values(documents).reduce((s, d) => s + readFileSync(join(outDir, d.file)).byteLength, 0);
+  console.log(`\n${records.length} vectores en ${byDocument.size} documento(s), ${(bytes / 1024 / 1024).toFixed(1)} MB, ${((Date.now() - started) / 1000).toFixed(0)}s → ${outDir}`);
 }
 
 main().catch((error) => {
