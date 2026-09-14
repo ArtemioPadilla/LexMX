@@ -412,7 +412,8 @@
     "resources": "Resources",
     "account": "Account",
     "tools": "Tools",
-    "library": "Library"
+    "library": "Library",
+    "templates": "Templates"
   },
   "hero": {
     "title": "Your Mexican Legal AI Assistant",
@@ -2016,5 +2017,16 @@
     "lastDays": "reforms in the last {{days}} days",
     "reformed": "Reform",
     "source": "Reform dates from the DOF as recorded in the installed corpus. Verify at the official source."
+  },
+  "templates": {
+    "title": "Templates",
+    "subtitle": "Base documents anchored to articles: fill in the fields, review and export to Word, Markdown or PDF. Everything happens in your browser.",
+    "none": "no templates",
+    "noneBody": "No templates yet for {{country}}. They ship with the jurisdiction module.",
+    "beforeUsing": "Before using it",
+    "copy": "Copy",
+    "print": "Print / PDF",
+    "missing": "{{count}} field(s) empty, shown in brackets",
+    "disclaimer": "Guidance only: adapt it to the case and review it with a lawyer before use. The cited articles are the basis; verify the current text at the official source."
   }
 }

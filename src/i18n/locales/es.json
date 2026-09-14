@@ -412,7 +412,8 @@
     "resources": "Recursos",
     "account": "Cuenta",
     "tools": "Herramientas",
-    "library": "Biblioteca"
+    "library": "Biblioteca",
+    "templates": "Plantillas"
   },
   "hero": {
     "title": "Tu Asistente Legal Mexicano con IA",
@@ -2016,5 +2017,16 @@
     "lastDays": "reformas de los últimos {{days}} días",
     "reformed": "Reforma",
     "source": "Fechas de reforma según el DOF, tomadas del corpus instalado. Verifica en la fuente oficial."
+  },
+  "templates": {
+    "title": "Plantillas",
+    "subtitle": "Escritos base anclados a artículos: llena los campos, revisa y exporta a Word, Markdown o PDF. Todo ocurre en tu navegador.",
+    "none": "sin plantillas",
+    "noneBody": "Todavía no hay plantillas para {{country}}. Se añaden en el módulo de jurisdicción.",
+    "beforeUsing": "Antes de usarla",
+    "copy": "Copiar",
+    "print": "Imprimir / PDF",
+    "missing": "{{count}} campo(s) sin llenar, marcados entre corchetes",
+    "disclaimer": "Plantilla orientativa: adáptala al caso y revísala con un abogado antes de usarla. Los artículos citados son la base; verifica su texto vigente en la fuente oficial."
   }
 }

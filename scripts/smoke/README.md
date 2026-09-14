@@ -12,6 +12,7 @@ node scripts/smoke/setup.mjs /tmp/setup.png
 node scripts/smoke/wiki.mjs /tmp/wiki.png
 node scripts/smoke/sw.mjs
 node scripts/smoke/cases.mjs /tmp/cases.png
+node scripts/smoke/templates.mjs /tmp/templates.png
 fuser -k -n tcp 4321   # o kill $(lsof -t -i:4321)
 ```
 
