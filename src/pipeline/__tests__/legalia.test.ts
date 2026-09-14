@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  normalizeArticleNumber,
   areaFromMateria,
   corpusIndexEntry,
   humanizeTitle,
@@ -201,5 +202,54 @@ describe('toLegalDocument', () => {
       size: 1234,
       url: '/legal-corpus/laassp.json',
     });
+  });
+});
+
+describe('article header shapes across LegalIA snapshots', () => {
+  it.each([
+    ['**Artículo 47.** Texto', '47'],
+    ['**Artículo  452.** (DEROGADO)', '452'],
+    ['Art. 1o.- En los Estados Unidos Mexicanos', '1'],
+    ['Art. 115. (DEROGADO POR EL ARTÍCULO 4° TRANSITORIO)', '115'],
+    ['Art. 1,000. (DEROGADO)', '1000'],
+    ['Art. 1,390 Bis 15. El emplazamiento', '1390 Bis 15'],
+    ['**ARTICULO 1**,002.- El usufructuario', '1002'],
+    ['**ARTICULO 2o.-**A.- El impuesto se calculará', '2-A'],
+    ['**Artículo 17-H.-** Los certificados', '17-H'],
+    ['**ARTICULO 10 BIS.-** Los proveedores', '10 Bis'],
+    ['**ARTICULO 107 bis.-** El término', '107 Bis'],
+    ['**ARTICULO 13.- (DEROGADO, D.O.F. 31 DE DICIEMBRE DE 1998)**', '13'],
+    ['**ARTICULO PRIMERO.-** La presente Ley', 'Primero'],
+    ['**Artículo Único.** El presente Decreto', 'Único'],
+    ['**Primero.** Entrará en vigor', 'Primero'],
+  ])('%s → %s', (lead, expected) => {
+    expect(normalizeArticleNumber(lead)).toBe(expected);
+  });
+
+  it('does not treat a paragraph that starts with a cross-reference as a header', () => {
+    const body = '**Artículo 1.** Uno.\n\nArtículo 17-H Bis de este Código no aplica aquí.\n\nArtículos 5o. y 6o. se citan.';
+    const content = parseSnapshotBody(body, 'x');
+    expect(content.map((c) => c.number)).toEqual(['1']);
+    expect(content[0]?.content).toContain('17-H Bis de este Código');
+  });
+
+  it('parses CPEUM-style plain "Art. No.-" leads and CCF-style broken bold', () => {
+    const body = ['**CAPITULO I.**', '**DE LOS DERECHOS HUMANOS.**', 'Art. 1o.- Todas las personas.', '**(REFORMADO, D.O.F. 2011)**', 'Segundo párrafo del 1o.', 'Art. 2o.- La Nación.', '**ARTICULO 1**,910.- El que obrando ilícitamente.'].join('\n\n');
+    const content = parseSnapshotBody(body, 'c');
+    expect(content.filter((c) => c.type === 'article').map((c) => c.number)).toEqual(['1', '2', '1910']);
+    expect(content.find((c) => c.number === '1')?.content).toContain('Segundo párrafo');
+    expect(content.find((c) => c.number === '1')?.parent).toBe('c-chapter-i');
+  });
+
+  it('splits long articles into self-describing parts', () => {
+    const long = Array.from({ length: 12 }, (_, i) => `Párrafo ${i + 1}. ${'texto '.repeat(60)}`).join('\n\n');
+    const content = parseSnapshotBody(`**Artículo 47.** ${long}`, 'lft');
+    expect(content.length).toBeGreaterThan(1);
+    expect(content.every((c) => c.number === '47' && c.content.length <= 1900)).toBe(true);
+    expect(content[0]?.partNumber).toBe(1);
+    expect(content[0]?.totalParts).toBe(content.length);
+    expect(content[1]?.id).toBe('lft-art-47-p2');
+    expect(content[1]?.content.startsWith('Artículo 47. ')).toBe(true);
+    expect(content[1]?.title).toMatch(/parte 2\//);
   });
 });

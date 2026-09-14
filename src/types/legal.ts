@@ -66,6 +66,9 @@ export interface LegalContent {
   title?: string;
   content: string;
   parent?: string;
+  /** 1-based part index when a long article is split into parts (corpus pipeline). */
+  partNumber?: number;
+  totalParts?: number;
   children?: string[];
   
   // For vectorization
