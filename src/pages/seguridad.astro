@@ -1,0 +1,145 @@
+---
+/**
+ * /seguridad — la página que demuestra la arquitectura (plan § 11.4 G).
+ * Todo lo que afirma aquí está anclado a código y a docs/DATA-COMPATIBILITY.md;
+ * cuando cambie el contrato de datos, cambia esta página en el mismo PR.
+ */
+import BaseLayout from '../components/layout/BaseLayout.astro';
+import { getUrl } from '../utils/urls';
+
+const pageTitle = 'Seguridad y privacidad - LexMX';
+const repo = import.meta.env.PUBLIC_REPO_SLUG || 'ArtemioPadilla/LexMX';
+const serverConfigured = Boolean(import.meta.env.PUBLIC_SUPABASE_URL && import.meta.env.PUBLIC_SUPABASE_ANON_KEY);
+
+const guarantees = [
+  {
+    title: 'Tus consultas no salen de tu dispositivo por defecto',
+    body: 'La búsqueda sobre el corpus, los embeddings y el ranking corren en tu navegador. Solo el texto que tú eliges enviar viaja al proveedor de modelo que tú configuraste con tu propia llave.',
+    proof: 'src/lib/rag, src/lib/embeddings (Transformers.js, modelo multilingual-e5-small en local)',
+  },
+  {
+    title: 'Trae tu propio modelo',
+    body: 'LexMX no revende inferencia. Configuras OpenAI, Anthropic, Google, Bedrock o un modelo local (WebLLM) con tu llave; el costo y el contrato de datos son entre tú y ese proveedor.',
+    proof: 'src/lib/llm/providers',
+  },
+  {
+    title: 'Llaves cifradas en tu navegador',
+    body: 'Las llaves de API se guardan cifradas con AES-GCM de 256 bits; la llave de cifrado se deriva con PBKDF2 (SHA-256) de tu contraseña y nunca se persiste.',
+    proof: 'src/lib/security/encryption.ts · docs/DATA-COMPATIBILITY.md',
+  },
+  {
+    title: 'Sin telemetría, sin cuentas obligatorias',
+    body: 'No hay analítica de terceros ni identificadores de usuario. Reportar un error abre un issue público en GitHub con el texto que tú revisas antes de enviarlo.',
+    proof: 'src/islands/ErrorBoundary.tsx · src/lib/report-issue.ts',
+  },
+  {
+    title: 'Código abierto y verificable',
+    body: 'Cada línea de este sitio, del pipeline de corpus y del servidor opcional está publicada. Puedes auditar, compilar y desplegar tu propia copia.',
+    proof: `github.com/${repo}`,
+  },
+];
+
+const dataTable = [
+  ['Historial de chat y expedientes', 'IndexedDB y localStorage de tu navegador', 'Nunca', 'Tú, al borrar datos del sitio'],
+  ['Llaves de API', 'sessionStorage o localStorage, cifradas', 'Nunca', 'Tú, desde /setup'],
+  ['Corpus legal y vectores', 'IndexedDB (descargados del release público)', 'No aplica: es público', 'Tú, al actualizar el corpus'],
+  ['Documentos que subes', 'Memoria e IndexedDB', 'Nunca por defecto', 'Tú, desde el expediente'],
+  ['Cuenta y organización (opcional)', 'LexMX Servidor (Supabase) con Row Level Security', 'Solo si inicias sesión', 'Tú, desde tu cuenta'],
+];
+---
+
+<BaseLayout title={pageTitle} description="Cómo protege LexMX tus consultas, documentos y llaves: arquitectura local-first, cifrado en el navegador y servidor opcional.">
+  <main class="min-h-screen bg-white dark:bg-gray-900">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <p class="text-sm font-semibold uppercase tracking-wide text-legal-600 dark:text-legal-400">Seguridad y privacidad</p>
+      <h1 class="mt-2 text-4xl font-bold text-gray-900 dark:text-white">La arquitectura es la garantía</h1>
+      <p class="mt-4 text-lg text-gray-600 dark:text-gray-300">
+        LexMX es <strong>local-first</strong>: el sitio es estático, la inteligencia corre en tu dispositivo y el servidor es opcional.
+        No te pedimos que confíes en una política; te mostramos dónde vive cada dato y qué código lo toca.
+      </p>
+
+      <section class="mt-12" aria-labelledby="garantias">
+        <h2 id="garantias" class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Cinco garantías, cada una con su prueba</h2>
+        <ol class="space-y-4">
+          {guarantees.map((g, i) => (
+            <li class="rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+              <div class="flex items-start gap-3">
+                <span aria-hidden="true" class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-legal-100 text-legal-700 dark:bg-legal-900/40 dark:text-legal-300 font-mono text-sm">{i + 1}</span>
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{g.title}</h3>
+                  <p class="mt-1 text-gray-600 dark:text-gray-300">{g.body}</p>
+                  <p class="mt-2 text-xs font-mono text-gray-500 dark:text-gray-400">Prueba: {g.proof}</p>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section class="mt-12" aria-labelledby="datos">
+        <h2 id="datos" class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Dónde vive cada dato</h2>
+        <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+          <table class="min-w-full text-sm">
+            <thead class="bg-gray-50 dark:bg-gray-800 text-left text-gray-700 dark:text-gray-200">
+              <tr>
+                <th scope="col" class="px-4 py-3 font-semibold">Dato</th>
+                <th scope="col" class="px-4 py-3 font-semibold">Dónde se guarda</th>
+                <th scope="col" class="px-4 py-3 font-semibold">¿Sale de tu dispositivo?</th>
+                <th scope="col" class="px-4 py-3 font-semibold">Quién lo borra</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-700 dark:text-gray-300">
+              {dataTable.map((row) => (
+                <tr>
+                  {row.map((cell) => <td class="px-4 py-3 align-top">{cell}</td>)}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="mt-12" aria-labelledby="servidor">
+        <h2 id="servidor" class="text-2xl font-bold text-gray-900 dark:text-white mb-4">LexMX Servidor (opcional)</h2>
+        <p class="text-gray-600 dark:text-gray-300">
+          Las funciones de equipo (organizaciones, facturación, monitoreo de tribunales, alertas de reformas, WhatsApp) usan un
+          servidor sobre Supabase. Reglas que no se negocian:
+        </p>
+        <ul class="mt-4 list-disc space-y-2 pl-6 text-gray-600 dark:text-gray-300">
+          <li>El navegador usa solo la llave pública; <strong>Row Level Security</strong> es la única frontera. La llave de servicio vive únicamente en las funciones del servidor.</li>
+          <li><strong>Ningún expediente ni consulta llega al servidor por defecto.</strong> Solo metadatos de cuenta, organización, suscripción y eventos de monitoreo.</li>
+          <li>Si tu organización comparte documentos, se <strong>cifran en tu navegador</strong> antes de subir; el servidor guarda bytes que no puede leer.</li>
+          <li>Toda acción que use el servidor lo dice en la interfaz antes de ejecutarse.</li>
+          <li>Todo es Postgres estándar y funciones Deno: puedes autoalojarlo con el <code>docker compose</code> oficial sin cambiar código.</li>
+        </ul>
+        <p class="mt-4 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3 text-sm text-gray-700 dark:text-gray-200" role="status">
+          {serverConfigured
+            ? 'Esta instalación tiene LexMX Servidor configurado. Sin iniciar sesión, sigue funcionando por completo en modo local.'
+            : 'Esta instalación no tiene servidor configurado: funciona al 100 % en modo local.'}
+        </p>
+      </section>
+
+      <section class="mt-12" aria-labelledby="marco">
+        <h2 id="marco" class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Marco legal por país</h2>
+        <p class="text-gray-600 dark:text-gray-300">
+          Cada jurisdicción declara su ley de protección de datos y su autoridad en <code>src/jurisdictions</code>: LFPDPPP (México),
+          Ley 19.628 (Chile), Ley 25.326 (Argentina), Ley 1581 de 2012 (Colombia), Ley 29733 (Perú), LGPD (Brasil), Ley 18.331 (Uruguay),
+          LOPDP (Ecuador), Ley 8968 (Costa Rica) y Ley 81 de 2019 (Panamá). Toda respuesta del asistente incluye el aviso de que es
+          orientación general y no asesoría legal.
+        </p>
+      </section>
+
+      <section class="mt-12" aria-labelledby="reportar">
+        <h2 id="reportar" class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Encontraste un problema de seguridad</h2>
+        <p class="text-gray-600 dark:text-gray-300">
+          Abre un issue con la etiqueta <code>security</code> en
+          <a class="text-legal-600 dark:text-legal-400 underline underline-offset-2" href={`https://github.com/${repo}/issues/new?labels=security`} rel="noopener noreferrer" target="_blank">github.com/{repo}</a>
+          o usa el botón de feedback de esta página; si el problema expone datos de terceros, descríbelo sin incluirlos.
+        </p>
+        <p class="mt-6 text-sm text-gray-500 dark:text-gray-400">
+          Ver también: <a class="underline underline-offset-2" href={getUrl('privacy')}>Política de privacidad</a> · <a class="underline underline-offset-2" href={getUrl('legal')}>Aviso legal</a>
+        </p>
+      </section>
+    </div>
+  </main>
+</BaseLayout>
