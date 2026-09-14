@@ -5,9 +5,11 @@
  * leaves the device.
  */
 import { useMemo, useState } from 'react';
-import { ArrowLeftRightIcon, CopyIcon, FileUpIcon, Trash2Icon } from 'lucide-react';
+import { ArrowLeftRightIcon, CopyIcon, FileUpIcon, MessageSquareIcon, Trash2Icon } from 'lucide-react';
 import { useTranslation } from '@/i18n';
 import { diffDocuments, toUnifiedText, type DiffLine, type DiffResult } from '@/lib/compare/diff';
+import { setPendingPrompt } from '@/stores/chat';
+import { getUrl } from '@/utils/urls';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -42,12 +44,18 @@ function Inner() {
     setError(null);
     setStatus(t('compare.extracting', { name: file.name }));
     try {
-      const { contentExtractor } = await import('@/lib/ingestion/document-content-extractors');
-      const extracted = await contentExtractor.extractFromArrayBuffer(await file.arrayBuffer(), file.type, {
-        ocr: 'auto',
-        onOcrProgress: (p) => setStatus(t('compare.ocrRunning', { progress: Math.round(p.progress * 100) })),
-      });
-      if (side === 'left') { setLeft(extracted.text); setLeftName(file.name); } else { setRight(extracted.text); setRightName(file.name); }
+      let text: string;
+      if (file.type.startsWith('text/') || /\.(txt|md)$/i.test(file.name)) {
+        text = await file.text();
+      } else {
+        const { contentExtractor } = await import('@/lib/ingestion/document-content-extractors');
+        const extracted = await contentExtractor.extractFromArrayBuffer(await file.arrayBuffer(), file.type, {
+          ocr: 'auto',
+          onOcrProgress: (p) => setStatus(t('compare.ocrRunning', { progress: Math.round(p.progress * 100) })),
+        });
+        text = extracted.text;
+      }
+      if (side === 'left') { setLeft(text); setLeftName(file.name); } else { setRight(text); setRightName(file.name); }
     } catch (e) {
       setError(t('compare.fileError', { error: e instanceof Error ? e.message : String(e) }));
     } finally {
@@ -82,6 +90,7 @@ function Inner() {
             <div className="ml-auto flex gap-1">
               <Button size="sm" variant={view === 'unified' ? 'default' : 'outline'} onClick={() => setView('unified')}>{t('compare.viewUnified')}</Button>
               <Button size="sm" variant={view === 'split' ? 'default' : 'outline'} onClick={() => setView('split')}><ArrowLeftRightIcon className="mr-1 h-4 w-4" aria-hidden="true" />{t('compare.viewSplit')}</Button>
+              <Button size="sm" variant="outline" onClick={() => { setPendingPrompt(t('compare.explainPrompt', { diff: toUnifiedText(result, leftName || 'A', rightName || 'B').slice(0, 12000) })); window.location.href = getUrl('chat'); }}><MessageSquareIcon className="mr-1 h-4 w-4" aria-hidden="true" />{t('compare.explain')}</Button>
               <Button size="sm" variant="outline" onClick={() => void copyDiff()}><CopyIcon className="mr-1 h-4 w-4" aria-hidden="true" />{copied ? t('compare.copied') : t('compare.copyDiff')}</Button>
               <Button size="sm" variant="ghost" onClick={() => { setLeft(''); setRight(''); setLeftName(''); setRightName(''); }}><Trash2Icon className="mr-1 h-4 w-4" aria-hidden="true" />{t('compare.clear')}</Button>
             </div>

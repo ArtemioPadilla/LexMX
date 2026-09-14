@@ -414,7 +414,8 @@
     "tools": "Tools",
     "library": "Library",
     "templates": "Templates",
-    "compare": "Compare"
+    "compare": "Compare",
+    "tables": "Tables"
   },
   "hero": {
     "title": "Your Mexican Legal AI Assistant",
@@ -2054,6 +2055,15 @@
         "past_due": "Past due",
         "canceled": "Canceled",
         "paused": "Paused"
+      },
+      "portal": {
+        "upgradePro": "Get Pro",
+        "upgradeTeam": "Get Team",
+        "manage": "Manage billing",
+        "redirecting": "Opening the billing portal…",
+        "error": "Could not open the portal: {{error}}",
+        "notConfigured": "Billing is not configured on this server.",
+        "note": "Payment is processed by the provider (Stripe); LexMX only receives the status by webhook."
       }
     },
     "monitoring": {
@@ -2161,7 +2171,9 @@
     "extracting": "Extracting text from {{name}}…",
     "ocrRunning": "OCR on your device… {{progress}}%",
     "fileError": "Could not read the file: {{error}}",
-    "privacy": "Everything runs in your browser: texts and files are never sent to a server."
+    "privacy": "Everything runs in your browser: texts and files are never sent to a server.",
+    "explain": "Explain changes in the chat",
+    "explainPrompt": "Explain the legal impact of each change between these two versions. For each difference say what changes, who it affects and which applicable article should be checked. Do not invent articles: if unsure, say so.\n\n{{diff}}"
   },
   "ocr": {
     "title": "OCR for scans and photos",
@@ -2216,5 +2228,39 @@
       "transcribing": "Transcribing"
     },
     "privacyNote": "The chosen model downloads once and stays in the browser cache. Nothing is uploaded: neither audio nor text."
+  },
+  "tables": {
+    "title": "Tabular review",
+    "subtitle": "Load several documents, define the fields to extract (parties, dates, amounts, clauses) and review them in an editable table you can export as CSV. Everything runs in your browser.",
+    "fields": "Fields to extract",
+    "fieldLabel": "Field name",
+    "fieldKind": "Kind",
+    "fieldPattern": "Pattern",
+    "removeField": "Remove field",
+    "addField": "Add field",
+    "newField": "New field",
+    "kinds": {
+      "parties": "Parties",
+      "date": "First date",
+      "amount": "First amount",
+      "clause": "Clause by heading",
+      "keyword": "Sentence with keyword",
+      "regex": "Regular expression"
+    },
+    "patternHint": {
+      "keyword": "e.g. penalty",
+      "regex": "e.g. within (\\d+) days",
+      "clause": "e.g. term"
+    },
+    "documents": "Documents",
+    "addDocuments": "Add documents",
+    "exportCsv": "Export CSV",
+    "clear": "Clear",
+    "empty": "Add documents to start (TXT, PDF, DOCX; scanned PDFs go through OCR).",
+    "document": "Document",
+    "notFound": "Not found in the document; you can type it",
+    "extracting": "Extracting {{name}}…",
+    "fileError": "Could not read {{name}}: {{error}}",
+    "privacy": "Extraction is deterministic (no model): every cell comes from a match in the text and shows its context on hover."
   }
 }

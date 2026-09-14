@@ -20,7 +20,7 @@ import { TEST_IDS } from '@/utils/test-ids';
 import { $corpusInstall } from '@/stores/corpus';
 import { $jurisdictionCode, setJurisdiction } from '@/stores/jurisdiction';
 import { listJurisdictions } from '@/jurisdictions';
-import { $chatMessages, $chatMode, appendMessage, nextMessageId, resetThread, updateMessage, type ChatMessage as ThreadMessage, type ChatMode } from '@/stores/chat';
+import { $chatMessages, $chatMode, appendMessage, nextMessageId, resetThread, takePendingPrompt, updateMessage, type ChatMessage as ThreadMessage, type ChatMode } from '@/stores/chat';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -65,6 +65,11 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
   const { t, language } = useTranslation();
   /** Text present before dictation started; interim results replace what follows it. */
   const dictationBase = useRef<string | null>(null);
+  // A prompt prepared by another page (/comparar) lands in the composer once.
+  useEffect(() => {
+    const pending = takePendingPrompt();
+    if (pending) setCurrentInput(pending);
+  }, []);
   const messages = useStore($chatMessages);
   const mode = useStore($chatMode);
   const corpus = useStore($corpusInstall);

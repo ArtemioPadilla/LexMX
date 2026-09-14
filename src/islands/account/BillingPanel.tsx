@@ -5,6 +5,7 @@ import { useTranslation } from '@/i18n';
 import { PLAN_QUOTAS, effectivePlan, getSubscription, getUsage, usageRatio, type BillingScope, type Subscription, type Usage } from '@/lib/server/billing';
 import type { Org } from '@/lib/server/orgs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,6 +17,21 @@ export function BillingPanel({ client, userId, orgs }: { client: SupabaseClient;
   const [scopeId, setScopeId] = useState<string>('me');
   const [state, setState] = useState<{ sub: Subscription | null; usage: Usage } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [portalBusy, setPortalBusy] = useState(false);
+
+  async function openPortal(action: 'checkout' | 'portal', plan?: 'pro' | 'team') {
+    setPortalBusy(true);
+    setError(null);
+    try {
+      const { data, error: fnError } = await client.functions.invoke<{ url?: string; error?: string }>('billing-portal', { body: { action, plan, orgId: scopeId === 'me' ? undefined : scopeId } });
+      if (fnError) throw new Error(fnError.message);
+      if (!data?.url) throw new Error(data?.error ?? t('account.billing.portal.notConfigured'));
+      window.location.href = data.url;
+    } catch (e) {
+      setError(t('account.billing.portal.error', { error: e instanceof Error ? e.message : String(e) }));
+      setPortalBusy(false);
+    }
+  }
 
   useEffect(() => {
     const scope: BillingScope = scopeId === 'me' ? { userId } : { orgId: scopeId };
@@ -66,7 +82,13 @@ export function BillingPanel({ client, userId, orgs }: { client: SupabaseClient;
             <UsageRow label={t('account.billing.documents')} used={state.usage.documents} quota={quota.documents} fmt={fmt} of={t('account.billing.of')} />
             <p className="text-sm">{t('account.billing.tokens')}: {state.usage.tokensIn.toLocaleString()} / {state.usage.tokensOut.toLocaleString()}</p>
           </div>
-          <p className="text-xs text-muted-foreground">{t('account.billing.manage')}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {plan === 'free' && <Button size="sm" disabled={portalBusy} onClick={() => void openPortal('checkout', 'pro')}>{t('account.billing.portal.upgradePro')}</Button>}
+            {plan === 'free' && scopeId !== 'me' && <Button size="sm" variant="outline" disabled={portalBusy} onClick={() => void openPortal('checkout', 'team')}>{t('account.billing.portal.upgradeTeam')}</Button>}
+            {state.sub?.provider === 'stripe' && <Button size="sm" variant="outline" disabled={portalBusy} onClick={() => void openPortal('portal')}>{t('account.billing.portal.manage')}</Button>}
+            {portalBusy && <span className="text-xs text-muted-foreground" role="status">{t('account.billing.portal.redirecting')}</span>}
+          </div>
+          <p className="text-xs text-muted-foreground">{t('account.billing.portal.note')}</p>
         </>
       )}
     </section>

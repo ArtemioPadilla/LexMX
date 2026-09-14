@@ -1,0 +1,73 @@
+name: 📱 Mobile (Tauri 2)
+
+# Plan § 11.4 E. Generates the Android project from the same dist/ that
+# GitHub Pages and LexMX Escritorio use, and builds an unsigned debug APK on
+# every tag or manual run. iOS builds on macOS without signing (no store
+# upload) so the project compiles in CI; signing needs the store secrets
+# (ANDROID_KEYSTORE_*, APPLE_*) listed in docs/MOBILE.md.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    name: Android (debug APK)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - name: Android NDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;26.3.11579264" "platforms;android-34" "build-tools;34.0.0"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/26.3.11579264" >> "$GITHUB_ENV"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+      - name: Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+      - run: npm ci
+      - name: Generate the Android project (idempotent)
+        run: |
+          if [ ! -d src-tauri/gen/android ]; then npm run mobile:android:init -- --ci; fi
+      - name: Build debug APK
+        run: npm run mobile:android:build -- --debug --apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lexmx-android-debug
+          path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+
+  ios:
+    name: iOS (unsigned build)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+      - run: npm ci
+      - name: Generate the iOS project (idempotent)
+        run: |
+          if [ ! -d src-tauri/gen/apple ]; then npm run mobile:ios:init -- --ci; fi
+      - name: Build for simulator (no signing)
+        run: npm run mobile:ios:build -- --debug --target aarch64-sim

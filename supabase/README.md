@@ -17,6 +17,8 @@ modo local-first: el sitio estático nunca depende de estas piezas.
 | `migrations/0006_corpus_vectors.sql` | Corpus abierto en pgvector (384-d, mismo modelo que el cliente) y `match_chunks` |
 | `functions/search` | API pública de búsqueda semántica (base del MCP hospedado) |
 | `functions/accept-invite` | Convierte un token de invitación (solo su SHA-256 vive en `invites`) en asiento de `org_members`; exige sesión con el correo invitado |
+| `functions/court-monitor` | Corre los adaptadores de tribunales/gacetas (`src/lib/monitoring/adapters.ts`) sobre `watched_cases` y escribe `court_events`; lo llama pg_cron (`0007`) |
+| `functions/billing-portal` | Crea sesiones de Stripe Checkout (Pro/Team) y enlaces al Customer Portal; nunca escribe `subscriptions` |
 | `functions/web-push` | Entrega notificaciones pendientes a las suscripciones push |
 | `functions/stripe-webhook` | Único escritor de `subscriptions` |
 | `functions/whatsapp-webhook` | Webhook de Meta Cloud API (handshake + respuesta) |

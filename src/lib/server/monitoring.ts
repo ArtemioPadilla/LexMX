@@ -4,6 +4,7 @@
  * key; RLS limits reads to the owner (or org members).
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { ADAPTERS } from '@/lib/monitoring/adapters';
 
 export interface WatchedCase {
   id: string;
@@ -43,14 +44,9 @@ export interface Notification {
   readAt: string | null;
 }
 
-/** Court adapters known per jurisdiction. The id is what the scheduled adapter reads. */
+/** Court adapters known per jurisdiction (ids match `src/lib/monitoring/adapters.ts`, what the scheduled job runs). */
 export const COURT_ADAPTERS: Record<string, ReadonlyArray<{ id: string; name: string }>> = {
-  mx: [
-    { id: 'mx-pjf', name: 'Poder Judicial de la Federación (listas y acuerdos)' },
-    { id: 'mx-scjn', name: 'Suprema Corte de Justicia de la Nación' },
-    { id: 'mx-cdmx-tsj', name: 'Tribunal Superior de Justicia de la Ciudad de México' },
-    { id: 'mx-dof', name: 'Diario Oficial de la Federación (búsqueda por texto)' },
-  ],
+  mx: ADAPTERS.map((a) => ({ id: a.id, name: a.name })),
 };
 
 function fail(error: { message: string } | null): void {

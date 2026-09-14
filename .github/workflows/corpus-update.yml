@@ -65,6 +65,9 @@ jobs:
       - name: Build embeddings (same model as the client)
         run: node --experimental-strip-types scripts/corpus/build-embeddings.ts --corpus build/corpus/legal-corpus --out build/corpus/embeddings
 
+      - name: Retrieval benchmark (fails under evals/baseline.json)
+        run: node --experimental-strip-types scripts/eval/retrieval.ts --corpus build/corpus/legal-corpus --embeddings build/corpus/embeddings --out evals/results
+
       - name: Package
         id: pkg
         run: |

@@ -414,7 +414,8 @@
     "tools": "Herramientas",
     "library": "Biblioteca",
     "templates": "Plantillas",
-    "compare": "Comparar"
+    "compare": "Comparar",
+    "tables": "Tablas"
   },
   "hero": {
     "title": "Tu Asistente Legal Mexicano con IA",
@@ -2054,6 +2055,15 @@
         "past_due": "Pago pendiente",
         "canceled": "Cancelada",
         "paused": "Pausada"
+      },
+      "portal": {
+        "upgradePro": "Contratar Pro",
+        "upgradeTeam": "Contratar Team",
+        "manage": "Administrar facturación",
+        "redirecting": "Abriendo el portal de pago…",
+        "error": "No se pudo abrir el portal: {{error}}",
+        "notConfigured": "La facturación no está configurada en este servidor.",
+        "note": "El pago se procesa en el proveedor (Stripe); LexMX solo recibe el estado por webhook."
       }
     },
     "monitoring": {
@@ -2161,7 +2171,9 @@
     "extracting": "Extrayendo texto de {{name}}…",
     "ocrRunning": "OCR en tu dispositivo… {{progress}}%",
     "fileError": "No se pudo leer el archivo: {{error}}",
-    "privacy": "Todo ocurre en tu navegador: los textos y archivos no se envían a ningún servidor."
+    "privacy": "Todo ocurre en tu navegador: los textos y archivos no se envían a ningún servidor.",
+    "explain": "Explicar cambios en el chat",
+    "explainPrompt": "Explica el impacto jurídico de cada cambio entre estas dos versiones. Para cada diferencia indica qué cambia, a quién afecta y qué artículo aplicable conviene revisar. No inventes artículos: si no estás seguro, dilo.\n\n{{diff}}"
   },
   "ocr": {
     "title": "OCR de escaneos y fotos",
@@ -2216,5 +2228,39 @@
       "transcribing": "Transcribiendo"
     },
     "privacyNote": "La primera vez se descarga el modelo elegido y queda en caché del navegador. Nada se sube: ni el audio ni el texto."
+  },
+  "tables": {
+    "title": "Revisión tabular",
+    "subtitle": "Carga varios documentos, define qué campos extraer (partes, fechas, montos, cláusulas) y revísalos en una tabla editable que exportas a CSV. Todo ocurre en tu navegador.",
+    "fields": "Campos a extraer",
+    "fieldLabel": "Nombre del campo",
+    "fieldKind": "Tipo",
+    "fieldPattern": "Patrón",
+    "removeField": "Quitar campo",
+    "addField": "Añadir campo",
+    "newField": "Nuevo campo",
+    "kinds": {
+      "parties": "Partes",
+      "date": "Primera fecha",
+      "amount": "Primer monto",
+      "clause": "Cláusula por encabezado",
+      "keyword": "Oración con palabra clave",
+      "regex": "Expresión regular"
+    },
+    "patternHint": {
+      "keyword": "p. ej. penalización",
+      "regex": "p. ej. plazo de (\\d+) días",
+      "clause": "p. ej. vigencia"
+    },
+    "documents": "Documentos",
+    "addDocuments": "Añadir documentos",
+    "exportCsv": "Exportar CSV",
+    "clear": "Limpiar",
+    "empty": "Añade documentos para empezar (TXT, PDF, DOCX; los PDF escaneados pasan por OCR).",
+    "document": "Documento",
+    "notFound": "No se encontró en el documento; puedes escribirlo",
+    "extracting": "Extrayendo {{name}}…",
+    "fileError": "No se pudo leer {{name}}: {{error}}",
+    "privacy": "La extracción es determinista (sin modelo): cada celda viene de una coincidencia en el texto y muestra su contexto al pasar el cursor."
   }
 }

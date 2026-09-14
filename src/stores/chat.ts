@@ -40,3 +40,22 @@ export function updateMessage(id: string, patch: Partial<ChatMessage>): void {
 export function resetThread(welcome?: string): void {
   $chatMessages.set(welcome ? [{ id: nextMessageId(), type: 'system', content: welcome, timestamp: Date.now() }] : []);
 }
+
+/**
+ * Prompt prepared by another page (e.g. /comparar → "explain changes"). The
+ * chat island consumes it once on mount and clears it. Kept in
+ * sessionStorage so it survives the navigation to /chat.
+ */
+const PENDING_KEY = 'lexmx_pending_prompt';
+export function setPendingPrompt(text: string): void {
+  try { sessionStorage.setItem(PENDING_KEY, text); } catch { /* storage unavailable */ }
+}
+export function takePendingPrompt(): string | null {
+  try {
+    const v = sessionStorage.getItem(PENDING_KEY);
+    if (v !== null) sessionStorage.removeItem(PENDING_KEY);
+    return v;
+  } catch {
+    return null;
+  }
+}
