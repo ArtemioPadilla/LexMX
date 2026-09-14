@@ -1,0 +1,22 @@
+import { chromium } from '@playwright/test';
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const context = await browser.newContext();
+const page = await context.newPage();
+const cdp = await context.newCDPSession(page);
+const errors = [];
+cdp.on('ServiceWorker.workerErrorReported', (e) => errors.push(e.errorMessage));
+await cdp.send('ServiceWorker.enable');
+await page.goto('http://localhost:4321/LexMX/wiki', { waitUntil: 'load', timeout: 60000 });
+const info = await page.evaluate(async () => {
+  const reg = await Promise.race([navigator.serviceWorker.ready, new Promise((_, r) => setTimeout(() => r(new Error('sw timeout')), 20000))]);
+  await new Promise((res) => setTimeout(res, 3000));
+  const keys = await caches.keys();
+  const precache = await caches.open(keys.find((k) => k.includes('precache')) || '');
+  const n = (await precache.keys()).length;
+  return { script: reg.active?.scriptURL, caches: keys, precached: n };
+}).catch((e) => ({ error: String(e) }));
+await context.setOffline(true);
+const offline = await page.goto('http://localhost:4321/LexMX/chat', { waitUntil: 'load', timeout: 30000 }).then((r) => ({ status: r?.status(), title: null })).catch((e) => ({ error: String(e).slice(0, 80) }));
+const title = await page.title().catch(() => null);
+console.log(JSON.stringify({ info, offline: { ...offline, title }, errors: errors.slice(0, 3) }, null, 1));
+await browser.close();

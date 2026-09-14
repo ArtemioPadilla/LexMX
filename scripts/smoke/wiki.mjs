@@ -1,0 +1,12 @@
+import { chromium } from '@playwright/test';
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+const errors = [];
+page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+await page.goto('http://localhost:4321/LexMX/wiki#proceso-legislativo', { waitUntil: 'networkidle', timeout: 60000 });
+await page.waitForTimeout(1500);
+const current = await page.locator('[data-wiki-nav] a[aria-current="true"]').getAttribute('href');
+const details = await page.locator('details').count();
+await page.screenshot({ path: process.argv[2] });
+console.log(JSON.stringify({ current, details, errors }));
+await browser.close();

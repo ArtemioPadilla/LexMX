@@ -1,0 +1,16 @@
+import { chromium } from '@playwright/test';
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const page = await browser.newPage();
+const errors = [];
+page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+await page.goto('http://localhost:4321/LexMX/chat', { waitUntil: 'networkidle', timeout: 60000 });
+await page.waitForSelector('[data-testid="chat-input"]', { timeout: 30000 });
+await page.waitForTimeout(4000);
+const welcome = await page.locator('[data-testid="chat-welcome"]').count();
+const header = await page.locator('[data-testid="chat-container"] header').innerText();
+await page.fill('[data-testid="chat-input"]', 'Hola');
+const sendEnabled = await page.locator('[data-testid="chat-send"]').isEnabled();
+await page.screenshot({ path: process.argv[2], fullPage: true });
+console.log(JSON.stringify({ welcome, sendEnabled, header: header.slice(0, 200), errors: errors.slice(0, 8) }, null, 2));
+await browser.close();
