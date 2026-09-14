@@ -31,7 +31,7 @@ export default function DocumentViewer({
   const [viewMode, setViewMode] = useState<ViewMode>(initialView as ViewMode);
   const [currentSection, setCurrentSection] = useState<string | null>(initialSection ?? null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<Array<{ id: string; type: string; number?: string; title?: string; content: string; score: number }>>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [highlightedChunks, setHighlightedChunks] = useState<string[]>([]);
 
@@ -94,7 +94,7 @@ export default function DocumentViewer({
         content.content?.toLowerCase().includes(query.toLowerCase())
       ) || [];
       
-      setSearchResults(results);
+      setSearchResults(results.map((r) => ({ id: r.id, type: r.type, number: r.number, title: r.title, content: r.content, score: 1 })));
       setHighlightedChunks(results.map(r => r.id));
     } catch (error) {
       console.error('Search error:', error);

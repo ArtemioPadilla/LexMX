@@ -70,7 +70,7 @@ export default function DevDashboard() {
   }, []);
 
   const toggleFeature = (feature: string) => {
-    DevData.toggleFeature(feature as any);
+    DevData.toggleFeature(feature as Parameters<typeof DevData.toggleFeature>[0]);
   };
 
   const resetAllFeatures = () => {

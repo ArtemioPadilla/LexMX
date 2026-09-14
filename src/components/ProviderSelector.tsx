@@ -41,14 +41,16 @@ export default function ProviderSelector({ onProviderChange, className = '' }: P
         console.warn('Provider initialization warning:', err);
       });
       
-      const configs: any[] = await providerManager.getEnabledProviders().catch(() => []);
+      const configs: ProviderConfig[] = await providerManager.getEnabledProviders().catch((): ProviderConfig[] => []);
       
       // Always include WebLLM as a fallback
       if (configs.length === 0 || !configs.find(p => p.id === 'webllm')) {
         configs.push({
           id: 'webllm',
           name: 'WebLLM',
-          type: 'webllm',
+          type: 'local',
+          priority: 1,
+          createdAt: Date.now(),
           enabled: true,
           apiKey: '',
           model: 'Llama-3.2-3B-Instruct-q4f16_1-MLC'

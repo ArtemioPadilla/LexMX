@@ -10,7 +10,7 @@ export interface CaseEvent {
   date: Date;
   icon?: string;
   color?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 interface CaseTimelineProps {
@@ -122,7 +122,7 @@ export default function CaseTimeline({
       try {
         const chatData = JSON.parse(savedChat);
         if (chatData.messages && chatData.messages.length > 1) {
-          const firstUserMessage = chatData.messages.find((m: any) => m.type === 'user');
+          const firstUserMessage = chatData.messages.find((m: { type: string; content?: string }) => m.type === 'user');
           if (firstUserMessage) {
             generatedEvents.push({
               id: `chat_${chatData.conversationId}`,

@@ -1,3 +1,4 @@
+import type { TranslationValue } from '../types/common';
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '../i18n/index';
 import { ingestionPipeline } from '../lib/ingestion/document-ingestion-pipeline';
@@ -130,7 +131,7 @@ export default function DocumentIngestionPipeline({
     // Pre-flight CORS check for URL ingestion
     if (manualUrl && !activeRequest && !uploadedFile) {
       // Get current translations for CORS analysis
-      const currentTranslations = (window as any).__translations?.[
+      const currentTranslations = (window as Window & { __translations?: Record<string, Record<string, TranslationValue>> }).__translations?.[
         localStorage.getItem('language') || 'es'
       ];
       const corsAnalysis = await CorsDetector.analyzeCorsRequirements(manualUrl, currentTranslations);
@@ -191,7 +192,7 @@ export default function DocumentIngestionPipeline({
         setShowCorsGuidance(true);
         // Re-analyze to get latest suggestions
         if (manualUrl) {
-          const currentTranslations = (window as any).__translations?.[
+          const currentTranslations = (window as Window & { __translations?: Record<string, Record<string, TranslationValue>> }).__translations?.[
             localStorage.getItem('language') || 'es'
           ];
           const corsAnalysis = await CorsDetector.analyzeCorsRequirements(manualUrl, currentTranslations);

@@ -116,9 +116,9 @@ export interface LineageAudit {
   timestamp: Date;
   action: 'created' | 'updated' | 'verified' | 'corrected' | 'deprecated';
   actor: string;
-  changes?: Record<string, any>;
+  changes?: Record<string, unknown>;
   reason?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Integration with RAG system

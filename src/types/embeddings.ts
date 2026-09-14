@@ -8,7 +8,7 @@ export interface EmbeddingVector {
 export interface EmbeddingDocument {
   id: string;
   text: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface EmbeddingResult {
@@ -25,7 +25,7 @@ export interface EmbeddingProviderConfig {
   cacheExpiration?: number;
   apiKey?: string;
   apiUrl?: string;
-  onProgress?: (progress: any) => void;
+  onProgress?: (progress: ModelProgressEvent) => void;
 }
 
 export interface EmbeddingProviderStats {
@@ -68,6 +68,16 @@ export interface SimilarityOptions {
 }
 
 // Progress event types for RAG visualization
+/** Model download/load progress reported by the embedding providers. */
+export interface ModelProgressEvent {
+  status: string;
+  percentage: number;
+  file?: string;
+  loaded?: number;
+  total?: number;
+  name?: string;
+}
+
 export interface RAGProgressEvent {
   stage: 'query_analysis' | 'embedding_generation' | 'document_search' | 'context_building' | 'response_generation';
   status: 'pending' | 'active' | 'completed' | 'error';

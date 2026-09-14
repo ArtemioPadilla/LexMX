@@ -1,5 +1,6 @@
 // Embedding manager for provider selection and management
 
+import type { ModelProgressEvent } from '@/types/embeddings';
 import { TransformersEmbeddingProvider } from './transformers-provider';
 import { OpenAIEmbeddingProvider } from './openai-embedding-provider';
 import { MockEmbeddingProvider } from './mock-provider';
@@ -111,7 +112,7 @@ export class EmbeddingManager {
       case 'transformers':
         return new TransformersEmbeddingProvider({
           ...config,
-          onProgress: (progress: ProgressEvent) => {
+          onProgress: (progress: ModelProgressEvent) => {
             if (progress.status === 'downloading') {
               this.emitProgress(
                 'embedding_generation',

@@ -92,25 +92,25 @@ export default function DocumentRequestForm({ onSubmit, onSuggestionsUpdate }: D
   }, [searchTimeout, onSuggestionsUpdate]);
 
   // Handle form field changes
-  const handleFieldChange = (field: keyof SmartFormState, value: any) => {
+  const handleFieldChange = (field: keyof SmartFormState, value: SmartFormState[keyof SmartFormState]) => {
     setFormState(prev => ({ ...prev, [field]: value }));
     
     if (field === 'title' || field === 'description') {
       debouncedSearch(
-        field === 'title' ? value : formState.title,
-        field === 'description' ? value : formState.description
+        field === 'title' ? String(value ?? '') : formState.title,
+        field === 'description' ? String(value ?? '') : formState.description
       );
     }
   };
 
   // Handle source changes
-  const handleSourceChange = (index: number, field: keyof DocumentSource, value: any) => {
+  const handleSourceChange = (index: number, field: keyof DocumentSource, value: DocumentSource[keyof DocumentSource]) => {
     setSources(prev => {
       const newSources = [...prev];
       newSources[index] = { ...newSources[index], [field]: value };
 
       // Auto-validate URLs
-      if (field === 'url' && value) {
+      if (field === 'url' && typeof value === 'string' && value) {
         validateSourceUrl(value, index);
       }
 
@@ -154,7 +154,7 @@ export default function DocumentRequestForm({ onSubmit, onSuggestionsUpdate }: D
   const validateFile = (file: File): boolean => {
     const fileType = file.name.split('.').pop()?.toLowerCase();
     
-    if (!fileType || !ALLOWED_FILE_TYPES.includes(fileType as any)) {
+    if (!fileType || !ALLOWED_FILE_TYPES.includes(fileType as (typeof ALLOWED_FILE_TYPES)[number])) {
       setErrors(prev => ({ ...prev, file: `Tipo de archivo no permitido. Tipos válidos: ${ALLOWED_FILE_TYPES.join(', ')}` }));
       return false;
     }

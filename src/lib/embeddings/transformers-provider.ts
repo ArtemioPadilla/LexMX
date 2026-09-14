@@ -1,8 +1,8 @@
 // Transformers.js provider for free in-browser embeddings
 
+import type { ModelProgressEvent } from '@/types/embeddings';
 import { BaseEmbeddingProvider } from './base-provider';
 import type { EmbeddingProviderType, EmbeddingVector, EmbeddingProviderConfig } from '@/types/embeddings';
-import type { ProgressEvent } from '@/types/common';
 // Type-only import: erased at compile time, so it does NOT pull the runtime
 // package (and its onnxruntime-node native binding) into any eagerly-loaded
 // bundle. The actual module is loaded dynamically inside `initialize()`.
@@ -12,7 +12,7 @@ export class TransformersEmbeddingProvider extends BaseEmbeddingProvider {
   type: EmbeddingProviderType = 'transformers';
   private extractor: FeatureExtractionPipeline | null = null;
   private modelName: string;
-  private progressCallback?: (progress: ProgressEvent) => void;
+  private progressCallback?: (progress: ModelProgressEvent) => void;
 
   constructor(config: EmbeddingProviderConfig = {}) {
     super({

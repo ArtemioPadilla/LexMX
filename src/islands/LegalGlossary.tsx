@@ -13,7 +13,7 @@ interface GlossaryTerm {
   examples?: string[];
 }
 
-const glossaryTerms = (t: any): GlossaryTerm[] => [
+const glossaryTerms = (t: (key: string) => string): GlossaryTerm[] => [
   {
     id: 'amparo',
     term: t('wiki.glossary.terms.amparo.term'),
@@ -118,7 +118,7 @@ const glossaryTerms = (t: any): GlossaryTerm[] => [
   }
 ];
 
-const categories = (t: any) => [
+const categories = (t: (key: string) => string) => [
   t('wiki.glossary.categories.all'),
   t('wiki.glossary.categories.constitutional'),
   t('wiki.glossary.categories.civil'),

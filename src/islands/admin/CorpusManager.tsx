@@ -333,7 +333,7 @@ export default function CorpusManager() {
           {validationResults.issues.length > 0 && (
             <div className="max-h-60 overflow-y-auto">
               <h4 className="text-sm font-medium mb-2">{t('admin.corpus.issues')}</h4>
-              {validationResults.issues.map((item: any) => (
+              {validationResults.issues.map((item: { documentId: string; issues: string[] }) => (
                 <div key={item.documentId} className="text-sm mb-2">
                   <span className="font-mono">{item.documentId}:</span>
                   <ul className="ml-4 text-red-600">
