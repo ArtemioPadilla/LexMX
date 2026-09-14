@@ -2009,5 +2009,12 @@
     "installed": "installed",
     "pending": "pending",
     "localNote": "The library lives in IndexedDB (lexmx_vectors). Nothing is sent to any server."
+  },
+  "news": {
+    "title": "What's new",
+    "sinceVisit": "reforms since your last visit ({{date}})",
+    "lastDays": "reforms in the last {{days}} days",
+    "reformed": "Reform",
+    "source": "Reform dates from the DOF as recorded in the installed corpus. Verify at the official source."
   }
 }

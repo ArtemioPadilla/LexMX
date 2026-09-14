@@ -53,6 +53,7 @@ reinstalación.
 | `webllm_loaded_models` | modelos WebLLM descargados | `src/lib/llm/providers/webllm-provider.ts` |
 | `lexmx_document_requests` | solicitudes de documentos creadas en este navegador, votos y comentarios locales (`{ requests, votes, comments }`) | `src/lib/document-requests/request-store.ts` |
 | `lexmx_jurisdiction` | código de jurisdicción activa (`mx`, `cl`, …); ausente ⇒ `mx` | `src/stores/jurisdiction.ts` |
+| `lexmx_last_visit` | ISO de la última visita, para "Novedades" (reformas posteriores) | `src/islands/RecentReformsIsland.tsx` |
 | `lexmx_kdf_salt` | sal PBKDF2 por instalación (base64, 16 bytes). Borrarla hace ilegibles los payloads versión 2 | `src/lib/security/encryption.ts` |
 | `lexmx_request_voter_id` | id anónimo aleatorio para evitar votos duplicados; nunca se envía | `src/lib/document-requests/request-store.ts` |
 

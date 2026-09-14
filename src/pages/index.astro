@@ -2,6 +2,7 @@
 // Landing page for LexMX
 import BaseLayout from '../components/layout/BaseLayout.astro';
 import { getUrl } from '../utils/urls';
+import RecentReformsIsland from '../islands/RecentReformsIsland.tsx';
 ---
 
 <BaseLayout title="LexMX - Asistente Legal Mexicano con IA">
@@ -94,6 +95,8 @@ import { getUrl } from '../utils/urls';
     </section>
 
     <!-- Features Section -->
+    <div class="py-6 bg-white dark:bg-gray-900"><RecentReformsIsland client:only="react" /></div>
+
     <section id="features" class="py-20 bg-white dark:bg-gray-900">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
