@@ -1,5 +1,10 @@
 # Evaluación de recuperación (plan § 11.4 F, benchmark abierto)
 
+Un conjunto por corpus: `mx-federal/` (México, línea base en `evals/baseline.json`) y
+`cl-nacional/` (Chile, `evals/cl-nacional/baseline.json`, corpus de
+`npm run corpus:import:cl`). `npm run eval:retrieval:cl -- --corpus … --embeddings …`
+corre el chileno; `--cases` y `--baseline` eligen cualquier otro.
+
 `mx-federal/retrieval.jsonl`: una línea por caso, con la pregunta en lenguaje
 natural y el artículo que debe aparecer entre los primeros resultados. Los
 casos cubren la Constitución y las leyes federales de la oleada 1 (laboral,

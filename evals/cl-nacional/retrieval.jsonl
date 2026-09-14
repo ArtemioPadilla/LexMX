@@ -1,0 +1,24 @@
+{"id":"cl-cpr-19","query":"¿Qué derechos asegura la Constitución chilena a todas las personas?","expect":{"doc":"cl-cpr","article":"19"},"area":"constitutional"}
+{"id":"cl-cpr-1","query":"¿Qué dice la Constitución de Chile sobre que las personas nacen libres e iguales y la familia como núcleo de la sociedad?","expect":{"doc":"cl-cpr","article":"1"},"area":"constitutional"}
+{"id":"cl-cpr-5","query":"¿En quién reside la soberanía según la Constitución chilena y cómo se ejerce?","expect":{"doc":"cl-cpr","article":"5"},"area":"constitutional"}
+{"id":"cl-ct-22","query":"¿Cuántas horas semanales dura la jornada ordinaria de trabajo en Chile?","expect":{"doc":"cl-ct","article":"22"},"area":"labor"}
+{"id":"cl-ct-161","query":"¿Puede el empleador despedir por necesidades de la empresa en Chile?","expect":{"doc":"cl-ct","article":"161"},"area":"labor"}
+{"id":"cl-ct-163","query":"¿Cuánto es la indemnización por años de servicio cuando se despide por necesidades de la empresa?","expect":{"doc":"cl-ct","article":"163"},"area":"labor"}
+{"id":"cl-ct-7","query":"¿Qué es el contrato individual de trabajo según el Código del Trabajo chileno?","expect":{"doc":"cl-ct","article":"7"},"area":"labor"}
+{"id":"cl-ct-159","query":"¿En qué casos termina el contrato de trabajo, como mutuo acuerdo o renuncia con aviso de treinta días?","expect":{"doc":"cl-ct","article":"159"},"area":"labor"}
+{"id":"cl-ct-184","query":"¿Qué obligación tiene el empleador de proteger la vida y salud de los trabajadores?","expect":{"doc":"cl-ct","article":"184"},"area":"labor"}
+{"id":"cl-cc-1545","query":"¿Todo contrato legalmente celebrado es una ley para los contratantes?","expect":{"doc":"cl-cc","article":"1545"},"area":"civil"}
+{"id":"cl-cc-2314","query":"¿Quién comete un delito o cuasidelito que causa daño a otro está obligado a indemnizar?","expect":{"doc":"cl-cc","article":"2314"},"area":"civil"}
+{"id":"cl-cc-1793","query":"¿Qué es la compraventa según el Código Civil chileno?","expect":{"doc":"cl-cc","article":"1793"},"area":"civil"}
+{"id":"cl-cp-391","query":"¿Cuál es la pena del homicidio simple en Chile?","expect":{"doc":"cl-cp","article":"391"},"area":"criminal"}
+{"id":"cl-cp-432","query":"¿Qué diferencia hay entre robo y hurto según el Código Penal chileno?","expect":{"doc":"cl-cp","article":"432"},"area":"criminal"}
+{"id":"cl-cp-1","query":"¿Qué es delito según el Código Penal de Chile?","expect":{"doc":"cl-cp","article":"1"},"area":"criminal"}
+{"id":"cl-lpc-3","query":"¿Cuáles son los derechos básicos del consumidor en Chile, como la libre elección y el derecho a información veraz?","expect":{"doc":"cl-lpc","article":"3"},"area":"consumer"}
+{"id":"cl-lpc-23","query":"¿Qué infracción comete el proveedor que actúa con negligencia y causa menoscabo al consumidor?","expect":{"doc":"cl-lpc","article":"23"},"area":"consumer"}
+{"id":"cl-lpd-4","query":"¿Cuándo puede tratarse datos personales en Chile, se requiere consentimiento del titular?","expect":{"doc":"cl-lpd","article":"4"},"area":"privacy"}
+{"id":"cl-lpd-12","query":"¿Tengo derecho a exigir información sobre mis datos personales a quien maneja un banco de datos?","expect":{"doc":"cl-lpd","article":"12"},"area":"privacy"}
+{"id":"cl-lbgma-10","query":"¿Qué proyectos deben someterse al sistema de evaluación de impacto ambiental en Chile?","expect":{"doc":"cl-lbgma","article":"10"},"area":"administrative"}
+{"id":"cl-cpp-93","query":"¿Qué derechos y garantías tiene el imputado en el proceso penal chileno?","expect":{"doc":"cl-cpp","article":"93"},"area":"criminal"}
+{"id":"cl-lir-52","query":"¿Sobre qué renta se paga el impuesto global complementario en Chile?","expect":{"doc":"cl-lir","article":"52"},"area":"tax"}
+{"id":"cl-ccom-3","query":"¿Cuáles son los actos de comercio según el Código de Comercio chileno?","expect":{"doc":"cl-ccom","article":"3"},"area":"commercial"}
+{"id":"cl-cpc-254","query":"¿Qué debe contener la demanda civil en Chile: designación del tribunal, nombre del demandante?","expect":{"doc":"cl-cpc","article":"254"},"area":"civil"}

@@ -113,12 +113,14 @@ function textOf(node: Node | undefined): string {
 
 // "Artículo 1.-", "Art. 2º.-", "Artículo 1.o", "Art.2.o", "Artículo 12 bis.-", "Artículo único.-".
 const ARTICLE_LEAD =
-  /^\s*Art(?:[íi]culo|\.)?\s*(\d+(?:\s*(?:bis|ter|qu[áa]ter|quinquies|sexies))?|[úu]nico|primero|segundo|tercero|cuarto|quinto|sexto|s[ée]ptimo|octavo|noveno|d[ée]cimo)(?:\s*\.?\s*[oº°])?\s*[.:-]*\s*/iu;
+  /^\s*Art(?:[íi]culo|\.)?\s*(\d+|[úu]nico|primero|segundo|tercero|cuarto|quinto|sexto|s[ée]ptimo|octavo|noveno|d[ée]cimo)(?:\s*\.?\s*[oº°](?![a-z]))?(?:\s*(bis|ter|qu[áa]ter|quinquies|sexies)\b)?(?:\s*\.?\s*[oº°](?![a-z]))?\s*[.:-]*\s*/iu;
 
-/** "Artículo 12 bis.-" → "12 bis"; "Artículo único." → "único". */
+/** "Artículo 12 bis.-" → "12 bis"; "Artículo 3º bis.-" → "3 bis"; "Artículo único." → "único". */
 export function articleNumber(text: string): string | null {
   const m = ARTICLE_LEAD.exec(text);
-  return m ? m[1]!.replace(/\s+/g, ' ').trim().toLowerCase() : null;
+  if (!m) return null;
+  const base = m[1]!.trim().toLowerCase();
+  return m[2] ? `${base} ${m[2].toLowerCase()}` : base;
 }
 
 function slug(s: string): string {

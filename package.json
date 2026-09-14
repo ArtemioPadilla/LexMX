@@ -45,7 +45,8 @@
     "mobile:ios:init": "npx --yes @tauri-apps/cli@^2 ios init",
     "mobile:ios:dev": "npx --yes @tauri-apps/cli@^2 ios dev",
     "mobile:ios:build": "npx --yes @tauri-apps/cli@^2 ios build",
-    "corpus:import:cl": "node --experimental-strip-types scripts/corpus/import-leychile.ts"
+    "corpus:import:cl": "node --experimental-strip-types scripts/corpus/import-leychile.ts",
+    "eval:retrieval:cl": "node --experimental-strip-types scripts/eval/retrieval.ts --cases evals/cl-nacional/retrieval.jsonl --baseline evals/cl-nacional/baseline.json --out evals/results"
   },
   "dependencies": {
     "@astrojs/react": "^5.0.7",

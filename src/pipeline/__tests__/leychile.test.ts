@@ -43,6 +43,9 @@ describe('leychile adapter', () => {
     expect(articleNumber('Artículo único.- texto')).toBe('único');
     expect(articleNumber('Artículo 1.o Las relaciones')).toBe('1');
     expect(articleNumber('Art.2.o Reconócese')).toBe('2');
+    expect(articleNumber('Artículo 3º bis.- El consumidor')).toBe('3 bis');
+    expect(articleNumber('Artículo 20 BIS.- DEROGADO')).toBe('20 bis');
+    expect(articleNumber('Artículo 1º.- Las personas')).toBe('1');
     expect(articleNumber('Nada')).toBeNull();
   });
 

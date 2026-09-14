@@ -48,7 +48,7 @@ migración).
 - `.claude/agents/` — `prometeo`, `forja`, `centinela`; `.claude/checklists/` — ethics, governance, forbidden imports
 - `scripts/` — `doctor.sh`, `ship.sh`, `monday.sh`, `new-issue.sh`, `ratchet.mjs`, `check-ts-pragmas.mjs`, `corpus/` (LegalIA import, LeyChile import, per-document embeddings), `eval/retrieval.ts`, `mcp/server.ts` (local MCP server over the corpus), `smoke/` (Chromium smoke tests against `dist/`)
 - `supabase/` — optional server (plan § 11.9): `migrations/` (RLS on every table), `functions/` (Deno Edge Functions), `README.md`; invariants tested in `src/test/supabase-schema.test.ts`
-- `evals/` — retrieval golden set per corpus (`mx-federal/retrieval.jsonl`) and results
+- `evals/` — retrieval golden sets per corpus (`mx-federal/`, `cl-nacional/`) with one baseline each, and results
 - `public/office/manifest.xml` + `src/pages/office/taskpane.astro` — Word add-in (same chat as a task pane, Office.js only talks to the document)
 - `docs/SECURITY-PROGRAM.md` (ISO 27001/42001 control map for the optional server), `docs/COMMUNITY.md` (allied firms and student clinics)
 

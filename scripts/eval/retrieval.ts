@@ -150,7 +150,8 @@ async function main() {
   console.log('\n' + JSON.stringify(summary, null, 2));
   console.log(`\n→ ${file}`);
 
-  const baselinePath = resolve('evals/baseline.json');
+  // One baseline per corpus: --baseline evals/<corpus>/baseline.json (default: the Mexican federal set).
+  const baselinePath = resolve(arg('baseline', 'evals/baseline.json')!);
   if (existsSync(baselinePath)) {
     const baseline = JSON.parse(readFileSync(baselinePath, 'utf8')) as { articleRecallAt5: number };
     if (summary.article.recallAt5 + 1e-9 < baseline.articleRecallAt5) {
