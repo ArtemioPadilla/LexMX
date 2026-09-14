@@ -7,7 +7,7 @@ import type { RAGProgressEvent, RAGSearchResult } from '@/types/embeddings';
 
 import { IndexedDBVectorStore } from '@/lib/storage/indexeddb-vector-store';
 import { HybridSearchEngine } from './hybrid-search';
-import { rankCorpusResults } from './ranking';
+import { rankCorpusResults, rerankLexical } from './ranking';
 import { MexicanLegalDocumentProcessor } from '@/lib/legal/document-processor';
 import { providerManager } from '@/lib/llm/provider-manager';
 import { promptBuilder } from '@/lib/llm/prompt-builder';
@@ -689,9 +689,9 @@ export class LegalRAGEngine extends EventEmitter {
     corpusFilter?: CorpusFilter
   ): Promise<{ results: SearchResult[]; grounded: boolean }> {
     const filtered = hasCorpusFilter(corpusFilter);
-    // Over-fetch when a filter is active so post-filtering still yields
-    // maxResults; always over-fetch a little so ranking rules can demote.
-    const topK = filtered ? maxResults * 4 : maxResults * 2;
+    // Over-fetch so ranking rules can demote and the lexical re-ranker can
+    // promote (see ranking.ts); more when a filter will discard results.
+    const topK = Math.max(30, filtered ? maxResults * 8 : maxResults * 6);
     if (this.useRealEmbeddings) {
       // The installed corpus lives in the vector store (IndexedDB); the
       // in-memory VectorSearch only holds documents indexed ad hoc.
@@ -700,7 +700,7 @@ export class LegalRAGEngine extends EventEmitter {
         topK,
         scoreThreshold: this.config.similarityThreshold
       });
-      const results = applyCorpusFilter(rankCorpusResults(raw), corpusFilter).slice(0, maxResults);
+      const results = applyCorpusFilter(rerankLexical(rankCorpusResults(raw), processedQuery.originalQuery), corpusFilter).slice(0, maxResults);
       return { results, grounded: results.length > 0 };
     }
     const fallback = await this.retrieveRelevantDocuments(processedQuery, topK);

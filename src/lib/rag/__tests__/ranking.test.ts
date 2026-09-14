@@ -23,3 +23,37 @@ describe('rankCorpusResults', () => {
     expect(input[0]?.score).toBe(0.9);
   });
 });
+
+import { ARTICLE_MENTION_BOOST, LEXICAL_WEIGHT, lexicalOverlap, mentionedArticles, queryTerms, rerankLexical } from '../ranking';
+
+describe('lexical re-ranking', () => {
+  it('extracts content terms with light stemming and no stopwords', () => {
+    expect(queryTerms('¿Cuáles son las causas de rescisión sin responsabilidad para el patrón?')).toEqual(['causa', 'rescision', 'responsabilidad', 'patron']);
+    expect(queryTerms('artículo 47 de la ley')).toEqual([]);
+  });
+
+  it('measures overlap by prefix, accent-insensitive', () => {
+    const terms = queryTerms('indemnización por años de servicio');
+    expect(lexicalOverlap(terms, 'deberá pagar la INDEMNIZACIÓN por años de servicio')).toBe(1);
+    expect(lexicalOverlap(terms, 'nada que ver')).toBe(0);
+    expect(lexicalOverlap([], 'x')).toBe(0);
+  });
+
+  it('finds article numbers named in the query', () => {
+    expect(mentionedArticles('qué dice el artículo 47 y el art. 17-H bis')).toEqual(['47', '17-h bis']);
+  });
+
+  it('promotes chunks with lexical evidence and the mentioned article', () => {
+    const base = { title: 'LFT', type: 'law', legalArea: 'labor', hierarchy: 3, lastUpdated: '' };
+    const out = rerankLexical(
+      [
+        { id: 'a', content: 'Disposiciones generales sobre el trabajo digno.', score: 0.90, metadata: { ...base, article: '2' } },
+        { id: 'b', content: 'Son causas de rescisión de la relación de trabajo, sin responsabilidad para el patrón: engañar…', score: 0.88, metadata: { ...base, article: '47' } },
+      ],
+      '¿Qué dice el artículo 47 sobre las causas de rescisión sin responsabilidad para el patrón?',
+    );
+    expect(out[0]?.id).toBe('b');
+    expect(out[0]?.score).toBeCloseTo(0.88 + LEXICAL_WEIGHT * 1 + ARTICLE_MENTION_BOOST, 5);
+    expect(out[1]?.score).toBeCloseTo(0.90, 5);
+  });
+});

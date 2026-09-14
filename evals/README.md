@@ -40,6 +40,10 @@ El benchmark aplica las mismas reglas que `src/lib/rag/ranking.ts` y que
   navegación y desplazaban artículos reales en consultas cortas.
 - Los artículos transitorios (marcados `transitory: true` por el pipeline)
   se penalizan ×0.92 para que no superen al texto permanente que reforman.
+- Re-ranking léxico sobre los 60 mejores por coseno: + 0.08 × fracción de
+  términos de la consulta presentes en el chunk y + 0.06 si la consulta nombra
+  el número de artículo del chunk (`rerankLexical`). Subió el recall@5 por
+  artículo de 0.81 a 0.88 en México y de 0.71 a 0.79 en Chile sin tocar el modelo.
 - Las consultas llevan el prefijo `query: ` de multilingual-e5 (el corpus se
   embebe como pasajes sin prefijo); el motor hace lo mismo con
   `embedQuery`.
@@ -51,8 +55,9 @@ El benchmark aplica las mismas reglas que `src/lib/rag/ranking.ts` y que
 | 2026-09-14 | 14 leyes | 1.00 | 0.79 | 0.93 | `results/mx-federal-2026-09-14.json` |
 | 2026-09-14 | 39 leyes, solo artículos, transitorios ×0.92 | 0.98 | 0.81 | 0.93 | `results/mx-federal-39-2026-09-14.json` |
 | 2026-09-14 | Chile, 11 normas (24 casos) | 1.00 | 0.71 | 0.83 | `results/cl-nacional-2026-09-14.json` |
+| 2026-09-14 | 39 leyes + re-ranking léxico | 1.00 | 0.88 | 0.91 | `results/mx-federal-39-lexical-2026-09-14.json` |
+| 2026-09-14 | Chile + re-ranking léxico | 1.00 | 0.79 | 0.92 | `results/cl-nacional-lexical-2026-09-14.json` |
 
-Las áreas más débiles son fiscal (0.60) y administrativa (0/2): el modelo
-`e5-small` confunde artículos vecinos con numeración compuesta (`17-H`,
-`93`) y las consultas de transparencia. Candidatos: embeddings afinados en
-español jurídico (línea F) y re-ranking léxico por número de artículo.
+Lo que queda por debajo (fiscal en México, penal en Chile) son artículos
+vecinos con numeración compuesta y textos largos partidos en varias partes.
+Siguiente palanca: embeddings afinados en español jurídico (línea F).

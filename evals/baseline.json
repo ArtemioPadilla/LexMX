@@ -1,8 +1,8 @@
 {
-  "articleRecallAt5": 0.813,
-  "documentRecallAt5": 0.976,
+  "articleRecallAt5": 0.88,
+  "documentRecallAt5": 1.0,
   "cases": 43,
-  "corpus": "mx-federal (39 leyes, LegalIA; índice solo de artículos, transitorios ×0.92)",
+  "corpus": "mx-federal (39 leyes, LegalIA; índice solo de artículos, transitorios ×0.92, re-ranking léxico)",
   "model": "Xenova/multilingual-e5-small",
   "setAt": "2026-09-14"
 }

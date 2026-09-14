@@ -22,10 +22,14 @@ function arg(name: string, fallback?: string): string | undefined {
 }
 
 interface Case { id: string; query: string; expect: { doc: string; article: string }; area?: string }
-interface Chunk { id: string; doc: string; article?: string; transitory?: boolean; embedding: number[] }
+interface Chunk { id: string; doc: string; article?: string; transitory?: boolean; text: string; embedding: number[] }
+import { rerankLexical } from '../../src/lib/rag/ranking.ts';
+
 /** Transitorios rank below the permanent text they amend (mirrors the engine). */
 const TRANSITORY_PENALTY = 0.92;
-interface CorpusDoc { id: string; content?: Array<{ id?: string; type: string; number?: string; transitory?: boolean }> }
+const CANDIDATES = 60;
+const LEXICAL = process.env.EVAL_LEXICAL !== '0';
+interface CorpusDoc { id: string; content?: Array<{ id?: string; type: string; number?: string; transitory?: boolean; content?: string }> }
 interface EmbeddingsIndex { documents?: Record<string, { file: string }>; batchFiles?: number }
 
 const corpusDir = resolve(arg('corpus', 'build/corpus/legal-corpus')!);
@@ -71,7 +75,7 @@ function loadChunks(): Chunk[] {
       if (type && type !== 'article') continue; // structural headers are navigation, not answers (build-embeddings skips them too)
       const article = r.metadata?.article ?? (section?.type === 'article' ? section.number : undefined);
       const transitory = r.metadata?.transitory ?? section?.transitory ?? (section?.id?.includes('-trans-') || undefined);
-      chunks.push({ id: r.id, doc: docId, article, transitory, embedding: r.embedding });
+      chunks.push({ id: r.id, doc: docId, article, transitory, text: section?.content ?? '', embedding: r.embedding });
     }
   }
   void articleOf;
@@ -105,7 +109,13 @@ async function main() {
     }
     const out = await extractor(`query: ${c.query}`, { pooling: 'mean', normalize: true });
     const q = Array.from(out.data as Float32Array);
-    const ranked = chunks.map((ch) => ({ ch, score: dot(q, ch.embedding) * (ch.transitory ? TRANSITORY_PENALTY : 1) })).sort((a, b) => b.score - a.score).slice(0, k);
+    // Cosine over the whole index, then lexical re-ranking of the top candidates (same rules as src/lib/rag/ranking.ts).
+    const candidates = chunks.map((ch) => ({ ch, score: dot(q, ch.embedding) * (ch.transitory ? TRANSITORY_PENALTY : 1) })).sort((a, b) => b.score - a.score).slice(0, CANDIDATES);
+    const reranked = LEXICAL
+      ? rerankLexical(candidates.map((r) => ({ id: r.ch.id, content: r.ch.text, score: r.score, metadata: { title: '', type: 'law', legalArea: '', hierarchy: 3, lastUpdated: '', article: r.ch.article } })), c.query)
+      : candidates.map((r) => ({ id: r.ch.id, score: r.score }));
+    const byId = new Map(candidates.map((r) => [r.ch.id, r.ch]));
+    const ranked = reranked.slice(0, k).map((r) => ({ ch: byId.get(r.id)!, score: r.score }));
     const docRank = ranked.findIndex((r) => r.ch.doc === c.expect.doc);
     const articleRank = ranked.findIndex((r) => r.ch.doc === c.expect.doc && normalizeArticle(r.ch.article) === normalizeArticle(c.expect.article));
     results.push({
