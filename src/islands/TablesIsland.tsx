@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Callout } from '@/components/ui/callout';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { SaveToCase } from '@/components/SaveToCase';
 import ErrorBoundary from './ErrorBoundary';
 
 export default function TablesIsland() {
@@ -68,12 +69,16 @@ function Inner() {
     setDocs((d) => [...d, ...loaded]);
   }
 
-  function exportCsv() {
+  function csv(): string {
     const merged = rows.map((r) => ({
       ...r,
       cells: Object.fromEntries(specs.map((s) => [s.id, { value: cellValue(r, s), offset: 0, context: '' }])),
     }));
-    downloadBlob(new Blob(['﻿' + rowsToCsv(specs, merged)], { type: 'text/csv;charset=utf-8' }), 'revision.csv');
+    return rowsToCsv(specs, merged);
+  }
+
+  function exportCsv() {
+    downloadBlob(new Blob(['\ufeff' + csv()], { type: 'text/csv;charset=utf-8' }), 'revision.csv');
   }
 
   const helper = createColumnHelper<ExtractedRow>();
@@ -139,6 +144,7 @@ function Inner() {
           {docs.length > 0 && (
             <>
               <Button size="sm" onClick={exportCsv}><DownloadIcon className="mr-1 h-4 w-4" aria-hidden="true" />{t('tables.exportCsv')}</Button>
+              <SaveToCase name="revision.csv" type="text/csv" tag="tabla" content={csv} />
               <Button size="sm" variant="ghost" onClick={() => { setDocs([]); setOverrides({}); }}>{t('tables.clear')}</Button>
             </>
           )}

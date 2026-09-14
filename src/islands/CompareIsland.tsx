@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Callout } from '@/components/ui/callout';
 import { cn } from '@/lib/cn';
+import { SaveToCase } from '@/components/SaveToCase';
 import ErrorBoundary from './ErrorBoundary';
 
 export default function CompareIsland() {
@@ -92,6 +93,7 @@ function Inner() {
               <Button size="sm" variant={view === 'split' ? 'default' : 'outline'} onClick={() => setView('split')}><ArrowLeftRightIcon className="mr-1 h-4 w-4" aria-hidden="true" />{t('compare.viewSplit')}</Button>
               <Button size="sm" variant="outline" onClick={() => { setPendingPrompt(t('compare.explainPrompt', { diff: toUnifiedText(result, leftName || 'A', rightName || 'B').slice(0, 12000) })); window.location.href = getUrl('chat'); }}><MessageSquareIcon className="mr-1 h-4 w-4" aria-hidden="true" />{t('compare.explain')}</Button>
               <Button size="sm" variant="outline" onClick={() => void copyDiff()}><CopyIcon className="mr-1 h-4 w-4" aria-hidden="true" />{copied ? t('compare.copied') : t('compare.copyDiff')}</Button>
+              <SaveToCase name={`comparacion-${(leftName || 'A').replace(/\.[^.]+$/, '')}-vs-${(rightName || 'B').replace(/\.[^.]+$/, '')}.diff`} type="text/x-diff" tag="comparacion" content={() => toUnifiedText(result, leftName || 'A', rightName || 'B')} />
               <Button size="sm" variant="ghost" onClick={() => { setLeft(''); setRight(''); setLeftName(''); setRightName(''); }}><Trash2Icon className="mr-1 h-4 w-4" aria-hidden="true" />{t('compare.clear')}</Button>
             </div>
           </div>

@@ -2262,5 +2262,13 @@
     "extracting": "Extracting {{name}}…",
     "fileError": "Could not read {{name}}: {{error}}",
     "privacy": "Extraction is deterministic (no model): every cell comes from a match in the text and shows its context on hover."
+  },
+  "saveToCase": {
+    "button": "Save to case",
+    "pick": "Case",
+    "confirm": "Save",
+    "cancel": "Cancel",
+    "saved": "Saved to “{{title}}”.",
+    "noCases": "You have no cases; create one in My Cases."
   }
 }

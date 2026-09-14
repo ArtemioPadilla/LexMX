@@ -2262,5 +2262,13 @@
     "extracting": "Extrayendo {{name}}…",
     "fileError": "No se pudo leer {{name}}: {{error}}",
     "privacy": "La extracción es determinista (sin modelo): cada celda viene de una coincidencia en el texto y muestra su contexto al pasar el cursor."
+  },
+  "saveToCase": {
+    "button": "Guardar en expediente",
+    "pick": "Expediente",
+    "confirm": "Guardar",
+    "cancel": "Cancelar",
+    "saved": "Guardado en «{{title}}».",
+    "noCases": "No tienes expedientes; crea uno en Mis Casos."
   }
 }

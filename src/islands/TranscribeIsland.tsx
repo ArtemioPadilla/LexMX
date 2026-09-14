@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Textarea } from '@/components/ui/textarea';
 import { ProgressBar } from '@/components/ui/progress-bar';
+import { SaveToCase } from '@/components/SaveToCase';
 import ErrorBoundary from './ErrorBoundary';
 
 export default function TranscribeIsland() {
@@ -129,6 +130,7 @@ function Inner() {
             <div className="ml-auto flex gap-1">
               <Button size="sm" variant="outline" onClick={() => { void navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }); }}><CopyIcon className="mr-1 h-4 w-4" aria-hidden="true" />{copied ? t('transcribe.copied') : t('transcribe.copy')}</Button>
               <Button size="sm" variant="outline" onClick={() => downloadBlob(new Blob([text], { type: 'text/plain;charset=utf-8' }), 'transcripcion.txt')}><DownloadIcon className="mr-1 h-4 w-4" aria-hidden="true" />{t('transcribe.download')}</Button>
+              <SaveToCase name="transcripcion.txt" type="text/plain" tag="transcripcion" content={() => text} />
             </div>
           </div>
           <Textarea rows={12} value={text} onChange={(e) => setText(e.target.value)} className="font-mono text-xs" aria-label={t('transcribe.result')} />
