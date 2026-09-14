@@ -80,6 +80,7 @@ export default [
     ignores: [
       'scripts/**',
       'tests/**',
+      'supabase/**', // Deno edge functions: not part of the browser bundle
       'dist/**',
       'node_modules/**',
       '.astro/**',

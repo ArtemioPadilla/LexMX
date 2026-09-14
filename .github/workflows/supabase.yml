@@ -1,0 +1,60 @@
+name: 🗄️ Supabase migrations
+
+# Plan § 11.9 (Inceptor recipe `supabase-migrations-ci.md`). Applies
+# `supabase/migrations/**` to the linked project on push to main. Requires:
+#   Variables: SUPABASE_PROJECT_REF (public, it is in the project URL)
+#   Secrets:   SUPABASE_ACCESS_TOKEN (Account → Access Tokens, `sbp_…`),
+#              SUPABASE_DB_PASSWORD  (Project Settings → Database)
+# Without SUPABASE_PROJECT_REF the job exits early: the site keeps working in
+# local-first mode and nothing breaks.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/functions/**'
+      - '.github/workflows/supabase.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-migrate
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Push schema and deploy functions
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+    steps:
+      - name: Check configuration
+        id: cfg
+        run: |
+          if [ -z "$PROJECT_REF" ] || [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::notice::Supabase not configured (SUPABASE_PROJECT_REF / SUPABASE_ACCESS_TOKEN); skipping."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        if: steps.cfg.outputs.enabled == 'true'
+      - uses: supabase/setup-cli@v1
+        if: steps.cfg.outputs.enabled == 'true'
+        with:
+          version: latest
+      - name: Link project
+        if: steps.cfg.outputs.enabled == 'true'
+        run: supabase link --project-ref "$PROJECT_REF" -p "$SUPABASE_DB_PASSWORD"
+      - name: Apply migrations
+        if: steps.cfg.outputs.enabled == 'true'
+        run: supabase db push -p "$SUPABASE_DB_PASSWORD"
+      - name: Deploy Edge Functions
+        if: steps.cfg.outputs.enabled == 'true'
+        run: supabase functions deploy --project-ref "$PROJECT_REF"

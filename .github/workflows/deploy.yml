@@ -77,6 +77,9 @@ jobs:
           ASTRO_BASE: ${{ vars.ASTRO_BASE || '/LexMX' }}
           PUBLIC_REPO_SLUG: ${{ vars.PUBLIC_REPO_SLUG || 'ArtemioPadilla/LexMX' }}
           PUBLIC_BUILD_SHA: ${{ github.sha }}
+          # Optional server (plan § 11.9). Empty => the UI shows "servidor no configurado" (local-first mode).
+          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
         
       - name: 📄 Ensure .nojekyll file in dist
         run: |

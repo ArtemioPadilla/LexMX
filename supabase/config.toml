@@ -1,0 +1,41 @@
+# Supabase CLI config (plan § 11.9). The project ref is NOT committed: the
+# migrations workflow links with `vars.SUPABASE_PROJECT_REF`. Local dev uses
+# `supabase start` with these defaults.
+project_id = "lexmx"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 15
+
+[auth]
+enabled = true
+site_url = "http://localhost:4321/LexMX/"
+additional_redirect_urls = ["http://localhost:4321/**", "https://artemiopadilla.github.io/LexMX/**"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = true
+
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[edge_runtime]
+enabled = true
