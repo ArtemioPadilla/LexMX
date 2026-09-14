@@ -579,7 +579,10 @@
       "title": "LexMX answer flagged as not helpful",
       "thanks": "Thanks for your feedback"
     },
-    "warningTitle": "Notice"
+    "warningTitle": "Notice",
+    "jurisdiction": "Jurisdiction",
+    "jurisdictionHint": "Answers are limited to this jurisdiction's corpus",
+    "corpusPending": "corpus pending"
   },
   "setup": {
     "title": "AI Provider Setup",

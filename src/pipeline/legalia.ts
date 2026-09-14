@@ -409,6 +409,7 @@ export function toLegalDocument(meta: InstrumentMeta, snapshotMarkdown: string):
     publicationDate,
     status: statusFromVigencia(meta.vigencia),
     territorialScope: 'federal',
+    jurisdiction: 'mx',
     applicability: meta.resumen?.trim() || `Legislación federal: ${humanizeTitle(nombre)}`,
     content,
     fullText,

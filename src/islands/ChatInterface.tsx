@@ -18,6 +18,8 @@ import { buildIssueUrl } from '@/lib/report-issue';
 import { useTranslation } from '@/i18n';
 import { TEST_IDS } from '@/utils/test-ids';
 import { $corpusInstall } from '@/stores/corpus';
+import { $jurisdictionCode, setJurisdiction } from '@/stores/jurisdiction';
+import { listJurisdictions } from '@/jurisdictions';
 import { $chatMessages, $chatMode, appendMessage, nextMessageId, resetThread, updateMessage, type ChatMessage as ThreadMessage, type ChatMode } from '@/stores/chat';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
@@ -63,6 +65,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
   const messages = useStore($chatMessages);
   const mode = useStore($chatMode);
   const corpus = useStore($corpusInstall);
+  const jurisdiction = useStore($jurisdictionCode);
 
   const [currentInput, setCurrentInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -169,7 +172,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
           legalArea: selectedArea || undefined,
           includeReferences: true,
           maxResults: MODE_RESULTS[mode],
-          corpusFilter: corpusSelection.areas.length > 0 || corpusSelection.documents.length > 0 ? corpusSelection : undefined,
+          corpusFilter: { ...corpusSelection, jurisdiction },
           abortSignal: abortControllerRef.current.signal,
         },
       );
@@ -246,6 +249,17 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
             </p>
           </div>
           <div className="flex items-center gap-1">
+            <select
+              aria-label={t('chat.jurisdiction')}
+              title={t('chat.jurisdictionHint')}
+              value={jurisdiction}
+              onChange={(e) => setJurisdiction(e.target.value)}
+              className="mr-2 h-8 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {listJurisdictions().map((j) => (
+                <option key={j.code} value={j.code}>{j.name}{j.code !== 'mx' ? ` · ${t('chat.corpusPending')}` : ''}</option>
+              ))}
+            </select>
             <div role="radiogroup" aria-label="Modo" className="mr-2 inline-flex rounded-lg border border-border p-0.5 text-xs">
               {(['ask', 'research'] as ChatMode[]).map((m) => (
                 <button

@@ -38,6 +38,8 @@ export interface DocumentMetadata {
   legalArea: string;
   hierarchy: number;
   lastUpdated: string;
+  /** Jurisdiction code ('mx', 'cl', …). Absent ⇒ 'mx'. */
+  jurisdiction?: string;
   url?: string;
   article?: string;
   // Lineage information

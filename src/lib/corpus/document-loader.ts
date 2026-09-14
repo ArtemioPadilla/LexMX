@@ -342,6 +342,7 @@ export class DocumentLoader {
         legalArea: doc.primaryArea,
         hierarchy: doc.hierarchy,
         lastUpdated: doc.publicationDate,
+        jurisdiction: doc.jurisdiction ?? 'mx',
         article: chunk.metadata?.article,
         url: doc.officialUrl,
         sourceInstitution: doc.authority,

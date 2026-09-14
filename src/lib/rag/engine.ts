@@ -50,6 +50,13 @@ export interface RAGEngineStatus {
 // A LegalResponse plus an explicit "was this actually grounded in retrieved
 // documents" flag, so callers never mistake a mock-corpus answer for one
 // backed by the real legal corpus. See `getStatus()` for the engine-level view.
+/** Restricts retrieval to areas, documents or a jurisdiction (plan § 11.2). */
+export interface CorpusFilter {
+  areas?: LegalArea[];
+  documents?: string[];
+  jurisdiction?: string;
+}
+
 export interface GroundedLegalResponse extends LegalResponse {
   grounded: boolean;
 }
@@ -220,10 +227,7 @@ export class LegalRAGEngine extends EventEmitter {
       maxResults?: number;
       includeReferences?: boolean;
       forceRefresh?: boolean;
-      corpusFilter?: {
-        areas?: LegalArea[];
-        documents?: string[];
-      };
+      corpusFilter?: CorpusFilter;
     } = {}
   ): Promise<GroundedLegalResponse> {
     if (!this.initialized) {
@@ -255,7 +259,7 @@ export class LegalRAGEngine extends EventEmitter {
       });
 
       // Retrieve relevant legal documents
-      const { results: searchResults, grounded } = await this.retrieveDocumentsForQuery(processedQuery, options.maxResults || 5);
+      const { results: searchResults, grounded } = await this.retrieveDocumentsForQuery(processedQuery, options.maxResults || 5, options.corpusFilter);
 
       // Build legal context
       this.emitProgress('context_building', 'active', 'Building legal context...');
@@ -324,10 +328,7 @@ export class LegalRAGEngine extends EventEmitter {
       includeReferences?: boolean;
       forceRefresh?: boolean;
       abortSignal?: AbortSignal;
-      corpusFilter?: {
-        areas?: LegalArea[];
-        documents?: string[];
-      };
+      corpusFilter?: CorpusFilter;
     } = {}
   ): Promise<GroundedLegalResponse> {
     if (!this.initialized) {
@@ -385,7 +386,7 @@ export class LegalRAGEngine extends EventEmitter {
       }
 
       // Retrieve relevant legal documents
-      const { results: searchResults, grounded } = await this.retrieveDocumentsForQuery(processedQuery, options.maxResults || 5);
+      const { results: searchResults, grounded } = await this.retrieveDocumentsForQuery(processedQuery, options.maxResults || 5, options.corpusFilter);
 
       // Emit document search completed with results
       this.emitProgress('document_search', 'completed', `Found ${searchResults.length} relevant documents`, {
@@ -639,14 +640,19 @@ export class LegalRAGEngine extends EventEmitter {
    */
   private async retrieveDocumentsForQuery(
     processedQuery: ProcessedQuery,
-    maxResults: number
+    maxResults: number,
+    corpusFilter?: CorpusFilter
   ): Promise<{ results: SearchResult[]; grounded: boolean }> {
+    const filtered = hasCorpusFilter(corpusFilter);
+    // Over-fetch when a filter is active so post-filtering still yields maxResults.
+    const topK = filtered ? maxResults * 4 : maxResults;
     if (this.useRealEmbeddings) {
-      const ragResults = await this.vectorSearch.search(processedQuery.originalQuery, { topK: maxResults });
-      const results = this.convertRAGResultsToSearchResults(ragResults);
+      const ragResults = await this.vectorSearch.search(processedQuery.originalQuery, { topK });
+      const results = applyCorpusFilter(this.convertRAGResultsToSearchResults(ragResults), corpusFilter).slice(0, maxResults);
       return { results, grounded: results.length > 0 };
     }
-    return this.retrieveRelevantDocuments(processedQuery, maxResults);
+    const fallback = await this.retrieveRelevantDocuments(processedQuery, topK);
+    return { ...fallback, results: applyCorpusFilter(fallback.results, corpusFilter).slice(0, maxResults) };
   }
 
   /**
@@ -1132,3 +1138,19 @@ El amparo protege a las personas contra:
 }
 
 export default LegalRAGEngine;
+
+function hasCorpusFilter(filter?: CorpusFilter): boolean {
+  return Boolean(filter && ((filter.areas?.length ?? 0) > 0 || (filter.documents?.length ?? 0) > 0 || filter.jurisdiction));
+}
+
+/** Keeps results that match every active constraint. Chunk ids are `${docId}_chunk_${i}`. */
+export function applyCorpusFilter(results: SearchResult[], filter?: CorpusFilter): SearchResult[] {
+  if (!hasCorpusFilter(filter)) return results;
+  return results.filter((r) => {
+    const docId = r.id.replace(/_chunk_\d+$/, '');
+    if (filter!.documents?.length && !filter!.documents.includes(docId)) return false;
+    if (filter!.areas?.length && !filter!.areas.includes(r.metadata?.legalArea as LegalArea)) return false;
+    if (filter!.jurisdiction && (r.metadata?.jurisdiction ?? 'mx') !== filter!.jurisdiction) return false;
+    return true;
+  });
+}

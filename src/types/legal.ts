@@ -53,6 +53,8 @@ export interface LegalDocument {
   citations?: string[];
   
   // Metadata
+  /** Jurisdiction code from src/jurisdictions ('mx', 'cl', …). Absent ⇒ 'mx'. */
+  jurisdiction?: string;
   officialUrl?: string;
   relatedDependencies: string[];
   importance: 'critical' | 'high' | 'medium' | 'low';

@@ -579,7 +579,10 @@
       "title": "Respuesta de LexMX marcada como no útil",
       "thanks": "Gracias por tu feedback"
     },
-    "warningTitle": "Aviso"
+    "warningTitle": "Aviso",
+    "jurisdiction": "Jurisdicción",
+    "jurisdictionHint": "Las respuestas se limitan al corpus de esta jurisdicción",
+    "corpusPending": "corpus pendiente"
   },
   "setup": {
     "title": "Configuración de Proveedores IA",
