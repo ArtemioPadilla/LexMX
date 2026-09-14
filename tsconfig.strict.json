@@ -26,6 +26,8 @@
     "src/lib/corpus/**/*.ts",
     "src/lib/embeddings/**/*.ts",
     "src/lib/utils/**/*.ts",
+    "src/lib/rag/**/*.ts",
+    "src/lib/ingestion/**/*.ts",
     "src/jurisdictions/**/*.ts"
   ]
 }
