@@ -3,6 +3,17 @@
  * Handles push notification subscriptions and delivery for legal updates
  */
 
+/**
+ * `image` is a widely-supported Notification API extension (Chrome, Edge)
+ * that TypeScript's DOM lib doesn't declare on `NotificationOptions`. Extend
+ * locally instead of using `any`.
+ */
+interface ExtendedNotificationOptions extends NotificationOptions {
+  image?: string;
+  actions?: NotificationPayload['actions'];
+  timestamp?: number;
+}
+
 export interface NotificationPayload {
   title: string;
   body: string;
@@ -79,13 +90,9 @@ export class PushNotificationManager {
 
     try {
       this.registration = await navigator.serviceWorker.ready;
-      console.log('[PushNotifications] Service worker ready');
-      
+
       // Check existing subscription
       this.subscription = await this.registration.pushManager.getSubscription();
-      if (this.subscription) {
-        console.log('[PushNotifications] Existing subscription found');
-      }
     } catch (error) {
       console.error('[PushNotifications] Initialization failed:', error);
     }
@@ -121,7 +128,6 @@ export class PushNotificationManager {
     }
 
     const permission = await Notification.requestPermission();
-    console.log('[PushNotifications] Permission:', permission);
     
     if (permission === 'granted') {
       // Try to subscribe automatically after permission granted
@@ -169,10 +175,8 @@ export class PushNotificationManager {
 
       // Save subscription locally
       this.saveSubscriptionInfo(subscriptionInfo);
-      
+
       // In a real app, send subscription to your server
-      console.log('[PushNotifications] Subscribed:', subscriptionInfo);
-      
       return subscriptionInfo;
     } catch (error) {
       console.error('[PushNotifications] Subscription failed:', error);
@@ -193,7 +197,6 @@ export class PushNotificationManager {
       if (success) {
         this.subscription = null;
         this.clearSubscriptionInfo();
-        console.log('[PushNotifications] Unsubscribed successfully');
       }
       return success;
     } catch (error) {
@@ -211,8 +214,8 @@ export class PushNotificationManager {
     try {
       const saved = localStorage.getItem('lexmx_push_subscription');
       if (saved) {
-        const info = JSON.parse(saved);
-        // Convert date strings back to Date objects
+        const info: SubscriptionInfo = JSON.parse(saved);
+        // Convert date strings back to Date objects (JSON round-trips them as strings)
         info.createdAt = new Date(info.createdAt);
         info.lastActive = new Date(info.lastActive);
         return info;
@@ -241,10 +244,8 @@ export class PushNotificationManager {
     };
 
     this.saveSubscriptionInfo(updatedInfo);
-    
+
     // In a real app, update preferences on your server
-    console.log('[PushNotifications] Preferences updated:', updatedInfo.preferences);
-    
     return true;
   }
 
@@ -257,7 +258,7 @@ export class PushNotificationManager {
       return;
     }
 
-    const options: NotificationOptions = {
+    const options: ExtendedNotificationOptions = {
       body: payload.body,
       icon: payload.icon || '/favicon.svg',
       badge: payload.badge || '/favicon.svg',
@@ -451,14 +452,17 @@ export class PushNotificationManager {
 
   // Utility methods
 
-  private urlBase64ToUint8Array(base64String: string): Uint8Array {
+  private urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
       .replace(/-/g, '+')
       .replace(/_/g, '/');
 
     const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
+    // Explicitly allocate on an `ArrayBuffer` (not the wider `ArrayBufferLike`,
+    // which also covers `SharedArrayBuffer`) so the result satisfies the
+    // `BufferSource` the Push API's `applicationServerKey` expects.
+    const outputArray = new Uint8Array(new ArrayBuffer(rawData.length));
 
     for (let i = 0; i < rawData.length; ++i) {
       outputArray[i] = rawData.charCodeAt(i);
@@ -472,7 +476,7 @@ export class PushNotificationManager {
     const bytes = new Uint8Array(buffer);
     let binary = '';
     for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
+      binary += String.fromCharCode(bytes[i] ?? 0);
     }
     return window.btoa(binary);
   }

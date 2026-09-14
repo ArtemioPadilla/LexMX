@@ -406,7 +406,7 @@ Rama `claude/lex-inceptor-migration-analysis-qmg92a`. Cada fase se cierra con
 | 0 Congelar y limpiar | ✅ | Commit "Fase 0": PR #73 fusionado en la rama, basura y código muerto fuera, Dependabot y cron pausados |
 | 1 Upgrade en sitio | ✅ | Astro 5.18, React 19, Tailwind 4, Vitest 4, Node 22; capa API y quality borradas; `docs/DATA-COMPATIBILITY.md` |
 | 2 Capa Inceptor y ratchet | ✅ | Agentes, checklists, scripts, ErrorBoundary/HydrationCanary/FeedbackFAB, `ratchet.mjs`, `tsconfig.strict.json`, `ci.yml`, CLAUDE.md nuevo |
-| 3 Saneamiento del núcleo | 🔄 | Ola 1 (security, storage, legal, corpus, embeddings, utils) ✅ con tests y estricto; ola 2 (llm, rag, admin, ingestion, módulos menores, infraestructura de tests) en curso |
+| 3 Saneamiento del núcleo | ✅ | Ola 1 (security, storage, legal, corpus, embeddings, utils) y ola 2 (llm, rag, admin, ingestion, document-requests, document-viewer, offline, notifications, pwa, config, dev, i18n, infraestructura de tests) en estricto con tests reales. Los 32 errores de `tsc` que quedan viven en islas y componentes que reescriben las Fases 4 y 5 |
 | 4 Chat y configuración | 🔄 | Tokens semánticos shadcn/Inceptor y utilidades (`scroll-fade-y`, `shimmer`) en `global.css`; kit UI y primitivas de IA se instalan al cerrar la ola 2 |
 | 5 Resto de UI | ⏳ | |
 | 6 Corpus real | 🔄 | Importador desde LegalIA (`src/pipeline/legalia.ts`, `scripts/corpus/*`) probado con la LFT real; `corpus-update.yml` publica el release `corpus-latest` y `deploy.yml` lo consume; embeddings por documento (layout 2.1) y `CorpusInstaller` en el cliente: instala por shard, reanuda, omite la red si la versión ya está en IndexedDB y reporta progreso en `$corpusInstall` |
@@ -415,8 +415,9 @@ Rama `claude/lex-inceptor-migration-analysis-qmg92a`. Cada fase se cierra con
 | 11.9 Supabase | 🔄 | `supabase/` (6 migraciones con RLS, 4 Edge Functions, `supabase.yml`, test de invariantes); falta `src/lib/supabase.ts`, `$session` y las islas de cuenta |
 
 Métricas del ratchet: 584 → 234 (PR #73) → 171 (Fase 1) → 169 (Fase 2) → 123
-errores de `tsc` tras la ola 1; `any` 282 → 256; tests 502 → 410 reales tras
-borrar rutas API y casos obsoletos (todos verdes).
+errores de `tsc` tras la ola 1 → 32 tras la ola 2; `any` 282 → 256 → 20; tests
+502 → 410 reales tras borrar rutas API y casos obsoletos → 557 tras la ola 2
+(todos verdes).
 
 ## 9. Estado del arte comercial y complemento al plan
 

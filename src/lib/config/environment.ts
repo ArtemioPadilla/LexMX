@@ -316,16 +316,16 @@ class EnvironmentManager {
     
     // Deep merge configuration
     this.config = this.deepMerge(
-      this.getDefaultConfig(),
-      baseConfig,
-      userPreferences
-    ) as EnvironmentConfig;
+      this.getDefaultConfig() as unknown as Record<string, unknown>,
+      baseConfig as Record<string, unknown>,
+      userPreferences as Record<string, unknown>
+    ) as unknown as EnvironmentConfig;
     
     // Listen for user preference changes
     if (typeof window !== 'undefined') {
-      window.addEventListener('userPreferencesChanged', (event: CustomEvent) => {
+      window.addEventListener('userPreferencesChanged', ((event: CustomEvent<Partial<EnvironmentConfig>>) => {
         this.updateConfig(event.detail);
-      });
+      }) as EventListener);
     }
   }
   
@@ -367,30 +367,37 @@ class EnvironmentManager {
     };
   }
   
-  private deepMerge(target: any, ...sources: any[]): any {
+  private deepMerge(
+    target: Record<string, unknown>,
+    ...sources: Array<Record<string, unknown> | undefined>
+  ): Record<string, unknown> {
     if (!sources.length) return target;
     const source = sources.shift();
-    
-    if (this.isObject(target) && this.isObject(source)) {
+
+    if (source && this.isObject(target) && this.isObject(source)) {
       for (const key in source) {
-        if (this.isObject(source[key])) {
+        const sourceValue = source[key];
+        if (this.isObject(sourceValue)) {
           if (!target[key]) Object.assign(target, { [key]: {} });
-          this.deepMerge(target[key], source[key]);
+          this.deepMerge(target[key] as Record<string, unknown>, sourceValue);
         } else {
-          Object.assign(target, { [key]: source[key] });
+          Object.assign(target, { [key]: sourceValue });
         }
       }
     }
-    
+
     return this.deepMerge(target, ...sources);
   }
-  
-  private isObject(item: any): boolean {
-    return item && typeof item === 'object' && !Array.isArray(item);
+
+  private isObject(item: unknown): item is Record<string, unknown> {
+    return !!item && typeof item === 'object' && !Array.isArray(item);
   }
   
   private updateConfig(updates: Partial<EnvironmentConfig>): void {
-    this.config = this.deepMerge({ ...this.config }, updates);
+    this.config = this.deepMerge(
+      { ...this.config } as unknown as Record<string, unknown>,
+      updates as Record<string, unknown>
+    ) as unknown as EnvironmentConfig;
     this.notifyListeners();
   }
   
@@ -480,7 +487,10 @@ class EnvironmentManager {
     
     const env = detectEnvironment();
     const baseConfig = getBaseConfig(env);
-    this.config = this.deepMerge(this.getDefaultConfig(), baseConfig) as EnvironmentConfig;
+    this.config = this.deepMerge(
+      this.getDefaultConfig() as unknown as Record<string, unknown>,
+      baseConfig as Record<string, unknown>
+    ) as unknown as EnvironmentConfig;
     this.notifyListeners();
   }
 }

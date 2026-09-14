@@ -219,19 +219,3 @@ export const TEST_IDS = {
     ready: (component: string) => `${component}-ready`,
   },
 } as const;
-
-// Type-safe helper to get test ID
-export function getTestId(path: string): string {
-  const parts = path.split('.');
-  let current: Record<string, unknown> = TEST_IDS;
-  
-  for (const part of parts) {
-    current = current[part];
-    if (!current) {
-      console.warn(`Test ID not found: ${path}`);
-      return path;
-    }
-  }
-  
-  return typeof current === 'function' ? current : current as string;
-}

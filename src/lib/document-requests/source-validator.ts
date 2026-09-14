@@ -1,9 +1,32 @@
-import type { 
-  OfficialSourceValidation, 
-  DocumentSource as _DocumentSource,
-  SpamDetectionResult 
+import type {
+  OfficialSourceValidation,
+  SpamDetectionResult
 } from '../../types/legal';
 import { OFFICIAL_SOURCES } from '../../types/legal';
+
+/**
+ * Extra metadata this validator infers from a URL or file, beyond the
+ * narrower `OfficialSourceValidation['metadata']` shape declared in
+ * `src/types/legal.ts`. A superset assigns fine structurally; we just need
+ * our own name for it instead of `any`.
+ */
+interface SourceMetadata {
+  publicationDate?: string;
+  documentNumber?: string;
+  officialGazette?: string;
+  documentType?: string;
+  fileType?: string;
+  fileSize?: number;
+  fileName?: string;
+  possibleSource?: string;
+  extractedDate?: string;
+}
+
+/** Minimal shape `checkRateLimit` needs from a stored document request. */
+interface RateLimitRequestRecord {
+  userFingerprint: string;
+  createdAt: string | number | Date;
+}
 
 /**
  * Official Source Validator
@@ -86,12 +109,12 @@ export class SourceValidator {
   private static async performDeepValidation(url: URL): Promise<{
     confidence: number;
     warnings: string[];
-    metadata?: any;
+    metadata?: SourceMetadata;
   }> {
     const domain = url.hostname.toLowerCase();
     const path = url.pathname.toLowerCase();
     const warnings: string[] = [];
-    const metadata: any = {};
+    const metadata: SourceMetadata = {};
 
     let confidence = 0.5; // Base confidence for official domains
 
@@ -230,7 +253,7 @@ export class SourceValidator {
   static async validateFile(file: File): Promise<OfficialSourceValidation> {
     const warnings: string[] = [];
     let confidence = 0.3; // Lower confidence for uploaded files
-    const metadata: any = {};
+    const metadata: SourceMetadata = {};
 
     // File type validation
     const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
@@ -414,7 +437,7 @@ export class SourceValidator {
   /**
    * Rate limiting check
    */
-  static checkRateLimit(userFingerprint: string, requests: any[]): {
+  static checkRateLimit(userFingerprint: string, requests: RateLimitRequestRecord[]): {
     allowed: boolean;
     remaining: number;
     resetAt: Date;

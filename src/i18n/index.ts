@@ -155,10 +155,10 @@ function useSafeState<T>(initialValue: T): [T, (value: T) => void] {
   }
 }
 
-function useSafeReducer<T>(
-  reducer: (state: T, action: any) => T, 
+function useSafeReducer<T, A>(
+  reducer: (state: T, action: A) => T,
   initialState: T
-): [T, (action: any) => void] {
+): [T, (action: A) => void] {
   try {
     return useReducer(reducer, initialState);
   } catch {
@@ -167,7 +167,7 @@ function useSafeReducer<T>(
   }
 }
 
-function useSafeEffect(effect: () => void | (() => void), deps?: any[]): void {
+function useSafeEffect(effect: () => void | (() => void), deps?: unknown[]): void {
   try {
     return useEffect(effect, deps);
   } catch {
@@ -180,7 +180,7 @@ function useSafeEffect(effect: () => void | (() => void), deps?: any[]): void {
 export function useTranslation() {
   // Use safe hooks to avoid React context issues during SSR/hydration
   const [isClient, setIsClient] = useSafeState(false);
-  const [, forceUpdate] = useSafeReducer((x: number) => x + 1, 0);
+  const [, forceUpdate] = useSafeReducer<number, number>((x: number) => x + 1, 0);
 
   // Ensure we're client-side before setting up subscriptions
   useSafeEffect(() => {

@@ -1,9 +1,22 @@
-import type { 
-  SpamDetectionResult, 
-  RateLimitInfo, 
-  DocumentRequest 
+import type {
+  SpamDetectionResult,
+  RateLimitInfo,
+  DocumentRequest,
+  DocumentSource
 } from '../../types/legal';
-import { SourceValidator as _SourceValidator } from './source-validator';
+
+/**
+ * `RateLimitInfo` (shared, `src/types/legal.ts`) doesn't carry an `allowed`
+ * flag; callers derive it from `remaining`. We compute it once here so the
+ * call sites below don't repeat `remaining > 0`.
+ */
+type RateLimitCheck = RateLimitInfo & { allowed: boolean };
+
+/** A rate-limited action record, as persisted under `STORAGE_KEYS.RATE_LIMITS`. */
+interface RateLimitAction {
+  timestamp: number;
+  action: string;
+}
 
 /**
  * Comprehensive Security Manager for Document Request System
@@ -63,7 +76,7 @@ export class SecurityManager {
     // 1. Rate limiting check
     const rateLimitCheck = await this.checkRateLimit(userFingerprint, 'requests');
     if (!rateLimitCheck.allowed) {
-      violations.push(`Límite de velocidad excedido. Intenta en ${Math.ceil((rateLimitCheck.resetAt.getTime() - Date.now()) / 60000)} minutos`);
+      violations.push(`Límite de velocidad excedido. Intenta en ${Math.ceil((new Date(rateLimitCheck.resetAt).getTime() - Date.now()) / 60000)} minutos`);
       riskScore += 0.8;
     }
 
@@ -132,7 +145,7 @@ export class SecurityManager {
   static async checkRateLimit(
     userFingerprint: string,
     action: 'requests' | 'votes' | 'comments' | 'reports'
-  ): Promise<RateLimitInfo> {
+  ): Promise<RateLimitCheck> {
     const limits = {
       requests: this.RATE_LIMITS.REQUESTS_PER_HOUR,
       votes: this.RATE_LIMITS.VOTES_PER_HOUR,
@@ -145,7 +158,7 @@ export class SecurityManager {
 
     try {
       const stored = localStorage.getItem(this.STORAGE_KEYS.RATE_LIMITS);
-      const rateLimits: Record<string, Array<{ timestamp: number; action: string }>> = 
+      const rateLimits: Record<string, RateLimitAction[]> =
         stored ? JSON.parse(stored) : {};
 
       const userActions = rateLimits[userFingerprint] || [];
@@ -197,7 +210,7 @@ export class SecurityManager {
   ): Promise<void> {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEYS.RATE_LIMITS);
-      const rateLimits: Record<string, Array<{ timestamp: number; action: string }>> = 
+      const rateLimits: Record<string, RateLimitAction[]> =
         stored ? JSON.parse(stored) : {};
 
       if (!rateLimits[userFingerprint]) {
@@ -327,25 +340,25 @@ export class SecurityManager {
       }
 
       // Check recent activity pattern
-      const rateLimits = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.RATE_LIMITS) || '{}');
+      const rateLimits: Record<string, RateLimitAction[]> = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.RATE_LIMITS) || '{}');
       const userActions = rateLimits[userFingerprint] || [];
-      
+
       if (userActions.length > 0) {
-        const recentActions = userActions.filter(action => 
+        const recentActions = userActions.filter((action: RateLimitAction) =>
           Date.now() - action.timestamp < 10 * 60 * 1000 // Last 10 minutes
         );
-        
+
         if (recentActions.length > 10) {
           reasons.push('Actividad excesivamente rápida');
           riskIncrease += 0.3;
         }
 
         // Check for suspicious timing patterns
-        const timestamps = recentActions.map(action => action.timestamp).sort();
+        const timestamps = recentActions.map((action: RateLimitAction) => action.timestamp).sort();
         let suspiciousIntervals = 0;
-        
+
         for (let i = 1; i < timestamps.length; i++) {
-          const interval = timestamps[i] - timestamps[i - 1];
+          const interval = (timestamps[i] ?? 0) - (timestamps[i - 1] ?? 0);
           if (interval < 1000) { // Less than 1 second between actions
             suspiciousIntervals++;
           }
@@ -375,7 +388,7 @@ export class SecurityManager {
   /**
    * Validate request sources for suspicious patterns
    */
-  private static async validateRequestSource(source: any): Promise<{ isValid: boolean; reasons: string[] }> {
+  private static async validateRequestSource(source: DocumentSource): Promise<{ isValid: boolean; reasons: string[] }> {
     const reasons: string[] = [];
 
     if (source.type === 'url' && source.url) {
@@ -560,8 +573,8 @@ export class SecurityManager {
         localStorage.setItem(this.STORAGE_KEYS.BLOCKED_USERS, JSON.stringify(blockedUsers));
       }
 
-      // Log the blocking action
-      console.log(`User ${userFingerprint} blocked for: ${reason}`);
+      // Log the blocking action (security audit trail)
+      console.warn(`User ${userFingerprint} blocked for: ${reason}`);
     } catch (error) {
       console.error('Error blocking user:', error);
     }
@@ -589,10 +602,10 @@ export class SecurityManager {
       const rateLimitThreshold = now - (48 * 60 * 60 * 1000); // 48 hours
       
       // Clean rate limit data
-      const rateLimits = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.RATE_LIMITS) || '{}');
-      
+      const rateLimits: Record<string, RateLimitAction[]> = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.RATE_LIMITS) || '{}');
+
       for (const [userFingerprint, actions] of Object.entries(rateLimits)) {
-        const recentActions = (actions as any[]).filter(action => action.timestamp >= rateLimitThreshold);
+        const recentActions = actions.filter((action: RateLimitAction) => action.timestamp >= rateLimitThreshold);
         if (recentActions.length > 0) {
           rateLimits[userFingerprint] = recentActions;
         } else {
@@ -602,11 +615,9 @@ export class SecurityManager {
       
       localStorage.setItem(this.STORAGE_KEYS.RATE_LIMITS, JSON.stringify(rateLimits));
 
-      // Reset user reports older than 30 days
-      const _reportThreshold = now - (30 * 24 * 60 * 60 * 1000); // 30 days
-      // This is a simplified cleanup - in a real app, you'd track report timestamps
-      
-      console.log('Security data cleanup completed');
+      // NOTE: user reports (`STORAGE_KEYS.USER_REPORTS`) have no per-report
+      // timestamp today, so they can't be aged out here. Tracking timestamps
+      // is a prerequisite for a "reset reports older than 30 days" cleanup.
     } catch (error) {
       console.error('Error cleaning up security data:', error);
     }

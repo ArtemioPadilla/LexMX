@@ -151,7 +151,6 @@ export class OfflineQueueManager {
     // Register for background sync if available
     this.registerBackgroundSync('legal-query-sync');
 
-    console.log(`[OfflineQueue] Query queued: ${queryId}`);
     return queryId;
   }
 
@@ -188,7 +187,6 @@ export class OfflineQueueManager {
     // Register for background sync if available
     this.registerBackgroundSync('document-upload-sync');
 
-    console.log(`[OfflineQueue] Document queued: ${documentId}`);
     return documentId;
   }
 
@@ -231,7 +229,6 @@ export class OfflineQueueManager {
    */
   async processPendingQueries(): Promise<void> {
     const pendingQueries = await this.getPendingQueries();
-    console.log(`[OfflineQueue] Processing ${pendingQueries.length} pending queries`);
 
     for (const query of pendingQueries) {
       if (query.retryCount >= query.maxRetries) {
@@ -268,7 +265,6 @@ export class OfflineQueueManager {
    */
   async processPendingDocuments(): Promise<void> {
     const pendingDocuments = await this.getPendingDocuments();
-    console.log(`[OfflineQueue] Processing ${pendingDocuments.length} pending documents`);
 
     for (const document of pendingDocuments) {
       try {
@@ -547,7 +543,7 @@ export class OfflineQueueManager {
   /**
    * Notify client about sync completion
    */
-  private notifyClient(type: string, data: any): void {
+  private notifyClient(type: string, data: Record<string, unknown>): void {
     // Broadcast to all clients
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.controller?.postMessage({
@@ -566,14 +562,14 @@ export class OfflineQueueManager {
    * Get queue statistics
    */
   async getQueueStats(): Promise<{
-    queries: { pending: number; completed: number; failed: number };
-    documents: { pending: number; completed: number; failed: number };
+    queries: { pending: number; syncing: number; completed: number; failed: number };
+    documents: { pending: number; syncing: number; completed: number; failed: number };
   }> {
     await this.ensureDB();
 
     const stats = {
-      queries: { pending: 0, completed: 0, failed: 0 },
-      documents: { pending: 0, completed: 0, failed: 0 }
+      queries: { pending: 0, syncing: 0, completed: 0, failed: 0 },
+      documents: { pending: 0, syncing: 0, completed: 0, failed: 0 }
     };
 
     // Count queries by status
@@ -627,31 +623,29 @@ export class OfflineQueueManager {
     const queryStore = transaction.objectStore(this.STORES.queries);
     const queryIndex = queryStore.index('status');
     
-    const completedQueries = await new Promise<IDBRequest>((resolve, reject) => {
+    const completedQueries = await new Promise<OfflineQuery[]>((resolve, reject) => {
       const request = queryIndex.getAll('completed');
-      request.onsuccess = () => resolve(request);
+      request.onsuccess = () => resolve(request.result as OfflineQuery[]);
       request.onerror = () => reject(request.error);
     });
 
-    for (const query of (completedQueries as any).result) {
+    for (const query of completedQueries) {
       queryStore.delete(query.id);
     }
 
     // Clear completed documents
     const docStore = transaction.objectStore(this.STORES.documents);
     const docIndex = docStore.index('status');
-    
-    const completedDocs = await new Promise<IDBRequest>((resolve, reject) => {
+
+    const completedDocs = await new Promise<OfflineDocument[]>((resolve, reject) => {
       const request = docIndex.getAll('completed');
-      request.onsuccess = () => resolve(request);
+      request.onsuccess = () => resolve(request.result as OfflineDocument[]);
       request.onerror = () => reject(request.error);
     });
 
-    for (const document of (completedDocs as any).result) {
+    for (const document of completedDocs) {
       docStore.delete(document.id);
     }
-
-    console.log('[OfflineQueue] Completed items cleared from queue');
   }
 
   private async ensureDB(): Promise<void> {

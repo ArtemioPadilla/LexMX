@@ -1,5 +1,25 @@
-import type { LegalDocument, LegalChunk } from '../../types/legal';
-import type { SearchResult, RetrievalResult as _RetrievalResult } from '../../types/rag';
+import type { LegalDocument, LegalContent, LegalChunk } from '../../types/legal';
+import type { SearchResult, DocumentMetadata } from '../../types/rag';
+
+/**
+ * `SearchResult['metadata']` (`DocumentMetadata`, `src/types/rag.ts`) has no
+ * `number`/`documentId`/`documentTitle` fields; this module's navigation and
+ * RAG-context helpers need them, so we extend locally instead of widening
+ * the shared type. A superset assigns fine to `DocumentMetadata` as long as
+ * it's built through a typed value rather than an inline literal.
+ */
+export interface SearchResultMetadata extends DocumentMetadata {
+  number?: string;
+  documentId?: string;
+  documentTitle?: string;
+}
+
+/** Result of {@link DocumentRAGIntegration.extractContext}. */
+export interface DocumentContext {
+  target: LegalContent | null;
+  context: LegalContent[];
+  hierarchy: LegalContent[];
+}
 
 export class DocumentRAGIntegration {
   private document: LegalDocument;
@@ -65,9 +85,13 @@ export class DocumentRAGIntegration {
               legalArea: this.document.primaryArea,
               originalId: content.id,
               documentTitle: this.document.title,
+              // `${documentId}_chunk_${chunkIndex}_${subIndex}` (the chunk id
+              // above) already encodes the parent chunk; `LegalChunk.metadata`
+              // has no `isSubChunk`/`parentChunk` fields to duplicate it in.
               chunkIndex: chunkIndex + subIndex,
-              isSubChunk: true,
-              parentChunk: `${this.document.id}_chunk_${chunkIndex}`
+              partNumber: subIndex,
+              totalParts: contentChunks.length,
+              isLastPart: subIndex === contentChunks.length - 1
             },
             keywords: this.extractKeywords(chunkContent)
           });
@@ -106,15 +130,7 @@ export class DocumentRAGIntegration {
           id: content.id,
           content: content.content,
           score,
-          metadata: {
-            type: content.type,
-            number: content.number,
-            title: content.title,
-            documentId: this.document.id,
-            documentTitle: this.document.title,
-            hierarchy: this.document.hierarchy,
-            legalArea: this.document.primaryArea
-          }
+          metadata: this.buildSearchMetadata(content)
         });
       }
     }
@@ -153,15 +169,7 @@ export class DocumentRAGIntegration {
           id: content.id,
           content: content.content,
           score,
-          metadata: {
-            type: content.type,
-            number: content.number,
-            title: content.title,
-            documentId: this.document.id,
-            documentTitle: this.document.title,
-            hierarchy: this.document.hierarchy,
-            legalArea: this.document.primaryArea
-          }
+          metadata: this.buildSearchMetadata(content)
         });
       }
     }
@@ -169,6 +177,24 @@ export class DocumentRAGIntegration {
     return results
       .sort((a, b) => b.score - a.score)
       .slice(0, topK);
+  }
+
+  /**
+   * Build the `DocumentMetadata` (plus this module's extra navigation
+   * fields) shared by `semanticSearch` and `findRelatedSections`.
+   */
+  private buildSearchMetadata(content: LegalContent): SearchResultMetadata {
+    return {
+      type: content.type,
+      number: content.number,
+      article: content.number,
+      title: content.title ?? this.document.title,
+      documentId: this.document.id,
+      documentTitle: this.document.title,
+      hierarchy: this.document.hierarchy,
+      legalArea: this.document.primaryArea,
+      lastUpdated: this.document.lastUpdated ?? this.document.publicationDate
+    };
   }
 
   /**
@@ -180,13 +206,9 @@ export class DocumentRAGIntegration {
       contextWindow?: number;
       includeHierarchy?: boolean;
     } = {}
-  ): {
-    target: any;
-    context: any[];
-    hierarchy: any[];
-  } {
+  ): DocumentContext {
     const { contextWindow = 2, includeHierarchy = true } = options;
-    
+
     if (!this.document.content) {
       return { target: null, context: [], hierarchy: [] };
     }
@@ -197,6 +219,9 @@ export class DocumentRAGIntegration {
     }
 
     const target = this.document.content[targetIndex];
+    if (!target) {
+      return { target: null, context: [], hierarchy: [] };
+    }
     
     // Get surrounding context
     const startIndex = Math.max(0, targetIndex - contextWindow);
@@ -213,9 +238,7 @@ export class DocumentRAGIntegration {
    * Generate embeddings for document content (placeholder)
    */
   async generateEmbeddings(): Promise<void> {
-    // In production, this would call an embedding service
-    console.log('Generating embeddings for document:', this.document.id);
-    
+    // In production, this would call an embedding service.
     // Placeholder implementation
     if (this.document.content) {
       for (const content of this.document.content) {
@@ -313,10 +336,10 @@ export class DocumentRAGIntegration {
     return intersection.size / union.size; // Jaccard similarity
   }
 
-  private getHierarchicalContext(target: any): any[] {
+  private getHierarchicalContext(target: LegalContent): LegalContent[] {
     if (!this.document.content) return [];
-    
-    const hierarchy: any[] = [];
+
+    const hierarchy: LegalContent[] = [];
     let currentParent = target.parent;
     
     while (currentParent) {
@@ -333,6 +356,19 @@ export class DocumentRAGIntegration {
   }
 }
 
+/** A `SearchResult` produced by `DocumentRAGIntegration`, carrying the extra navigation fields. */
+export type EnrichedSearchResult = SearchResult & { metadata: SearchResultMetadata };
+
+/** A document navigation entry, as returned by `convertSearchResultsToNavigation`. */
+export interface DocumentNavigationEntry {
+  id: string;
+  type: string;
+  number?: string;
+  title: string;
+  score: number;
+  level: number;
+}
+
 /**
  * Utility functions for document viewer integration
  */
@@ -347,7 +383,7 @@ export const DocumentViewerUtils = {
   /**
    * Convert search results to document navigation format
    */
-  convertSearchResultsToNavigation(results: SearchResult[]): any[] {
+  convertSearchResultsToNavigation(results: EnrichedSearchResult[]): DocumentNavigationEntry[] {
     return results.map(result => ({
       id: result.id,
       type: result.metadata.type,
@@ -376,7 +412,7 @@ export const DocumentViewerUtils = {
   /**
    * Format content for RAG context window
    */
-  formatContextForRAG(context: { target: any; context: any[]; hierarchy: any[] }): string {
+  formatContextForRAG(context: DocumentContext): string {
     let formatted = '';
     
     // Add hierarchical context

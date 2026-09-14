@@ -1,7 +1,8 @@
-import type { 
-  RequestNotification, 
-  DocumentRequest, 
-  RequestStatus 
+import { useState, useEffect } from 'react';
+import type {
+  RequestNotification,
+  DocumentRequest,
+  RequestStatus
 } from '../../types/legal';
 
 /**
@@ -456,6 +457,3 @@ export function useNotifications(userId?: string) {
     refresh: () => userId && NotificationSystem.getNotifications(userId).then(setNotifications)
   };
 }
-
-// Import for useState
-import { useState, useEffect } from 'react';

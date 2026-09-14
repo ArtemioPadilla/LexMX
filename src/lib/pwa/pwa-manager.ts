@@ -21,6 +21,28 @@ export interface PWAInstallationState {
   installCount: number;
 }
 
+/** iOS Safari's nonstandard `navigator.standalone`; absent from lib.dom. */
+interface NavigatorWithStandalone extends Navigator {
+  standalone?: boolean;
+}
+
+/** The experimental `getInstalledRelatedApps()` API; absent from lib.dom. */
+interface RelatedApplication {
+  id?: string;
+  platform: string;
+  url?: string;
+}
+
+interface NavigatorWithRelatedApps extends Navigator {
+  getInstalledRelatedApps?: () => Promise<RelatedApplication[]>;
+}
+
+/** Persisted subset of `PWAInstallationState` under `STORAGE_KEY`. */
+interface PersistedPWAState {
+  lastPromptDismissed: string | null;
+  installCount: number;
+}
+
 /**
  * PWA Manager for handling installation and updates
  */
@@ -61,8 +83,9 @@ export class PWAManager {
     // Check if already installed via navigator.standalone (iOS)
     this.state.isInstalled = this.checkInstallationStatus();
 
-    // Listen for beforeinstallprompt event
-    window.addEventListener('beforeinstallprompt', this.handleBeforeInstallPrompt.bind(this));
+    // Listen for beforeinstallprompt event ('beforeinstallprompt' isn't in
+    // WindowEventMap, so the typed handler needs an `EventListener` cast).
+    window.addEventListener('beforeinstallprompt', this.handleBeforeInstallPrompt.bind(this) as EventListener);
 
     // Listen for app installed event
     window.addEventListener('appinstalled', this.handleAppInstalled.bind(this));
@@ -86,13 +109,10 @@ export class PWAManager {
     this.state.installPrompt = event;
     this.state.canInstall = true;
 
-    console.log('[PWA] Install prompt ready');
     this.notifyListeners();
   }
 
   private handleAppInstalled(): void {
-    console.log('[PWA] App was installed');
-    
     this.state.isInstalled = true;
     this.state.canInstall = false;
     this.state.installPrompt = null;
@@ -107,8 +127,6 @@ export class PWAManager {
 
   private handleServiceWorkerMessage(event: MessageEvent): void {
     if (event.data?.type === 'UPDATE_AVAILABLE') {
-      console.log('[PWA] Update available');
-      
       // Notify listeners about available update
       window.dispatchEvent(new CustomEvent('pwa-update-available', {
         detail: event.data
@@ -131,8 +149,6 @@ export class PWAManager {
 
       // Wait for user choice
       const choiceResult = await this.state.installPrompt.userChoice;
-
-      console.log('[PWA] User choice:', choiceResult.outcome);
 
       if (choiceResult.outcome === 'dismissed') {
         this.state.lastPromptDismissed = new Date();
@@ -189,7 +205,7 @@ export class PWAManager {
     return (
       window.matchMedia('(display-mode: standalone)').matches ||
       // iOS standalone mode
-      (window.navigator as any).standalone === true ||
+      (window.navigator as NavigatorWithStandalone).standalone === true ||
       // Android standalone mode
       document.referrer.startsWith('android-app://')
     );
@@ -200,7 +216,7 @@ export class PWAManager {
    */
   private checkInstallationStatus(): boolean {
     // iOS Safari standalone
-    if ((window.navigator as any).standalone === true) {
+    if ((window.navigator as NavigatorWithStandalone).standalone === true) {
       return true;
     }
 
@@ -210,8 +226,9 @@ export class PWAManager {
     }
 
     // Check if installed via related applications API (experimental)
-    if ('getInstalledRelatedApps' in navigator) {
-      (navigator as any).getInstalledRelatedApps().then((apps: any[]) => {
+    const navigatorWithRelatedApps = navigator as NavigatorWithRelatedApps;
+    if (navigatorWithRelatedApps.getInstalledRelatedApps) {
+      navigatorWithRelatedApps.getInstalledRelatedApps().then((apps) => {
         if (apps.length > 0) {
           this.state.isInstalled = true;
           this.notifyListeners();
@@ -357,7 +374,7 @@ export class PWAManager {
       offline: 'serviceWorker' in navigator,
       notifications: 'Notification' in window,
       backgroundSync: 'serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype,
-      shareTarget: 'share' in navigator || 'shareTarget' in (window as any),
+      shareTarget: 'share' in navigator || 'shareTarget' in (window as unknown as Record<string, unknown>),
       shortcuts: 'getInstalledRelatedApps' in navigator
     };
   }
@@ -414,7 +431,7 @@ export class PWAManager {
     try {
       const saved = localStorage.getItem(this.STORAGE_KEY);
       if (saved) {
-        const state = JSON.parse(saved);
+        const state: PersistedPWAState = JSON.parse(saved);
         this.state.lastPromptDismissed = state.lastPromptDismissed ? new Date(state.lastPromptDismissed) : null;
         this.state.installCount = state.installCount || 0;
       }
@@ -423,10 +440,7 @@ export class PWAManager {
     }
   }
 
-  private trackEvent(event: string, data?: any): void {
-    // Track PWA events for analytics
-    console.log(`[PWA] Event: ${event}`, data);
-    
+  private trackEvent(event: string, data?: Record<string, unknown>): void {
     // Custom event for analytics integration
     window.dispatchEvent(new CustomEvent('pwa-event', {
       detail: { event, data, timestamp: new Date().toISOString() }
