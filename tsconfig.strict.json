@@ -31,6 +31,8 @@
     "src/lib/admin/**/*.ts",
     "src/lib/llm/**/*.ts",
     "src/jurisdictions/**/*.ts",
+    "src/lib/cn.ts",
+    "src/components/ui/**/*.tsx",
     "src/types/background-sync.d.ts",
     "src/lib/document-requests/**/*.ts",
     "src/lib/document-viewer/**/*.ts",
