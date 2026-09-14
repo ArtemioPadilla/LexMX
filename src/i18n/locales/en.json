@@ -632,7 +632,14 @@
         "success": "Connections Successful",
         "verifying": "Verifying all providers are working correctly",
         "ready": "All providers are ready to use",
-        "finish": "Finish Configuration"
+        "finish": "Finish Configuration",
+        "title": "Testing connections",
+        "status": {
+          "untested": "Not tested",
+          "testing": "Testing…",
+          "success": "Connected",
+          "error": "Could not connect"
+        }
       },
       "complete": {
         "title": "Configuration Complete!",
@@ -644,6 +651,21 @@
           "changeProviders": "You can change providers at any time"
         },
         "startUsing": "Start Using LexMX"
+      },
+      "steps": {
+        "choose": "Choose",
+        "configure": "Configure",
+        "test": "Test",
+        "done": "Done"
+      },
+      "recommended": "Recommended",
+      "localOnly": "Your keys are stored encrypted in this browser; they never leave your device.",
+      "save": "Save and continue",
+      "skipProvider": "Skip this provider",
+      "back": "Back",
+      "existing": {
+        "title": "You already have providers configured",
+        "body": "Configured: {{list}}. You can add more or configure them again."
       }
     },
     "providers": {
@@ -678,7 +700,9 @@
       "connectionError": "Could not connect to provider",
       "testConnection": "Test Connection",
       "testing": "Testing...",
-      "success": "Connection successful!"
+      "success": "Connection successful!",
+      "invalidUrl": "Invalid URL (use http:// or https://)",
+      "keyOrCredentials": "Provide an API key or the alternative credentials"
     },
     "help": {
       "title": "Need Help?",
@@ -773,6 +797,32 @@
         "bestFor": "LM Studio, vLLM, FastChat, custom",
         "configuration": "URL endpoint + optional API key"
       }
+    },
+    "fields": {
+      "apiKey": "API key",
+      "apiKeyOptional": "API key (optional)",
+      "endpoint": "Server URL",
+      "model": "Model",
+      "region": "Region",
+      "accessKeyId": "Access key ID (IAM)",
+      "secretAccessKey": "Secret access key (IAM)",
+      "orIam": "Use an API key or IAM credentials.",
+      "azureResourceName": "Azure resource name",
+      "azureDeploymentName": "Deployment name",
+      "azureTenantId": "Tenant ID (Azure AD)",
+      "azureClientId": "Client ID (Azure AD)",
+      "azureClientSecret": "Client secret (Azure AD)",
+      "orAzureAd": "Use an API key or Azure AD credentials.",
+      "gcpProjectId": "GCP project ID",
+      "gcpLocation": "GCP region",
+      "gcpServiceAccountKey": "Service account key (JSON)",
+      "orServiceAccount": "Use an API key or a service account."
+    },
+    "cost": {
+      "free": "Free",
+      "low": "Low cost",
+      "medium": "Medium cost",
+      "high": "High cost"
     }
   },
   "wiki": {

@@ -1,7 +1,7 @@
 ---
 // Provider setup page
 import BaseLayout from '../components/layout/BaseLayout.astro';
-import ProviderSetup from '../islands/ProviderSetup.tsx';
+import SetupWizard from '../islands/SetupWizard.tsx';
 import { getUrl } from '../utils/urls';
 ---
 
@@ -27,7 +27,7 @@ import { getUrl } from '../utils/urls';
 
       <!-- Provider Setup Component -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <ProviderSetup client:load />
+        <SetupWizard client:load />
       </div>
 
       <!-- Help Section -->

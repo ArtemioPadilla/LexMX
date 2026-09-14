@@ -632,7 +632,14 @@
         "success": "Conexiones Exitosas",
         "verifying": "Verificando que todos los proveedores funcionen correctamente",
         "ready": "Todos los proveedores están listos para usar",
-        "finish": "Finalizar Configuración"
+        "finish": "Finalizar Configuración",
+        "title": "Probando conexiones",
+        "status": {
+          "untested": "Sin probar",
+          "testing": "Probando…",
+          "success": "Conexión exitosa",
+          "error": "No se pudo conectar"
+        }
       },
       "complete": {
         "title": "¡Configuración Completa!",
@@ -644,6 +651,21 @@
           "changeProviders": "Puedes cambiar proveedores en cualquier momento"
         },
         "startUsing": "Comenzar a Usar LexMX"
+      },
+      "steps": {
+        "choose": "Elige",
+        "configure": "Configura",
+        "test": "Prueba",
+        "done": "Listo"
+      },
+      "recommended": "Recomendado",
+      "localOnly": "Tus llaves se guardan cifradas en este navegador; nunca salen de tu dispositivo.",
+      "save": "Guardar y continuar",
+      "skipProvider": "Omitir este proveedor",
+      "back": "Volver",
+      "existing": {
+        "title": "Ya tienes proveedores configurados",
+        "body": "Configurados: {{list}}. Puedes añadir más o volver a configurarlos."
       }
     },
     "providers": {
@@ -678,7 +700,9 @@
       "connectionError": "No se pudo conectar con el proveedor",
       "testConnection": "Probar Conexión",
       "testing": "Probando...",
-      "success": "¡Conexión exitosa!"
+      "success": "¡Conexión exitosa!",
+      "invalidUrl": "URL inválida (usa http:// o https://)",
+      "keyOrCredentials": "Indica una clave API o las credenciales alternativas"
     },
     "help": {
       "title": "¿Necesitas Ayuda?",
@@ -773,6 +797,32 @@
         "bestFor": "LM Studio, vLLM, FastChat, custom",
         "configuration": "URL endpoint + API key opcional"
       }
+    },
+    "fields": {
+      "apiKey": "Clave API",
+      "apiKeyOptional": "Clave API (opcional)",
+      "endpoint": "URL del servidor",
+      "model": "Modelo",
+      "region": "Región",
+      "accessKeyId": "Access key ID (IAM)",
+      "secretAccessKey": "Secret access key (IAM)",
+      "orIam": "Usa una clave API o credenciales IAM.",
+      "azureResourceName": "Nombre del recurso Azure",
+      "azureDeploymentName": "Nombre del despliegue",
+      "azureTenantId": "Tenant ID (Azure AD)",
+      "azureClientId": "Client ID (Azure AD)",
+      "azureClientSecret": "Client secret (Azure AD)",
+      "orAzureAd": "Usa una clave API o credenciales de Azure AD.",
+      "gcpProjectId": "ID del proyecto GCP",
+      "gcpLocation": "Región GCP",
+      "gcpServiceAccountKey": "Llave de cuenta de servicio (JSON)",
+      "orServiceAccount": "Usa una clave API o una cuenta de servicio."
+    },
+    "cost": {
+      "free": "Gratis",
+      "low": "Costo bajo",
+      "medium": "Costo medio",
+      "high": "Costo alto"
     }
   },
   "wiki": {
