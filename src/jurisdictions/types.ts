@@ -68,6 +68,43 @@ export interface LegalFramework {
   dataAuthority?: string;
 }
 
+/** Calculadora determinista por jurisdicción (laboral, plazos, fiscal). */
+export interface CalculatorField {
+  name: string;
+  label: string;
+  type: 'number' | 'date' | 'select' | 'boolean';
+  options?: Array<{ value: string; label: string }>;
+  min?: number;
+  step?: number;
+  required?: boolean;
+  help?: string;
+}
+
+export interface CalculatorLine {
+  label: string;
+  amount: number;
+  /** Fundamento legal en formato de la jurisdicción. */
+  basis: string;
+  note?: string;
+}
+
+export interface CalculatorResult {
+  lines: CalculatorLine[];
+  total: number;
+  currency: string;
+  warnings: string[];
+}
+
+export interface Calculator<TInput = Record<string, unknown>> {
+  id: string;
+  name: string;
+  description: string;
+  fields: CalculatorField[];
+  /** Parámetros con fecha de vigencia (salario mínimo, UMA…). */
+  parameters: Record<string, { value: number; asOf: string; source: string }>;
+  compute(input: TInput): CalculatorResult;
+}
+
 export interface Jurisdiction {
   code: JurisdictionCode;
   name: string;
@@ -80,4 +117,6 @@ export interface Jurisdiction {
   sources: LegalSource[];
   citation: CitationStyle;
   legal: LegalFramework;
+  /** Calculadoras deterministas propias del país (opcional). */
+  calculators?: Calculator[];
 }

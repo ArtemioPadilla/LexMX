@@ -2,6 +2,7 @@
  * México: jurisdicción de referencia (plan § 11.2 y § 11.3).
  */
 import type { CitationStyle, Jurisdiction, ParsedCitation } from '../types';
+import { mxCalculators } from './calculators';
 
 export const MX_ENTITIES = [
   ['MX-AGU', 'Aguascalientes'],
@@ -143,6 +144,7 @@ export const mx: Jurisdiction = {
     },
   ],
   citation: mxCitation,
+  calculators: mxCalculators,
   legal: {
     privacyLaw: {
       name: 'Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP)',
