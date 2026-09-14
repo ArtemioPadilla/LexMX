@@ -4,12 +4,17 @@
  * says so and nothing else changes. Everything that touches the server is
  * labelled. Roles come from the session (app_metadata), never from the UI.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '@nanostores/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CloudIcon, LogOutIcon, ShieldIcon } from 'lucide-react';
 import { supabase, supabaseEnabled } from '@/lib/supabase';
+import { acceptInvite, listMyOrgs, type Org } from '@/lib/server/orgs';
+import { OrgPanel } from './account/OrgPanel';
+import { BillingPanel } from './account/BillingPanel';
+import { MonitoringPanel } from './account/MonitoringPanel';
+import type { Session } from '@supabase/supabase-js';
 import { $authReady, $guardUser, $session } from '@/stores/auth';
 import { LoginSchema, RegisterSchema, type LoginValues, type RegisterValues } from '@/schemas/auth';
 import { useTranslation } from '@/i18n';
@@ -60,22 +65,7 @@ function Inner() {
   if (!ready) return <Skeleton className="h-40 w-full" />;
 
   if (session) {
-    return (
-      <div className="space-y-4">
-        <div className="rounded-lg border border-border p-4">
-          <p className="text-sm text-muted-foreground">{t('account.signedInAs')}</p>
-          <p className="font-medium">{session.user.email}</p>
-          <div className="mt-2 flex flex-wrap gap-1">
-            {(user?.roles ?? []).map((r) => <Badge key={r} variant="secondary">{r}</Badge>)}
-            {user?.flags?.emailVerified ? <Badge variant="outline"><ShieldIcon className="mr-1 h-3 w-3" aria-hidden="true" />{t('account.emailVerified')}</Badge> : <Badge variant="destructive">{t('account.emailUnverified')}</Badge>}
-          </div>
-        </div>
-        <ServerLabel />
-        <Button variant="outline" onClick={async () => { await supabase?.auth.signOut(); setMessage(null); }}>
-          <LogOutIcon className="mr-1 h-4 w-4" aria-hidden="true" />{t('account.signOut')}
-        </Button>
-      </div>
-    );
+    return <SignedIn session={session} roles={[...(user?.roles ?? [])]} emailVerified={user?.flags?.emailVerified === true} onSignOut={() => setMessage(null)} />;
   }
 
   return (
@@ -84,11 +74,73 @@ function Inner() {
         <TabsTrigger value="login">{t('account.login')}</TabsTrigger>
         <TabsTrigger value="register">{t('account.register')}</TabsTrigger>
       </TabsList>
+      {pendingInviteToken() && <Callout title={t('account.orgs.invites')} variant="default" className="text-sm">{t('account.invite.signInFirst')}</Callout>}
       {message && <Callout title={message.kind === 'error' ? 'Error' : 'OK'} variant={message.kind} className="text-sm">{message.text}</Callout>}
       <TabsContent value="login"><LoginForm onMessage={setMessage} /></TabsContent>
       <TabsContent value="register"><RegisterForm onMessage={setMessage} /></TabsContent>
       <ServerLabel />
     </Tabs>
+  );
+}
+
+/** Reads `?invite=` once; the token never touches storage. */
+function pendingInviteToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  const token = new URLSearchParams(window.location.search).get('invite');
+  return token && token.length >= 20 ? token : null;
+}
+
+function SignedIn({ session, roles, emailVerified, onSignOut }: { session: Session; roles: string[]; emailVerified: boolean; onSignOut: () => void }) {
+  const { t } = useTranslation();
+  const client = supabase!;
+  const [orgs, setOrgs] = useState<Org[]>([]);
+  const [orgsVersion, setOrgsVersion] = useState(0);
+  const [invite, setInvite] = useState<{ kind: 'info' | 'success' | 'error'; text: string } | null>(() => (pendingInviteToken() ? { kind: 'info', text: t('account.invite.accepting') } : null));
+
+  useEffect(() => {
+    const token = pendingInviteToken();
+    if (!token) return;
+    acceptInvite(client, token)
+      .then((r) => {
+        setInvite({ kind: 'success', text: t('account.invite.accepted', { role: t(`account.orgs.roles.${r.role}`) }) });
+        setOrgsVersion((v) => v + 1);
+      })
+      .catch((e: unknown) => setInvite({ kind: 'error', text: t('account.invite.failed', { error: e instanceof Error ? e.message : String(e) }) }))
+      .finally(() => window.history.replaceState(null, '', window.location.pathname));
+  }, [client, t]);
+
+  useEffect(() => {
+    let cancelled = false;
+    listMyOrgs(client).then((list) => { if (!cancelled) setOrgs(list); }).catch(() => { if (!cancelled) setOrgs([]); });
+    return () => { cancelled = true; };
+  }, [client, orgsVersion]);
+
+  return (
+    <div className="space-y-4">
+      {invite && <Callout title={invite.kind === 'error' ? 'Error' : t('account.orgs.invites')} variant={invite.kind === 'info' ? 'default' : invite.kind} className="text-sm" aria-live="polite">{invite.text}</Callout>}
+      <div className="rounded-lg border border-border p-4">
+        <p className="text-sm text-muted-foreground">{t('account.signedInAs')}</p>
+        <p className="font-medium">{session.user.email}</p>
+        <div className="mt-2 flex flex-wrap gap-1">
+          {roles.map((r) => <Badge key={r} variant="secondary">{r}</Badge>)}
+          {emailVerified ? <Badge variant="outline"><ShieldIcon className="mr-1 h-3 w-3" aria-hidden="true" />{t('account.emailVerified')}</Badge> : <Badge variant="destructive">{t('account.emailUnverified')}</Badge>}
+        </div>
+      </div>
+      <Tabs defaultValue="orgs" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="orgs">{t('account.tabs.orgs')}</TabsTrigger>
+          <TabsTrigger value="billing">{t('account.tabs.billing')}</TabsTrigger>
+          <TabsTrigger value="monitoring">{t('account.tabs.monitoring')}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="orgs"><OrgPanel key={orgsVersion} client={client} userId={session.user.id} /></TabsContent>
+        <TabsContent value="billing"><BillingPanel client={client} userId={session.user.id} orgs={orgs} /></TabsContent>
+        <TabsContent value="monitoring"><MonitoringPanel client={client} /></TabsContent>
+      </Tabs>
+      <ServerLabel />
+      <Button variant="outline" onClick={async () => { await client.auth.signOut(); onSignOut(); }}>
+        <LogOutIcon className="mr-1 h-4 w-4" aria-hidden="true" />{t('account.signOut')}
+      </Button>
+    </div>
   );
 }
 

@@ -16,6 +16,7 @@ modo local-first: el sitio estático nunca depende de estas piezas.
 | `migrations/0005_court_events.sql` | Expedientes vigilados, eventos de tribunal, reformas, seguimiento de leyes, Web Push, notificaciones con fan-out |
 | `migrations/0006_corpus_vectors.sql` | Corpus abierto en pgvector (384-d, mismo modelo que el cliente) y `match_chunks` |
 | `functions/search` | API pública de búsqueda semántica (base del MCP hospedado) |
+| `functions/accept-invite` | Convierte un token de invitación (solo su SHA-256 vive en `invites`) en asiento de `org_members`; exige sesión con el correo invitado |
 | `functions/web-push` | Entrega notificaciones pendientes a las suscripciones push |
 | `functions/stripe-webhook` | Único escritor de `subscriptions` |
 | `functions/whatsapp-webhook` | Webhook de Meta Cloud API (handshake + respuesta) |

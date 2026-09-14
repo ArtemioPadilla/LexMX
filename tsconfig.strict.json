@@ -41,6 +41,8 @@
     "src/schemas/**/*.ts",
     "src/types/background-sync.d.ts",
     "src/lib/document-requests/**/*.ts",
+    "src/lib/server/**/*.ts",
+    "src/lib/export/**/*.ts",
     "src/lib/document-viewer/**/*.ts",
     "src/lib/offline/**/*.ts",
     "src/lib/notifications/**/*.ts",
