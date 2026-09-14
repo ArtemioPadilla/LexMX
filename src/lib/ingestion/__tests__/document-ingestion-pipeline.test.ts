@@ -1,162 +1,279 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { DocumentIngestionPipeline } from '../document-ingestion-pipeline';
+import { describe, it, expect, vi } from 'vitest';
+import {
+  DocumentIngestionPipeline,
+  type DocumentStore,
+  type EmbeddingGenerator,
+  type IngestionDocumentFetcher,
+  type IngestionProgress,
+  type IngestionStoreName
+} from '../document-ingestion-pipeline';
 import type { DocumentRequest } from '@/types/legal';
+import type { EmbeddingVector } from '@/types/embeddings';
+
+/** Minimal, fully-typed DocumentRequest fixture; override only what a test cares about. */
+function createRequest(overrides: Partial<DocumentRequest> = {}): DocumentRequest {
+  return {
+    id: 'req-1',
+    title: 'Ley de Prueba',
+    description: 'Documento de prueba para el pipeline de ingesta',
+    requestedBy: 'test-user',
+    type: 'law',
+    hierarchy: 3,
+    primaryArea: 'civil',
+    secondaryAreas: [],
+    territorialScope: 'federal',
+    sources: [{
+      id: 'source-1',
+      type: 'url',
+      url: 'https://www.dof.gob.mx/test-document',
+      verified: false,
+      isOfficial: true
+    }],
+    votes: 0,
+    voters: [],
+    comments: [],
+    priority: 'medium',
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    verified: false,
+    ...overrides
+  };
+}
+
+const SAMPLE_LAW = `TÍTULO I
+Disposiciones Generales
+
+Artículo 1.-
+La presente ley es de orden público y de observancia general.
+`;
+
+function createFakeEmbeddingManager(): EmbeddingGenerator {
+  const fakeVector = (): EmbeddingVector => ({ values: [0.1, 0.2, 0.3], dimensions: 3 });
+  return {
+    initialize: vi.fn().mockResolvedValue(undefined),
+    embed: vi.fn().mockResolvedValue(fakeVector()),
+    embedBatch: vi.fn().mockImplementation(async (texts: string[]) => texts.map(fakeVector))
+  };
+}
+
+function createFakeStore(): DocumentStore & { records: Map<string, unknown> } {
+  const records = new Map<string, unknown>();
+  return {
+    records,
+    store: vi.fn(async (storeName: IngestionStoreName, key: string, data: unknown) => {
+      records.set(`${storeName}:${key}`, data);
+    })
+  };
+}
+
+/** Internals that are still worth unit-testing directly (pure helper logic). */
+interface PipelineInternals {
+  estimateTokens(text: string): number;
+  createBatches<T>(items: T[], batchSize: number): T[][];
+}
 
 describe('DocumentIngestionPipeline', () => {
-  let pipeline: DocumentIngestionPipeline;
-
-  beforeEach(() => {
-    pipeline = new DocumentIngestionPipeline();
-  });
-
   describe('constructor', () => {
-    it('should create instance with default config', () => {
-      expect(pipeline).toBeDefined();
+    it('creates an instance with default config and dependencies', () => {
+      const pipeline = new DocumentIngestionPipeline();
+      expect(pipeline).toBeInstanceOf(DocumentIngestionPipeline);
     });
 
-    it('should accept custom configuration', () => {
-      const customPipeline = new DocumentIngestionPipeline({
+    it('accepts custom configuration', () => {
+      const pipeline = new DocumentIngestionPipeline({
         chunkSize: 1024,
         chunkOverlap: 100,
-        preserveStructure: false
+        preserveStructure: false,
+        generateEmbeddings: false
       });
-      expect(customPipeline).toBeDefined();
+      expect(pipeline).toBeInstanceOf(DocumentIngestionPipeline);
+    });
+  });
+
+  describe('ingestFromRequest (end to end, with fakes)', () => {
+    it('runs fetching -> parsing -> chunking -> embedding -> storing in order and stores the result', async () => {
+      const fetcher: IngestionDocumentFetcher = {
+        fetchFromRequest: vi.fn().mockResolvedValue(SAMPLE_LAW)
+      };
+      const embeddingManager = createFakeEmbeddingManager();
+      const store = createFakeStore();
+      const pipeline = new DocumentIngestionPipeline({}, { fetcher, embeddingManager, store });
+
+      const seenStages: IngestionProgress['stage'][] = [];
+      pipeline.on('progress', (event: IngestionProgress) => {
+        expect(event).toHaveProperty('progress');
+        expect(event).toHaveProperty('message');
+        expect(event).toHaveProperty('timestamp');
+        if (seenStages[seenStages.length - 1] !== event.stage) {
+          seenStages.push(event.stage);
+        }
+      });
+
+      const result = await pipeline.ingestFromRequest(createRequest());
+
+      expect(result.success).toBe(true);
+      expect(seenStages).toEqual([
+        'fetching',
+        'parsing',
+        'chunking',
+        'embedding',
+        'storing',
+        'complete'
+      ]);
+      expect(result.documentId).toBeDefined();
+      expect(store.records.has(`legal_documents:${result.documentId}`)).toBe(true);
+      expect(embeddingManager.embedBatch).toHaveBeenCalled();
+    });
+
+    it('reports an error stage and success:false when the fetcher throws', async () => {
+      const fetcher: IngestionDocumentFetcher = {
+        fetchFromRequest: vi.fn().mockRejectedValue(new Error('network down'))
+      };
+      const pipeline = new DocumentIngestionPipeline({}, { fetcher });
+
+      const progressEvents: IngestionProgress[] = [];
+      pipeline.on('progress', (event: IngestionProgress) => progressEvents.push(event));
+
+      const result = await pipeline.ingestFromRequest(createRequest());
+
+      expect(result.success).toBe(false);
+      expect(result.errors?.[0]).toContain('network down');
+      expect(progressEvents.at(-1)?.stage).toBe('error');
+    });
+
+    it('skips the embedding stage when generateEmbeddings is false', async () => {
+      const fetcher: IngestionDocumentFetcher = {
+        fetchFromRequest: vi.fn().mockResolvedValue(SAMPLE_LAW)
+      };
+      const embeddingManager = createFakeEmbeddingManager();
+      const store = createFakeStore();
+      const pipeline = new DocumentIngestionPipeline(
+        { generateEmbeddings: false },
+        { fetcher, embeddingManager, store }
+      );
+
+      const stages: IngestionProgress['stage'][] = [];
+      pipeline.on('progress', (event: IngestionProgress) => stages.push(event.stage));
+
+      const result = await pipeline.ingestFromRequest(createRequest());
+
+      expect(result.success).toBe(true);
+      expect(result.embeddings).toBeUndefined();
+      expect(embeddingManager.embedBatch).not.toHaveBeenCalled();
+      expect(stages).not.toContain('embedding');
     });
   });
 
   describe('ingestFromUrl', () => {
-    it('should process URL and create document request', async () => {
-      const url = 'https://www.dof.gob.mx/test-document';
-      const mockMetadata = {
-        title: 'Test Document',
-        type: 'law' as const
+    it('flags an official Mexican government domain when building the request', async () => {
+      let capturedRequest: DocumentRequest | undefined;
+      const fetcher: IngestionDocumentFetcher = {
+        fetchFromRequest: vi.fn(async (request: DocumentRequest) => {
+          capturedRequest = request;
+          return SAMPLE_LAW;
+        })
       };
+      const pipeline = new DocumentIngestionPipeline(
+        { generateEmbeddings: false },
+        { fetcher, store: createFakeStore() }
+      );
 
-      // Mock the fetcher to avoid actual network calls
-      vi.spyOn(pipeline as any, 'ingestFromRequest').mockResolvedValue({
-        success: true,
-        documentId: 'test-id',
-        stats: {
-          fetchTime: 100,
-          parseTime: 50,
-          chunkTime: 30,
-          embeddingTime: 200,
-          totalTime: 380,
-          chunkCount: 5,
-          tokenCount: 1500
-        }
-      });
+      await pipeline.ingestFromUrl('https://www.dof.gob.mx/test-document');
 
-      const result = await pipeline.ingestFromUrl(url, mockMetadata);
-      
-      expect(result.success).toBe(true);
-      expect(result.documentId).toBe('test-id');
+      expect(capturedRequest?.sources[0]?.isOfficial).toBe(true);
     });
 
-    it('should detect official sources', async () => {
-      const officialUrl = 'https://www.dof.gob.mx/document';
-      const isOfficial = (pipeline as any).isOfficialSource(officialUrl);
-      expect(isOfficial).toBe(true);
-    });
+    it('flags a non-official domain when building the request', async () => {
+      let capturedRequest: DocumentRequest | undefined;
+      const fetcher: IngestionDocumentFetcher = {
+        fetchFromRequest: vi.fn(async (request: DocumentRequest) => {
+          capturedRequest = request;
+          return SAMPLE_LAW;
+        })
+      };
+      const pipeline = new DocumentIngestionPipeline(
+        { generateEmbeddings: false },
+        { fetcher, store: createFakeStore() }
+      );
 
-    it('should detect non-official sources', async () => {
-      const unofficialUrl = 'https://example.com/document';
-      const isOfficial = (pipeline as any).isOfficialSource(unofficialUrl);
-      expect(isOfficial).toBe(false);
+      await pipeline.ingestFromUrl('https://example.com/document');
+
+      expect(capturedRequest?.sources[0]?.isOfficial).toBe(false);
     });
   });
 
   describe('cancel', () => {
-    it('should cancel ongoing ingestion', () => {
-      const mockAbort = vi.fn();
-      (pipeline as any).abortController = { abort: mockAbort };
-      
+    it('aborts the in-flight fetch signal and the ingestion reports failure', async () => {
+      const fetcher: IngestionDocumentFetcher = {
+        fetchFromRequest: (_request, options) =>
+          new Promise<string>((_resolve, reject) => {
+            options?.signal?.addEventListener('abort', () => reject(new Error('aborted by user')));
+          })
+      };
+      const pipeline = new DocumentIngestionPipeline({}, { fetcher });
+
+      const resultPromise = pipeline.ingestFromRequest(createRequest());
+      await Promise.resolve(); // let the fetch stage register its abort listener
       pipeline.cancel();
-      
-      expect(mockAbort).toHaveBeenCalled();
+
+      const result = await resultPromise;
+      expect(result.success).toBe(false);
+      expect(result.errors?.[0]).toContain('aborted by user');
+    });
+
+    it('is a no-op when nothing is in flight', () => {
+      const pipeline = new DocumentIngestionPipeline();
+      expect(() => pipeline.cancel()).not.toThrow();
     });
   });
 
-  describe('progress events', () => {
-    it('should emit progress events', () => {
-      return new Promise<void>((resolve) => {
-        pipeline.on('progress', (event) => {
-          expect(event).toHaveProperty('stage');
-          expect(event).toHaveProperty('progress');
-          expect(event).toHaveProperty('message');
-          expect(event).toHaveProperty('timestamp');
-          resolve();
-        });
+  describe('ingestBatch', () => {
+    it('processes every request and reports per-document progress', async () => {
+      vi.useFakeTimers();
+      try {
+        const fetcher: IngestionDocumentFetcher = {
+          fetchFromRequest: vi.fn().mockResolvedValue(SAMPLE_LAW)
+        };
+        const pipeline = new DocumentIngestionPipeline(
+          { generateEmbeddings: false },
+          { fetcher, store: createFakeStore() }
+        );
 
-        // Trigger a progress event
-        (pipeline as any).emitProgress('fetching', 50, 'Test message');
-      });
+        const batchEvents: Array<{ current: number; total: number }> = [];
+        pipeline.on('batch-progress', (event: { current: number; total: number }) =>
+          batchEvents.push(event)
+        );
+
+        const requests = [createRequest({ id: 'r1' }), createRequest({ id: 'r2' })];
+        const resultsPromise = pipeline.ingestBatch(requests);
+        await vi.runAllTimersAsync();
+        const results = await resultsPromise;
+
+        expect(results).toHaveLength(2);
+        expect(results.every(result => result.success)).toBe(true);
+        expect(batchEvents.map(event => event.current)).toEqual([1, 2]);
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 
-  describe('batch processing', () => {
-    it('should process multiple documents in batch', async () => {
-      const requests: DocumentRequest[] = [
-        {
-          id: '1',
-          title: 'Document 1',
-          type: 'law',
-          sources: [{
-            id: 'source1',
-            type: 'url',
-            url: 'https://test.com/doc1',
-            verified: false,
-            isOfficial: false
-          }],
-          status: 'pending',
-          priority: 5,
-          requestedBy: 'test-user',
-          createdAt: new Date().toISOString(),
-          hierarchy: 3,
-          primaryArea: 'civil'
-        }
-      ];
-
-      // Mock the ingest method
-      vi.spyOn(pipeline, 'ingestFromRequest').mockResolvedValue({
-        success: true,
-        stats: {
-          fetchTime: 100,
-          parseTime: 50,
-          chunkTime: 30,
-          embeddingTime: 200,
-          totalTime: 380,
-          chunkCount: 5,
-          tokenCount: 1500
-        }
-      });
-
-      const results = await pipeline.ingestBatch(requests);
-      
-      expect(results).toHaveLength(1);
-      expect(results[0].success).toBe(true);
-    });
-  });
-
-  describe('helper methods', () => {
-    it('should estimate tokens correctly', () => {
+  describe('pure helper methods', () => {
+    it('estimates tokens as roughly 1 token per 4 characters', () => {
+      const pipeline = new DocumentIngestionPipeline() as unknown as PipelineInternals;
       const text = 'This is a test text with approximately 10 words here.';
-      const tokens = (pipeline as any).estimateTokens(text);
-      
-      // Rough estimate: 1 token ≈ 4 characters
-      const expectedTokens = Math.ceil(text.length / 4);
-      expect(tokens).toBe(expectedTokens);
+
+      expect(pipeline.estimateTokens(text)).toBe(Math.ceil(text.length / 4));
     });
 
-    it('should create batches correctly', () => {
+    it('splits an array into batches of the requested size', () => {
+      const pipeline = new DocumentIngestionPipeline() as unknown as PipelineInternals;
       const items = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-      const batches = (pipeline as any).createBatches(items, 3);
-      
-      expect(batches).toHaveLength(4);
-      expect(batches[0]).toEqual([1, 2, 3]);
-      expect(batches[1]).toEqual([4, 5, 6]);
-      expect(batches[2]).toEqual([7, 8, 9]);
-      expect(batches[3]).toEqual([10]);
+
+      const batches = pipeline.createBatches(items, 3);
+
+      expect(batches).toEqual([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10]]);
     });
   });
 });

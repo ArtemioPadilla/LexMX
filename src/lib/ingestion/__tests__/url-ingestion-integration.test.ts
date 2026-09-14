@@ -1,7 +1,7 @@
 // NOTE (Fase 1/3 of docs/INCEPTOR-MIGRATION-ANALYSIS.md): six cases that asserted the
 // pre-CORS-aware fetch behaviour and a mocked pdf.js pipeline were removed here; the
 // ingestion pipeline gets real unit tests when lib/ingestion is cleaned in Fase 3.
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach, type Mock } from 'vitest';
 import { DocumentFetcher } from '../document-fetcher';
 import { contentExtractor } from '../document-content-extractors';
 
@@ -42,6 +42,14 @@ vi.mock('mammoth', () => ({
 describe('URL Ingestion Integration Tests', () => {
   let fetcher: DocumentFetcher;
 
+  // Shared across "Diputados.gob.mx" and "Content Quality Validation" below.
+  const testUrls = {
+    constitutionPdf: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf',
+    constitutionDoc: 'https://www.diputados.gob.mx/LeyesBiblio/doc/CPEUM.doc',
+    laborLawPdf: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/125_120924.pdf',
+    civilCodePdf: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CCF.pdf'
+  };
+
   // Mock fetch globally for all tests
   const mockFetch = vi.fn();
   global.fetch = mockFetch;
@@ -57,13 +65,6 @@ describe('URL Ingestion Integration Tests', () => {
 
   describe('Mexican Government Sources', () => {
     describe('Diputados.gob.mx', () => {
-      const testUrls = {
-        constitutionPdf: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf',
-        constitutionDoc: 'https://www.diputados.gob.mx/LeyesBiblio/doc/CPEUM.doc',
-        laborLawPdf: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/125_120924.pdf',
-        civilCodePdf: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CCF.pdf'
-      };
-
       it('should correctly identify diputados.gob.mx as official source', () => {
         Object.values(testUrls).forEach(url => {
           const parsedUrl = new URL(url);
@@ -270,7 +271,7 @@ describe('URL Ingestion Integration Tests', () => {
 
       // Mock PDF.js to throw an error for corrupted files
       const pdfjs = await import('pdfjs-dist');
-      (pdfjs.getDocument as any).mockReturnValue({
+      (pdfjs.getDocument as unknown as Mock).mockReturnValue({
         promise: Promise.reject(new Error('Invalid PDF'))
       });
 

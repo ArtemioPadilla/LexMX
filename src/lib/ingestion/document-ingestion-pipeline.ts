@@ -4,7 +4,7 @@
 import type { DocumentRequest, LegalDocument, LegalChunk } from '@/types/legal';
 import type { EmbeddingVector } from '@/types/embeddings';
 import { EventEmitter } from 'events';
-import { DocumentFetcher } from './document-fetcher';
+import { DocumentFetcher, type FetchOptions } from './document-fetcher';
 import { DocumentParser } from './document-parser';
 import { ContextualChunker } from '../rag/chunking/contextual-chunker';
 import { EmbeddingManager } from '../embeddings/embedding-manager';
@@ -16,6 +16,46 @@ export interface IngestionPipelineConfig {
   generateEmbeddings?: boolean;
   validateSources?: boolean;
   batchSize?: number;
+}
+
+/**
+ * Narrow surface the pipeline actually needs from a fetcher. Lets tests inject
+ * a fake instead of stubbing `DocumentFetcher` internals, and keeps
+ * `ingestFromFile` from having to fake a whole `DocumentFetcher`.
+ */
+export interface IngestionDocumentFetcher {
+  fetchFromRequest(request: DocumentRequest, options?: FetchOptions): Promise<string | null>;
+}
+
+/**
+ * Narrow surface the pipeline needs from an embedding backend. `EmbeddingManager`
+ * satisfies this structurally; tests can inject a lightweight fake instead of
+ * spinning up the real (transformers-backed) manager.
+ */
+export interface EmbeddingGenerator {
+  initialize(): Promise<void>;
+  embed(text: string): Promise<EmbeddingVector>;
+  embedBatch(texts: string[]): Promise<EmbeddingVector[]>;
+}
+
+/** Object stores the pipeline is allowed to write ingestion output into. */
+export type IngestionStoreName = 'legal_documents' | 'chunks' | 'embeddings';
+
+/**
+ * Narrow surface the pipeline needs from a persistence backend. Defaults to
+ * `EnhancedOfflineStorage`, loaded lazily so the pipeline doesn't pull
+ * IndexedDB-only code into non-browser contexts (or tests) that inject a fake.
+ */
+export interface DocumentStore {
+  store<T>(storeName: IngestionStoreName, key: string, data: T): Promise<void>;
+}
+
+export interface IngestionPipelineDependencies {
+  fetcher?: IngestionDocumentFetcher;
+  parser?: DocumentParser;
+  chunker?: ContextualChunker;
+  embeddingManager?: EmbeddingGenerator;
+  store?: DocumentStore;
 }
 
 export interface IngestionProgressDetails {
@@ -56,17 +96,29 @@ export interface IngestionResult {
   errors?: string[];
 }
 
+/** Default persistence backend: lazily-loaded `EnhancedOfflineStorage`. */
+const defaultDocumentStore: DocumentStore = {
+  async store<T>(storeName: IngestionStoreName, key: string, data: T): Promise<void> {
+    const { EnhancedOfflineStorage } = await import('../storage/enhanced-offline-storage');
+    await EnhancedOfflineStorage.getInstance().store(storeName, key, data);
+  }
+};
+
 export class DocumentIngestionPipeline extends EventEmitter {
-  private fetcher: DocumentFetcher;
+  private fetcher: IngestionDocumentFetcher;
   private parser: DocumentParser;
   private chunker: ContextualChunker;
-  private embeddingManager: EmbeddingManager;
+  private embeddingManager: EmbeddingGenerator;
+  private documentStore: DocumentStore;
   private config: Required<IngestionPipelineConfig>;
   private abortController: AbortController | null = null;
 
-  constructor(config: IngestionPipelineConfig = {}) {
+  constructor(
+    config: IngestionPipelineConfig = {},
+    dependencies: IngestionPipelineDependencies = {}
+  ) {
     super();
-    
+
     this.config = {
       chunkSize: 512,
       chunkOverlap: 50,
@@ -77,16 +129,17 @@ export class DocumentIngestionPipeline extends EventEmitter {
       ...config
     };
 
-    this.fetcher = new DocumentFetcher();
-    this.parser = new DocumentParser();
-    this.chunker = new ContextualChunker({
+    this.fetcher = dependencies.fetcher ?? new DocumentFetcher();
+    this.parser = dependencies.parser ?? new DocumentParser();
+    this.chunker = dependencies.chunker ?? new ContextualChunker({
       maxChunkSize: this.config.chunkSize,
       overlapSize: this.config.chunkOverlap,
       preserveStructure: this.config.preserveStructure
     });
-    this.embeddingManager = new EmbeddingManager({
+    this.embeddingManager = dependencies.embeddingManager ?? new EmbeddingManager({
       defaultProvider: 'transformers'
     });
+    this.documentStore = dependencies.store ?? defaultDocumentStore;
   }
 
   async initialize(): Promise<void> {
@@ -238,11 +291,10 @@ export class DocumentIngestionPipeline extends EventEmitter {
       this.emitProgress('embedding', 50, 'Generating embeddings...');
       const embeddings = new Map<string, EmbeddingVector>();
       
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
+      for (const [i, chunk] of chunks.entries()) {
         const embedding = await this.embeddingManager.embed(chunk.content);
         embeddings.set(chunk.id, embedding);
-        
+
         this.emitProgress(
           'embedding',
           50 + (i / chunks.length) * 40,
@@ -307,16 +359,15 @@ export class DocumentIngestionPipeline extends EventEmitter {
 
     // Read file content
     const content = await this.readFile(file);
-    
-    // Create a mock fetcher response
-    const mockFetcher = {
+
+    // Temporarily replace the fetcher with one that just returns the file's
+    // already-read content, so ingestFromRequest can be reused unchanged.
+    const fileFetcher: IngestionDocumentFetcher = {
       fetchFromRequest: async () => content
     };
-    
-    // Temporarily replace fetcher
     const originalFetcher = this.fetcher;
-    this.fetcher = mockFetcher as any;
-    
+    this.fetcher = fileFetcher;
+
     try {
       return await this.ingestFromRequest(request as DocumentRequest);
     } finally {
@@ -351,18 +402,16 @@ export class DocumentIngestionPipeline extends EventEmitter {
   async ingestBatch(requests: DocumentRequest[]): Promise<IngestionResult[]> {
     const results: IngestionResult[] = [];
     
-    for (let i = 0; i < requests.length; i++) {
-      const request = requests[i];
-      
+    for (const [i, request] of requests.entries()) {
       this.emit('batch-progress', {
         current: i + 1,
         total: requests.length,
         currentDocument: request.title
       });
-      
+
       const result = await this.ingestFromRequest(request);
       results.push(result);
-      
+
       // Small delay between documents to avoid overwhelming the system
       if (i < requests.length - 1) {
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -390,11 +439,8 @@ export class DocumentIngestionPipeline extends EventEmitter {
   ): Promise<Map<string, EmbeddingVector>> {
     const embeddings = new Map<string, EmbeddingVector>();
     const batches = this.createBatches(chunks, this.config.batchSize);
-    
-    console.log(`[DocumentIngestion] Starting embedding generation for ${chunks.length} chunks in ${batches.length} batches`);
-    
-    for (let i = 0; i < batches.length; i++) {
-      const batch = batches[i];
+
+    for (const [i, batch] of batches.entries()) {
       const progress = Math.round((i / batches.length) * 100);
       
       // Detailed progress with batch information
@@ -413,10 +459,15 @@ export class DocumentIngestionPipeline extends EventEmitter {
       
       const texts = batch.map(chunk => chunk.content);
       const batchEmbeddings = await this.embeddingManager.embedBatch(texts);
-      
-      for (let j = 0; j < batch.length; j++) {
-        embeddings.set(batch[j].id, batchEmbeddings[j]);
-      }
+
+      batch.forEach((chunk, j) => {
+        const embedding = batchEmbeddings[j];
+        // Defensive: only record a result if the batch embedder actually
+        // returned one for this position (it should always match 1:1).
+        if (embedding) {
+          embeddings.set(chunk.id, embedding);
+        }
+      });
       
       // Critical: Yield control to the main thread to prevent UI blocking
       // This allows the UI to update progress and remain responsive
@@ -442,8 +493,7 @@ export class DocumentIngestionPipeline extends EventEmitter {
         }
       }
     }
-    
-    console.log(`[DocumentIngestion] Embedding generation complete: ${embeddings.size} embeddings created`);
+
     return embeddings;
   }
 
@@ -460,26 +510,22 @@ export class DocumentIngestionPipeline extends EventEmitter {
     chunks: LegalChunk[],
     embeddings?: Map<string, EmbeddingVector>
   ): Promise<void> {
-    // Store document in enhanced offline storage for retrieval
     try {
-      const storage = await import('../storage/enhanced-offline-storage');
-      const offlineStorage = storage.EnhancedOfflineStorage.getInstance();
-      
       // Store the complete document
-      await offlineStorage.store('legal_documents', document.id, document);
-      
+      await this.documentStore.store('legal_documents', document.id, document);
+
       // Store chunks for RAG engine
       for (const chunk of chunks) {
-        await offlineStorage.store('chunks', chunk.id, chunk);
+        await this.documentStore.store('chunks', chunk.id, chunk);
       }
-      
+
       // Store embeddings
       if (embeddings) {
         for (const [chunkId, embedding] of embeddings.entries()) {
-          await offlineStorage.store('embeddings', chunkId, embedding);
+          await this.documentStore.store('embeddings', chunkId, embedding);
         }
       }
-      
+
     } catch (error) {
       console.error('Failed to store document:', error);
       throw error;
@@ -519,16 +565,16 @@ export class DocumentIngestionPipeline extends EventEmitter {
 
   private async estimateTokensAsync(chunks: LegalChunk[]): Promise<number> {
     let totalTokens = 0;
-    
-    for (let i = 0; i < chunks.length; i++) {
-      totalTokens += this.estimateTokens(chunks[i].content);
-      
+
+    for (const [i, chunk] of chunks.entries()) {
+      totalTokens += this.estimateTokens(chunk.content);
+
       // Yield control every 100 chunks to prevent blocking
       if (i % 100 === 0 && i > 0) {
         await new Promise(resolve => setTimeout(resolve, 0));
       }
     }
-    
+
     return totalTokens;
   }
 

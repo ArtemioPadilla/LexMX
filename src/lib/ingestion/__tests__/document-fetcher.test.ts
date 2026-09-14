@@ -1,16 +1,47 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { DocumentFetcher } from '../document-fetcher';
 import type { DocumentRequest } from '@/types/legal';
 
-// Mock fetch globally
-global.fetch = vi.fn();
+/** Minimal, fully-typed DocumentRequest fixture; override only what a test cares about. */
+function createDocumentRequest(overrides: Partial<DocumentRequest> = {}): DocumentRequest {
+  return {
+    id: 'test-request',
+    title: 'Test Document',
+    description: 'Fixture request for DocumentFetcher tests',
+    requestedBy: 'test-user',
+    type: 'law',
+    hierarchy: 3,
+    primaryArea: 'civil',
+    secondaryAreas: [],
+    territorialScope: 'federal',
+    sources: [],
+    votes: 0,
+    voters: [],
+    comments: [],
+    priority: 'medium',
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    verified: false,
+    ...overrides
+  };
+}
+
+/** Reaches into DocumentFetcher's private HTML/XML helpers without `any`. */
+interface DocumentFetcherInternals {
+  extractHtmlContent(html: string): string;
+  decodeHtmlEntities(text: string): string;
+  parseXmlContent(xml: string): string;
+}
 
 describe('DocumentFetcher', () => {
   let fetcher: DocumentFetcher;
+  let fetchMock: Mock;
 
   beforeEach(() => {
+    fetchMock = vi.fn();
+    global.fetch = fetchMock as unknown as typeof fetch;
     fetcher = new DocumentFetcher();
-    vi.clearAllMocks();
   });
 
   describe('isOfficialSource', () => {
@@ -47,41 +78,35 @@ describe('DocumentFetcher', () => {
 
   describe('fetchFromUrl', () => {
     it('should fetch content from URL successfully', async () => {
-      const mockResponse = {
+      fetchMock.mockResolvedValue({
         ok: true,
         headers: new Headers({
           'content-type': 'text/html'
         }),
         text: async () => '<html><body>Legal content</body></html>'
-      };
-
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      });
 
       const content = await fetcher.fetchFromUrl('https://test.com/document');
       expect(content).toContain('Legal content');
     });
 
     it('should handle HTTP errors', async () => {
-      const mockResponse = {
+      fetchMock.mockResolvedValue({
         ok: false,
         status: 404,
         statusText: 'Not Found'
-      };
-
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      });
 
       await expect(fetcher.fetchFromUrl('https://test.com/404')).rejects.toThrow('HTTP 404: Not Found');
     });
 
     it('should check content size limit', async () => {
-      const mockResponse = {
+      fetchMock.mockResolvedValue({
         ok: true,
         headers: new Headers({
           'content-length': '20000000' // 20MB
         })
-      };
-
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      });
 
       await expect(
         fetcher.fetchFromUrl('https://test.com/large', { maxSize: 10 * 1024 * 1024 })
@@ -89,7 +114,7 @@ describe('DocumentFetcher', () => {
     });
 
     it('should handle timeout', async () => {
-      (global.fetch as any).mockRejectedValue(new Error('AbortError'));
+      fetchMock.mockRejectedValue(new Error('AbortError'));
 
       await expect(
         fetcher.fetchFromUrl('https://test.com/slow', { timeout: 100 })
@@ -99,42 +124,31 @@ describe('DocumentFetcher', () => {
 
   describe('fetchFromRequest', () => {
     it('should fetch from URL source', async () => {
-      const request: DocumentRequest = {
+      const request = createDocumentRequest({
         id: 'test-1',
-        title: 'Test Document',
-        type: 'law',
         sources: [{
           id: 'source-1',
           type: 'url',
           url: 'https://test.com/doc',
           verified: false,
           isOfficial: false
-        }],
-        status: 'pending',
-        priority: 'medium',
-        requestedBy: 'user',
-        createdAt: new Date().toISOString(),
-        hierarchy: 3,
-        primaryArea: 'civil'
-      };
+        }]
+      });
 
-      const mockResponse = {
+      fetchMock.mockResolvedValue({
         ok: true,
         headers: new Headers({ 'content-type': 'text/plain' }),
         text: async () => 'Document content'
-      };
-
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      });
 
       const content = await fetcher.fetchFromRequest(request);
       expect(content).toBe('Document content');
     });
 
     it('should handle PDF upload source', async () => {
-      const request: DocumentRequest = {
+      const request = createDocumentRequest({
         id: 'test-2',
         title: 'Uploaded Document',
-        type: 'law',
         sources: [{
           id: 'source-2',
           type: 'pdf_upload',
@@ -142,32 +156,19 @@ describe('DocumentFetcher', () => {
           filename: 'document.pdf',
           verified: false,
           isOfficial: false
-        }],
-        status: 'pending',
-        priority: 'medium',
-        requestedBy: 'user',
-        createdAt: new Date().toISOString(),
-        hierarchy: 3,
-        primaryArea: 'civil'
-      };
+        }]
+      });
 
       const content = await fetcher.fetchFromRequest(request);
       expect(content).toBe('PDF content here');
     });
 
     it('should throw error when no valid source found', async () => {
-      const request: DocumentRequest = {
+      const request = createDocumentRequest({
         id: 'test-3',
         title: 'No Source Document',
-        type: 'law',
-        sources: [],
-        status: 'pending',
-        priority: 'medium',
-        requestedBy: 'user',
-        createdAt: new Date().toISOString(),
-        hierarchy: 3,
-        primaryArea: 'civil'
-      };
+        sources: []
+      });
 
       await expect(fetcher.fetchFromRequest(request)).rejects.toThrow('No valid source found in request');
     });
@@ -188,8 +189,9 @@ describe('DocumentFetcher', () => {
         </html>
       `;
 
-      const extracted = (fetcher as any).extractHtmlContent(html);
-      
+      const internals = fetcher as unknown as DocumentFetcherInternals;
+      const extracted = internals.extractHtmlContent(html);
+
       expect(extracted).toContain('Title');
       expect(extracted).toContain('Paragraph 1');
       expect(extracted).toContain('Paragraph 2');
@@ -201,15 +203,17 @@ describe('DocumentFetcher', () => {
   describe('HTML entity decoding', () => {
     it('should decode common HTML entities', () => {
       const encoded = '&lt;div&gt; &amp; &quot;test&quot; &apos;single&apos; &ntilde;';
-      const decoded = (fetcher as any).decodeHtmlEntities(encoded);
-      
+      const internals = fetcher as unknown as DocumentFetcherInternals;
+      const decoded = internals.decodeHtmlEntities(encoded);
+
       expect(decoded).toBe('<div> & "test" \'single\' ñ');
     });
 
     it('should decode Spanish special characters', () => {
       const encoded = '&aacute;&eacute;&iacute;&oacute;&uacute; &Aacute;&Eacute;&Iacute;&Oacute;&Uacute; &Ntilde;';
-      const decoded = (fetcher as any).decodeHtmlEntities(encoded);
-      
+      const internals = fetcher as unknown as DocumentFetcherInternals;
+      const decoded = internals.decodeHtmlEntities(encoded);
+
       expect(decoded).toBe('áéíóú ÁÉÍÓÚ Ñ');
     });
   });
@@ -224,8 +228,9 @@ describe('DocumentFetcher', () => {
         </document>
       `;
 
-      const extracted = (fetcher as any).parseXmlContent(xml);
-      
+      const internals = fetcher as unknown as DocumentFetcherInternals;
+      const extracted = internals.parseXmlContent(xml);
+
       expect(extracted).toContain('Legal Document');
       expect(extracted).toContain('This is the content');
       expect(extracted).not.toContain('<?xml');
@@ -235,34 +240,30 @@ describe('DocumentFetcher', () => {
 
   describe('specialized fetchers', () => {
     it('should construct DOF URL correctly', async () => {
-      const mockResponse = {
+      fetchMock.mockResolvedValue({
         ok: true,
         headers: new Headers({ 'content-type': 'text/html' }),
         text: async () => 'DOF content'
-      };
-
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      });
 
       await fetcher.fetchFromDOF('01/01/2024', '12345');
-      
-      expect(global.fetch).toHaveBeenCalledWith(
+
+      expect(fetchMock).toHaveBeenCalledWith(
         expect.stringContaining('dof.gob.mx'),
         expect.any(Object)
       );
     });
 
     it('should construct SCJN URL correctly', async () => {
-      const mockResponse = {
+      fetchMock.mockResolvedValue({
         ok: true,
         headers: new Headers({ 'content-type': 'text/html' }),
         text: async () => 'SCJN content'
-      };
-
-      (global.fetch as any).mockResolvedValue(mockResponse);
+      });
 
       await fetcher.fetchFromSCJN('2024/123');
-      
-      expect(global.fetch).toHaveBeenCalledWith(
+
+      expect(fetchMock).toHaveBeenCalledWith(
         expect.stringContaining('scjn.gob.mx'),
         expect.any(Object)
       );

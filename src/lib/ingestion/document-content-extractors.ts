@@ -1,16 +1,31 @@
 // Enhanced document content extractors for PDF, DOC, and other formats
 // Integrates PDF.js and mammoth.js for proper content extraction
+//
+// Both libraries are loaded lazily (dynamic `import()`), not at module scope:
+// they are only needed when a PDF/DOC actually needs extracting, and pulling
+// them in eagerly would ship their (sizeable) parsing code to every caller of
+// this module, including ones that only ever handle plain text/HTML.
 
-import * as pdfjsLib from 'pdfjs-dist';
-import * as mammoth from 'mammoth';
+type PdfJsModule = typeof import('pdfjs-dist');
+type MammothModule = typeof import('mammoth');
 
-// Configure PDF.js worker
-if (typeof window !== 'undefined') {
-  // For browser environment
-  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.min.mjs',
-    import.meta.url
-  ).toString();
+let pdfWorkerConfigured = false;
+
+async function loadPdfJs(): Promise<PdfJsModule> {
+  const pdfjsLib = await import('pdfjs-dist');
+  if (!pdfWorkerConfigured && typeof window !== 'undefined') {
+    // For browser environment
+    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+      'pdfjs-dist/build/pdf.worker.min.mjs',
+      import.meta.url
+    ).toString();
+    pdfWorkerConfigured = true;
+  }
+  return pdfjsLib;
+}
+
+async function loadMammoth(): Promise<MammothModule> {
+  return import('mammoth');
 }
 
 export interface ExtractionOptions {
@@ -56,6 +71,8 @@ export class PDFExtractor {
     } = options;
 
     try {
+      const pdfjsLib = await loadPdfJs();
+
       // Load the PDF document
       const loadingTask = pdfjsLib.getDocument({
         data: buffer,
@@ -221,6 +238,8 @@ export class DOCExtractor {
     const { includeMetadata = true } = options;
 
     try {
+      const mammoth = await loadMammoth();
+
       // mammoth's extractRawText only accepts the input document; style-map and
       // image-conversion options only apply to convertToHtml, so they are not
       // passed here.

@@ -14,16 +14,16 @@ describe('Real URL Accessibility Tests (Manual)', () => {
 
   // Skip these tests by default - uncomment to run manually
   describe.skip('Mexican Government Sources - Real HTTP Tests', () => {
-    
-    describe('Diputados.gob.mx', () => {
-      const testUrls = {
-        constitutionPdf: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf',
-        constitutionDoc: 'https://www.diputados.gob.mx/LeyesBiblio/doc/CPEUM.doc',
-        laborLawPdf: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/125_120924.pdf',
-        civilCodePdf: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CCF.pdf',
-        penalCodePdf: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CPF.pdf'
-      };
+    // Shared by the "Diputados.gob.mx" and "Content Quality Validation" blocks below.
+    const testUrls = {
+      constitutionPdf: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf',
+      constitutionDoc: 'https://www.diputados.gob.mx/LeyesBiblio/doc/CPEUM.doc',
+      laborLawPdf: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/125_120924.pdf',
+      civilCodePdf: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CCF.pdf',
+      penalCodePdf: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CPF.pdf'
+    };
 
+    describe('Diputados.gob.mx', () => {
       it('should successfully fetch Mexican Constitution PDF', async () => {
         const result = await fetcher.fetchFromUrl(testUrls.constitutionPdf);
         
@@ -197,89 +197,3 @@ describe('Real URL Accessibility Tests (Manual)', () => {
   });
 });
 
-/**
- * Helper function to run real tests manually
- * Usage: 
- * import { runRealUrlTests } from './real-url-accessibility.manual.test';
- * await runRealUrlTests();
- */
-export async function runRealUrlTests() {
-  console.log('🧪 Starting real URL accessibility tests...');
-  
-  const fetcher = new DocumentFetcher();
-  const testResults = [];
-  
-  const testCases = [
-    {
-      name: 'Constitution PDF',
-      url: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/CPEUM.pdf',
-      expectedContent: ['CONSTITUCIÓN', 'Artículo']
-    },
-    {
-      name: 'Constitution DOC',
-      url: 'https://www.diputados.gob.mx/LeyesBiblio/doc/CPEUM.doc',
-      expectedContent: ['CONSTITUCIÓN', 'Artículo']
-    },
-    {
-      name: 'Labor Law PDF',
-      url: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/125_120924.pdf',
-      expectedContent: ['LEY FEDERAL DEL TRABAJO', 'trabajo']
-    }
-  ];
-  
-  for (const testCase of testCases) {
-    console.log(`📄 Testing ${testCase.name}...`);
-    
-    try {
-      const startTime = Date.now();
-      const result = await fetcher.fetchFromUrl(testCase.url);
-      const duration = Date.now() - startTime;
-      
-      const hasExpectedContent = testCase.expectedContent.every(content =>
-        result.toLowerCase().includes(content.toLowerCase())
-      );
-      
-      testResults.push({
-        name: testCase.name,
-        success: true,
-        duration,
-        contentLength: result.length,
-        hasExpectedContent,
-        url: testCase.url
-      });
-      
-      console.log(`✅ ${testCase.name} - ${duration}ms - ${result.length} chars`);
-      
-    } catch (error) {
-      testResults.push({
-        name: testCase.name,
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        url: testCase.url
-      });
-      
-      console.log(`❌ ${testCase.name} - Error: ${error}`);
-    }
-  }
-  
-  console.log('\n📊 Test Results Summary:');
-  console.log('='.repeat(50));
-  
-  testResults.forEach(result => {
-    if (result.success) {
-      console.log(`✅ ${result.name}`);
-      console.log(`   Duration: ${result.duration}ms`);
-      console.log(`   Content: ${result.contentLength} characters`);
-      console.log(`   Expected content found: ${result.hasExpectedContent ? 'Yes' : 'No'}`);
-    } else {
-      console.log(`❌ ${result.name}`);
-      console.log(`   Error: ${result.error}`);
-    }
-    console.log('');
-  });
-  
-  const successCount = testResults.filter(r => r.success).length;
-  console.log(`\n🎯 Results: ${successCount}/${testResults.length} tests passed`);
-  
-  return testResults;
-}

@@ -294,7 +294,7 @@ export class DocumentFetcher {
     
     // Extract body content if present
     const bodyMatch = content.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-    if (bodyMatch) {
+    if (bodyMatch?.[1] !== undefined) {
       content = bodyMatch[1];
     }
     

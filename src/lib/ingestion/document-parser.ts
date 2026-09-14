@@ -110,15 +110,6 @@ export class DocumentParser {
   }
 
   /**
-   * Parse a PDF document (placeholder - requires PDF library)
-   */
-  async parsePDF(_pdfBuffer: ArrayBuffer): Promise<string> {
-    // In production, use a library like pdf-parse or pdfjs
-    console.warn('PDF parsing not yet implemented');
-    return '[PDF content would be extracted here]';
-  }
-
-  /**
    * Normalize content for consistent parsing
    */
   private normalizeContent(content: string): string {
@@ -153,10 +144,10 @@ export class DocumentParser {
     let sectionId = 0;
     let foundStructuredContent = false;
     
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
+    for (const [i, rawLine] of lines.entries()) {
+      const line = rawLine.trim();
       if (!line) continue;
-      
+
       // Check for title
       const titleMatch = line.match(/^(?:TÍTULO|Título|TÍT\.?)\s+([IVXLCDM]+|\d+)/);
       if (titleMatch) {
@@ -194,7 +185,9 @@ export class DocumentParser {
       }
       
       // Check for article
-      const articleMatch = line.match(/^(?:Artículo|Art\.?)\s+(\d+(?:\s+bis)?(?:\s+[A-Z])?)/);
+      // Case-insensitive on the "bis" suffix: Mexican statutes write it as
+      // "Artículo 2 Bis", "2 BIS" or "2 bis" depending on the source.
+      const articleMatch = line.match(/^(?:Artículo|Art\.?)\s+(\d+(?:\s+bis)?(?:\s+[A-Z])?)/i);
       if (articleMatch) {
         foundStructuredContent = true;
         if (currentSection) {
@@ -231,7 +224,7 @@ export class DocumentParser {
     }
     
     // If no structured content was found, create logical sections from paragraphs
-    if (!foundStructuredContent && sections.length === 1 && sections[0].content.length > 500) {
+    if (!foundStructuredContent && sections.length === 1 && (sections[0]?.content.length ?? 0) > 500) {
       return this.createSectionsFromPlainText(content);
     }
     
@@ -266,7 +259,7 @@ export class DocumentParser {
       const sectionContent = sectionParagraphs.join('\n\n');
       
       // Try to extract a meaningful title from the first paragraph
-      const firstPara = sectionParagraphs[0];
+      const firstPara = sectionParagraphs[0] ?? '';
       const title = this.extractTitleFromParagraph(firstPara);
       
       sections.push({
@@ -287,7 +280,7 @@ export class DocumentParser {
    */
   private extractTitleFromParagraph(paragraph: string): string {
     // Take first sentence or first 50 characters as title
-    const firstSentence = paragraph.split(/[.!?]/)[0].trim();
+    const firstSentence = (paragraph.split(/[.!?]/)[0] ?? '').trim();
     if (firstSentence.length > 10 && firstSentence.length < 80) {
       return firstSentence;
     }
@@ -304,14 +297,13 @@ export class DocumentParser {
     const flatContent: LegalContent[] = [];
     
     // Create flat content array with parent references
-    for (let i = 0; i < sections.length; i++) {
-      const section = sections[i];
-      
+    for (const [i, section] of sections.entries()) {
       // Find parent based on level
       let parentId: string | undefined;
       for (let j = i - 1; j >= 0; j--) {
-        if (sections[j].level < section.level) {
-          parentId = sections[j].id;
+        const candidate = sections[j];
+        if (candidate && candidate.level < section.level) {
+          parentId = candidate.id;
           break;
         }
       }
@@ -432,21 +424,21 @@ export class DocumentParser {
    */
   private extractTitle(lines: string[], startIndex: number): string {
     // Look for title in the same line or next lines
-    const currentLine = lines[startIndex];
+    const currentLine = lines[startIndex] ?? '';
     const titleInLine = currentLine.split(/\s{2,}/).slice(1).join(' ').trim();
-    
+
     if (titleInLine) {
       return titleInLine;
     }
-    
+
     // Check next lines for title
     for (let i = startIndex + 1; i < Math.min(startIndex + 3, lines.length); i++) {
-      const line = lines[i].trim();
+      const line = (lines[i] ?? '').trim();
       if (line && !line.match(/^(?:Artículo|CAPÍTULO|TÍTULO|SECCIÓN)/)) {
         return line;
       }
     }
-    
+
     return '';
   }
 
@@ -490,14 +482,14 @@ export class DocumentParser {
     };
     
     const match = dateStr.match(/(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})/);
-    if (match) {
+    if (match?.[1] && match[2] && match[3]) {
       const day = match[1].padStart(2, '0');
       const month = months[match[2].toLowerCase()] || '01';
       const year = match[3];
       return `${year}-${month}-${day}`;
     }
-    
-    return new Date().toISOString().split('T')[0];
+
+    return new Date().toISOString().split('T')[0] ?? '';
   }
 
   private fixCommonOCRErrors(text: string): string {
