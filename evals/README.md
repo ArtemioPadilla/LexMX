@@ -25,3 +25,28 @@ Reglas:
   `recall@5` por artículo: solo puede subir (`evals/baseline.json`).
 - Los cambios de modelo de embeddings o de chunking se justifican con este
   benchmark en el PR.
+
+## Reglas de ranking (compartidas con el motor)
+
+El benchmark aplica las mismas reglas que `src/lib/rag/ranking.ts` y que
+`CorpusInstaller`/`build-embeddings` al construir el índice:
+
+- Solo se indexan secciones de tipo `article`; títulos y capítulos son
+  navegación y desplazaban artículos reales en consultas cortas.
+- Los artículos transitorios (marcados `transitory: true` por el pipeline)
+  se penalizan ×0.92 para que no superen al texto permanente que reforman.
+- Las consultas llevan el prefijo `query: ` de multilingual-e5 (el corpus se
+  embebe como pasajes sin prefijo); el motor hace lo mismo con
+  `embedQuery`.
+
+## Resultados
+
+| Fecha | Corpus | doc recall@5 | art recall@5 | art recall@10 | Archivo |
+|---|---|---|---|---|---|
+| 2026-09-14 | 14 leyes | 1.00 | 0.79 | 0.93 | `results/mx-federal-2026-09-14.json` |
+| 2026-09-14 | 39 leyes, solo artículos, transitorios ×0.92 | 0.98 | 0.81 | 0.93 | `results/mx-federal-39-2026-09-14.json` |
+
+Las áreas más débiles son fiscal (0.60) y administrativa (0/2): el modelo
+`e5-small` confunde artículos vecinos con numeración compuesta (`17-H`,
+`93`) y las consultas de transparencia. Candidatos: embeddings afinados en
+español jurídico (línea F) y re-ranking léxico por número de artículo.

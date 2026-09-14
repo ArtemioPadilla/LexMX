@@ -260,7 +260,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
               className="mr-2 h-8 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {listJurisdictions().map((j) => (
-                <option key={j.code} value={j.code}>{j.name}{j.code !== 'mx' ? ` · ${t('chat.corpusPending')}` : ''}</option>
+                <option key={j.code} value={j.code}>{j.code !== 'mx' ? `${j.name} · ${t('chat.corpusPending')}` : j.name}</option>
               ))}
             </select>
             <div role="radiogroup" aria-label="Modo" className="mr-2 inline-flex rounded-lg border border-border p-0.5 text-xs">
@@ -432,7 +432,12 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
             <DictationButton
               locale={language}
               disabled={!isInitialized || isProcessing}
-              labels={{ start: t('chat.dictate'), stop: t('chat.dictating'), note: t('chat.dictationNote') }}
+              labels={{
+                start: t('chat.dictate'),
+                stop: t('chat.dictating'),
+                note: t('chat.dictationNote'),
+                local: { start: t('chat.dictateLocal'), stop: t('chat.dictatingLocal'), note: t('chat.dictationLocalNote'), busy: t('chat.transcribing') },
+              }}
               onTranscript={(text) => setCurrentInput((prev) => { const base = dictationBase.current ?? prev; dictationBase.current = base; return base ? `${base} ${text}` : text; })}
             />
           }

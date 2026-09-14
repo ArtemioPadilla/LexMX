@@ -66,8 +66,9 @@ migración).
 | `npm run corpus:import` / `corpus:embeddings` | build the federal corpus and its per-document embedding shards (what `corpus-update.yml` runs) |
 | `npm run eval:retrieval` | retrieval benchmark (recall@k / MRR by article) against a built corpus; fails under `evals/baseline.json` |
 | `npm run mcp` | local MCP server (`search_corpus`, `get_article`, `list_documents`) |
-| `npm run lighthouse` | build, stage `dist/` under `.lighthouse-root/LexMX/` (Pages base path) and run Lighthouse CI with `lighthouse-budgets.json` |
+| `npm run lighthouse` | build, stage `dist/` under `.lighthouse-root/LexMX/` (Pages base path) and run Lighthouse CI with the budgets and a11y assertions in `lighthouserc.json` |
 | `npm run desktop:dev` / `desktop:build` | Tauri 2 desktop app |
+| `npm run mobile:android:*` / `mobile:ios:*` | Tauri 2 mobile (`docs/MOBILE.md`; needs the platform SDKs) |
 | `npm run doctor` / `ship` / `monday` / `new-issue` | Inceptor workflow scripts |
 
 ## Quality ratchet (read before touching code)

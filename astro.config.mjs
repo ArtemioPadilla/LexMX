@@ -11,6 +11,8 @@ import AstroPWA from '@vite-pwa/astro';
 // keep the historical default so `npm run build` still targets Pages.
 const BASE =
   process.env.ASTRO_BASE || (process.env.NODE_ENV === 'production' ? '/LexMX' : '/');
+// Manifest URLs need the trailing slash whatever ASTRO_BASE was given as.
+const BASE_PATH = BASE.endsWith('/') ? BASE : `${BASE}/`;
 
 export default defineConfig({
   site: 'https://artemiopadilla.github.io',
@@ -35,18 +37,18 @@ export default defineConfig({
         short_name: 'LexMX',
         description:
           'Asistente legal mexicano con IA - consultas legales precisas basadas en legislación mexicana. Funciona sin conexión.',
-        start_url: BASE,
-        scope: BASE,
+        start_url: BASE_PATH,
+        scope: BASE_PATH,
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#22c55e',
         lang: 'es',
         icons: [
-          { src: `${BASE}favicon.svg`, sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
-          { src: `${BASE}icon-192.png`, sizes: '192x192', type: 'image/png', purpose: 'any' },
-          { src: `${BASE}icon-192.png`, sizes: '192x192', type: 'image/png', purpose: 'maskable' },
-          { src: `${BASE}icon-512.png`, sizes: '512x512', type: 'image/png', purpose: 'any' },
-          { src: `${BASE}icon-512.png`, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: `${BASE_PATH}favicon.svg`, sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          { src: `${BASE_PATH}icon-192.png`, sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: `${BASE_PATH}icon-192.png`, sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: `${BASE_PATH}icon-512.png`, sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: `${BASE_PATH}icon-512.png`, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       injectManifest: {
@@ -59,7 +61,10 @@ export default defineConfig({
     }),
     compress({
       CSS: true,
-      HTML: true,
+      // React separates adjacent text nodes in SSR HTML with `<!-- -->`;
+      // stripping comments (or collapsing whitespace) inside islands made
+      // React throw hydration error #418 on /chat. Leave both alone.
+      HTML: { 'html-minifier-terser': { collapseWhitespace: false, removeComments: false } },
       Image: true,
       JavaScript: true,
       SVG: true,

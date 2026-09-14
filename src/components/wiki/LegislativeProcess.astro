@@ -43,15 +43,15 @@ const steps: Step[] = [
         </summary>
         <div class="grid gap-4 border-t border-gray-200 p-4 text-sm dark:border-gray-700 md:grid-cols-3">
           <div>
-            <h4 class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Qué ocurre</h4>
+            <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Qué ocurre</p>
             <ul class="list-inside list-disc text-gray-700 dark:text-gray-300">{step.details.map((d) => <li>{d}</li>)}</ul>
           </div>
           <div>
-            <h4 class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Quién participa</h4>
+            <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Quién participa</p>
             <ul class="list-inside list-disc text-gray-700 dark:text-gray-300">{step.actors.map((d) => <li>{d}</li>)}</ul>
           </div>
           <div>
-            <h4 class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Requisitos</h4>
+            <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Requisitos</p>
             <ul class="list-inside list-disc text-gray-700 dark:text-gray-300">{step.requirements.map((d) => <li>{d}</li>)}</ul>
           </div>
         </div>

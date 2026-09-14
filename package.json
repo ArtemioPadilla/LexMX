@@ -38,7 +38,13 @@
     "lighthouse": "ASTRO_BASE=/LexMX npm run build && node scripts/lighthouse-stage.mjs && npx --yes @lhci/cli@0.15 autorun",
     "mcp": "node --experimental-strip-types scripts/mcp/server.ts",
     "desktop:dev": "npx --yes @tauri-apps/cli@^2 dev",
-    "desktop:build": "npx --yes @tauri-apps/cli@^2 build"
+    "desktop:build": "npx --yes @tauri-apps/cli@^2 build",
+    "mobile:android:init": "npx --yes @tauri-apps/cli@^2 android init",
+    "mobile:android:dev": "npx --yes @tauri-apps/cli@^2 android dev",
+    "mobile:android:build": "npx --yes @tauri-apps/cli@^2 android build",
+    "mobile:ios:init": "npx --yes @tauri-apps/cli@^2 ios init",
+    "mobile:ios:dev": "npx --yes @tauri-apps/cli@^2 ios dev",
+    "mobile:ios:build": "npx --yes @tauri-apps/cli@^2 ios build"
   },
   "dependencies": {
     "@astrojs/react": "^5.0.7",

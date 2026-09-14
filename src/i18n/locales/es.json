@@ -589,7 +589,11 @@
     "corpusPending": "corpus pendiente",
     "dictate": "Dictar por voz",
     "dictating": "Detener dictado",
-    "dictationNote": "Usa el reconocimiento de voz del navegador; según el navegador, el audio puede procesarse en los servidores de su fabricante"
+    "dictationNote": "Usa el reconocimiento de voz del navegador; según el navegador, el audio puede procesarse en los servidores de su fabricante",
+    "dictateLocal": "Dictar con Whisper local",
+    "dictatingLocal": "Detener y transcribir",
+    "dictationLocalNote": "Graba en tu dispositivo y transcribe con Whisper en el navegador; nada se envía",
+    "transcribing": "Transcribiendo…"
   },
   "setup": {
     "title": "Configuración de Proveedores IA",
@@ -2187,5 +2191,30 @@
     "howTo": "Cómo instalarlo",
     "howToSteps": "En Word: Insertar → Complementos → Mis complementos → Cargar mi complemento, y elige el archivo manifest.xml. También funciona en Word para la web.",
     "withCitations": "Incluir citas al final"
+  },
+  "transcribe": {
+    "title": "Notas de voz y transcripción local",
+    "subtitle": "Graba desde el micrófono o carga un audio y obtén una transcripción con marcas de tiempo. Whisper corre en tu navegador; el audio no sale de tu dispositivo.",
+    "language": "Idioma",
+    "model": "Modelo",
+    "record": "Grabar",
+    "stop": "Detener",
+    "chooseFile": "Cargar audio",
+    "result": "Transcripción",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "download": "Descargar .txt",
+    "error": "No se pudo transcribir: {{error}}",
+    "micError": "No se pudo acceder al micrófono: {{error}}",
+    "status": {
+      "loading": "Cargando modelo",
+      "initiate": "Descargando modelo",
+      "download": "Descargando modelo",
+      "progress": "Descargando modelo",
+      "done": "Listo",
+      "ready": "Modelo listo",
+      "transcribing": "Transcribiendo"
+    },
+    "privacyNote": "La primera vez se descarga el modelo elegido y queda en caché del navegador. Nada se sube: ni el audio ni el texto."
   }
 }

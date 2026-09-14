@@ -39,7 +39,7 @@ const levels = keys.map((key, i) => ({
           </summary>
           <div class="border-t border-gray-200 px-4 py-3 text-sm dark:border-gray-700">
             <p class="text-gray-700 dark:text-gray-300" data-i18n={l.descriptionKey}>{l.description}</p>
-            <h4 class="mt-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400" data-i18n="wiki.normativeHierarchy.examples">{t('wiki.normativeHierarchy.examples')}</h4>
+            <p class="mt-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400" data-i18n="wiki.normativeHierarchy.examples">{t('wiki.normativeHierarchy.examples')}</p>
             <ul class="mt-1 list-inside list-disc text-gray-700 dark:text-gray-300">
               {l.examples.map((e) => <li data-i18n={e.key}>{e.text}</li>)}
             </ul>

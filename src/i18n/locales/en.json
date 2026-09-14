@@ -589,7 +589,11 @@
     "corpusPending": "corpus pending",
     "dictate": "Dictate by voice",
     "dictating": "Stop dictation",
-    "dictationNote": "Uses the browser's speech recognition; depending on the browser, audio may be processed on its vendor's servers"
+    "dictationNote": "Uses the browser's speech recognition; depending on the browser, audio may be processed on its vendor's servers",
+    "dictateLocal": "Dictate with local Whisper",
+    "dictatingLocal": "Stop and transcribe",
+    "dictationLocalNote": "Records on your device and transcribes with Whisper in the browser; nothing is sent",
+    "transcribing": "Transcribing…"
   },
   "setup": {
     "title": "AI Provider Setup",
@@ -2187,5 +2191,30 @@
     "howTo": "How to install",
     "howToSteps": "In Word: Insert → Add-ins → My Add-ins → Upload My Add-in, and pick manifest.xml. Word for the web works too.",
     "withCitations": "Append citations"
+  },
+  "transcribe": {
+    "title": "Voice notes and local transcription",
+    "subtitle": "Record from the microphone or load an audio file and get a timestamped transcript. Whisper runs in your browser; audio never leaves your device.",
+    "language": "Language",
+    "model": "Model",
+    "record": "Record",
+    "stop": "Stop",
+    "chooseFile": "Load audio",
+    "result": "Transcript",
+    "copy": "Copy",
+    "copied": "Copied",
+    "download": "Download .txt",
+    "error": "Could not transcribe: {{error}}",
+    "micError": "Could not access the microphone: {{error}}",
+    "status": {
+      "loading": "Loading model",
+      "initiate": "Downloading model",
+      "download": "Downloading model",
+      "progress": "Downloading model",
+      "done": "Done",
+      "ready": "Model ready",
+      "transcribing": "Transcribing"
+    },
+    "privacyNote": "The chosen model downloads once and stays in the browser cache. Nothing is uploaded: neither audio nor text."
   }
 }
