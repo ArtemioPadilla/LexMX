@@ -119,7 +119,7 @@ export function computeSeverance(input: SeveranceInput): CalculatorResult {
   return { lines, total: round2(lines.reduce((s, l) => s + l.amount, 0)), currency: 'MXN', warnings };
 }
 
-export const mxSeveranceCalculator: Calculator<SeveranceInput> = {
+export const mxSeveranceCalculator: Calculator = {
   id: 'mx-finiquito-liquidacion',
   name: 'Finiquito y liquidación (LFT)',
   description: 'Aguinaldo y vacaciones proporcionales, prima vacacional, prima de antigüedad e indemnización por despido injustificado.',
@@ -139,7 +139,7 @@ export const mxSeveranceCalculator: Calculator<SeveranceInput> = {
     { name: 'borderZone', label: 'Zona libre de la frontera norte', type: 'boolean' },
   ],
   parameters: MX_PARAMETERS,
-  compute: computeSeverance,
+  compute: (input) => computeSeverance(input as unknown as SeveranceInput),
 };
 
-export const mxCalculators: Calculator[] = [mxSeveranceCalculator as Calculator];
+export const mxCalculators: Calculator[] = [mxSeveranceCalculator];
