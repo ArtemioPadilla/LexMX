@@ -26,10 +26,10 @@ declare global {
   type GPUAdapterInfo = Record<string, unknown>;
 }
 
-import type { 
+import type {
   LLMProvider,
   LLMRequest,
-  LLMResponse, 
+  LLMResponse,
   ProviderConfig,
   StreamCallback,
   LLMModel,
@@ -42,6 +42,12 @@ import type {
 import type { LegalArea } from '../../../types/legal';
 import { promptBuilder } from '../prompt-builder';
 import { i18n } from '@/i18n';
+// Type-only import: erased at compile time, so this does NOT create a static
+// runtime dependency on `@mlc-ai/web-llm`. The engine itself is only ever
+// loaded via the dynamic `import()` inside `_initialize()`.
+import type { MLCEngine, InitProgressReport } from '@mlc-ai/web-llm';
+
+type WebLLMModule = typeof import('@mlc-ai/web-llm');
 
 export interface WebLLMConfig extends ProviderConfig {
   modelId?: string;
@@ -89,9 +95,9 @@ export class WebLLMProvider implements LLMProvider {
   
   status: ProviderStatus = 'disconnected';
   
-  private engine: any = null;
+  private engine: MLCEngine | null = null;
   private config: WebLLMConfig;
-  private webllmModule: any = null;
+  private webllmModule: WebLLMModule | null = null;
   private isInitializing = false;
   private initPromise: Promise<void> | null = null;
   private metrics: ProviderMetrics = {
@@ -124,16 +130,18 @@ export class WebLLMProvider implements LLMProvider {
     }
   }
 
-  private async ensureInitialized(): Promise<void> {
+  private async ensureInitialized(): Promise<MLCEngine> {
     if (!this.engine && !this.isInitializing) {
       await this.initialize();
     } else if (this.isInitializing && this.initPromise) {
       await this.initPromise;
     }
-    
-    if (!this.engine) {
+
+    const engine = this.engine;
+    if (!engine) {
       throw new Error('WebLLM engine failed to initialize');
     }
+    return engine;
   }
 
   private async _initialize(): Promise<void> {
@@ -144,26 +152,18 @@ export class WebLLMProvider implements LLMProvider {
       }
 
       // Dynamically import WebLLM to ensure it's loaded in browser context
-      console.log('[WebLLM] Loading WebLLM module...');
       this.webllmModule = await import('@mlc-ai/web-llm');
-      
-      console.log('[WebLLM] Module loaded:', Object.keys(this.webllmModule));
 
       const modelId = this.config.modelId || this.config.model || 'Llama-3.2-3B-Instruct-q4f16_1-MLC';
-      
-      console.log(`[WebLLM] Creating engine with model: ${modelId}`);
-      
+
       // Use the default configuration approach
       this.engine = await this.webllmModule.CreateMLCEngine(modelId, {
-        initProgressCallback: (progress: any) => {
+        initProgressCallback: (progress: InitProgressReport) => {
           const percentage = Math.round(progress.progress * 100);
           const message = `${progress.text} (${percentage}%)`;
-          console.log(`[WebLLM] Progress: ${message}`);
           this.config.initProgressCallback?.(percentage, message);
         }
       });
-      
-      console.log('[WebLLM] Engine created successfully');
     } catch (error) {
       console.error('Failed to initialize WebLLM:', error);
       throw error;
@@ -172,16 +172,16 @@ export class WebLLMProvider implements LLMProvider {
 
   async complete(request: LLMRequest): Promise<LLMResponse> {
     const startTime = Date.now();
-    
-    await this.ensureInitialized();
+
+    const engine = await this.ensureInitialized();
 
     try {
       const webllmMessages = request.messages.map(msg => ({
-        role: msg.role as 'system' | 'user' | 'assistant',
+        role: msg.role,
         content: msg.content
       }));
 
-      const response = await this.engine.chat.completions.create({
+      const response = await engine.chat.completions.create({
         messages: webllmMessages,
         temperature: request.temperature ?? this.config.temperature ?? 0.7,
         max_tokens: request.maxTokens ?? this.config.maxTokens ?? 2048,
@@ -220,19 +220,19 @@ export class WebLLMProvider implements LLMProvider {
 
   async stream(request: LLMRequest, onChunk: StreamCallback): Promise<LLMResponse> {
     const startTime = Date.now();
-    
-    await this.ensureInitialized();
+
+    const engine = await this.ensureInitialized();
 
     try {
       const webllmMessages = request.messages.map(msg => ({
-        role: msg.role as 'system' | 'user' | 'assistant',
+        role: msg.role,
         content: msg.content
       }));
 
       if (onChunk) {
         let fullContent = '';
 
-        const response = await this.engine.chat.completions.create({
+        const response = await engine.chat.completions.create({
           messages: webllmMessages,
           temperature: request.temperature ?? this.config.temperature ?? 0.7,
           max_tokens: request.maxTokens ?? this.config.maxTokens ?? 2048,

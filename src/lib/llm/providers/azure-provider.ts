@@ -12,6 +12,7 @@ import type {
   LLMProviderType,
   ProviderMetrics
 } from '../../../types/llm';
+import type { RawCompletionResult } from './raw-completion';
 
 export class AzureProvider implements LLMProvider {
   readonly id: string = 'azure';
@@ -158,7 +159,7 @@ export class AzureProvider implements LLMProvider {
     this.tokenExpiry = Date.now() + (data.expires_in - 300) * 1000;
   }
 
-  private async complete(request: LLMRequest): Promise<any> {
+  private async complete(request: LLMRequest): Promise<RawCompletionResult> {
     const startTime = Date.now();
     
     try {
@@ -238,7 +239,7 @@ export class AzureProvider implements LLMProvider {
     };
   }
 
-  private async streamInternal(request: LLMRequest, onChunk: StreamCallback): Promise<any> {
+  private async streamInternal(request: LLMRequest, onChunk: StreamCallback): Promise<RawCompletionResult> {
     const startTime = Date.now();
     let fullContent = '';
     let promptTokens = 0;
@@ -389,7 +390,7 @@ export class AzureProvider implements LLMProvider {
       'gpt-35-turbo-16k': { prompt: 0.003, completion: 0.004 }
     };
 
-    const modelPricing = pricing[model] || pricing['gpt-35-turbo'];
+    const modelPricing = pricing[model] ?? pricing['gpt-35-turbo']!;
     return (promptTokens * modelPricing.prompt + completionTokens * modelPricing.completion) / 1000;
   }
 }

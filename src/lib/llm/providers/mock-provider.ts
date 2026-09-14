@@ -1,12 +1,55 @@
 // Mock LLM Provider for Testing and Development
-// This provider simulates LLM responses for testing purposes
+// This provider simulates LLM responses for testing purposes, and also
+// doubles as the always-available fallback `LLMProvider` used by
+// `ProviderManager`/`ProviderFactory` when no real provider is configured.
 
-import type { 
-  ChatCompletionOptions, 
-  ChatCompletionResponse,
+import type {
+  CostLevel,
+  LLMCapability,
+  LLMModel,
   LLMProvider,
-  TokenUsage 
-} from '../types';
+  LLMProviderType,
+  LLMRequest,
+  LLMResponse,
+  ProviderConfig,
+  ProviderMetrics,
+  ProviderStatus,
+  StreamCallback
+} from '../../../types/llm';
+
+// Legacy testing-oriented request/response shapes. These predate the shared
+// `LLMRequest`/`LLMResponse` types and are kept local (rather than imported
+// from a removed `../types` module) so the existing behavior tests keep
+// exercising the same lightweight surface.
+export interface ChatCompletionMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+export interface ChatCompletionOptions {
+  messages: ChatCompletionMessage[];
+  temperature?: number;
+  maxTokens?: number;
+  stream?: boolean;
+}
+
+export interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+export interface ChatCompletionResponse {
+  content: string;
+  usage: TokenUsage;
+  error?: string;
+  stream?: AsyncIterableIterator<string>;
+  metadata?: {
+    provider: string;
+    model: string;
+    timestamp: string;
+  };
+}
 
 export interface MockProviderConfig {
   defaultDelay?: number;
@@ -17,14 +60,29 @@ export interface MockProviderConfig {
   trackHistory?: boolean;
 }
 
+// Accepted by the constructor so the mock can be created either as a plain
+// testing double (`new MockProvider({ simulateErrors: true })`) or through
+// `ProviderFactory.createProvider(config)` with a real `ProviderConfig`.
+export type MockProviderOptions = Partial<ProviderConfig> & MockProviderConfig;
+
 interface RequestHistoryEntry {
-  messages: Array<{ role: string; content: string }>;
+  messages: ChatCompletionMessage[];
   timestamp: Date;
   response?: string;
 }
 
+const MOCK_MODEL: LLMModel = {
+  id: 'mock-model',
+  name: 'Mock Model',
+  description: 'Simulated model used for development, tests, and the demo fallback.',
+  contextLength: 8192,
+  maxTokens: 4096,
+  capabilities: ['privacy', 'offline'],
+  costPer1kTokens: { input: 0, output: 0 }
+};
+
 export class MockProvider implements LLMProvider {
-  private config: MockProviderConfig;
+  private behaviorConfig: MockProviderConfig;
   private _initialized = false;
   private totalUsage: TokenUsage = {
     promptTokens: 0,
@@ -32,15 +90,24 @@ export class MockProvider implements LLMProvider {
     totalTokens: 0
   };
   private requestHistory: RequestHistoryEntry[] = [];
-  
-  // Provider metadata
-  public readonly id = 'mock';
-  public readonly name = 'Mock Provider';
-  public readonly type: 'local' | 'cloud' = 'local';
-  public status: 'connected' | 'disconnected' | 'error' = 'disconnected';
 
-  constructor(config: MockProviderConfig = {}) {
-    this.config = {
+  // LLMProvider metadata
+  public readonly id: string;
+  public readonly name: string;
+  public readonly type: LLMProviderType;
+  public readonly icon = '🎭';
+  public readonly description = 'Respuestas simuladas para demostrar LexMX cuando no hay proveedores configurados';
+  public readonly costLevel: CostLevel = 'free';
+  public readonly capabilities: LLMCapability[] = ['privacy', 'offline'];
+  public readonly models: LLMModel[] = [MOCK_MODEL];
+  public status: ProviderStatus = 'disconnected';
+
+  constructor(config: MockProviderOptions = {}) {
+    this.id = config.id ?? 'mock';
+    this.name = config.name ?? 'Mock Provider';
+    this.type = config.type ?? 'local';
+
+    this.behaviorConfig = {
       defaultDelay: 500,
       simulateErrors: false,
       errorRate: 0.1,
@@ -54,24 +121,20 @@ export class MockProvider implements LLMProvider {
   async initialize(): Promise<boolean> {
     // Simulate initialization delay
     await this.delay(100);
-    
-    // Don't simulate errors during initialization in test mode
-    // Only simulate errors during complete() calls
-    // This makes tests more predictable
-    
+
+    // Don't simulate errors during initialization in test mode.
+    // Errors only occur during complete()/generateResponse() calls, which
+    // keeps tests deterministic.
     this._initialized = true;
     this.status = 'connected';
     return true;
   }
 
   async testConnection(): Promise<boolean> {
-    // Mock provider always returns true for test connection
-    // unless it's not initialized
     return this._initialized;
   }
 
   async isAvailable(): Promise<boolean> {
-    // Check if provider is available and initialized
     return this._initialized && this.status === 'connected';
   }
 
@@ -93,19 +156,16 @@ export class MockProvider implements LLMProvider {
     }
 
     // Simulate errors if configured (deterministic in test mode)
-    if (this.config.simulateErrors) {
+    if (this.behaviorConfig.simulateErrors) {
+      const errorRate = this.behaviorConfig.errorRate ?? 0.1;
       // In test mode with 100% error rate, always throw
-      if (this.config.errorRate === 1.0) {
-        throw new Error('Mock provider request failed (simulated error)');
-      }
-      // Otherwise use random chance
-      if (Math.random() < this.config.errorRate!) {
+      if (errorRate === 1.0 || Math.random() < errorRate) {
         throw new Error('Mock provider request failed (simulated error)');
       }
     }
 
     // Track history if enabled
-    if (this.config.trackHistory) {
+    if (this.behaviorConfig.trackHistory) {
       this.requestHistory.push({
         messages: options.messages,
         timestamp: new Date()
@@ -114,13 +174,14 @@ export class MockProvider implements LLMProvider {
 
     // Calculate delay based on message complexity
     const messageLength = options.messages.reduce((acc, msg) => acc + msg.content.length, 0);
-    const delay = Math.min(this.config.defaultDelay! + (messageLength / 100) * 100, 2000);
-    
+    const defaultDelay = this.behaviorConfig.defaultDelay ?? 500;
+    const delay = Math.min(defaultDelay + (messageLength / 100) * 100, 2000);
+
     await this.delay(delay);
 
     // Generate mock response
     const responseContent = this.generateMockResponse(options);
-    
+
     // Calculate token usage
     const promptTokens = this.estimateTokens(
       options.messages.map(m => m.content).join(' ')
@@ -136,40 +197,28 @@ export class MockProvider implements LLMProvider {
     this.totalUsage.completionTokens += completionTokens;
     this.totalUsage.totalTokens += totalTokens;
 
+    const metadata = this.behaviorConfig.debug
+      ? { provider: 'mock', model: 'mock-model', timestamp: new Date().toISOString() }
+      : undefined;
+
     // Handle streaming mode
     if (options.stream) {
       const chunks = this.splitIntoChunks(responseContent);
       const stream = this.createStream(chunks);
-      
+
       return {
         content: '',
-        usage: {
-          promptTokens,
-          completionTokens,
-          totalTokens
-        },
+        usage: { promptTokens, completionTokens, totalTokens },
         stream,
-        metadata: this.config.debug ? {
-          provider: 'mock',
-          model: 'mock-model',
-          timestamp: new Date().toISOString()
-        } : undefined
+        metadata
       };
     }
 
     // Return regular response
     return {
       content: responseContent,
-      usage: {
-        promptTokens,
-        completionTokens,
-        totalTokens
-      },
-      metadata: this.config.debug ? {
-        provider: 'mock',
-        model: 'mock-model',
-        timestamp: new Date().toISOString()
-      } : undefined
+      usage: { promptTokens, completionTokens, totalTokens },
+      metadata
     };
   }
 
@@ -192,114 +241,90 @@ export class MockProvider implements LLMProvider {
   }
 
   setConfig(config: Partial<MockProviderConfig>): void {
-    this.config = { ...this.config, ...config };
+    this.behaviorConfig = { ...this.behaviorConfig, ...config };
   }
 
   getConfig(): MockProviderConfig {
-    return { ...this.config };
+    return { ...this.behaviorConfig };
   }
 
   getRequestHistory(): RequestHistoryEntry[] {
     return [...this.requestHistory];
   }
 
-  // Additional methods for compatibility with provider-manager
+  // --- LLMProvider surface (used by ProviderFactory/ProviderManager) ---
 
-  async generateResponse(request: any): Promise<any> {
-    // Use the complete method for generating responses
-    const response = await this.complete({
-      messages: request.messages || [],
+  async generateResponse(request: LLMRequest): Promise<LLMResponse> {
+    const startTime = Date.now();
+    const completion = await this.complete({
+      messages: request.messages.map(m => ({ role: m.role, content: m.content })),
       maxTokens: request.maxTokens,
       temperature: request.temperature,
       stream: false
     });
-    
+
+    const latency = Date.now() - startTime;
+
     return {
-      ...response,
-      metadata: {
-        ...response.metadata,
-        provider: this.id,
-        model: this.getModel()
-      }
+      content: completion.content,
+      model: request.model || this.getModel(),
+      provider: this.id,
+      usage: completion.usage,
+      cost: 0,
+      latency,
+      processingTime: latency,
+      metadata: { cached: false, fallback: this.id === 'mock' }
     };
   }
 
-  async stream(request: any, onChunk?: (chunk: string) => void): Promise<any> {
-    // Use the complete method with streaming enabled
-    const response = await this.complete({
-      messages: request.messages || [],
+  async stream(request: LLMRequest, onChunk: StreamCallback): Promise<LLMResponse> {
+    const startTime = Date.now();
+    const completion = await this.complete({
+      messages: request.messages.map(m => ({ role: m.role, content: m.content })),
       maxTokens: request.maxTokens,
       temperature: request.temperature,
       stream: true
     });
-    
-    // If onChunk callback is provided and we have a stream
-    if (onChunk && response.stream) {
-      for await (const chunk of response.stream) {
+
+    let fullContent = '';
+    if (completion.stream) {
+      for await (const chunk of completion.stream) {
+        fullContent += chunk;
         onChunk(chunk);
       }
     }
-    
-    return response;
+
+    const latency = Date.now() - startTime;
+
+    return {
+      content: fullContent,
+      model: request.model || this.getModel(),
+      provider: this.id,
+      usage: completion.usage,
+      cost: 0,
+      latency,
+      processingTime: latency,
+      metadata: { cached: false, fallback: this.id === 'mock' }
+    };
   }
 
-  getMetrics(): any {
-    // Return basic metrics for the mock provider
+  estimateCost(_request: LLMRequest): number {
+    return 0;
+  }
+
+  getMetrics(): ProviderMetrics {
+    const lastEntry = this.requestHistory[this.requestHistory.length - 1];
     return {
+      providerId: this.id,
       totalRequests: this.requestHistory.length,
-      totalTokens: this.totalUsage.totalTokens,
-      averageResponseTime: 500, // Mock average
-      errorRate: this.config.simulateErrors ? this.config.errorRate : 0,
-      status: this.status,
-      lastUsed: this.requestHistory.length > 0 
-        ? this.requestHistory[this.requestHistory.length - 1].timestamp 
-        : null
+      successRate: this.behaviorConfig.simulateErrors ? 1 - (this.behaviorConfig.errorRate ?? 0) : 1,
+      averageLatency: this.behaviorConfig.defaultDelay ?? 500,
+      totalCost: 0,
+      lastUsed: lastEntry ? lastEntry.timestamp.getTime() : 0
     };
   }
 
-  validateConfig(_config: any): boolean {
-    // Mock provider accepts any config for testing
-    return true;
-  }
-
-  getModelInfo(modelId: string): any {
-    return {
-      id: modelId || 'mock-model',
-      name: 'Mock Model',
-      maxTokens: 4096,
-      contextWindow: 8192,
-      capabilities: ['chat', 'completion', 'embeddings'],
-      costPer1kTokens: { input: 0.001, output: 0.002 }
-    };
-  }
-
-  async listModels(): Promise<any[]> {
-    return Promise.resolve([
-      {
-        id: 'mock-model-small',
-        name: 'Mock Model Small',
-        maxTokens: 2048,
-        contextWindow: 4096,
-        capabilities: ['chat', 'completion'],
-        costPer1kTokens: { input: 0.0005, output: 0.001 }
-      },
-      {
-        id: 'mock-model-large',
-        name: 'Mock Model Large',
-        maxTokens: 8192,
-        contextWindow: 16384,
-        capabilities: ['chat', 'completion', 'embeddings'],
-        costPer1kTokens: { input: 0.002, output: 0.004 }
-      }
-    ]);
-  }
-
-  getEstimatedCost(tokens: number): number {
-    // Simple cost calculation: $0.001 per 1000 tokens
-    return (tokens / 1000) * 0.001;
-  }
-
-  // Private helper methods
+  // --- Private helpers ---
 
   private async delay(ms: number): Promise<void> {
     // Check if we're in a test environment with fake timers
@@ -313,20 +338,20 @@ export class MockProvider implements LLMProvider {
   private generateMockResponse(options: ChatCompletionOptions): string {
     const lastMessage = options.messages[options.messages.length - 1];
     const query = lastMessage?.content || '';
-    
+
     // Check for legal terms in Spanish or English
     const legalTermsES = ['artículo', 'ley', 'derecho', 'legal', 'normativa', 'constitución', 'amparo'];
     const legalTermsEN = ['article', 'law', 'right', 'legal', 'regulation', 'constitution'];
-    
-    const hasLegalContext = [...legalTermsES, ...legalTermsEN].some(term => 
+
+    const hasLegalContext = [...legalTermsES, ...legalTermsEN].some(term =>
       query.toLowerCase().includes(term)
     );
 
     let response = '';
-    
+
     // Add prefix if configured
-    if (this.config.responsePrefix) {
-      response = this.config.responsePrefix;
+    if (this.behaviorConfig.responsePrefix) {
+      response = this.behaviorConfig.responsePrefix;
     }
 
     // Generate contextual mock response
@@ -360,12 +385,12 @@ export class MockProvider implements LLMProvider {
     const words = text.split(' ');
     const chunks: string[] = [];
     const chunkSize = 5; // 5 words per chunk
-    
+
     for (let i = 0; i < words.length; i += chunkSize) {
       const chunk = words.slice(i, i + chunkSize).join(' ');
       chunks.push(chunk + (i + chunkSize < words.length ? ' ' : ''));
     }
-    
+
     return chunks;
   }
 
@@ -376,9 +401,6 @@ export class MockProvider implements LLMProvider {
     }
   }
 }
-
-// Export default instance for convenience
-export const mockProvider = new MockProvider();
 
 // Export alias for backward compatibility
 export { MockProvider as MockLLMProvider };

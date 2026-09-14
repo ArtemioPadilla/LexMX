@@ -12,6 +12,7 @@ import type {
   LLMProviderType,
   ProviderMetrics
 } from '../../../types/llm';
+import type { RawCompletionResult } from './raw-completion';
 
 export class ClaudeProvider implements LLMProvider {
   readonly id: string = 'claude';
@@ -109,7 +110,7 @@ export class ClaudeProvider implements LLMProvider {
     return { ...this.metrics };
   }
 
-  private async complete(request: LLMRequest): Promise<any> {
+  private async complete(request: LLMRequest): Promise<RawCompletionResult> {
     const startTime = Date.now();
     
     try {
@@ -178,7 +179,7 @@ export class ClaudeProvider implements LLMProvider {
     };
   }
 
-  private async streamInternal(request: LLMRequest, onChunk: StreamCallback): Promise<any> {
+  private async streamInternal(request: LLMRequest, onChunk: StreamCallback): Promise<RawCompletionResult> {
     const startTime = Date.now();
     let fullContent = '';
     let promptTokens = 0;
@@ -285,7 +286,6 @@ export class ClaudeProvider implements LLMProvider {
           'X-API-Key': this.config.apiKey!,
           'anthropic-version': '2023-06-01'
         },
-        signal: request.abortSignal,
         body: JSON.stringify({
           model: 'claude-3-haiku-20240307',
           messages: [{ role: 'user', content: 'Test' }],
@@ -319,7 +319,7 @@ export class ClaudeProvider implements LLMProvider {
       'claude-2.0': { prompt: 8, completion: 24 }
     };
 
-    const modelPricing = pricing[model] || pricing['claude-3-haiku-20240307'];
+    const modelPricing = pricing[model] ?? pricing['claude-3-haiku-20240307']!;
     return (promptTokens * modelPricing.prompt + completionTokens * modelPricing.completion) / 1000000;
   }
 }

@@ -1,19 +1,19 @@
 // Main provider manager that orchestrates all LLM providers
 
-import type { 
-  LLMProvider, 
-  ProviderConfig, 
-  LLMRequest, 
-  LLMResponse, 
-  QueryContext,
-  UserProfile
+import type {
+  LLMProvider,
+  ProviderConfig,
+  LLMRequest,
+  LLMResponse,
+  QueryContext
 } from '../../types/llm';
 
 import { providerRegistry } from './provider-registry';
+import type { UserProfile } from './provider-registry';
 import { secureStorage } from '../security/secure-storage';
 import { ProviderFactory } from './providers';
 import { intelligentSelector } from './intelligent-selector';
-import { getEnvironmentConfig, hasValidApiKey, isProviderEnabled, createProviderConfigFromEnv } from '../utils/env-config';
+import { hasValidApiKey, isProviderEnabled, createProviderConfigFromEnv } from '../utils/env-config';
 
 export class ProviderManager {
   private providers: Map<string, LLMProvider> = new Map();
@@ -169,39 +169,31 @@ export class ProviderManager {
       
       // Store the default configuration
       await secureStorage.storeProviderConfig(defaultMockConfig);
-      
+
       // Initialize the mock provider
       await this.initializeProvider(defaultMockConfig);
-      
-      console.log('[ProviderManager] Mock provider initialized as fallback');
     }
   }
 
   private async autoConfigureFromEnvironment(): Promise<void> {
-    console.log('[ProviderManager] Auto-configuring providers from environment variables');
-    
     const providersToCheck = ['openai', 'anthropic', 'google', 'ollama', 'bedrock', 'azure', 'vertex'];
-    
+
     for (const providerId of providersToCheck) {
       try {
         // Skip if already configured by user
         const existingConfig = await secureStorage.getProviderConfig(providerId);
         if (existingConfig) {
-          console.log(`[ProviderManager] ${providerId} already configured, skipping auto-config`);
           continue;
         }
-        
+
         // Check if environment variables are available for this provider
         if (!isProviderEnabled(providerId) || !hasValidApiKey(providerId)) {
-          console.log(`[ProviderManager] ${providerId} not enabled or missing API key, skipping`);
           continue;
         }
-        
+
         // Create configuration from environment
         const envConfig = createProviderConfigFromEnv(providerId);
         if (envConfig) {
-          console.log(`[ProviderManager] Auto-configuring ${providerId} from environment`);
-          
           const fullConfig: ProviderConfig = {
             ...envConfig as ProviderConfig,
             costLimit: {
@@ -209,23 +201,16 @@ export class ProviderManager {
               monthly: 500
             }
           };
-          
+
           // Store the configuration
           await secureStorage.storeProviderConfig(fullConfig);
-          
+
           // Initialize the provider
           await this.initializeProvider(fullConfig);
-          
-          console.log(`[ProviderManager] ${providerId} auto-configured and initialized`);
         }
       } catch (error) {
         console.warn(`[ProviderManager] Failed to auto-configure ${providerId}:`, error);
       }
-    }
-    
-    const envConfig = getEnvironmentConfig();
-    if (envConfig.debug) {
-      console.log('[ProviderManager] Auto-configuration complete');
     }
   }
 
@@ -294,9 +279,9 @@ export class ProviderManager {
     scoredProviders.sort((a, b) => b.score - a.score);
 
     const selectedProvider = scoredProviders[0]?.provider || null;
-    
+
     if (selectedProvider?.id === 'mock') {
-      console.log('[ProviderManager] Using mock provider - configure real providers for full functionality');
+      console.warn('[ProviderManager] Using mock provider - configure real providers for full functionality');
     }
 
     return selectedProvider;
@@ -704,18 +689,19 @@ export class ProviderManager {
     response: LLMResponse | null,
     success: boolean
   ): Promise<void> {
-    // Log usage for analytics and billing
+    // Log usage for analytics and billing.
+    // TODO: persist `_usage` once the analytics store lands; today we only
+    // gate on the privacy setting so the call site behavior stays intact.
     const _usage = {
       timestamp: Date.now(),
       providerId,
       model: request.model,
       success,
-      tokens: response?.usage?.totalTokens || response?.totalTokens || 0,
-      cost: response?.cost || 0,
-      latency: response?.latency || response?.processingTime || 0
+      tokens: response?.usage?.totalTokens ?? 0,
+      cost: response?.cost ?? 0,
+      latency: response?.latency ?? response?.processingTime ?? 0
     };
 
-    // Store in secure storage if analytics enabled
     const privacySettings = secureStorage.getPrivacySettings();
     if (privacySettings.analytics !== 'none') {
       // Store anonymized usage data
@@ -749,7 +735,7 @@ export class ProviderManager {
     
     // Otherwise return the first enabled provider
     const enabledProviders = await this.getEnabledProviders();
-    return enabledProviders.length > 0 ? enabledProviders[0] : null;
+    return enabledProviders[0] ?? null;
   }
 
   // Set preferred provider
@@ -801,13 +787,24 @@ export class ProviderManager {
     // Initialize the provider which will trigger the download
     await this.initializeProvider(config);
     
-    // Get the provider and trigger initialization
+    // Get the provider and trigger initialization. WebLLM exposes an eager
+    // `initialize()` (to kick off the model download) that isn't part of the
+    // shared `LLMProvider` interface, so we narrow with a type guard instead
+    // of an `any` cast.
     const provider = this.providers.get('webllm');
-    if (provider && 'initialize' in provider) {
-      // Triggering WebLLM initialization/download
-      await (provider as any).initialize();
+    if (provider && isInitializable(provider)) {
+      await provider.initialize();
     }
   }
+}
+
+interface InitializableProvider {
+  initialize(): Promise<void>;
+}
+
+function isInitializable(provider: LLMProvider): provider is LLMProvider & InitializableProvider {
+  const maybeInitializable = provider as Partial<InitializableProvider>;
+  return typeof maybeInitializable.initialize === 'function';
 }
 
 // Global provider manager instance

@@ -1,4 +1,3 @@
-import type { LLMProvider as _LLMProvider, LLMModel as _LLMModel } from '../../types/llm';
 import type { LegalArea, QueryType } from '../../types/legal';
 import { providerManager } from './provider-manager';
 
@@ -182,7 +181,8 @@ export class IntelligentProviderSelector {
 
     // Filter by max cost if specified
     if (criteria.maxCost !== undefined) {
-      const filtered = scores.filter(s => s.estimatedCost <= criteria.maxCost);
+      const maxCost = criteria.maxCost;
+      const filtered = scores.filter(s => s.estimatedCost <= maxCost);
       return filtered[0] || null;
     }
 

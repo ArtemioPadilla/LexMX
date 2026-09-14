@@ -130,8 +130,8 @@ export const SUPPORTED_PROVIDERS: Record<string, ProviderMetadata> = {
     icon: '/icons/aws.svg',
     description: 'Access Claude, Llama, and other models through AWS - Enterprise-grade security and compliance',
     costLevel: 'medium',
-    capabilities: ['reasoning', 'analysis', 'multilingual', 'enterprise'],
-    setupComplexity: 'moderate',
+    capabilities: ['reasoning', 'analysis', 'multilingual'],
+    setupComplexity: 'medium',
     recommendedFor: ['Enterprise users', 'AWS ecosystem integration', 'Multiple model access', 'Compliance requirements'],
     documentation: 'https://docs.aws.amazon.com/bedrock/',
     website: 'https://aws.amazon.com/bedrock'

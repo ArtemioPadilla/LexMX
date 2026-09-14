@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { WebLLMProvider } from '../webllm-provider';
 import type { LLMRequest, ProviderConfig } from '../../../../types/llm';
+import type { CreateMLCEngine as CreateMLCEngineType } from '@mlc-ai/web-llm';
 
 // Mock WebLLM module
 const mockEngine = {
@@ -39,7 +40,9 @@ describe('WebLLMProvider', () => {
       name: 'WebLLM',
       type: 'local',
       enabled: true,
-      model: 'Llama-3.2-3B-Instruct-q4f16_1-MLC'
+      priority: 100,
+      model: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
+      createdAt: Date.now()
     };
 
     provider = new WebLLMProvider(mockConfig);
@@ -140,6 +143,7 @@ describe('WebLLMProvider', () => {
   describe('cost estimation', () => {
     it('should always return 0 cost', () => {
       const request: LLMRequest = {
+        model: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
         messages: [{ role: 'user', content: 'Test message' }],
         temperature: 0.7
       };
@@ -181,19 +185,19 @@ describe('WebLLMProvider', () => {
   describe('error handling', () => {
     it('should handle initialization errors gracefully', async () => {
       const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
-      (CreateMLCEngine as any).mockRejectedValueOnce(new Error('Init failed'));
+      vi.mocked(CreateMLCEngine as unknown as typeof CreateMLCEngineType).mockRejectedValueOnce(new Error('Init failed'));
 
       await expect(provider.initialize()).rejects.toThrow('Init failed');
     });
 
     it('should prevent multiple initialization attempts', async () => {
       const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
-      
+
       // Create a new provider for this test to ensure clean state
       const testProvider = new WebLLMProvider(mockConfig);
-      
-      (CreateMLCEngine as any).mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve(mockEngine), 50))
+
+      vi.mocked(CreateMLCEngine as unknown as typeof CreateMLCEngineType).mockImplementation(() =>
+        new Promise(resolve => setTimeout(() => resolve(mockEngine as never), 50))
       );
 
       // Start multiple initializations

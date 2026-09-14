@@ -9,14 +9,13 @@ import { AzureProvider } from './azure-provider';
 import { VertexProvider } from './vertex-provider';
 import { MockLLMProvider } from './mock-provider';
 import { MockProvider } from './mock-provider';
+import { OpenAICompatibleProvider } from './openai-compatible';
 import type { LLMProvider, ProviderConfig } from '../../../types/llm';
 
-export { OpenAIProvider, ClaudeProvider, GeminiProvider, OllamaProvider, WebLLMProvider, BedrockProvider, AzureProvider, VertexProvider, MockLLMProvider, MockProvider };
+export { OpenAIProvider, ClaudeProvider, GeminiProvider, OllamaProvider, WebLLMProvider, BedrockProvider, AzureProvider, VertexProvider, MockLLMProvider, MockProvider, OpenAICompatibleProvider };
 
 export class ProviderFactory {
   static createProvider(config: ProviderConfig): LLMProvider {
-    console.log(`[ProviderFactory] Creating provider for: ${config.id}`);
-    
     switch (config.id) {
       case 'openai':
         return new OpenAIProvider(config);
@@ -29,7 +28,6 @@ export class ProviderFactory {
       case 'ollama':
         return new OllamaProvider(config);
       case 'webllm':
-        console.log('[ProviderFactory] Creating WebLLMProvider instance');
         return new WebLLMProvider({
           ...config,
           modelId: config.model || 'Llama-3.2-3B-Instruct-q4f16_1-MLC'
@@ -41,8 +39,9 @@ export class ProviderFactory {
       case 'vertex':
         return new VertexProvider(config);
       case 'mock':
-        console.log('[ProviderFactory] Creating MockLLMProvider instance');
         return new MockLLMProvider(config);
+      case 'openai-compatible':
+        return new OpenAICompatibleProvider(config);
       default:
         console.error(`[ProviderFactory] Unknown provider: ${config.id}`);
         throw new Error(`Unknown provider: ${config.id}`);
@@ -50,7 +49,7 @@ export class ProviderFactory {
   }
 
   static isProviderSupported(providerId: string): boolean {
-    return ['openai', 'anthropic', 'claude', 'google', 'gemini', 'ollama', 'webllm', 'bedrock', 'azure', 'vertex', 'mock'].includes(providerId);
+    return ['openai', 'anthropic', 'claude', 'google', 'gemini', 'ollama', 'webllm', 'bedrock', 'azure', 'vertex', 'mock', 'openai-compatible'].includes(providerId);
   }
 
   static createMockProvider(): LLMProvider {

@@ -1,24 +1,110 @@
 // Ollama (local) provider implementation
-import type { 
-  LLMProvider, 
-  LLMResponse, 
-  LLMRequest, 
+import type {
+  CostLevel,
+  LLMCapability,
+  LLMModel,
+  LLMProvider,
+  LLMProviderType,
+  LLMResponse,
+  LLMRequest,
   ProviderConfig,
-  StreamCallback 
+  ProviderMetrics,
+  ProviderStatus,
+  StreamCallback
 } from '../../../types/llm';
+import type { RawCompletionResult } from './raw-completion';
+
+// Ollama's `/api/chat` response is untyped JSON; this covers the fields the
+// provider actually reads out of it.
+interface OllamaChatResponse {
+  message?: { role?: string; content?: string };
+  model?: string;
+  done?: boolean;
+  total_duration?: number;
+}
+
+interface OllamaStreamLine {
+  message?: { content?: string };
+  done?: boolean;
+  model?: string;
+}
+
+interface OllamaTagsResponse {
+  models?: Array<{ name: string }>;
+}
+
+const DEFAULT_MODEL: LLMModel = {
+  id: 'llama2',
+  name: 'Llama 2',
+  description: 'Default local Ollama model (override via provider config)',
+  contextLength: 4096,
+  maxTokens: 4096,
+  capabilities: ['privacy', 'offline', 'customizable']
+};
 
 export class OllamaProvider implements LLMProvider {
+  readonly id: string = 'ollama';
+  readonly name: string = 'Ollama';
+  readonly type: LLMProviderType = 'local';
+  readonly icon: string = '/icons/ollama.svg';
+  readonly description: string = 'Run models locally - Complete privacy, no API costs, works offline';
+  readonly costLevel: CostLevel = 'free';
+  readonly capabilities: LLMCapability[] = ['privacy', 'offline', 'customizable'];
+  models: LLMModel[] = [DEFAULT_MODEL];
+  status: ProviderStatus = 'disconnected';
+
   private config: ProviderConfig;
   private baseUrl: string;
+  private metrics: ProviderMetrics = {
+    providerId: 'ollama',
+    totalRequests: 0,
+    successRate: 1.0,
+    averageLatency: 0,
+    totalCost: 0,
+    lastUsed: Date.now()
+  };
 
   constructor(config: ProviderConfig) {
     this.config = config;
     this.baseUrl = config.endpoint || 'http://localhost:11434';
   }
 
-  async complete(request: LLMRequest): Promise<LLMResponse> {
+  async generateResponse(request: LLMRequest): Promise<LLMResponse> {
+    const response = await this.complete(request);
+    return {
+      content: response.content,
+      model: response.model,
+      provider: this.id,
+      usage: {
+        promptTokens: response.promptTokens,
+        completionTokens: response.completionTokens,
+        totalTokens: response.totalTokens
+      },
+      cost: this.getCost(response.promptTokens, response.completionTokens, response.model),
+      latency: response.processingTime,
+      processingTime: response.processingTime,
+      metadata: {
+        cached: false
+      }
+    };
+  }
+
+  async isAvailable(): Promise<boolean> {
+    return this.testConnection();
+  }
+
+  estimateCost(_request: LLMRequest): number {
+    // Ollama is free (local)
+    return 0;
+  }
+
+  getMetrics(): ProviderMetrics {
+    return { ...this.metrics };
+  }
+
+  private async complete(request: LLMRequest): Promise<RawCompletionResult> {
     const startTime = Date.now();
-    
+
     try {
       const response = await fetch(`${this.baseUrl}/api/chat`, {
         method: 'POST',
@@ -45,16 +131,17 @@ export class OllamaProvider implements LLMProvider {
         throw new Error(`Ollama API error: ${response.status} - ${error}`);
       }
 
-      const data = await response.json();
+      const data: OllamaChatResponse = await response.json();
+      const content = data.message?.content || '';
 
       // Estimate token counts (Ollama doesn't provide exact counts)
       const promptTokens = this.estimateTokens(request.messages.map(m => m.content).join(' '));
-      const completionTokens = this.estimateTokens(data.message.content);
+      const completionTokens = this.estimateTokens(content);
 
       return {
-        content: data.message.content,
-        role: data.message.role,
-        model: data.model,
+        content,
+        role: 'assistant',
+        model: data.model || request.model || this.config.model || 'llama2',
         promptTokens,
         completionTokens,
         totalTokens: promptTokens + completionTokens,
@@ -68,6 +155,26 @@ export class OllamaProvider implements LLMProvider {
   }
 
   async stream(request: LLMRequest, onChunk: StreamCallback): Promise<LLMResponse> {
+    const response = await this.streamInternal(request, onChunk);
+    return {
+      content: response.content,
+      model: response.model,
+      provider: this.id,
+      usage: {
+        promptTokens: response.promptTokens,
+        completionTokens: response.completionTokens,
+        totalTokens: response.totalTokens
+      },
+      cost: this.getCost(response.promptTokens, response.completionTokens, response.model),
+      latency: response.processingTime,
+      processingTime: response.processingTime,
+      metadata: {
+        cached: false
+      }
+    };
+  }
+
+  private async streamInternal(request: LLMRequest, onChunk: StreamCallback): Promise<RawCompletionResult> {
     const startTime = Date.now();
     let fullContent = '';
     let model = request.model || this.config.model || 'llama2';
@@ -106,7 +213,7 @@ export class OllamaProvider implements LLMProvider {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         // Check if request was aborted
         if (request.abortSignal?.aborted) {
           reader.cancel();
@@ -119,8 +226,8 @@ export class OllamaProvider implements LLMProvider {
         for (const line of lines) {
           if (line.trim()) {
             try {
-              const parsed = JSON.parse(line);
-              
+              const parsed: OllamaStreamLine = JSON.parse(line);
+
               if (parsed.message?.content) {
                 fullContent += parsed.message.content;
                 onChunk(parsed.message.content);
@@ -193,8 +300,8 @@ export class OllamaProvider implements LLMProvider {
       if (!response.ok) {
         throw new Error(`Failed to list models: ${response.status}`);
       }
-      const data = await response.json();
-      return data.models?.map((m: any) => m.name) || [];
+      const data: OllamaTagsResponse = await response.json();
+      return data.models?.map(m => m.name) || [];
     } catch (error) {
       console.error('Failed to list Ollama models:', error);
       return [];
@@ -202,7 +309,7 @@ export class OllamaProvider implements LLMProvider {
   }
 
   // Ollama-specific method to pull a model
-  async pullModel(modelName: string, onProgress?: (progress: number) => void): Promise<void> {
+  async pullModel(modelName: string, onProgress?: (progress: number) => void, abortSignal?: AbortSignal): Promise<void> {
     try {
       const response = await fetch(`${this.baseUrl}/api/pull`, {
         method: 'POST',
@@ -224,9 +331,9 @@ export class OllamaProvider implements LLMProvider {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         // Check if request was aborted
-        if (request.abortSignal?.aborted) {
+        if (abortSignal?.aborted) {
           reader.cancel();
           throw new Error('Request aborted');
         }

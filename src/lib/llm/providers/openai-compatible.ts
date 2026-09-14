@@ -1,22 +1,23 @@
 // OpenAI-compatible API provider for local LLMs (LM Studio, vLLM, etc.)
 
-import type { LocalProvider, LLMRequest, LLMResponse, LocalModel, ProviderConfig } from '@/types/llm';
+import type { ChatMessage, LocalProvider, LLMCapability, LLMRequest, LLMResponse, LocalModel, ProviderConfig } from '@/types/llm';
 import type { LegalArea } from '@/types/legal';
+import type { ErrorWithCode, TokenUsage } from '@/types/common';
 import { BaseLLMProvider } from '../base-provider';
 import { promptBuilder } from '../prompt-builder';
 import { i18n } from '@/i18n';
 
 export class OpenAICompatibleProvider extends BaseLLMProvider implements LocalProvider {
-  public readonly type = 'local' as const;
-  public readonly icon = '/icons/local-api.svg';
-  public readonly description = 'Connect to LM Studio, vLLM, or other OpenAI-compatible local APIs';
-  public readonly costLevel = 'free' as const;
-  public readonly capabilities = ['privacy', 'customizable', 'offline'];
+  public override readonly type = 'local' as const;
+  public override readonly icon = '/icons/local-api.svg';
+  public override readonly description = 'Connect to LM Studio, vLLM, or other OpenAI-compatible local APIs';
+  public override readonly costLevel = 'free' as const;
+  public override readonly capabilities: LLMCapability[] = ['privacy', 'customizable', 'offline'];
   public readonly endpoint: string;
   public discoveredModels: LocalModel[] = [];
 
   // Common models that work with OpenAI-compatible APIs
-  public models: LocalModel[] = [];
+  public override models: LocalModel[] = [];
 
   constructor(config: ProviderConfig) {
     super(config);
@@ -72,13 +73,14 @@ export class OpenAICompatibleProvider extends BaseLLMProvider implements LocalPr
       // First discover models
       await this.discoverModels();
       
-      if (this.discoveredModels.length === 0) {
+      const firstModel = this.discoveredModels[0];
+      if (!firstModel) {
         return false; // No models available
       }
 
       // Test with the first available model
       const testRequest: LLMRequest = {
-        model: this.discoveredModels[0].id,
+        model: firstModel.id,
         messages: [
           { role: 'user', content: 'Test connection - respond with "OK"' }
         ],
@@ -104,9 +106,9 @@ export class OpenAICompatibleProvider extends BaseLLMProvider implements LocalPr
         throw new Error(`Failed to fetch models: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      
-      this.discoveredModels = data.data?.map((model: any) => ({
+      const data: { data?: Array<{ id: string }> } = await response.json();
+
+      this.discoveredModels = data.data?.map((model) => ({
         id: model.id,
         name: model.id,
         description: this.inferModelDescription(model.id),
@@ -175,29 +177,22 @@ export class OpenAICompatibleProvider extends BaseLLMProvider implements LocalPr
         latency
       );
 
-      // Add API-specific metadata
-      llmResponse.metadata = {
-        ...llmResponse.metadata,
-        finishReason: data.choices?.[0]?.finish_reason,
-        model: data.model
-      };
-
       this.updateMetrics(llmResponse, true);
       return llmResponse;
 
-    } catch (error: any) {
+    } catch (error) {
       const latency = Date.now() - startTime;
-      
+
       // Create error response for metrics
       const errorResponse = this.createBaseResponse(
-        request, 
-        '', 
-        { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }, 
+        request,
+        '',
+        { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
         latency
       );
       this.updateMetrics(errorResponse, false);
-      
-      this.handleError(error, request);
+
+      this.handleError(error as ErrorWithCode, request);
     }
   }
 
@@ -220,8 +215,11 @@ export class OpenAICompatibleProvider extends BaseLLMProvider implements LocalPr
     return headers;
   }
 
-  private formatMessages(messages: any[], systemPrompt?: string): any[] {
-    const formatted = [];
+  private formatMessages(
+    messages: ChatMessage[],
+    systemPrompt?: string
+  ): Array<{ role: ChatMessage['role']; content: string }> {
+    const formatted: Array<{ role: ChatMessage['role']; content: string }> = [];
 
     // Add system message if provided
     if (systemPrompt) {
@@ -244,7 +242,7 @@ export class OpenAICompatibleProvider extends BaseLLMProvider implements LocalPr
     return formatted;
   }
 
-  private estimateTokenUsage(request: LLMRequest, response: string): any {
+  private estimateTokenUsage(request: LLMRequest, response: string): TokenUsage {
     // Rough token estimation (1 token ≈ 4 characters)
     const promptText = request.messages.map(m => m.content).join(' ');
     const systemPrompt = request.systemPrompt || '';
@@ -304,9 +302,9 @@ export class OpenAICompatibleProvider extends BaseLLMProvider implements LocalPr
     return 4096; // Conservative default
   }
 
-  private inferCapabilities(modelName: string): string[] {
+  private inferCapabilities(modelName: string): LLMCapability[] {
     const name = modelName.toLowerCase();
-    const capabilities = ['reasoning'];
+    const capabilities: LLMCapability[] = ['reasoning'];
     
     if (name.includes('llama') || name.includes('mistral')) {
       capabilities.push('multilingual');
@@ -331,7 +329,7 @@ export class OpenAICompatibleProvider extends BaseLLMProvider implements LocalPr
   }
 
   // OpenAI-compatible API specific methods
-  async getServerInfo(): Promise<any> {
+  async getServerInfo(): Promise<{ available: boolean; modelCount?: number; endpoint?: string }> {
     try {
       // Try to get server information (not standard OpenAI API)
       const response = await fetch(`${this.endpoint}/v1/models`, {
@@ -339,14 +337,14 @@ export class OpenAICompatibleProvider extends BaseLLMProvider implements LocalPr
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data: { data?: unknown[] } = await response.json();
         return {
           available: true,
           modelCount: data.data?.length || 0,
           endpoint: this.endpoint
         };
       }
-      
+
       return { available: false };
     } catch {
       return { available: false };

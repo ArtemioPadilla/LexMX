@@ -12,6 +12,9 @@ import type {
   LLMProviderType,
   ProviderMetrics
 } from '../../../types/llm';
+import type { ChatMessage } from '../../../types/llm';
+import type { ServiceAccount } from '../../../types/common';
+import type { RawCompletionResult } from './raw-completion';
 
 interface VertexAIRequest {
   contents: Array<{
@@ -29,6 +32,12 @@ interface VertexAIRequest {
     category: string;
     threshold: string;
   }>;
+}
+
+// Minimal shape of a Gemini/Vertex `content.parts[]` entry, enough to read
+// the generated text back out of the (otherwise untyped) JSON response.
+interface GeminiContentPart {
+  text: string;
 }
 
 export class VertexProvider implements LLMProvider {
@@ -136,11 +145,11 @@ export class VertexProvider implements LLMProvider {
     }
 
     // Parse service account key
-    let serviceAccount;
+    let serviceAccount: ServiceAccount | undefined;
     try {
-      serviceAccount = typeof this.config.gcpServiceAccountKey === 'string' 
-        ? JSON.parse(this.config.gcpServiceAccountKey)
-        : this.config.gcpServiceAccountKey;
+      serviceAccount = typeof this.config.gcpServiceAccountKey === 'string'
+        ? (JSON.parse(this.config.gcpServiceAccountKey) as ServiceAccount)
+        : (this.config.gcpServiceAccountKey as ServiceAccount | undefined);
     } catch (_error) {
       void _error;
       throw new Error('Invalid service account key format');
@@ -170,14 +179,15 @@ export class VertexProvider implements LLMProvider {
     }
 
     const data = await response.json();
-    this.accessToken = data.access_token;
+    const accessToken: string = data.access_token;
+    this.accessToken = accessToken;
     // Set expiry to 5 minutes before actual expiry for safety
     this.tokenExpiry = Date.now() + (data.expires_in - 300) * 1000;
-    
-    return this.accessToken;
+
+    return accessToken;
   }
 
-  private async createJWT(serviceAccount: any): Promise<string> {
+  private async createJWT(serviceAccount: ServiceAccount): Promise<string> {
     const header = {
       alg: 'RS256',
       typ: 'JWT'
@@ -201,7 +211,7 @@ export class VertexProvider implements LLMProvider {
     throw new Error('JWT signing requires server-side implementation. Please use API key authentication or deploy server-side proxy.');
   }
 
-  private convertToVertexFormat(messages: any[]): VertexAIRequest {
+  private convertToVertexFormat(messages: ChatMessage[]): VertexAIRequest {
     const contents = messages.map(msg => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: msg.content }]
@@ -209,8 +219,10 @@ export class VertexProvider implements LLMProvider {
 
     // Merge system prompt into first user message if present
     const systemMessage = messages.find(m => m.role === 'system');
-    if (systemMessage && contents.length > 0) {
-      contents[0].parts[0].text = `${systemMessage.content}\n\n${contents[0].parts[0].text}`;
+    const firstContent = contents[0];
+    const firstPart = firstContent?.parts[0];
+    if (systemMessage && firstContent && firstPart) {
+      firstPart.text = `${systemMessage.content}\n\n${firstPart.text}`;
     }
 
     return {
@@ -218,7 +230,7 @@ export class VertexProvider implements LLMProvider {
     };
   }
 
-  private async complete(request: LLMRequest): Promise<any> {
+  private async complete(request: LLMRequest): Promise<RawCompletionResult> {
     const startTime = Date.now();
     
     try {
@@ -279,7 +291,7 @@ export class VertexProvider implements LLMProvider {
         throw new Error('No valid response from Vertex AI');
       }
 
-      const content = candidate.content.parts.map((p: any) => p.text).join('');
+      const content = candidate.content.parts.map((p: GeminiContentPart) => p.text).join('');
       const usage = data.usageMetadata || {};
 
       return {
@@ -317,7 +329,7 @@ export class VertexProvider implements LLMProvider {
     };
   }
 
-  private async streamInternal(request: LLMRequest, onChunk: StreamCallback): Promise<any> {
+  private async streamInternal(request: LLMRequest, onChunk: StreamCallback): Promise<RawCompletionResult> {
     const startTime = Date.now();
     let fullContent = '';
     let promptTokens = 0;
@@ -402,7 +414,7 @@ export class VertexProvider implements LLMProvider {
             const candidate = data.candidates?.[0];
             
             if (candidate?.content?.parts) {
-              const chunk = candidate.content.parts.map((p: any) => p.text || '').join('');
+              const chunk = candidate.content.parts.map((p: GeminiContentPart) => p.text || '').join('');
               if (chunk) {
                 fullContent += chunk;
                 onChunk(chunk);
@@ -490,7 +502,7 @@ export class VertexProvider implements LLMProvider {
       'gemini-1.0-pro': { prompt: 0.0005, completion: 0.0015 }
     };
 
-    const modelPricing = pricing[model] || pricing['gemini-1.0-pro'];
+    const modelPricing = pricing[model] ?? pricing['gemini-1.0-pro']!;
     return (promptTokens * modelPricing.prompt + completionTokens * modelPricing.completion) / 1000;
   }
 }

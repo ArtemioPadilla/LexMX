@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MockProvider } from '../mock-provider';
-import type { ChatCompletionOptions } from '../../types';
+import type { ChatCompletionOptions } from '../mock-provider';
 
 describe('MockProvider', () => {
   let provider: MockProvider;
@@ -461,8 +461,8 @@ describe('MockProvider', () => {
       const history = debugProvider.getRequestHistory();
       
       expect(history).toHaveLength(2);
-      expect(history[0].messages[0].content).toBe('First');
-      expect(history[1].messages[0].content).toBe('Second');
+      expect(history[0]?.messages[0]?.content).toBe('First');
+      expect(history[1]?.messages[0]?.content).toBe('Second');
     });
   });
 });

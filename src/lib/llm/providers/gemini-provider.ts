@@ -12,6 +12,13 @@ import type {
   LLMProviderType,
   ProviderMetrics
 } from '../../../types/llm';
+import type { RawCompletionResult } from './raw-completion';
+
+// Minimal shape of a Gemini `content.parts[]` entry, enough to read the
+// generated text back out of the (otherwise untyped) JSON response.
+interface GeminiContentPart {
+  text: string;
+}
 
 export class GeminiProvider implements LLMProvider {
   readonly id: string = 'gemini';
@@ -99,7 +106,7 @@ export class GeminiProvider implements LLMProvider {
     return { ...this.metrics };
   }
 
-  private async complete(request: LLMRequest): Promise<any> {
+  private async complete(request: LLMRequest): Promise<RawCompletionResult> {
     const startTime = Date.now();
     
     try {
@@ -140,7 +147,7 @@ export class GeminiProvider implements LLMProvider {
         throw new Error('No response from Gemini');
       }
 
-      const content = candidate.content.parts.map((p: any) => p.text).join('');
+      const content = candidate.content.parts.map((p: GeminiContentPart) => p.text).join('');
       const usage = data.usageMetadata || {};
 
       return {
@@ -178,7 +185,7 @@ export class GeminiProvider implements LLMProvider {
     };
   }
 
-  private async streamInternal(request: LLMRequest, onChunk: StreamCallback): Promise<any> {
+  private async streamInternal(request: LLMRequest, onChunk: StreamCallback): Promise<RawCompletionResult> {
     const startTime = Date.now();
     let fullContent = '';
     let promptTokens = 0;
@@ -241,7 +248,7 @@ export class GeminiProvider implements LLMProvider {
               const candidate = parsed.candidates?.[0];
               
               if (candidate?.content?.parts) {
-                const text = candidate.content.parts.map((p: any) => p.text).join('');
+                const text = candidate.content.parts.map((p: GeminiContentPart) => p.text).join('');
                 if (text) {
                   fullContent += text;
                   onChunk(text);
@@ -311,7 +318,7 @@ export class GeminiProvider implements LLMProvider {
       'gemini-ultra': { prompt: 0.01, completion: 0.03 }
     };
 
-    const modelPricing = pricing[model] || pricing['gemini-pro'];
+    const modelPricing = pricing[model] ?? pricing['gemini-pro']!;
     return (promptTokens * modelPricing.prompt + completionTokens * modelPricing.completion) / 1000;
   }
 
@@ -326,13 +333,14 @@ export class GeminiProvider implements LLMProvider {
       
       // System messages are prepended to the first user message
       if (message.role === 'system') {
-        if (contents.length === 0 || contents[0].role !== 'user') {
+        const first = contents[0];
+        if (!first || first.role !== 'user') {
           contents.unshift({
             role: 'user',
             parts: [{ text: message.content }]
           });
         } else {
-          contents[0].parts.unshift({ text: message.content + '\n\n' });
+          first.parts.unshift({ text: message.content + '\n\n' });
         }
         continue;
       }

@@ -3,6 +3,7 @@ import { i18n } from '@/i18n';
 import type { Language } from '@/i18n';
 import type { LegalArea, QueryType } from '@/types/legal';
 import type { LLMProviderType } from '@/types/llm';
+import type { TranslationValue } from '@/types/common';
 
 export interface PromptBuilderOptions {
   language?: Language;
@@ -190,7 +191,7 @@ ${format.map(f => `- ${f}`).join('\n')}`;
   /**
    * Helper method to get raw translations for a given language
    */
-  getRawTranslations(section: string, language?: Language): any {
+  getRawTranslations(section: string, language?: Language): Record<string, TranslationValue> {
     return i18n.getSection(section, language || i18n.language);
   }
 }

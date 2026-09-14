@@ -1,17 +1,16 @@
 // Base LLM provider class that all providers extend
 
-import type { 
-  LLMProvider, 
-  LLMRequest, 
-  LLMResponse, 
-  ProviderConfig, 
+import type {
+  LLMProvider,
+  LLMRequest,
+  LLMResponse,
+  ProviderConfig,
   ProviderStatus,
   LLMModel,
   ProviderMetrics,
-  TokenUsage,
   LLMCapability
-} from '@/types';
-import type { ErrorWithCode } from '@/types/common';
+} from '@/types/llm';
+import type { ErrorWithCode, TokenUsage } from '@/types/common';
 
 export abstract class BaseLLMProvider implements LLMProvider {
   public readonly id: string;
@@ -165,10 +164,12 @@ export abstract class BaseLLMProvider implements LLMProvider {
   // Helper methods for cost calculation
   protected calculateTokenCost(usage: TokenUsage, model: LLMModel): number {
     if (!model.costPer1kTokens) return 0;
-    
-    const inputCost = (usage.promptTokens / 1000) * model.costPer1kTokens.input;
-    const outputCost = (usage.completionTokens / 1000) * model.costPer1kTokens.output;
-    
+
+    const promptTokens = usage.promptTokens ?? usage.prompt_tokens ?? 0;
+    const completionTokens = usage.completionTokens ?? usage.completion_tokens ?? 0;
+    const inputCost = (promptTokens / 1000) * model.costPer1kTokens.input;
+    const outputCost = (completionTokens / 1000) * model.costPer1kTokens.output;
+
     return inputCost + outputCost;
   }
 

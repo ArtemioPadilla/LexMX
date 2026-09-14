@@ -1,8 +1,9 @@
 // AWS Bedrock provider implementation
-import type { 
-  LLMProvider, 
-  LLMResponse, 
-  LLMRequest, 
+import type {
+  ChatMessage,
+  LLMProvider,
+  LLMResponse,
+  LLMRequest,
   ProviderConfig,
   StreamCallback,
   ProviderStatus,
@@ -10,12 +11,48 @@ import type {
   LLMModel,
   LLMCapability
 } from '../../../types/llm';
+import type { RawCompletionResult } from './raw-completion';
 
 interface BedrockConfig extends ProviderConfig {
   region?: string;
   accessKeyId?: string;
   secretAccessKey?: string;
   sessionToken?: string;
+}
+
+// Bedrock hosts several model families (Claude, Llama, Titan, Cohere, ...)
+// each with its own request/response JSON shape. Rather than model every
+// vendor's schema, requests are treated as an opaque JSON-serializable body
+// and responses as a loosely-typed envelope covering the fields each family
+// actually uses below.
+type BedrockRequestBody = Record<string, unknown>;
+
+interface BedrockRawResponse {
+  content?: Array<{ text?: string }>;
+  usage?: { input_tokens?: number; output_tokens?: number };
+  stop_reason?: string;
+  generation?: string;
+  prompt_token_count?: number;
+  generation_token_count?: number;
+  results?: Array<{ outputText?: string; tokenCount?: number; completionReason?: string }>;
+  inputTextTokenCount?: number;
+  generations?: Array<{ text?: string; finish_reason?: string }>;
+  text?: string;
+  output?: string;
+}
+
+interface BedrockStreamChunk {
+  delta?: { text?: string };
+  amazon_bedrock_invocationMetrics?: { inputTokenCount?: number; outputTokenCount?: number };
+  text?: string;
+  outputText?: string;
+  generation?: string;
+}
+
+interface ParsedStreamChunk {
+  content: string;
+  inputTokens?: number;
+  outputTokens?: number;
 }
 
 export class BedrockProvider implements LLMProvider {
@@ -184,7 +221,7 @@ export class BedrockProvider implements LLMProvider {
     return { ...this.metrics };
   }
 
-  private async complete(request: LLMRequest): Promise<any> {
+  private async complete(request: LLMRequest): Promise<RawCompletionResult> {
     const startTime = Date.now();
     const modelId = request.model || this.config.model || 'anthropic.claude-3-haiku-20240307-v1:0';
     
@@ -212,7 +249,7 @@ export class BedrockProvider implements LLMProvider {
     }
   }
 
-  private async streamInternal(request: LLMRequest, onChunk: StreamCallback): Promise<any> {
+  private async streamInternal(request: LLMRequest, onChunk: StreamCallback): Promise<RawCompletionResult> {
     const startTime = Date.now();
     const modelId = request.model || this.config.model || 'anthropic.claude-3-haiku-20240307-v1:0';
     let fullContent = '';
@@ -281,7 +318,7 @@ export class BedrockProvider implements LLMProvider {
     }
   }
 
-  private formatRequestBody(modelId: string, request: LLMRequest): any {
+  private formatRequestBody(modelId: string, request: LLMRequest): BedrockRequestBody {
     // Claude models
     if (modelId.startsWith('anthropic.claude')) {
       const systemMessage = request.messages.find(m => m.role === 'system');
@@ -347,7 +384,7 @@ export class BedrockProvider implements LLMProvider {
     };
   }
 
-  private formatLlamaPrompt(messages: any[]): string {
+  private formatLlamaPrompt(messages: ChatMessage[]): string {
     let prompt = '';
     
     for (const msg of messages) {
@@ -363,7 +400,7 @@ export class BedrockProvider implements LLMProvider {
     return prompt;
   }
 
-  private parseResponse(modelId: string, data: any, processingTime: number): any {
+  private parseResponse(modelId: string, data: BedrockRawResponse, processingTime: number): RawCompletionResult {
     // Claude models
     if (modelId.startsWith('anthropic.claude')) {
       return {
@@ -435,8 +472,8 @@ export class BedrockProvider implements LLMProvider {
     };
   }
 
-  private parseStreamChunks(modelId: string, buffer: string): { parsed: any[], remaining: string } {
-    const chunks: any[] = [];
+  private parseStreamChunks(modelId: string, buffer: string): { parsed: ParsedStreamChunk[], remaining: string } {
+    const chunks: ParsedStreamChunk[] = [];
     let remaining = buffer;
     
     // Different models use different streaming formats
@@ -460,7 +497,7 @@ export class BedrockProvider implements LLMProvider {
     return { parsed: chunks, remaining };
   }
 
-  private extractChunkContent(modelId: string, chunk: any): any {
+  private extractChunkContent(modelId: string, chunk: BedrockStreamChunk): ParsedStreamChunk {
     // Claude models
     if (modelId.startsWith('anthropic.claude')) {
       return {
@@ -479,7 +516,7 @@ export class BedrockProvider implements LLMProvider {
   private async makeRequest(
     method: string,
     path: string,
-    body: any,
+    body: BedrockRequestBody,
     signal?: AbortSignal
   ): Promise<Response> {
     const url = `${this.baseUrl}${path}`;
@@ -493,7 +530,7 @@ export class BedrockProvider implements LLMProvider {
     });
   }
 
-  private async getSignedHeaders(_method: string, _path: string, _body: any): Promise<Record<string, string>> {
+  private async getSignedHeaders(_method: string, _path: string, _body: BedrockRequestBody): Promise<Record<string, string>> {
     // For now, use simple API key authentication if provided
     // In production, you'd use AWS Signature V4
     const headers: Record<string, string> = {
@@ -526,7 +563,7 @@ export class BedrockProvider implements LLMProvider {
            (completionTokens / 1000) * (model.costPer1kOutput || 0);
   }
 
-  private estimateTokens(input: string | any[]): number {
+  private estimateTokens(input: string | ChatMessage[]): number {
     if (typeof input === 'string') {
       return Math.ceil(input.length / 4);
     }

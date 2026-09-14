@@ -12,6 +12,7 @@ import type {
   LLMProviderType,
   ProviderMetrics
 } from '../../../types/llm';
+import type { RawCompletionResult } from './raw-completion';
 
 export class OpenAIProvider implements LLMProvider {
   readonly id: string = 'openai';
@@ -99,7 +100,7 @@ export class OpenAIProvider implements LLMProvider {
     return { ...this.metrics };
   }
 
-  private async complete(request: LLMRequest): Promise<any> {
+  private async complete(request: LLMRequest): Promise<RawCompletionResult> {
     const startTime = Date.now();
     
     try {
@@ -166,7 +167,7 @@ export class OpenAIProvider implements LLMProvider {
     };
   }
 
-  private async streamInternal(request: LLMRequest, onChunk: StreamCallback): Promise<any> {
+  private async streamInternal(request: LLMRequest, onChunk: StreamCallback): Promise<RawCompletionResult> {
     const startTime = Date.now();
     let fullContent = '';
     let promptTokens = 0;
@@ -293,7 +294,7 @@ export class OpenAIProvider implements LLMProvider {
       'gpt-3.5-turbo-16k': { prompt: 0.003, completion: 0.004 }
     };
 
-    const modelPricing = pricing[model] || pricing['gpt-3.5-turbo'];
+    const modelPricing = pricing[model] ?? pricing['gpt-3.5-turbo']!;
     return (promptTokens * modelPricing.prompt + completionTokens * modelPricing.completion) / 1000;
   }
 }
