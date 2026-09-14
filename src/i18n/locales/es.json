@@ -410,7 +410,8 @@
     "closeMenu": "Cerrar menú",
     "quickActions": "Acciones Rápidas",
     "resources": "Recursos",
-    "account": "Cuenta"
+    "account": "Cuenta",
+    "tools": "Herramientas"
   },
   "hero": {
     "title": "Tu Asistente Legal Mexicano con IA",
@@ -1973,5 +1974,19 @@
     "invalidEmail": "Escribe un correo válido",
     "passwordTooShort": "La contraseña necesita al menos 8 caracteres",
     "checkEmail": "Revisa tu correo para confirmar la cuenta."
+  },
+  "tools": {
+    "title": "Calculadoras legales",
+    "subtitle": "Cálculos deterministas con fundamento por cada renglón y parámetros fechados. No usan IA.",
+    "none": "sin calculadoras",
+    "noneBody": "Todavía no hay calculadoras para {{country}}. Se añaden con el módulo de jurisdicción.",
+    "compute": "Calcular",
+    "concept": "Concepto",
+    "basis": "Fundamento",
+    "amount": "Importe",
+    "total": "Total",
+    "notes": "Notas",
+    "deterministic": "Cálculo determinista",
+    "disclaimer": "Orientación general: el cálculo definitivo depende del salario integrado, las prestaciones pactadas y el caso concreto. Verifica los artículos citados en la fuente oficial."
   }
 }

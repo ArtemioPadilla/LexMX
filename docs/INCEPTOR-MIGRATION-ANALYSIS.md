@@ -413,6 +413,7 @@ Rama `claude/lex-inceptor-migration-analysis-qmg92a`. Cada fase se cierra con
 | 7 Modo grounded y evaluación | 🔄 | Chat muestra `grounded` y fuentes con enlace oficial; benchmark de recuperación (`evals/`, 43 casos): documento recall@5 = 1.00, artículo recall@5 = 0.79, recall@10 = 0.93 tras corregir el parser; `evals/baseline.json` fija el mínimo |
 | 8-9 | ⏳ | |
 | 11.2 Jurisdicción | 🔄 | `src/jurisdictions/` (contrato + módulo México: entidades, jerarquía, fuentes, citas) en estricto con tests; falta cablear `LegalDocument.jurisdiction` y los demás países |
+| 11.4 C Producto local-first | 🔄 | Chat con cita verificable y modo grounded, modos Pregunta/Investiga, filtro jurisdiccional, expedientes en IndexedDB, calculadora laboral MX (finiquito/liquidación) en `/herramientas`. Faltan: Biblioteca, OCR, comparación, plantillas y exportación Word/PDF, voz |
 | 11.4 E Canales | 🔄 | Servidor MCP local `scripts/mcp/server.ts` (`search_corpus`, `get_article`, `list_documents` sobre stdio, sin dependencias) probado contra el corpus de 14 leyes; PWA con Workbox. Faltan: Tauri, complemento de Word |
 | 11.9 Supabase | 🔄 | `supabase/` (6 migraciones con RLS, 4 Edge Functions, `supabase.yml`, test de invariantes); cliente guardado `src/lib/supabase.ts`, `$session`/`$guardUser`, `route-guard.tsx`, `/cuenta` con alta e inicio de sesión (modo local si no hay variables). Falta: organizaciones/asientos en UI, facturación, monitoreo |
 

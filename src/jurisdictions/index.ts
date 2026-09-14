@@ -16,7 +16,7 @@ import { ec } from './ec';
 import { cr } from './cr';
 import { pa } from './pa';
 
-export type { Jurisdiction, JurisdictionCode, HierarchyLevel, LegalSource, SubnationalEntity, ParsedCitation, CitationStyle, LegalFramework, Language } from './types';
+export type { Jurisdiction, JurisdictionCode, HierarchyLevel, LegalSource, SubnationalEntity, ParsedCitation, CitationStyle, LegalFramework, Language, Calculator, CalculatorField, CalculatorLine, CalculatorResult } from './types';
 
 /** Orden = oleadas de § 11.4 B: MX → CL, AR, CO, PE → BR → UY, EC, CR, PA. */
 const REGISTRY: Record<JurisdictionCode, Jurisdiction> = { mx, cl, ar, co, pe, br, uy, ec, cr, pa };

@@ -410,7 +410,8 @@
     "closeMenu": "Close menu",
     "quickActions": "Quick Actions",
     "resources": "Resources",
-    "account": "Account"
+    "account": "Account",
+    "tools": "Tools"
   },
   "hero": {
     "title": "Your Mexican Legal AI Assistant",
@@ -1973,5 +1974,19 @@
     "invalidEmail": "Enter a valid email",
     "passwordTooShort": "Password needs at least 8 characters",
     "checkEmail": "Check your email to confirm the account."
+  },
+  "tools": {
+    "title": "Legal calculators",
+    "subtitle": "Deterministic calculations with a legal basis per line and dated parameters. No AI involved.",
+    "none": "no calculators",
+    "noneBody": "No calculators yet for {{country}}. They ship with the jurisdiction module.",
+    "compute": "Calculate",
+    "concept": "Item",
+    "basis": "Legal basis",
+    "amount": "Amount",
+    "total": "Total",
+    "notes": "Notes",
+    "deterministic": "Deterministic",
+    "disclaimer": "General guidance: the final figure depends on the integrated wage, agreed benefits and the specific case. Verify the cited articles at the official source."
   }
 }
