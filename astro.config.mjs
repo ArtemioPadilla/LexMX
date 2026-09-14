@@ -3,6 +3,7 @@ import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 import compress from 'astro-compress';
+import AstroPWA from '@vite-pwa/astro';
 
 // Subpath the site is served under. GitHub *project* pages live at
 // `<domain>/<repo>/`. The Pages build sets ASTRO_BASE=/LexMX; local dev and
@@ -19,6 +20,43 @@ export default defineConfig({
   integrations: [
     react(),
     sitemap(),
+    // PWA (Fase 5): Workbox worker built from src/sw.ts. `manifest.id` is
+    // fixed so browsers keep treating the site as the same installed app
+    // after the switch from public/sw.js + public/manifest.json.
+    AstroPWA({
+      registerType: 'autoUpdate',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      includeAssets: ['favicon.svg', 'icon.svg', 'icon-192.png', 'icon-512.png'],
+      manifest: {
+        id: `${BASE}`,
+        name: 'LexMX - Asistente Legal Mexicano',
+        short_name: 'LexMX',
+        description:
+          'Asistente legal mexicano con IA - consultas legales precisas basadas en legislación mexicana. Funciona sin conexión.',
+        start_url: BASE,
+        scope: BASE,
+        display: 'standalone',
+        background_color: '#ffffff',
+        theme_color: '#22c55e',
+        lang: 'es',
+        icons: [
+          { src: `${BASE}favicon.svg`, sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          { src: `${BASE}icon-192.png`, sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: `${BASE}icon-192.png`, sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: `${BASE}icon-512.png`, sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: `${BASE}icon-512.png`, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+      injectManifest: {
+        // Corpus and embeddings are runtime-cached by the worker, not precached.
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,webp,woff2}'],
+        globIgnores: ['**/legal-corpus/**', '**/embeddings/**', '**/node_modules/**'],
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+      },
+      experimental: { directoryAndTrailingSlashHandler: true },
+    }),
     compress({
       CSS: true,
       HTML: true,

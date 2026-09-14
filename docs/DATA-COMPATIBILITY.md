@@ -66,11 +66,13 @@ próximo desbloqueo, nunca de forma silenciosa.
 
 ## Service worker y manifest
 
-| Elemento | Valor actual | Nota |
+| Elemento | Valor | Dónde |
 |---|---|---|
-| Registro del SW | `${base}sw.js` | `src/components/layout/BaseLayout.astro` |
-| Caché del SW | `lexmx-${CACHE_VERSION}` | `public/sw.js` |
-| Manifest | `public/manifest.json`, sin `id`, `start_url: "./"` | Al pasar a `@vite-pwa/astro` (Fase 5) el SW nuevo debe borrar los caches `lexmx-*` y fijar `id` explícito para no reinstalar la PWA |
+| Worker | `sw.js` generado por `@vite-pwa/astro` (Workbox, `injectManifest`) desde `src/sw.ts`; `registerType: autoUpdate` | `astro.config.mjs`, `src/sw.ts`, `src/lib/pwa-register.ts` |
+| Manifest | `manifest.webmanifest` con `id` fijo = `BASE` (`/LexMX`) para que el navegador siga tratando la PWA como la misma app instalada | `astro.config.mjs` |
+| Caches | `workbox-precache-v2-*` (build), `corpus-shards` (JSON de `legal-corpus/` y `embeddings/`, cache-first), `hf-models` (modelo de embeddings), `assets` | `src/sw.ts` |
+| Caches heredadas | `lexmx-*` (worker anterior en `public/sw.js`): el worker nuevo las borra en `activate` | `src/sw.ts` |
+| Mensajes | `SKIP_WAITING`, `SEND_NOTIFICATION`, `GET_CACHE_INFO` → `CACHE_INFO`; sync tags `legal-query-sync` / `document-upload-sync` → `SYNC_REQUESTED` a las ventanas | `src/sw.ts`, `src/lib/pwa/pwa-manager.ts`, `src/lib/offline/offline-queue-manager.ts` |
 
 ## Origen
 
