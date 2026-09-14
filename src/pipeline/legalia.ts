@@ -263,14 +263,15 @@ export function areaFromMateria(materia: string | null | undefined, nombre = '')
  */
 export function typeFromName(nombre: string, categoria?: string): { type: DocumentType; hierarchy: LegalHierarchy } {
   const classify = (text: string): { type: DocumentType; hierarchy: LegalHierarchy } | undefined => {
-    const head = text.toUpperCase();
-    if (/CONSTITUCI[ÓO]N/.test(head)) return { type: 'constitution', hierarchy: 1 };
-    if (/\bC[ÓO]DIGO\b/.test(head)) return { type: 'code', hierarchy: 3 };
-    if (/^\s*LEY\b|\bLEY\s+(GENERAL|FEDERAL|ORG[ÁA]NICA|REGLAMENTARIA|NACIONAL|DE|DEL|PARA|SOBRE|QUE)\b/.test(head)) return { type: 'law', hierarchy: 3 };
-    if (/REGLAMENTO/.test(head)) return { type: 'regulation', hierarchy: 4 };
-    if (/\bNOM\b|NORMA OFICIAL/.test(head)) return { type: 'norm', hierarchy: 5 };
-    if (/TRATADO|CONVENI/.test(head)) return { type: 'treaty', hierarchy: 2 };
-    if (/LINEAMIENTO|ACUERDO|MANUAL|FORMATO|ESTATUTO/.test(head)) return { type: 'format', hierarchy: 7 };
+    const head = text.toUpperCase().trim();
+    if (/^CONSTITUCI[ÓO]N\b/.test(head)) return { type: 'constitution', hierarchy: 1 };
+    if (/^C[ÓO]DIGO\b/.test(head)) return { type: 'code', hierarchy: 3 };
+    if (/^REGLAMENTO\b/.test(head)) return { type: 'regulation', hierarchy: 4 };
+    if (/^(NOM\b|NORMA OFICIAL)/.test(head)) return { type: 'norm', hierarchy: 5 };
+    if (/^(TRATADO|CONVENI|PROTOCOLO)/.test(head)) return { type: 'treaty', hierarchy: 2 };
+    if (/^LEY\b/.test(head)) return { type: 'law', hierarchy: 3 };
+    if (/^(LINEAMIENTO|ACUERDO|MANUAL|FORMATO|ESTATUTO|DISPOSICI)/.test(head)) return { type: 'format', hierarchy: 7 };
+    if (/^DECRETO\b/.test(head)) return undefined; // a reform's category, never an instrument type
     return undefined;
   };
   return classify(nombre) ?? (categoria ? classify(categoria) : undefined) ?? { type: 'law', hierarchy: 3 };
