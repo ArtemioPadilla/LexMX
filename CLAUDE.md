@@ -46,7 +46,7 @@ migración).
 - `src/styles/global.css` — Tailwind v4 import, `@theme` tokens (legal, document, hierarchy palettes), dark variant by class
 - `src/test/` — vitest setup (`setupTests.ts`), mocks, `forbidden-imports.test.ts`
 - `.claude/agents/` — `prometeo`, `forja`, `centinela`; `.claude/checklists/` — ethics, governance, forbidden imports
-- `scripts/` — `doctor.sh`, `ship.sh`, `monday.sh`, `new-issue.sh`, `ratchet.mjs`, `check-ts-pragmas.mjs`, `corpus/` (LegalIA import + per-document embeddings), `eval/retrieval.ts`, `mcp/server.ts` (local MCP server over the corpus), `smoke/` (Chromium smoke tests against `dist/`)
+- `scripts/` — `doctor.sh`, `ship.sh`, `monday.sh`, `new-issue.sh`, `ratchet.mjs`, `check-ts-pragmas.mjs`, `corpus/` (LegalIA import, LeyChile import, per-document embeddings), `eval/retrieval.ts`, `mcp/server.ts` (local MCP server over the corpus), `smoke/` (Chromium smoke tests against `dist/`)
 - `supabase/` — optional server (plan § 11.9): `migrations/` (RLS on every table), `functions/` (Deno Edge Functions), `README.md`; invariants tested in `src/test/supabase-schema.test.ts`
 - `evals/` — retrieval golden set per corpus (`mx-federal/retrieval.jsonl`) and results
 - `public/office/manifest.xml` + `src/pages/office/taskpane.astro` — Word add-in (same chat as a task pane, Office.js only talks to the document)
@@ -64,6 +64,7 @@ migración).
 | `npm run test` | vitest |
 | `npm run lint` | eslint |
 | `npm run corpus:import` / `corpus:embeddings` | build the federal corpus and its per-document embedding shards (what `corpus-update.yml` runs) |
+| `npm run corpus:import:cl` | Chile corpus from LeyChile (`src/pipeline/leychile.ts` adapter), same layout; one corpus per jurisdiction |
 | `npm run eval:retrieval` | retrieval benchmark (recall@k / MRR by article) against a built corpus; fails under `evals/baseline.json` |
 | `npm run mcp` | local MCP server (`search_corpus`, `get_article`, `list_documents`) |
 | `npm run lighthouse` | build, stage `dist/` under `.lighthouse-root/LexMX/` (Pages base path) and run Lighthouse CI with the budgets and a11y assertions in `lighthouserc.json` |

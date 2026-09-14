@@ -44,7 +44,8 @@
     "mobile:android:build": "npx --yes @tauri-apps/cli@^2 android build",
     "mobile:ios:init": "npx --yes @tauri-apps/cli@^2 ios init",
     "mobile:ios:dev": "npx --yes @tauri-apps/cli@^2 ios dev",
-    "mobile:ios:build": "npx --yes @tauri-apps/cli@^2 ios build"
+    "mobile:ios:build": "npx --yes @tauri-apps/cli@^2 ios build",
+    "corpus:import:cl": "node --experimental-strip-types scripts/corpus/import-leychile.ts"
   },
   "dependencies": {
     "@astrojs/react": "^5.0.7",

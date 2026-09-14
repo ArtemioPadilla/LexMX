@@ -428,7 +428,11 @@ export function toLegalDocument(meta: InstrumentMeta, snapshotMarkdown: string):
 }
 
 /** Entrada de `metadata.json` / `index.json` del corpus público de LexMX. */
-export function corpusIndexEntry(doc: LegalDocument, sizeBytes: number) {
+export function corpusIndexEntry(
+  doc: LegalDocument,
+  sizeBytes: number,
+  origin: { jurisdiction?: string; source?: string } = {},
+) {
   return {
     id: doc.id,
     title: doc.title,
@@ -437,8 +441,8 @@ export function corpusIndexEntry(doc: LegalDocument, sizeBytes: number) {
     hierarchy: doc.hierarchy,
     status: doc.status,
     lastReform: doc.lastReform ?? null,
-    jurisdiction: 'mx-federal',
-    source: 'legalia:scjn-leyes',
+    jurisdiction: origin.jurisdiction ?? 'mx-federal',
+    source: origin.source ?? 'legalia:scjn-leyes',
     size: sizeBytes,
     lastUpdated: doc.lastUpdated ?? '',
     url: `/legal-corpus/${doc.id}.json`,
