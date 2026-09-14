@@ -33,18 +33,20 @@ migración).
 
 ## File organization
 
-- `src/pages/` — Astro routes (`chat`, `setup`, `casos`, `wiki`, `document/[id]`, `requests/*`, `admin/*`)
+- `src/pages/` — Astro routes (`chat`, `setup`, `casos`, `wiki`, `biblioteca`, `herramientas`, `cuenta`, `seguridad`, `document/[id]` generated from the corpus manifest, `requests/*`, `admin/*`)
 - `src/components/layout/BaseLayout.astro` — the single layout (mounts `HydrationCanary` + `FeedbackFAB`)
 - `src/components/` — Astro/React presentational components; `common/` holds Inceptor pieces (FeedbackFAB)
 - `src/islands/` — React islands hydrated with `client:*` (+ `ErrorBoundary`, `HydrationCanary`)
 - `src/lib/` — `llm/` (providers, prompt-builder), `rag/`, `embeddings/`, `storage/`, `security/`, `legal/`, `corpus/`, `ingestion/`, `admin/`, plus Inceptor utilities (`href`, `flags`, `disposer`, `report-issue`, `site-meta`, `use-client-preference`)
-- `src/jurisdictions/` — jurisdiction as a first-class module: `types.ts` contract, `mx/` (reference), `cl ar co pe br uy ec cr pa`, `_shared/citation.ts` factory; nothing country-specific lives outside its module
-- `src/stores/` — Nano Stores shared across islands (`corpus.ts`: `$corpusInstall`)
+- `src/jurisdictions/` — jurisdiction as a first-class module: `types.ts` contract, `mx/` (reference, with `calculators.ts`), `cl ar co pe br uy ec cr pa`, `_shared/citation.ts` factory; nothing country-specific lives outside its module (`docs/CONTRIBUTING-JURISDICTIONS.md`)
+- `src/stores/` — Nano Stores shared across islands (`corpus`, `chat`, `cases`, `jurisdiction`, `auth`, `pwa`)
+- `src/lib/case-management/` — IndexedDB store for expedientes; `src/schemas/` — zod schemas shared by forms
+- `src-tauri/` — LexMX Escritorio (Tauri 2) packaging the same `dist/`
 - `src/i18n/` — `useTranslation()` singleton + `locales/{es,en}.json`
 - `src/styles/global.css` — Tailwind v4 import, `@theme` tokens (legal, document, hierarchy palettes), dark variant by class
 - `src/test/` — vitest setup (`setupTests.ts`), mocks, `forbidden-imports.test.ts`
 - `.claude/agents/` — `prometeo`, `forja`, `centinela`; `.claude/checklists/` — ethics, governance, forbidden imports
-- `scripts/` — `doctor.sh`, `ship.sh`, `monday.sh`, `new-issue.sh`, `ratchet.mjs`, `check-ts-pragmas.mjs`, `corpus/` (LegalIA import + per-document embeddings), `eval/retrieval.ts`
+- `scripts/` — `doctor.sh`, `ship.sh`, `monday.sh`, `new-issue.sh`, `ratchet.mjs`, `check-ts-pragmas.mjs`, `corpus/` (LegalIA import + per-document embeddings), `eval/retrieval.ts`, `mcp/server.ts` (local MCP server over the corpus), `smoke/` (Chromium smoke tests against `dist/`)
 - `supabase/` — optional server (plan § 11.9): `migrations/` (RLS on every table), `functions/` (Deno Edge Functions), `README.md`; invariants tested in `src/test/supabase-schema.test.ts`
 - `evals/` — retrieval golden set per corpus (`mx-federal/retrieval.jsonl`) and results
 
@@ -60,7 +62,10 @@ migración).
 | `npm run test` | vitest |
 | `npm run lint` | eslint |
 | `npm run corpus:import` / `corpus:embeddings` | build the federal corpus and its per-document embedding shards (what `corpus-update.yml` runs) |
-| `npm run eval:retrieval` | retrieval benchmark (recall@k / MRR by article) against a built corpus |
+| `npm run eval:retrieval` | retrieval benchmark (recall@k / MRR by article) against a built corpus; fails under `evals/baseline.json` |
+| `npm run mcp` | local MCP server (`search_corpus`, `get_article`, `list_documents`) |
+| `npm run lighthouse` | Lighthouse CI with `lighthouse-budgets.json` (`/*` and `/chat`) |
+| `npm run desktop:dev` / `desktop:build` | Tauri 2 desktop app |
 | `npm run doctor` / `ship` / `monday` / `new-issue` | Inceptor workflow scripts |
 
 ## Quality ratchet (read before touching code)
