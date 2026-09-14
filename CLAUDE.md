@@ -38,11 +38,15 @@ migración).
 - `src/components/` — Astro/React presentational components; `common/` holds Inceptor pieces (FeedbackFAB)
 - `src/islands/` — React islands hydrated with `client:*` (+ `ErrorBoundary`, `HydrationCanary`)
 - `src/lib/` — `llm/` (providers, prompt-builder), `rag/`, `embeddings/`, `storage/`, `security/`, `legal/`, `corpus/`, `ingestion/`, `admin/`, plus Inceptor utilities (`href`, `flags`, `disposer`, `report-issue`, `site-meta`, `use-client-preference`)
+- `src/jurisdictions/` — jurisdiction as a first-class module: `types.ts` contract, `mx/` (reference), `cl ar co pe br uy ec cr pa`, `_shared/citation.ts` factory; nothing country-specific lives outside its module
+- `src/stores/` — Nano Stores shared across islands (`corpus.ts`: `$corpusInstall`)
 - `src/i18n/` — `useTranslation()` singleton + `locales/{es,en}.json`
 - `src/styles/global.css` — Tailwind v4 import, `@theme` tokens (legal, document, hierarchy palettes), dark variant by class
 - `src/test/` — vitest setup (`setupTests.ts`), mocks, `forbidden-imports.test.ts`
 - `.claude/agents/` — `prometeo`, `forja`, `centinela`; `.claude/checklists/` — ethics, governance, forbidden imports
-- `scripts/` — `doctor.sh`, `ship.sh`, `monday.sh`, `new-issue.sh`, `ratchet.mjs`, `check-ts-pragmas.mjs`, corpus scripts
+- `scripts/` — `doctor.sh`, `ship.sh`, `monday.sh`, `new-issue.sh`, `ratchet.mjs`, `check-ts-pragmas.mjs`, `corpus/` (LegalIA import + per-document embeddings), `eval/retrieval.ts`
+- `supabase/` — optional server (plan § 11.9): `migrations/` (RLS on every table), `functions/` (Deno Edge Functions), `README.md`; invariants tested in `src/test/supabase-schema.test.ts`
+- `evals/` — retrieval golden set per corpus (`mx-federal/retrieval.jsonl`) and results
 
 ## Commands
 
@@ -55,6 +59,8 @@ migración).
 | `npm run type-check:strict` | `tsc` on the cleaned modules listed in `tsconfig.strict.json` |
 | `npm run test` | vitest |
 | `npm run lint` | eslint |
+| `npm run corpus:import` / `corpus:embeddings` | build the federal corpus and its per-document embedding shards (what `corpus-update.yml` runs) |
+| `npm run eval:retrieval` | retrieval benchmark (recall@k / MRR by article) against a built corpus |
 | `npm run doctor` / `ship` / `monday` / `new-issue` | Inceptor workflow scripts |
 
 ## Quality ratchet (read before touching code)
@@ -111,7 +117,9 @@ GitHub issue (stack, component path, URL, UA) via `src/lib/report-issue.ts`.
 - Jerarquía normativa: Constitución (1) → tratados (2) → leyes y códigos federales (3) → reglamentos (4) → NOM (5) → leyes estatales (6) → formatos administrativos (7). Palette `hierarchy-1..7` in `global.css` mirrors it.
 - Citas: "Artículo 123 constitucional", "Artículo 47 de la Ley Federal del Trabajo", "Tesis 1a./J. 15/2019" (registro digital, época, instancia).
 - Toda respuesta lleva disclaimer: orientación, no asesoría legal; cita la fuente oficial.
-- Jurisdiction is a first-class dimension (`jurisdiction` field on documents); nothing Mexico-specific outside the Mexico module once `src/jurisdictions/` exists (plan § 11.2).
+- Jurisdiction is a first-class dimension: `getJurisdiction(code)` from `src/jurisdictions` gives hierarchy, entities, sources, citation parser/formatter and the privacy framework. Nothing Mexico-specific outside `src/jurisdictions/mx/` (plan § 11.2).
+- Corpus install: the RAG engine installs the published corpus shard by shard through `CorpusInstaller` (skips the network when `lexmx_vectors` already holds the served version). Progress lives in `$corpusInstall`; read it, never re-fetch the corpus from islands.
+- `/seguridad` documents the architecture guarantees; when a data-contract or server rule changes, update that page in the same PR.
 
 ## Quality bar
 
