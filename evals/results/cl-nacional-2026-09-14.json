@@ -1,0 +1,640 @@
+{
+ "summary": {
+  "model": "Xenova/multilingual-e5-small",
+  "corpusDocuments": 11,
+  "chunks": 9614,
+  "cases": 24,
+  "scored": 24,
+  "missing": [],
+  "document": {
+   "recallAt1": 1,
+   "recallAt5": 1,
+   "recallAt10": 1,
+   "mrr": 1
+  },
+  "article": {
+   "recallAt1": 0.5416666666666666,
+   "recallAt5": 0.7083333333333334,
+   "recallAt10": 0.8333333333333334,
+   "mrr": 0.6320601851851851
+  },
+  "byArea": {
+   "constitutional": {
+    "cases": 3,
+    "articleRecall5": 1
+   },
+   "labor": {
+    "cases": 6,
+    "articleRecall5": 0.667
+   },
+   "civil": {
+    "cases": 4,
+    "articleRecall5": 1
+   },
+   "criminal": {
+    "cases": 4,
+    "articleRecall5": 0.25
+   },
+   "consumer": {
+    "cases": 2,
+    "articleRecall5": 1
+   },
+   "privacy": {
+    "cases": 2,
+    "articleRecall5": 1
+   },
+   "administrative": {
+    "cases": 1,
+    "articleRecall5": 0
+   },
+   "tax": {
+    "cases": 1,
+    "articleRecall5": 0
+   },
+   "commercial": {
+    "cases": 1,
+    "articleRecall5": 1
+   }
+  },
+  "ranAt": "2026-09-14T04:46:38.042Z"
+ },
+ "results": [
+  {
+   "id": "cl-cpr-19",
+   "area": "constitutional",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 1,
+   "top": [
+    {
+     "doc": "cl-cpr",
+     "article": "19",
+     "score": 0.91
+    },
+    {
+     "doc": "cl-cpr",
+     "article": "13",
+     "score": 0.886
+    },
+    {
+     "doc": "cl-cpr",
+     "article": "154",
+     "score": 0.886
+    }
+   ]
+  },
+  {
+   "id": "cl-cpr-1",
+   "area": "constitutional",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 2,
+   "top": [
+    {
+     "doc": "cl-cpr",
+     "article": "19",
+     "score": 0.895
+    },
+    {
+     "doc": "cl-cpr",
+     "article": "1",
+     "score": 0.895
+    },
+    {
+     "doc": "cl-cpr",
+     "article": "154",
+     "score": 0.878
+    }
+   ]
+  },
+  {
+   "id": "cl-cpr-5",
+   "area": "constitutional",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 1,
+   "top": [
+    {
+     "doc": "cl-cpr",
+     "article": "5",
+     "score": 0.911
+    },
+    {
+     "doc": "cl-cpr",
+     "article": "135",
+     "score": 0.903
+    },
+    {
+     "doc": "cl-cpr",
+     "article": "154",
+     "score": 0.891
+    }
+   ]
+  },
+  {
+   "id": "cl-ct-22",
+   "area": "labor",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 8,
+   "top": [
+    {
+     "doc": "cl-ct",
+     "article": "28",
+     "score": 0.879
+    },
+    {
+     "doc": "cl-ct",
+     "article": "22 bis",
+     "score": 0.875
+    },
+    {
+     "doc": "cl-ct",
+     "article": "26 bis",
+     "score": 0.87
+    }
+   ]
+  },
+  {
+   "id": "cl-ct-161",
+   "area": "labor",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": null,
+   "top": [
+    {
+     "doc": "cl-ct",
+     "article": "136",
+     "score": 0.866
+    },
+    {
+     "doc": "cl-cpc",
+     "article": "445",
+     "score": 0.864
+    },
+    {
+     "doc": "cl-lir",
+     "article": "4",
+     "score": 0.863
+    }
+   ]
+  },
+  {
+   "id": "cl-ct-163",
+   "area": "labor",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 1,
+   "top": [
+    {
+     "doc": "cl-ct",
+     "article": "163",
+     "score": 0.875
+    },
+    {
+     "doc": "cl-cc",
+     "article": "2472",
+     "score": 0.87
+    },
+    {
+     "doc": "cl-ccom",
+     "article": "336",
+     "score": 0.866
+    }
+   ]
+  },
+  {
+   "id": "cl-ct-7",
+   "area": "labor",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 2,
+   "top": [
+    {
+     "doc": "cl-ct",
+     "article": "6",
+     "score": 0.902
+    },
+    {
+     "doc": "cl-ct",
+     "article": "7",
+     "score": 0.894
+    },
+    {
+     "doc": "cl-ct",
+     "article": "307",
+     "score": 0.881
+    }
+   ]
+  },
+  {
+   "id": "cl-ct-159",
+   "area": "labor",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 1,
+   "top": [
+    {
+     "doc": "cl-ct",
+     "article": "159",
+     "score": 0.904
+    },
+    {
+     "doc": "cl-ct",
+     "article": "152 quáter",
+     "score": 0.879
+    },
+    {
+     "doc": "cl-ct",
+     "article": "162",
+     "score": 0.878
+    }
+   ]
+  },
+  {
+   "id": "cl-ct-184",
+   "area": "labor",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 1,
+   "top": [
+    {
+     "doc": "cl-ct",
+     "article": "184",
+     "score": 0.893
+    },
+    {
+     "doc": "cl-ct",
+     "article": "92",
+     "score": 0.889
+    },
+    {
+     "doc": "cl-ct",
+     "article": "209",
+     "score": 0.882
+    }
+   ]
+  },
+  {
+   "id": "cl-cc-1545",
+   "area": "civil",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 1,
+   "top": [
+    {
+     "doc": "cl-cc",
+     "article": "1545",
+     "score": 0.926
+    },
+    {
+     "doc": "cl-cc",
+     "article": "1795",
+     "score": 0.893
+    },
+    {
+     "doc": "cl-ct",
+     "article": "307",
+     "score": 0.873
+    }
+   ]
+  },
+  {
+   "id": "cl-cc-2314",
+   "area": "civil",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 1,
+   "top": [
+    {
+     "doc": "cl-cc",
+     "article": "2314",
+     "score": 0.942
+    },
+    {
+     "doc": "cl-cc",
+     "article": "2325",
+     "score": 0.902
+    },
+    {
+     "doc": "cl-cc",
+     "article": "2317",
+     "score": 0.895
+    }
+   ]
+  },
+  {
+   "id": "cl-cc-1793",
+   "area": "civil",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 1,
+   "top": [
+    {
+     "doc": "cl-cc",
+     "article": "1793",
+     "score": 0.879
+    },
+    {
+     "doc": "cl-lir",
+     "article": "17",
+     "score": 0.865
+    },
+    {
+     "doc": "cl-ccom",
+     "article": "113",
+     "score": 0.862
+    }
+   ]
+  },
+  {
+   "id": "cl-cp-391",
+   "area": "criminal",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": null,
+   "top": [
+    {
+     "doc": "cl-cp",
+     "article": "6",
+     "score": 0.876
+    },
+    {
+     "doc": "cl-cp",
+     "article": "391 bis",
+     "score": 0.873
+    },
+    {
+     "doc": "cl-cp",
+     "article": "51",
+     "score": 0.857
+    }
+   ]
+  },
+  {
+   "id": "cl-cp-432",
+   "area": "criminal",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 2,
+   "top": [
+    {
+     "doc": "cl-cp",
+     "article": "456 bis",
+     "score": 0.87
+    },
+    {
+     "doc": "cl-cp",
+     "article": "432",
+     "score": 0.867
+    },
+    {
+     "doc": "cl-cp",
+     "article": "455 bis",
+     "score": 0.856
+    }
+   ]
+  },
+  {
+   "id": "cl-cp-1",
+   "area": "criminal",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": null,
+   "top": [
+    {
+     "doc": "cl-cp",
+     "article": "5",
+     "score": 0.886
+    },
+    {
+     "doc": "cl-cp",
+     "article": "6",
+     "score": 0.882
+    },
+    {
+     "doc": "cl-cpp",
+     "article": "132 bis",
+     "score": 0.877
+    }
+   ]
+  },
+  {
+   "id": "cl-lpc-3",
+   "area": "consumer",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 1,
+   "top": [
+    {
+     "doc": "cl-lpc",
+     "article": "3",
+     "score": 0.902
+    },
+    {
+     "doc": "cl-cpr",
+     "article": "19",
+     "score": 0.867
+    },
+    {
+     "doc": "cl-cpr",
+     "article": "13",
+     "score": 0.867
+    }
+   ]
+  },
+  {
+   "id": "cl-lpc-23",
+   "area": "consumer",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 1,
+   "top": [
+    {
+     "doc": "cl-lpc",
+     "article": "23",
+     "score": 0.894
+    },
+    {
+     "doc": "cl-lpc",
+     "article": "15",
+     "score": 0.884
+    },
+    {
+     "doc": "cl-lpc",
+     "article": "17",
+     "score": 0.87
+    }
+   ]
+  },
+  {
+   "id": "cl-lpd-4",
+   "area": "privacy",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 3,
+   "top": [
+    {
+     "doc": "cl-lpd",
+     "article": "20",
+     "score": 0.885
+    },
+    {
+     "doc": "cl-cc",
+     "article": "2",
+     "score": 0.873
+    },
+    {
+     "doc": "cl-lpd",
+     "article": "4",
+     "score": 0.87
+    }
+   ]
+  },
+  {
+   "id": "cl-lpd-12",
+   "area": "privacy",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 1,
+   "top": [
+    {
+     "doc": "cl-lpd",
+     "article": "12",
+     "score": 0.897
+    },
+    {
+     "doc": "cl-lpd",
+     "article": "5",
+     "score": 0.891
+    },
+    {
+     "doc": "cl-lpd",
+     "article": "14",
+     "score": 0.89
+    }
+   ]
+  },
+  {
+   "id": "cl-lbgma-10",
+   "area": "administrative",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 10,
+   "top": [
+    {
+     "doc": "cl-lbgma",
+     "article": "12",
+     "score": 0.894
+    },
+    {
+     "doc": "cl-lbgma",
+     "article": "22",
+     "score": 0.878
+    },
+    {
+     "doc": "cl-lbgma",
+     "article": "18 quáter",
+     "score": 0.874
+    }
+   ]
+  },
+  {
+   "id": "cl-cpp-93",
+   "area": "criminal",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 9,
+   "top": [
+    {
+     "doc": "cl-cpp",
+     "article": "7",
+     "score": 0.896
+    },
+    {
+     "doc": "cl-cpp",
+     "article": "10",
+     "score": 0.892
+    },
+    {
+     "doc": "cl-cpp",
+     "article": "432",
+     "score": 0.883
+    }
+   ]
+  },
+  {
+   "id": "cl-lir-52",
+   "area": "tax",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": null,
+   "top": [
+    {
+     "doc": "cl-lir",
+     "article": "58",
+     "score": 0.891
+    },
+    {
+     "doc": "cl-lir",
+     "article": "41",
+     "score": 0.889
+    },
+    {
+     "doc": "cl-lir",
+     "article": "41",
+     "score": 0.881
+    }
+   ]
+  },
+  {
+   "id": "cl-ccom-3",
+   "area": "commercial",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 1,
+   "top": [
+    {
+     "doc": "cl-ccom",
+     "article": "3",
+     "score": 0.88
+    },
+    {
+     "doc": "cl-ccom",
+     "article": "113",
+     "score": 0.874
+    },
+    {
+     "doc": "cl-ccom",
+     "article": "1",
+     "score": 0.858
+    }
+   ]
+  },
+  {
+   "id": "cl-cpc-254",
+   "area": "civil",
+   "status": "ok",
+   "docRank": 1,
+   "articleRank": 1,
+   "top": [
+    {
+     "doc": "cl-cpc",
+     "article": "254",
+     "score": 0.899
+    },
+    {
+     "doc": "cl-cc",
+     "article": "2",
+     "score": 0.895
+    },
+    {
+     "doc": "cl-cpc",
+     "article": "309",
+     "score": 0.892
+    }
+   ]
+  }
+ ],
+ "note": "Primera corrida del corpus chileno (11 normas, 9 614 chunks)"
+}

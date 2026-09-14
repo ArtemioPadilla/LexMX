@@ -50,6 +50,7 @@ El benchmark aplica las mismas reglas que `src/lib/rag/ranking.ts` y que
 |---|---|---|---|---|---|
 | 2026-09-14 | 14 leyes | 1.00 | 0.79 | 0.93 | `results/mx-federal-2026-09-14.json` |
 | 2026-09-14 | 39 leyes, solo artículos, transitorios ×0.92 | 0.98 | 0.81 | 0.93 | `results/mx-federal-39-2026-09-14.json` |
+| 2026-09-14 | Chile, 11 normas (24 casos) | 1.00 | 0.71 | 0.83 | `results/cl-nacional-2026-09-14.json` |
 
 Las áreas más débiles son fiscal (0.60) y administrativa (0/2): el modelo
 `e5-small` confunde artículos vecinos con numeración compuesta (`17-H`,

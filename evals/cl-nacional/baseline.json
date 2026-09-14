@@ -1,0 +1,8 @@
+{
+  "articleRecallAt5": 0.7,
+  "documentRecallAt5": 1.0,
+  "cases": 24,
+  "corpus": "cl-nacional (11 normas, LeyChile; índice solo de artículos, transitorios ×0.92)",
+  "model": "Xenova/multilingual-e5-small",
+  "setAt": "2026-09-14"
+}
