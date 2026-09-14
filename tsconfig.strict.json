@@ -18,6 +18,7 @@
     "src/lib/use-client-preference.ts",
     "src/utils/urls.ts",
     "src/islands/ErrorBoundary.tsx",
-    "src/islands/HydrationCanary.tsx"
+    "src/islands/HydrationCanary.tsx",
+    "src/pipeline/**/*.ts"
   ]
 }
