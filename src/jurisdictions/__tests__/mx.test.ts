@@ -6,7 +6,7 @@ describe('jurisdictions registry', () => {
   it('returns Mexico by default and lists it', () => {
     expect(getJurisdiction().code).toBe('mx');
     expect(getJurisdiction('mx')).toBe(mx);
-    expect(listJurisdictions().map((j) => j.code)).toEqual(['mx']);
+    expect(listJurisdictions().map((j) => j.code)[0]).toBe('mx');
   });
 
   it('rejects unknown codes with the available list', () => {

@@ -32,7 +32,7 @@ export interface LegalSource {
   name: string;
   kind: 'legislation' | 'jurisprudence' | 'gazette' | 'fiscal' | 'other';
   /** Cómo se accede: API abierta, descarga abierta, scraping o licencia. */
-  access: 'open-api' | 'open-download' | 'scraping' | 'licensed';
+  access: 'open-api' | 'open-download' | 'scraping' | 'licensed' | 'unverified';
   url: string;
   /** Patrón de enlace de verificación por documento, con `{id}`. */
   verifyUrl?: string;
