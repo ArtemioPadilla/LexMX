@@ -7,7 +7,7 @@ const t = getTranslation(Astro.url);
 ---
 
 <BaseLayout title={`${t('nav.about')} - LexMX`}>
-  <main class="min-h-screen bg-white dark:bg-gray-900">
+  <div class="min-h-screen bg-white dark:bg-gray-900">
     <AboutContent client:load />
-  </main>
+  </div>
 </BaseLayout>

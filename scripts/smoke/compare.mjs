@@ -1,0 +1,24 @@
+// Smoke: /comparar — paste two texts, verify the diff renders both views and the stats; /herramientas mounts the OCR tool.
+import { chromium } from '@playwright/test';
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+const errors = [];
+page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+page.on('console', (m) => { if (m.type() === 'error' && !/ERR_CONNECTION|404|huggingface/.test(m.text())) errors.push('console: ' + m.text()); });
+const requests = [];
+page.on('request', (r) => requests.push(r.url()));
+await page.goto('http://localhost:4321/LexMX/comparar', { waitUntil: 'networkidle', timeout: 60000 });
+await page.fill('#cmp-left', 'Artículo 47. Son causas de rescisión\nsin responsabilidad para el patrón\nel engaño');
+await page.fill('#cmp-right', 'Artículo 47. Son causales de rescisión\nsin responsabilidad para el patrón\nel engaño\nla violencia');
+await page.waitForSelector('[data-testid="diff-unified"]', { timeout: 10000 });
+const unifiedRows = await page.locator('[data-testid="diff-unified"] tr').count();
+const badges = await page.locator('section[aria-label] .inline-flex').allInnerTexts();
+await page.getByRole('button', { name: /Lado a lado|Side by side/ }).click();
+await page.waitForSelector('[data-testid="diff-split"]', { timeout: 5000 });
+const splitRows = await page.locator('[data-testid="diff-split"] tr').count();
+await page.screenshot({ path: process.argv[2] ?? '/tmp/compare.png' });
+await page.goto('http://localhost:4321/LexMX/herramientas', { waitUntil: 'networkidle', timeout: 60000 });
+await page.waitForSelector('#ocr-title', { timeout: 15000 });
+const tesseractLoadedEagerly = requests.some((u) => /tesseract/i.test(u));
+console.log(JSON.stringify({ unifiedRows, splitRows, badges, ocrMounted: true, tesseractLoadedEagerly, errors: errors.slice(0, 5) }, null, 1));
+await browser.close();

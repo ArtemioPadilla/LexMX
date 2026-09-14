@@ -6,6 +6,8 @@
 // them in eagerly would ship their (sizeable) parsing code to every caller of
 // this module, including ones that only ever handle plain text/HTML.
 
+import { needsOcr, ocrPdfPages, type OcrLanguage, type OcrProgress } from './ocr';
+
 type PdfJsModule = typeof import('pdfjs-dist');
 type MammothModule = typeof import('mammoth');
 
@@ -33,6 +35,14 @@ export interface ExtractionOptions {
   extractImages?: boolean;
   maxPages?: number;
   includeMetadata?: boolean;
+  /**
+   * OCR for PDF pages without a text layer (scans). 'auto' (default) OCRs
+   * only pages whose text layer is empty; 'always' OCRs every page; 'never'
+   * skips it. Runs on the device via Tesseract.js (see `ocr.ts`).
+   */
+  ocr?: 'auto' | 'always' | 'never';
+  ocrLanguage?: OcrLanguage;
+  onOcrProgress?: (p: OcrProgress) => void;
 }
 
 export interface ExtractionResult {
@@ -67,7 +77,8 @@ export class PDFExtractor {
   ): Promise<ExtractionResult> {
     const {
       includeMetadata = true,
-      maxPages = 500 // Reasonable limit for legal documents
+      maxPages = 500, // Reasonable limit for legal documents
+      ocr = 'auto'
     } = options;
 
     try {
@@ -162,6 +173,22 @@ export class PDFExtractor {
             text: `[Error extracting page ${pageNum}]`,
             hasImages: false
           });
+        }
+      }
+
+      // OCR pages that have no usable text layer (scanned documents).
+      if (ocr !== 'never' && typeof document !== 'undefined') {
+        const targets = pages.filter((p) => ocr === 'always' || needsOcr(p.text)).map((p) => p.pageNumber);
+        if (targets.length > 0) {
+          const recognized = await ocrPdfPages(pdfDoc, targets, { language: options.ocrLanguage, onProgress: options.onOcrProgress });
+          for (const p of pages) {
+            const text = recognized.get(p.pageNumber);
+            if (text !== undefined) {
+              p.text = text;
+              p.hasImages = true;
+              allText[p.pageNumber - 1] = text;
+            }
+          }
         }
       }
 

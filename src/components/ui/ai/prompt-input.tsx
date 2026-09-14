@@ -23,6 +23,8 @@ export interface PromptInputProps {
   textareaTestId?: string;
   /** data-testid for the send button. */
   sendTestId?: string;
+  /** Extra controls rendered before the send button (e.g. dictation). */
+  extra?: React.ReactNode;
 }
 
 export function PromptInput({
@@ -36,6 +38,7 @@ export function PromptInput({
   className,
   textareaTestId,
   sendTestId,
+  extra,
 }: PromptInputProps) {
   const ref = React.useRef<HTMLTextAreaElement>(null);
 
@@ -78,6 +81,7 @@ export function PromptInput({
         onKeyDown={handleKeyDown}
         className="max-h-[200px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
       />
+      {extra}
       {streaming ? (
         <button
           type="button"

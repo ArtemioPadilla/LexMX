@@ -413,7 +413,8 @@
     "account": "Cuenta",
     "tools": "Herramientas",
     "library": "Biblioteca",
-    "templates": "Plantillas"
+    "templates": "Plantillas",
+    "compare": "Comparar"
   },
   "hero": {
     "title": "Tu Asistente Legal Mexicano con IA",
@@ -585,7 +586,10 @@
     "warningTitle": "Aviso",
     "jurisdiction": "Jurisdicción",
     "jurisdictionHint": "Las respuestas se limitan al corpus de esta jurisdicción",
-    "corpusPending": "corpus pendiente"
+    "corpusPending": "corpus pendiente",
+    "dictate": "Dictar por voz",
+    "dictating": "Detener dictado",
+    "dictationNote": "Usa el reconocimiento de voz del navegador; según el navegador, el audio puede procesarse en los servidores de su fabricante"
   },
   "setup": {
     "title": "Configuración de Proveedores IA",
@@ -2130,5 +2134,43 @@
     "print": "Imprimir / PDF",
     "missing": "{{count}} campo(s) sin llenar, marcados entre corchetes",
     "disclaimer": "Plantilla orientativa: adáptala al caso y revísala con un abogado antes de usarla. Los artículos citados son la base; verifica su texto vigente en la fuente oficial."
+  },
+  "compare": {
+    "title": "Comparar documentos",
+    "subtitle": "Pega dos textos o carga dos archivos (TXT, PDF, DOCX; los PDF escaneados pasan por OCR en tu dispositivo) y mira las diferencias línea por línea y palabra por palabra.",
+    "left": "Versión A",
+    "right": "Versión B",
+    "leftPlaceholder": "Texto vigente, contrato original, artículo antes de la reforma…",
+    "rightPlaceholder": "Texto reformado, contraoferta, nueva versión…",
+    "loadFile": "Cargar archivo",
+    "clear": "Limpiar",
+    "stats": {
+      "added": "añadidas",
+      "removed": "eliminadas",
+      "unchanged": "sin cambio",
+      "similarity": "Similitud"
+    },
+    "copyDiff": "Copiar diff",
+    "copied": "Copiado",
+    "viewUnified": "Unificado",
+    "viewSplit": "Lado a lado",
+    "extracting": "Extrayendo texto de {{name}}…",
+    "ocrRunning": "OCR en tu dispositivo… {{progress}}%",
+    "fileError": "No se pudo leer el archivo: {{error}}",
+    "privacy": "Todo ocurre en tu navegador: los textos y archivos no se envían a ningún servidor."
+  },
+  "ocr": {
+    "title": "OCR de escaneos y fotos",
+    "subtitle": "Convierte un PDF escaneado o una foto de un documento en texto editable, sin subirlo a ningún lado.",
+    "language": "Idioma",
+    "drop": "Arrastra aquí un PDF o una imagen",
+    "choose": "o haz clic para elegir un archivo",
+    "running": "Reconociendo {{name}}",
+    "result": "Texto reconocido",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "download": "Descargar .txt",
+    "error": "No se pudo reconocer el texto: {{error}}",
+    "privacyNote": "El reconocimiento corre en un Web Worker de tu navegador. La primera vez se descargan el motor y el modelo de idioma (~15 MB) y quedan en caché; la imagen nunca sale de tu dispositivo."
   }
 }

@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../components/layout/BaseLayout.astro';
+import CompareIsland from '../islands/CompareIsland.tsx';
+import { getTranslation } from '../i18n/utils';
+const t = getTranslation(Astro.url);
+---
+
+<BaseLayout title={`${t('compare.title')} - LexMX`} description={t('compare.subtitle')}>
+  <div class="min-h-screen bg-white dark:bg-gray-900">
+    <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white" data-i18n="compare.title">{t('compare.title')}</h1>
+      <p class="mt-2 mb-8 text-gray-600 dark:text-gray-300" data-i18n="compare.subtitle">{t('compare.subtitle')}</p>
+      <CompareIsland client:only="react" />
+    </div>
+  </div>
+</BaseLayout>

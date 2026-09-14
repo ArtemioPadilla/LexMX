@@ -21,9 +21,9 @@ const { title, primaryArea } = Astro.props as { title: string; primaryArea?: str
 ---
 
 <BaseLayout title={`${title} - LexMX`} description={`${title}: texto vigente, artículos y búsqueda${primaryArea ? ` · ${primaryArea}` : ''}. Fuente oficial enlazada.`}>
-  <main class="min-h-screen bg-white dark:bg-gray-900">
+  <div class="min-h-screen bg-white dark:bg-gray-900">
     <HydrationWrapper name="document-viewer">
       <DocumentViewerWrapper documentId={id} documentTitle={title} client:load />
     </HydrationWrapper>
-  </main>
+  </div>
 </BaseLayout>

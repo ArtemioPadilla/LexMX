@@ -13,6 +13,7 @@ node scripts/smoke/wiki.mjs /tmp/wiki.png
 node scripts/smoke/sw.mjs
 node scripts/smoke/cases.mjs /tmp/cases.png
 node scripts/smoke/templates.mjs /tmp/templates.png
+node scripts/smoke/compare.mjs /tmp/compare.png
 fuser -k -n tcp 4321   # o kill $(lsof -t -i:4321)
 ```
 

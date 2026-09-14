@@ -27,6 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { Callout } from '@/components/ui/callout';
 import { ChatMessage, ChatThread } from '@/components/ui/ai/chat-message';
 import { PromptInput } from '@/components/ui/ai/prompt-input';
+import { DictationButton } from '@/components/ui/ai/dictation-button';
 import { ThinkingIndicator } from '@/components/ui/ai/streaming-text';
 import { CitationList, type CitationSource } from '@/components/ui/ai/citation';
 import { AIOutputLabel } from '@/components/ui/ai/ai-output-label';
@@ -61,7 +62,9 @@ function sourcesToCitations(sources: ThreadMessage['legalResponse'] extends infe
 }
 
 export default function ChatInterface({ className = '', autoFocus = true }: ChatInterfaceProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  /** Text present before dictation started; interim results replace what follows it. */
+  const dictationBase = useRef<string | null>(null);
   const messages = useStore($chatMessages);
   const mode = useStore($chatMode);
   const corpus = useStore($corpusInstall);
@@ -425,6 +428,14 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
           disabled={!isInitialized}
           textareaTestId={TEST_IDS.chat.input}
           sendTestId={TEST_IDS.chat.sendButton}
+          extra={
+            <DictationButton
+              locale={language}
+              disabled={!isInitialized || isProcessing}
+              labels={{ start: t('chat.dictate'), stop: t('chat.dictating'), note: t('chat.dictationNote') }}
+              onTranscript={(text) => setCurrentInput((prev) => { const base = dictationBase.current ?? prev; dictationBase.current = base; return base ? `${base} ${text}` : text; })}
+            />
+          }
         />
         <p className="mt-2 text-xs text-muted-foreground">{isInitialized ? t('chat.inputHelp') : t('common.loading')}</p>
       </div>

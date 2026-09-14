@@ -413,7 +413,8 @@
     "account": "Account",
     "tools": "Tools",
     "library": "Library",
-    "templates": "Templates"
+    "templates": "Templates",
+    "compare": "Compare"
   },
   "hero": {
     "title": "Your Mexican Legal AI Assistant",
@@ -585,7 +586,10 @@
     "warningTitle": "Notice",
     "jurisdiction": "Jurisdiction",
     "jurisdictionHint": "Answers are limited to this jurisdiction's corpus",
-    "corpusPending": "corpus pending"
+    "corpusPending": "corpus pending",
+    "dictate": "Dictate by voice",
+    "dictating": "Stop dictation",
+    "dictationNote": "Uses the browser's speech recognition; depending on the browser, audio may be processed on its vendor's servers"
   },
   "setup": {
     "title": "AI Provider Setup",
@@ -2130,5 +2134,43 @@
     "print": "Print / PDF",
     "missing": "{{count}} field(s) empty, shown in brackets",
     "disclaimer": "Guidance only: adapt it to the case and review it with a lawyer before use. The cited articles are the basis; verify the current text at the official source."
+  },
+  "compare": {
+    "title": "Compare documents",
+    "subtitle": "Paste two texts or load two files (TXT, PDF, DOCX; scanned PDFs go through OCR on your device) and see line-by-line and word-by-word differences.",
+    "left": "Version A",
+    "right": "Version B",
+    "leftPlaceholder": "Current text, original contract, article before the reform…",
+    "rightPlaceholder": "Reformed text, counter-offer, new version…",
+    "loadFile": "Load file",
+    "clear": "Clear",
+    "stats": {
+      "added": "added",
+      "removed": "removed",
+      "unchanged": "unchanged",
+      "similarity": "Similarity"
+    },
+    "copyDiff": "Copy diff",
+    "copied": "Copied",
+    "viewUnified": "Unified",
+    "viewSplit": "Side by side",
+    "extracting": "Extracting text from {{name}}…",
+    "ocrRunning": "OCR on your device… {{progress}}%",
+    "fileError": "Could not read the file: {{error}}",
+    "privacy": "Everything runs in your browser: texts and files are never sent to a server."
+  },
+  "ocr": {
+    "title": "OCR for scans and photos",
+    "subtitle": "Turn a scanned PDF or a photo of a document into editable text without uploading it anywhere.",
+    "language": "Language",
+    "drop": "Drop a PDF or an image here",
+    "choose": "or click to choose a file",
+    "running": "Recognizing {{name}}",
+    "result": "Recognized text",
+    "copy": "Copy",
+    "copied": "Copied",
+    "download": "Download .txt",
+    "error": "Could not recognize text: {{error}}",
+    "privacyNote": "Recognition runs in a Web Worker in your browser. The engine and language model (~15 MB) download once and stay cached; the image never leaves your device."
   }
 }
