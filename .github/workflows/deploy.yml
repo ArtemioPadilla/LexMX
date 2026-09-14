@@ -111,6 +111,10 @@ jobs:
           
       - name: 🏗️ Build application
         run: npm run build
+        env:
+          ASTRO_BASE: ${{ vars.ASTRO_BASE || '/LexMX' }}
+          PUBLIC_REPO_SLUG: ${{ vars.PUBLIC_REPO_SLUG || 'ArtemioPadilla/LexMX' }}
+          PUBLIC_BUILD_SHA: ${{ github.sha }}
         
       - name: 📄 Ensure .nojekyll file in dist
         run: |

@@ -1,0 +1,133 @@
+name: Deploy failure — auto-file issue
+
+# ---------------------------------------------------------------------------
+# Context (#184):
+# Inceptor's FeedbackFAB lets users file issues from the running app when
+# something is broken. This workflow closes the same loop from the CI side:
+# if the deploy to GitHub Pages fails, CI files (or comments on) a tracking
+# issue automatically, so the failure is visible without anyone having to
+# monitor the Actions UI.
+#
+# Triggered by the "Deploy to GitHub Pages" workflow completing, so it runs
+# AFTER the deploy job finishes — not on the same runner.
+#
+# Deduplication: we search for an existing open issue with the label
+# `deploy-failure`. If one exists we add a comment so there's a single
+# tracking thread per outage. If none exists we open a new one.
+#
+# On green deploy: we search for an open `deploy-failure` issue and add a
+# comment noting the deploy succeeded, then close it.
+# ---------------------------------------------------------------------------
+
+on:
+  workflow_run:
+    workflows: ['🚀 Deploy to GitHub Pages']
+    types: [completed]
+
+# Minimal permissions — issues only. Contents: read is not needed here
+# because we are not checking out code.
+permissions:
+  issues: write
+
+jobs:
+  handle-deploy-result:
+    name: Handle deploy result
+    runs-on: ubuntu-latest
+    env:
+      GH_REPO: ${{ github.repository }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}
+      CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+      DEPLOY_LABEL: deploy-failure
+
+    steps:
+      # -----------------------------------------------------------------------
+      # FAILURE path: open or update a deploy-failure tracking issue
+      # -----------------------------------------------------------------------
+      - name: Find existing open deploy-failure issue
+        id: find-issue
+        if: env.CONCLUSION == 'failure'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUMBER=$(gh issue list \
+            --repo "$GH_REPO" \
+            --label "$DEPLOY_LABEL" \
+            --state open \
+            --limit 1 \
+            --json number \
+            --jq '.[0].number // empty')
+          echo "issue_number=${ISSUE_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      - name: Open new deploy-failure issue
+        if: env.CONCLUSION == 'failure' && steps.find-issue.outputs.issue_number == ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --repo "$GH_REPO" \
+            --title "Deploy to GitHub Pages failed" \
+            --label "$DEPLOY_LABEL,bug,type:chore" \
+            --body "$(cat <<'BODY'
+          ## Deploy failure detected
+
+          The **Deploy to GitHub Pages** workflow completed with conclusion **failure**.
+
+          **Run:** ${{ env.RUN_URL }}
+          **Triggered by:** push to `${{ github.event.workflow_run.head_branch }}` (${{ github.event.workflow_run.head_sha }})
+
+          ---
+
+          This issue was opened automatically by the deploy-failure-issue workflow.
+          It will be closed automatically when a subsequent deploy succeeds.
+
+          cc @${{ github.event.workflow_run.actor.login }}
+          BODY
+          )"
+
+      - name: Comment on existing deploy-failure issue
+        if: env.CONCLUSION == 'failure' && steps.find-issue.outputs.issue_number != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment "${{ steps.find-issue.outputs.issue_number }}" \
+            --repo "$GH_REPO" \
+            --body "$(cat <<'BODY'
+          Deploy is still failing.
+
+          **New failed run:** ${{ env.RUN_URL }}
+          **Commit:** ${{ github.event.workflow_run.head_sha }}
+          BODY
+          )"
+
+      # -----------------------------------------------------------------------
+      # SUCCESS path: comment and close the open tracking issue if one exists
+      # -----------------------------------------------------------------------
+      - name: Find open deploy-failure issue on success
+        id: find-issue-success
+        if: env.CONCLUSION == 'success'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUMBER=$(gh issue list \
+            --repo "$GH_REPO" \
+            --label "$DEPLOY_LABEL" \
+            --state open \
+            --limit 1 \
+            --json number \
+            --jq '.[0].number // empty')
+          echo "issue_number=${ISSUE_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      - name: Comment and close deploy-failure issue on success
+        if: env.CONCLUSION == 'success' && steps.find-issue-success.outputs.issue_number != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment "${{ steps.find-issue-success.outputs.issue_number }}" \
+            --repo "$GH_REPO" \
+            --body "Deploy succeeded. Closing this issue.
+
+          **Successful run:** ${{ env.RUN_URL }}
+          **Commit:** ${{ github.event.workflow_run.head_sha }}"
+          gh issue close "${{ steps.find-issue-success.outputs.issue_number }}" \
+            --repo "$GH_REPO" \
+            --reason "completed"

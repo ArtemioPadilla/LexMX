@@ -2,6 +2,8 @@
  * URL utility functions for handling base path in different environments
  */
 
+import { withBase } from '../lib/href';
+
 // Get the base URL from environment or default to '/'
 const BASE_URL = import.meta.env.BASE_URL || '/';
 
@@ -11,18 +13,13 @@ const BASE_URL = import.meta.env.BASE_URL || '/';
  * @returns The full path with base URL
  */
 export function getUrl(path: string): string {
-  // Remove leading slash if present
+  // Thin wrapper over the Inceptor helper (src/lib/href.ts): same output as before,
+  // one implementation. New code should import `withBase` directly.
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  
-  // Handle empty path (home page)
   if (!cleanPath) {
-    return BASE_URL;
+    return BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
   }
-  
-  // Ensure BASE_URL ends with slash
-  const base = BASE_URL.endsWith('/') ? BASE_URL : BASE_URL + '/';
-  
-  return base + cleanPath;
+  return withBase('/' + cleanPath);
 }
 
 /**

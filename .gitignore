@@ -180,7 +180,7 @@ $RECYCLE.BIN/
 .nfs*
 
 # Project specific
-.claude/
+.claude/settings.local.json
 deployment-info.json
 update-summary.json
 corpus-update-report.md

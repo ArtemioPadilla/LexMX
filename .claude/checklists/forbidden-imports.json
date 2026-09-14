@@ -1,0 +1,38 @@
+{
+  "$schema": "./forbidden-imports.schema.json",
+  "version": "1.0.0",
+  "source": "CLAUDE.md §Critical warnings + docs/PRINCIPLES.md §7",
+  "purpose": "Single source of banned module specifiers for the IDD/Inceptor stack. centinela's forbidden-import scan and src/tests/forbidden-imports.test.ts both read THIS file — change a rule here, not in prose. Each `pattern` matches an import specifier (prefix match for scopes ending in '/').",
+  "banned": [
+    {
+      "pattern": "@radix-ui/",
+      "reason": "Base UI is the chosen primitive layer; never mix Radix with Base UI.",
+      "allowedAlternative": "@base-ui-components/react"
+    },
+    {
+      "pattern": "radix-ui",
+      "reason": "The consolidated, unscoped `radix-ui` package (successor to the individual `@radix-ui/*` packages) is still Radix — Base UI is the chosen primitive layer and this bare specifier isn't caught by the `@radix-ui/` scope-prefix pattern above.",
+      "allowedAlternative": "@base-ui-components/react"
+    },
+    {
+      "pattern": "@tremor/react",
+      "reason": "Use Tremor Raw (copy-paste) so it tree-shakes and we own the source.",
+      "allowedAlternative": "Tremor Raw components under src/components/ui"
+    },
+    {
+      "pattern": "framer-motion",
+      "reason": "Framer Motion merged into the `motion` package (Dec 2024).",
+      "allowedAlternative": "motion/react"
+    },
+    {
+      "pattern": "@astrojs/tailwind",
+      "reason": "Does not exist for Tailwind v4 — it goes through the Vite plugin.",
+      "allowedAlternative": "@tailwindcss/vite"
+    },
+    {
+      "pattern": "@ark-ui/react",
+      "reason": "ADR 0009 permits `@zag-js/<component>` machines for primitives Base UI doesn't ship, but not the full Ark UI wrapper — it carries its own data-scope/data-part styling conventions that would sit awkwardly next to Base UI's render-prop convention.",
+      "allowedAlternative": "@zag-js/<component> (e.g. @zag-js/splitter), wrapped shadcn-style in src/components/ui/"
+    }
+  ]
+}

@@ -1,713 +1,120 @@
-# CLAUDE.md
+# LexMX — Claude Code Context
+
+## Repository purpose
+
+LexMX es un asistente legal mexicano con IA: RAG sobre legislación y
+jurisprudencia con citas verificables, **corriendo en el dispositivo del
+usuario** (local-first, trae tu propio modelo). Sitio estático en GitHub Pages
+bajo `/LexMX/`, con un servidor opcional en Supabase para funciones de equipo.
+
+Every feature ships as: GitHub issue → Claude triages → PR → merge → deploy.
+The FeedbackFAB lets real users file issues with diagnostics pre-filled.
+
+**Plan maestro**: `docs/INCEPTOR-MIGRATION-ANALYSIS.md` (fases 0-9 y programa
+LATAM). **Contrato de datos del cliente**: `docs/DATA-COMPATIBILITY.md` (nombres
+de IndexedDB, claves `lexmx_*`, parámetros de cifrado: no cambian sin
+migración).
+
+## Stack (installed)
+
+| Package | Role |
+|---|---|
+| `astro` ^5.18 | islands architecture, `output: 'static'`, base `/LexMX` via `ASTRO_BASE` |
+| `@astrojs/react` ^5 + `react` ^19 | React islands only |
+| `tailwindcss` ^4 via `@tailwindcss/vite` | tokens in `src/styles/global.css` `@theme` (NOT `@astrojs/tailwind`) |
+| `@xenova/transformers` | embeddings in the browser (`Xenova/multilingual-e5-small`), **dynamic import only** |
+| `@mlc-ai/web-llm` | local inference, dynamic import only |
+| `pdfjs-dist`, `mammoth` | document text extraction |
+| `react-markdown` + `remark-gfm` | chat rendering |
+| `nanostores` | cross-island state (never React Context across islands) |
+| `vitest` ^4 (jsdom) | unit tests in `src/**/__tests__` and colocated `*.test.ts` |
+| `@playwright/test` | e2e in `tests/` (not in CI yet) |
+| `typescript` ^5.6 strict | `tsconfig.strict.json` adds Inceptor strictness for cleaned modules |
+
+## File organization
+
+- `src/pages/` — Astro routes (`chat`, `setup`, `casos`, `wiki`, `document/[id]`, `requests/*`, `admin/*`)
+- `src/components/layout/BaseLayout.astro` — the single layout (mounts `HydrationCanary` + `FeedbackFAB`)
+- `src/components/` — Astro/React presentational components; `common/` holds Inceptor pieces (FeedbackFAB)
+- `src/islands/` — React islands hydrated with `client:*` (+ `ErrorBoundary`, `HydrationCanary`)
+- `src/lib/` — `llm/` (providers, prompt-builder), `rag/`, `embeddings/`, `storage/`, `security/`, `legal/`, `corpus/`, `ingestion/`, `admin/`, plus Inceptor utilities (`href`, `flags`, `disposer`, `report-issue`, `site-meta`, `use-client-preference`)
+- `src/i18n/` — `useTranslation()` singleton + `locales/{es,en}.json`
+- `src/styles/global.css` — Tailwind v4 import, `@theme` tokens (legal, document, hierarchy palettes), dark variant by class
+- `src/test/` — vitest setup (`setupTests.ts`), mocks, `forbidden-imports.test.ts`
+- `.claude/agents/` — `prometeo`, `forja`, `centinela`; `.claude/checklists/` — ethics, governance, forbidden imports
+- `scripts/` — `doctor.sh`, `ship.sh`, `monday.sh`, `new-issue.sh`, `ratchet.mjs`, `check-ts-pragmas.mjs`, corpus scripts
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | dev server on 4321 |
+| `npm run build` | production build (set `ASTRO_BASE=/LexMX` for Pages parity) |
+| `npm run check` | **the gate**: ratchet + strict tsc + tests + lint + pragmas, then build |
+| `npm run ratchet` / `ratchet:update` | compare / rewrite `quality-baseline.json` (tsc errors, `any` warnings) |
+| `npm run type-check:strict` | `tsc` on the cleaned modules listed in `tsconfig.strict.json` |
+| `npm run test` | vitest |
+| `npm run lint` | eslint |
+| `npm run doctor` / `ship` / `monday` / `new-issue` | Inceptor workflow scripts |
+
+## Quality ratchet (read before touching code)
+
+- `quality-baseline.json` holds the current counts of `tsc` errors and
+  `no-explicit-any` warnings. **They may only go down.** CI fails if they grow.
+  If an increase is deliberate, run `npm run ratchet:update` in the same PR so
+  the diff shows it.
+- When you clean a module (tests pass, no `any`, no tsc errors), add its path
+  to `tsconfig.strict.json` `include`. The list only grows.
+- `@ts-ignore` is banned; `@ts-expect-error -- reason` and `@ts-nocheck -- reason`
+  need the reason (`scripts/check-ts-pragmas.mjs`).
+- Banned imports live in `.claude/checklists/forbidden-imports.json` and are
+  enforced by `src/test/forbidden-imports.test.ts`.
+
+## Workflow: Claude Code orchestration + sub-agents
+
+There is no native `/goal` loop; the main session orchestrates:
+
+1. **prometeo** decomposes an issue or phase of `docs/INCEPTOR-MIGRATION-ANALYSIS.md` into an ordered plan.
+2. **forja** implements one issue on a feature branch with atomic commits.
+3. **centinela** runs `npm run check` and returns APPROVED or REJECTED (`RETRY_FORJA`, `NEEDS_HUMAN`, `BLOCKED_UPSTREAM`).
+4. On APPROVED, push and open a PR that closes the issue.
+
+Conventions: branches `phase-N/issue-NNN-slug`, Conventional Commits with issue
+ref, PR title = issue title, body `Closes #N`.
+
+## Critical warnings
+
+1. ❌ **NEVER install `@astrojs/tailwind`**: Tailwind v4 goes through `@tailwindcss/vite`.
+2. ❌ **NEVER use React Context for state shared between islands**: use Nano Stores.
+3. ❌ **NEVER import `@xenova/transformers` or `@mlc-ai/web-llm` statically** in code that a page loads eagerly; use `import()` inside the provider that needs it. The `/chat` script budget depends on it.
+4. ❌ **NEVER change IndexedDB names/versions, `lexmx_*` keys or the AES-GCM/PBKDF2 parameters** without a migration (see `docs/DATA-COMPATIBILITY.md`).
+5. ❌ **NEVER send a user document or query to a server by default.** Anything that leaves the device is opt-in and says so in the UI.
+6. ❌ **NEVER add server-rendered routes** (`prerender = false`): the site is static. Server features go to Supabase (plan § 11.9).
+7. ❌ **NEVER mix Radix and Base UI**; prefer Base UI. `framer-motion` is banned (use `motion/react`).
+
+## Island lifecycle discipline
+
+Islands that attach listeners, intervals or observers must clean up on unmount.
+Use `createDisposer()` from `src/lib/disposer.ts` and return `d.dispose` from
+`useEffect`. For browser-only values (theme, locale) use `useClientPreference`
+from `src/lib/use-client-preference.ts` to avoid hydration mismatches.
+
+## Inceptor reporting
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+`src/islands/ErrorBoundary.tsx` captures runtime errors and builds a pre-filled
+GitHub issue (stack, component path, URL, UA) via `src/lib/report-issue.ts`.
+`HydrationCanary` stores hydration-mismatch URLs in `sessionStorage`; the
+`FeedbackFAB` reads that key. `PUBLIC_REPO_SLUG` selects the target repo.
 
-## Project Overview
+## Legal domain notes
 
-LexMX is a Mexican legal AI assistant that combines the complete Mexican legal corpus with RAG (Retrieval Augmented Generation) technology to provide accurate, contextualized legal responses. The project is designed as a fully static application deployed on GitHub Pages, optimized for privacy and cost efficiency.
+- Jerarquía normativa: Constitución (1) → tratados (2) → leyes y códigos federales (3) → reglamentos (4) → NOM (5) → leyes estatales (6) → formatos administrativos (7). Palette `hierarchy-1..7` in `global.css` mirrors it.
+- Citas: "Artículo 123 constitucional", "Artículo 47 de la Ley Federal del Trabajo", "Tesis 1a./J. 15/2019" (registro digital, época, instancia).
+- Toda respuesta lleva disclaimer: orientación, no asesoría legal; cita la fuente oficial.
+- Jurisdiction is a first-class dimension (`jurisdiction` field on documents); nothing Mexico-specific outside the Mexico module once `src/jurisdictions/` exists (plan § 11.2).
 
-**Key Technologies:** Astro, React Islands, TypeScript, Tailwind CSS, Multi-LLM integration (OpenAI, Claude, Gemini, AWS Bedrock)
+## Quality bar
 
-## Development Commands
-
-```bash
-# Development
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run preview      # Preview production build
-
-# Legal corpus management
-npm run build:corpus     # Download and process Mexican legal documents
-npm run build:embeddings # Generate embeddings (requires API key)
-npm run download:embeddings # Use pre-generated embeddings
-
-# Quality assurance
-npm run lint         # ESLint checking
-npm run type-check   # TypeScript type checking
-npm run test         # Run tests
-npm run test:e2e     # End-to-end tests with Playwright
-```
-
-## Architecture Overview
-
-### Islands Architecture with Astro
-- **Static Components** (.astro): Header, Footer, Legal document viewers, Static content
-- **Interactive Islands** (.tsx): ChatInterface, RAGEngine, TokenManager, DocumentUploader
-- **Selective Hydration**: Only interactive components load JavaScript client-side
-
-### Directory Structure
-```
-src/
-├── pages/              # Astro routes
-│   └── admin/         # Admin dashboards
-├── components/         # Static Astro components
-├── islands/            # Interactive React components
-├── lib/
-│   ├── rag/           # RAG engine core
-│   │   └── chunking/  # Advanced chunking strategies
-│   ├── llm/           # Multi-LLM management
-│   ├── legal/         # Mexican legal processing
-│   ├── storage/       # Hybrid storage system
-│   ├── corpus/        # Document corpus loader
-│   └── ingestion/     # Document ingestion pipeline
-├── data/
-│   ├── legal-corpus/  # Mexican legal documents
-│   └── embeddings/    # Pre-computed vectors
-└── workers/           # Web Workers for background processing
-```
-
-### Core Systems
-
-1. **RAG Engine** (`lib/rag/`):
-   - Hybrid search (semantic + keyword)
-   - Legal document chunking and retrieval
-   - Context optimization for Mexican law
-   - Contextual chunking with legal structure preservation
-   - Configurable chunking strategies (semantic, hierarchical, entity-aware)
-   - Dynamic chunk sizing based on content type
-   - **Real corpus document loading** from legal-corpus directory
-   - **Automatic fallback** to mock documents when corpus is empty
-
-2. **Multi-LLM Manager** (`lib/llm/`):
-   - Cost-optimized provider selection
-   - Intelligent routing based on query complexity
-   - Fallback strategies
-
-3. **Legal Processing** (`lib/legal/`):
-   - Mexican legal document parsing
-   - Query classification (civil, penal, laboral, fiscal, etc.)
-   - Citation extraction and validation
-   - **NEW**: Contradiction detection across documents
-   - **NEW**: Legal issue spotting and argument building
-   - **NEW**: Missing information detection
-
-4. **Storage System** (`lib/storage/`):
-   - Hybrid storage: IndexedDB + LocalStorage + SessionStorage
-   - Semantic caching for similar queries
-   - Token encryption (AES-256)
-   - **NEW**: Case workspace storage and management
-   - **NEW**: Document versioning and sets
-
-5. **Case Management** (`lib/case-management/`):
-   - Case workspace creation and organization
-   - Document library with multi-file upload
-   - Document sets for selective analysis
-   - Timeline and deadline tracking
-   - Party and evidence management
-   - Notes and annotations system
-
-6. **Document Ingestion Pipeline** (`lib/ingestion/`) - **NEW**:
-   - **DocumentFetcher**: Downloads from official Mexican government sources
-   - **DocumentParser**: Extracts structured content from PDFs/HTML/XML
-   - **ContextualChunker**: Maintains legal context across chunks
-   - **Real-time progress tracking** with stage-by-stage updates
-   - **Official source validation** for government domains
-   - **Batch processing** support for multiple documents
-
-## Legal Domain Knowledge
-
-### Mexican Legal Hierarchy
-1. **Constitución Política** (Level 1)
-2. **Treaties/International** (Level 2) 
-3. **Federal Laws/Codes** (Level 3)
-4. **Regulations** (Level 4)
-5. **Official Standards (NOMs)** (Level 5)
-6. **State Laws** (Level 6)
-7. **Administrative Formats** (Level 7)
-
-### Key Legal Areas Covered
-- **Constitutional Law**: CPEUM, Amparo
-- **Labor Law**: LFT, LSS, INFONAVIT
-- **Civil Law**: CCF, Family law
-- **Criminal Law**: CPF, CNPP
-- **Tax Law**: CFF, LISR, LIVA
-- **Commercial Law**: CCom, LGSM
-- **Administrative Law**: LGRA, LGTAIP
-
-### Legal Document Processing
-- Documents are chunked maintaining legal structure (articles, sections)
-- Legal citations are preserved and validated
-- Jurisprudence and legal precedents are properly indexed
-- Updates are tracked with reformation dates
-- **Automated ingestion** from official sources (DOF, SCJN, Diputados)
-- **Smart chunking** with contextual overlap and cross-references
-- **Legal-aware parsing** that preserves article hierarchy
-
-## API Integration
-
-### Supported LLM Providers
-- **OpenAI**: GPT-4 Turbo, GPT-4 (primary for complex legal analysis)
-- **Anthropic Claude**: Claude-3.5-Sonnet (recommended for legal reasoning)
-- **Google Gemini**: Gemini Pro (cost-effective option)
-- **AWS Bedrock**: Enterprise deployment
-
-### Token Management
-- Client-side AES-256 encryption
-- SessionStorage for security by default
-- No server-side token storage
-- Automatic cost tracking and limits
-
-## Security & Privacy
-
-### Data Protection
-- All processing happens client-side
-- No legal queries sent to servers
-- GDPR/LFPDPPP compliance
-- Encrypted token storage
-
-### Legal Compliance
-- Always includes disclaimers about professional legal advice
-- Cites specific legal sources
-- Warns about information currency
-- Maintains audit trails for legal references
-
-## Performance Optimization
-
-### Caching Strategy
-- Multi-level cache (memory → session → local → indexed)
-- Semantic query matching for cache hits
-- Legal document pre-loading for common queries
-- Aggressive compression for legal text
-
-### Cost Optimization
-- Intelligent provider routing
-- Context compression while preserving legal accuracy
-- Token prediction and optimization
-- Bulk processing for document updates
-
-## Testing Strategy
-
-### Test Categories
-- **Unit Tests**: RAG engine, legal parsing, token management
-- **Integration Tests**: Multi-LLM workflows, storage systems
-- **E2E Tests**: Full legal query workflows
-- **Legal Accuracy Tests**: Validation against known legal precedents
-
-## Deployment & Static Architecture
-
-### GitHub Pages Static Deployment
-
-**IMPORTANT**: LexMX is a fully static site designed for GitHub Pages deployment. Understanding this architecture is critical for development.
-
-#### Static Build Configuration
-```javascript
-// astro.config.mjs
-export default defineConfig({
-  output: 'static',  // CRITICAL: Must be static for GitHub Pages
-  site: 'https://artemiopadilla.github.io',
-  base: '/LexMX',    // GitHub Pages subpath
-  ...
-});
-```
-
-#### Architecture Overview
-
-1. **Build Time (SSG - Static Site Generation)**:
-   - Astro generates static HTML/CSS/JS files
-   - All pages are pre-rendered at build time
-   - API routes (`src/pages/api/`) are compiled but NOT deployed
-   - Result: Static files in `dist/` directory
-
-2. **Runtime (Client-Side Only)**:
-   - No server-side execution
-   - All functionality runs in the browser
-   - API routes don't exist in production
-   - `ClientAPI` class handles all "API" functionality client-side
-
-#### API Routes: Development vs Production
-
-**Development Mode** (`npm run dev`):
-```typescript
-// API routes work as normal server endpoints
-const response = await fetch('/api/quality/test', {
-  method: 'POST',
-  body: JSON.stringify(data)
-});
-```
-
-**Production Mode** (GitHub Pages):
-```typescript
-// ClientAPI intercepts and handles locally
-const response = await fetch('/api/quality/test', {
-  method: 'POST',
-  body: JSON.stringify(data)
-});
-// ↑ Same code, but ClientAPI handles it client-side
-```
-
-#### ClientAPI Architecture
-
-The `ClientAPI` class (`src/lib/api/api-adapter.ts`) provides seamless transition between dev and production:
-
-```typescript
-class ClientAPI {
-  async handleRequest(path: string, options: RequestInit) {
-    // In production, handle API calls client-side
-    switch(path) {
-      case '/api/quality/test':
-        return this.handleQualityTest(options);
-      case '/api/corpus/list':
-        return this.handleCorpusList(options);
-      // ... etc
-    }
-  }
-}
-```
-
-#### URL Handling for GitHub Pages
-
-**Always use the `getUrl` helper** for internal links:
-
-```typescript
-import { getUrl } from '../../utils/urls';
-
-// ✅ Correct - works in dev and production
-<a href={getUrl('chat')}>Chat</a>
-<img src={getUrl('images/logo.png')} />
-
-// ❌ Wrong - breaks on GitHub Pages
-<a href="/chat">Chat</a>
-<img src="/images/logo.png" />
-```
-
-#### Common Pitfalls to Avoid
-
-1. **SSR-Only Features**:
-   ```typescript
-   // ❌ NEVER use these in API routes
-   export const GET: APIRoute = async ({ clientAddress, locals }) => {
-     // clientAddress and locals are SSR-only
-   }
-   
-   // ✅ Use this pattern instead
-   export const GET: APIRoute = async (context) => {
-     const url = new URL(context.request.url);
-     // Process using only static-compatible features
-   }
-   ```
-
-2. **Hardcoded URLs**:
-   ```typescript
-   // ❌ Breaks on GitHub Pages
-   fetch('/api/endpoint')
-   window.location.href = '/chat'
-   
-   // ✅ Works everywhere
-   fetch(getUrl('api/endpoint'))
-   window.location.href = getUrl('chat')
-   ```
-
-3. **Environment Variables**:
-   ```typescript
-   // ❌ Runtime env vars don't exist in static build
-   const key = process.env.API_KEY;
-   
-   // ✅ Use client-side storage
-   const key = localStorage.getItem('api_key');
-   ```
-
-### GitHub Pages Configuration
-- **Output**: Fully static build (`output: 'static'`)
-- **Deployment**: Automatic via GitHub Actions on push to main
-- **Base Path**: `/LexMX/` (repository name)
-- **Assets**: Pre-built legal corpus and embeddings in `public/`
-- **CDN**: GitHub's global CDN serves all static assets
-
-### Build & Deployment Process
-
-1. **Local Development**:
-   ```bash
-   npm run dev          # Full dev server with API routes
-   npm run build        # Generate static files
-   npm run preview      # Preview static build locally
-   ```
-
-2. **CI/CD Pipeline** (GitHub Actions):
-   ```yaml
-   - name: Build
-     run: npm run build
-   - name: Upload artifact
-     uses: actions/upload-pages-artifact@v3
-     with:
-       path: ./dist
-   - name: Deploy to GitHub Pages
-     uses: actions/deploy-pages@v4
-   ```
-
-3. **Production URL Structure**:
-   ```
-   https://artemiopadilla.github.io/LexMX/          # Homepage
-   https://artemiopadilla.github.io/LexMX/chat      # Chat interface
-   https://artemiopadilla.github.io/LexMX/admin     # Admin panel
-   ```
-
-### Environment Variables
-```bash
-# Build-time only (for local corpus generation)
-OPENAI_API_KEY=sk-...          # For embedding generation
-CLAUDE_API_KEY=sk-ant-...      # For legal validation
-
-# Runtime configuration is handled via UI
-# API keys are stored encrypted in browser storage
-```
-
-## Code Quality Standards
-
-### TypeScript Configuration
-- Strict mode enabled
-- Legal-specific type definitions
-- Interface-driven development
-- Comprehensive error handling
-
-### Legal Content Standards
-- Always cite specific articles and laws
-- Include reformation dates
-- Validate legal citations
-- Maintain source traceability
-
-## Advanced User Features
-
-### Power User Configuration
-When implementing advanced features, ensure:
-- **Developer Mode**: Toggle to show/hide advanced features
-- **RAG Configuration Panel**: Visual controls for all parameters
-- **Performance Metrics**: Real-time display of token usage, latency, costs
-- **Query Execution Plan**: Transparent view of how queries are processed
-- **Custom Prompts**: Allow users to save and reuse custom prompt templates
-
-### Case Management Implementation
-For case management features:
-- Use IndexedDB for large document storage
-- Implement file chunking for uploads over 10MB
-- Support drag-and-drop for file uploads
-- Maintain document relationships and versions
-- Ensure all analysis respects document set boundaries
-
-### Advanced RAG Strategies
-When implementing advanced chunking:
-```typescript
-interface ChunkingStrategy {
-  type: 'fixed' | 'semantic' | 'contextual' | 'hierarchical' | 'entity-aware';
-  config: {
-    minSize: number;  // 128 tokens minimum
-    maxSize: number;  // 2048 tokens maximum
-    overlap: number;  // 0-50% overlap
-    preserveStructure: boolean;
-    preserveEntities: boolean;
-    preserveCitations: boolean;
-  };
-}
-```
-
-## Common Development Tasks
-
-### Adding New Legal Documents
-
-#### Method 1: Manual Upload (Recommended for single documents)
-1. Navigate to `/admin/documents`
-2. Upload PDF/TXT file or enter official URL
-3. System automatically:
-   - Validates source (checks if from official domain)
-   - Parses document structure
-   - Creates contextual chunks
-   - Generates embeddings
-   - Stores in corpus
-
-#### Method 2: Document Request System
-1. Create request at `/requests/new`
-2. Provide document details and official source
-3. Community votes on priority
-4. Approved documents are automatically ingested
-
-#### Method 3: Batch Processing (For corpus updates)
-1. Place document JSON in `public/legal-corpus/`
-2. Run `npm run build:embeddings` to generate vectors
-3. Documents are automatically loaded on next startup
-
-### Integrating New LLM Provider
-1. Create provider class in `src/lib/llm/providers/`
-2. Implement standard interface with error handling
-3. Add cost calculation logic
-4. Update selection algorithm
-
-### Legal Query Enhancement
-1. Analyze query patterns in `src/lib/legal/classifier.ts`
-2. Update prompts in i18n files (`src/i18n/locales/[es|en].json`)
-3. Use PromptBuilder for centralized prompt management
-4. Update chunking strategy for specific legal areas
-5. Test against known legal precedents
-
-## Internationalization (i18n) Guide
-
-### Overview
-LexMX uses a **dual translation system** to support both static and dynamic content:
-1. **Client-side translations** for interactive components (React islands)
-2. **Data attributes** for static Astro pages
-
-### Translation Systems
-
-#### 1. Client-Side Translations (React Components)
-For React components and islands, use the `useTranslation` hook:
-
-```typescript
-import { useTranslation } from '../i18n/index';
-
-export default function MyComponent() {
-  const { t } = useTranslation();
-  
-  return (
-    <div>
-      <h1>{t('myComponent.title')}</h1>
-      <p>{t('myComponent.description', { count: 5 })}</p>
-    </div>
-  );
-}
-```
-
-**When to use**: 
-- React components (`.tsx` files)
-- Interactive islands
-- Dynamic content that changes based on user interaction
-
-#### 2. Data Attributes (Astro Pages)
-For static Astro pages, use `data-i18n` attributes:
-
-```astro
-<h1 data-i18n="page.title">Título en Español</h1>
-<p data-i18n="page.description">Descripción en español</p>
-```
-
-The `ClientTranslations.astro` script automatically replaces content based on selected language.
-
-**When to use**:
-- Static Astro pages (`.astro` files)
-- Server-rendered content
-- SEO-critical content that needs to be in the HTML
-
-### Adding New Translations
-
-#### Step 1: Add Translation Keys
-Edit both language files:
-- `src/i18n/locales/en.json` (English)
-- `src/i18n/locales/es.json` (Spanish)
-
-```json
-{
-  "myFeature": {
-    "title": "My Feature Title",
-    "description": "Feature description",
-    "actions": {
-      "save": "Save",
-      "cancel": "Cancel"
-    }
-  }
-}
-```
-
-#### Step 2: Use in Components
-
-**React Component**:
-```typescript
-const { t } = useTranslation();
-return <h1>{t('myFeature.title')}</h1>;
-```
-
-**Astro Page**:
-```astro
-<h1 data-i18n="myFeature.title">Mi Característica</h1>
-```
-
-### Common Pitfalls & Solutions
-
-#### 1. Hydration Mismatches
-**Problem**: Server renders Spanish, client renders English, causing hydration errors.
-
-**Solution**: Remove internal hydration boundaries in components:
-```typescript
-// ❌ Don't do this
-if (!isHydrated) {
-  return <LoadingState />;
-}
-
-// ✅ Do this
-const { t } = useTranslation();
-return <div>{t('key')}</div>;
-```
-
-#### 2. Missing Translation Keys
-**Problem**: Console shows "Translation key not found" errors.
-
-**Solution**: 
-1. Ensure keys exist in both `en.json` and `es.json`
-2. Use consistent key paths
-3. Fallback to Spanish if English key missing
-
-#### 3. HTML Content in Translations
-**Problem**: HTML tags show as text instead of rendering.
-
-**Solution**: The `ClientTranslations` script detects HTML and uses `innerHTML`:
-```javascript
-if (value.includes('<') && value.includes('>')) {
-  element.innerHTML = value;
-} else {
-  element.textContent = value;
-}
-```
-
-#### 4. Dynamic Parameters
-Use placeholders for dynamic content:
-```json
-{
-  "welcome": "Welcome, {{name}}!",
-  "items": "You have {{count}} items"
-}
-```
-
-```typescript
-t('welcome', { name: 'Juan' })
-t('items', { count: 5 })
-```
-
-### Testing Translation Coverage
-
-1. **Visual Testing**: Switch languages and verify all text updates
-2. **Console Check**: Look for "Translation key not found" warnings
-3. **Automated Tests**: Run `npm test src/i18n/__tests__/i18n-validation.test.ts`
-
-### Best Practices
-
-1. **Consistent Key Naming**:
-   - Use dot notation: `section.subsection.key`
-   - Group related translations
-   - Use descriptive key names
-
-2. **Fallback Strategy**:
-   - Spanish as primary language
-   - English falls back to Spanish if key missing
-   - Show key name as last resort
-
-3. **Performance**:
-   - Translations load once on initialization
-   - Language changes trigger re-render only where needed
-   - Use localStorage for persistence
-
-4. **Maintenance**:
-   - Keep both language files in sync
-   - Document new translation keys
-   - Test both languages when adding features
-
-### System Prompts with i18n
-
-#### Architecture
-- **Centralized Prompt Builder**: `src/lib/llm/prompt-builder.ts`
-- **Internationalized Prompts**: Stored in `src/i18n/locales/[es|en].json`
-- **Dynamic Language Support**: Prompts adapt to user's selected language
-- **Provider Optimization**: Each LLM provider can access optimized prompts
-
-#### Adding/Modifying Prompts
-1. Edit `systemPrompts` section in both `es.json` and `en.json`
-2. Ensure consistent placeholder format (`{{variableName}}`)
-3. Run tests: `npm test src/i18n/__tests__/i18n-validation.test.ts`
-4. All providers automatically use updated prompts
-
-#### Prompt Structure
-```json
-{
-  "systemPrompts": {
-    "base": { /* Core prompt components */ },
-    "specializations": { /* Legal area-specific prompts */ },
-    "queryTemplates": { /* Query formatting templates */ },
-    "legalWarning": "...",
-    "recommendedActions": { /* Query type-specific actions */ }
-  }
-}
-```
-
-## Mexican Legal Specifics
-
-### Citation Formats
-- Constitutional: "Artículo 123 constitucional"
-- Legal: "Artículo 47 de la Ley Federal del Trabajo"
-- Jurisprudence: "Tesis 1a./J. 15/2019"
-- Regulations: "Artículo 15 del RLFT"
-
-### Legal Language Processing
-- Spanish legal terminology
-- Formal legal writing style
-- Mexican legal system structure
-- Constitutional hierarchy respect
-
-## Monitoring & Analytics
-
-### Performance Metrics
-- Query response time
-- Cache hit rates
-- Cost per query
-- Legal accuracy scores
-
-### User Privacy
-- No personal data collection
-- Anonymous usage patterns only
-- Local storage of preferences
-- No query logging
-
-## Document Ingestion & Management
-
-### Admin Dashboard (`/admin/documents`)
-- **Real-time ingestion monitoring** with progress bars
-- **Document statistics** (total docs, chunks, embeddings)
-- **Recent activity tracking**
-- **Quality metrics** for ingested documents
-
-### Ingestion Pipeline Features
-
-#### Supported Sources
-- **Official Government Sites**:
-  - dof.gob.mx (Diario Oficial de la Federación)
-  - scjn.gob.mx (Suprema Corte de Justicia)
-  - diputados.gob.mx (Cámara de Diputados)
-  - senado.gob.mx (Senado de la República)
-  - sat.gob.mx (SAT)
-  - imss.gob.mx (IMSS)
-  - infonavit.org.mx
-
-#### Processing Stages
-1. **Fetching**: Downloads from URL or processes uploaded file
-2. **Parsing**: Extracts structure (titles, chapters, articles)
-3. **Chunking**: Creates contextual chunks with overlap
-4. **Embedding**: Generates vectors using Transformers.js
-5. **Storing**: Saves to IndexedDB and corpus
-
-#### Chunking Strategies
-- **Hierarchical**: Preserves document structure
-- **Contextual**: Maintains surrounding context
-- **Cross-referenced**: Links related articles
-- **Legal-aware**: Respects article boundaries
-
-### API Endpoints (Planned)
-```typescript
-// Document ingestion
-POST /api/ingest/url      // Ingest from URL
-POST /api/ingest/file     // Ingest uploaded file
-GET  /api/ingest/status   // Check ingestion status
-
-// GitHub integration
-POST /api/github/issue    // Create document request issue
-GET  /api/github/requests // List pending requests
-```
-
-## Future Development
-
-### Planned Features
-- State-level legal documents
-- PDF document analysis with OCR
-- Legal document templates
-- Real-time legal updates from RSS feeds
-- GitHub Actions automation for corpus updates
-- WebHook receivers for partner organizations
-
-### Scalability Considerations
-- Modular architecture for legal area expansion
-- Provider-agnostic LLM integration
-- Efficient vector storage scaling
-- Legal corpus versioning system
+- Every PR passes `npm run check`.
+- New UI goes on the page it belongs to; new islands are wrapped in `ErrorBoundary`.
+- Accessibility: keyboard reachable, visible focus, `aria-live` for async status.

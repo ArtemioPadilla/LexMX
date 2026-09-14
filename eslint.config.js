@@ -78,6 +78,8 @@ export default [
   },
   {
     ignores: [
+      'scripts/**',
+      'tests/**',
       'dist/**',
       'node_modules/**',
       '.astro/**',

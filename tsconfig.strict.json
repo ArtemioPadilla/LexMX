@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": false,
+    "noEmit": true
+  },
+  "_comment": "Strict project (Inceptor settings). `include` only lists modules that have been cleaned in Fase 3; add a path here when its tests pass and it has no `any`. The list only grows.",
+  "include": [
+    "src/env.d.ts",
+    "src/lib/href.ts",
+    "src/lib/flags.ts",
+    "src/lib/disposer.ts",
+    "src/lib/report-issue.ts",
+    "src/lib/site-meta.ts",
+    "src/lib/use-client-preference.ts",
+    "src/utils/urls.ts",
+    "src/islands/ErrorBoundary.tsx",
+    "src/islands/HydrationCanary.tsx"
+  ]
+}

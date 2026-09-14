@@ -1,0 +1,78 @@
+{
+  "$schema": "./ethics.schema.json",
+  "version": "1.0.0",
+  "source": "docs/ETHICS.md §8-item-ethics-checklist",
+  "purpose": "Single source for the 8-item ethics checklist. Read by centinela's ethics gate, by the PR template, and by docs/ETHICS.md. Editing any item here is the canonical change — update the markdown mirrors after, not before.",
+  "tiers": {
+    "0": {
+      "trigger": "docs/**, *.md, *.mdx, tests/** changes only",
+      "required_items": []
+    },
+    "1": {
+      "trigger": "default for type:feat / type:fix",
+      "required_items": [1, 7, 8]
+    },
+    "2": {
+      "trigger": "risk:high — see triggers in docs/ETHICS.md §risk-high-triggers",
+      "required_items": [1, 2, 6, 7, 8]
+    }
+  },
+  "items": [
+    {
+      "id": 1,
+      "title": "Intent declared",
+      "fogg_concern": 1,
+      "question": "What behaviour change does this PR push the user toward, and whose benefit does it serve?",
+      "required_at_tier": [1, 2]
+    },
+    {
+      "id": 2,
+      "title": "No deception, no coercion",
+      "fogg_concern": "Methods-Always-Unethical",
+      "question": "Does any copy, default, or affordance mislead about consequences or remove a reasonable opt-out?",
+      "required_at_tier": [2]
+    },
+    {
+      "id": 3,
+      "title": "Asymmetric persistence justified",
+      "fogg_concern": "3+4",
+      "question": "If the UI nags, retries, or auto-reopens, is the user clearly in control of stopping it?",
+      "required_at_tier": []
+    },
+    {
+      "id": 4,
+      "title": "Borrowed credibility honest",
+      "fogg_concern": 2,
+      "question": "Do badges, charts, or 'AI-powered' labels imply more authority than the system actually has?",
+      "required_at_tier": []
+    },
+    {
+      "id": 5,
+      "title": "Emotional cues reciprocal or disclosed",
+      "fogg_concern": 5,
+      "question": "Does the UI express feelings without a way for the user's emotion to alter the system?",
+      "required_at_tier": []
+    },
+    {
+      "id": 6,
+      "title": "Surveillance overt and supportive",
+      "fogg_concern": "surveillance",
+      "question": "Is any telemetry visible to the user at the moment of capture, and used for help, not punishment?",
+      "required_at_tier": [2]
+    },
+    {
+      "id": 7,
+      "title": "Vulnerable-group impact considered",
+      "fogg_concern": "Ch. 9",
+      "question": "Could a child, non-native reader, anxious / low-vision / motor-impaired user be harmed by this pattern?",
+      "required_at_tier": [1, 2]
+    },
+    {
+      "id": 8,
+      "title": "Unintended-but-predictable outcomes named",
+      "fogg_concern": "Methods-Sometimes-Unethical",
+      "question": "What is the worst-case misuse or escalation of this behavior change, and is the design resilient to it?",
+      "required_at_tier": [1, 2]
+    }
+  ]
+}

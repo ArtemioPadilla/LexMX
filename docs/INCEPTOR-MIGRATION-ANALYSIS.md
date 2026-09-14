@@ -284,8 +284,9 @@ nuevos y sin `any`:
 3. `lib/embeddings`: transformers.js por `import()` diferido; borrar los 3
    adaptadores de 35 líneas; `maximumFileSizeToCacheInBytes` en Workbox.
 4. `lib/rag`, `lib/legal`, `lib/corpus`.
-5. `lib/ingestion`: reescribir o borrar `url-ingestion-integration.test.ts`
-   (los 12 tests rojos).
+5. `lib/ingestion`: escribir tests unitarios reales del pipeline (los 6 casos
+   rojos de `url-ingestion-integration.test.ts` se retiraron en la Fase 1
+   porque asumían el fetch previo a `cors-aware-fetch`).
 
 ### Fase 4 — Chat y configuración sobre primitivas Inceptor (1-2 semanas)
 

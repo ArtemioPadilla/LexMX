@@ -3,6 +3,8 @@
 import { ThemeToggle } from '../ThemeToggle';
 import { LanguageSelector } from '../LanguageSelector';
 import MobileMenu from '../../islands/MobileMenu';
+import HydrationCanary from '../../islands/HydrationCanary';
+import FeedbackFAB from '../common/FeedbackFAB.astro';
 import HydrationWrapper from '../HydrationWrapper.astro';
 import { getTranslation } from '../../i18n/utils';
 import { getUrl, getAssetUrl } from '../../utils/urls';
@@ -319,6 +321,8 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         });
     }
   </script>
+  <HydrationCanary client:idle />
+  <FeedbackFAB lang="es" />
 </body>
 </html>
 
