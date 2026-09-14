@@ -3,6 +3,7 @@
  */
 import type { CitationStyle, Jurisdiction, ParsedCitation } from '../types';
 import { mxCalculators } from './calculators';
+import { mxTemplates } from './templates';
 
 export const MX_ENTITIES = [
   ['MX-AGU', 'Aguascalientes'],
@@ -145,6 +146,7 @@ export const mx: Jurisdiction = {
   ],
   citation: mxCitation,
   calculators: mxCalculators,
+  templates: mxTemplates,
   legal: {
     privacyLaw: {
       name: 'Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP)',

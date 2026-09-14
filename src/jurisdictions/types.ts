@@ -105,6 +105,32 @@ export interface Calculator<TInput = Record<string, unknown>> {
   compute(input: TInput): CalculatorResult;
 }
 
+/** Plantilla de redacción anclada a artículos (plan § 11.4 C). El cuerpo es
+ * Markdown con marcadores `{{campo}}`; cada plantilla cita su fundamento. */
+export interface TemplateField {
+  name: string;
+  label: string;
+  type: 'text' | 'textarea' | 'date' | 'number' | 'select';
+  options?: Array<{ value: string; label: string }>;
+  required?: boolean;
+  help?: string;
+  placeholder?: string;
+}
+
+export interface DocumentTemplate {
+  id: string;
+  name: string;
+  description: string;
+  area: string;
+  fields: TemplateField[];
+  /** Markdown con `{{campo}}`. */
+  body: string;
+  /** Artículos en los que se apoya la plantilla. */
+  basis: string[];
+  /** Advertencias que el usuario debe leer antes de usarla. */
+  warnings?: string[];
+}
+
 export interface Jurisdiction {
   code: JurisdictionCode;
   name: string;
@@ -119,4 +145,6 @@ export interface Jurisdiction {
   legal: LegalFramework;
   /** Calculadoras deterministas propias del país (opcional). */
   calculators?: Calculator[];
+  /** Plantillas de redacción del país (opcional). */
+  templates?: DocumentTemplate[];
 }
