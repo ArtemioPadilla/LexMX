@@ -11,7 +11,8 @@ node scripts/smoke/chat.mjs /tmp/chat.png
 node scripts/smoke/setup.mjs /tmp/setup.png
 node scripts/smoke/wiki.mjs /tmp/wiki.png
 node scripts/smoke/sw.mjs
-kill %1
+node scripts/smoke/cases.mjs /tmp/cases.png
+fuser -k -n tcp 4321   # o kill $(lsof -t -i:4321)
 ```
 
 Los scripts usan el Chromium preinstalado (`/opt/pw-browsers/...`); ajusta

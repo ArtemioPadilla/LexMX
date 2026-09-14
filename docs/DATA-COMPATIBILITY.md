@@ -19,6 +19,7 @@ anterior. Este contrato se convierte en tests en la Fase 3 del plan
 | `lexmx_metadata` | ver `src/lib/storage/metadata-store.ts` | `lineages`, `audits`, `changeDetection`, `ragMetadata` | `src/lib/storage/metadata-store.ts` |
 | `LexMX_Enhanced_Storage` | 4 | almacenamiento offline y caché | `src/lib/storage/enhanced-offline-storage.ts` |
 | `LexMX_OfflineQueue` | 2 | cola de operaciones offline | `src/lib/offline/offline-queue-manager.ts` |
+| `LexMX_Cases` | 1 | `cases` (expedientes; fechas en ISO). En la primera apertura importa `localStorage['lexmx_cases']` (formato viejo) y marca `lexmx_cases_migrated_v1`; la clave vieja no se borra | `src/lib/case-management/case-store.ts` |
 
 ### Corpus publicado (`public/legal-corpus/`, `public/embeddings/`)
 

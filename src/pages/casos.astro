@@ -1,7 +1,7 @@
 ---
 // Cases management page
 import BaseLayout from '../components/layout/BaseLayout.astro';
-import CaseManager from '../islands/CaseManager.tsx';
+import CaseWorkspace from '../islands/CaseWorkspace.tsx';
 import { getTranslation } from '../i18n/utils';
 
 const t = getTranslation(Astro.url);
@@ -25,7 +25,7 @@ const description = t('cases.description');
 
       <!-- Case Manager Interface -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg" style="min-height: 600px;">
-        <CaseManager client:load />
+        <CaseWorkspace client:load />
       </div>
     </div>
   </div>
