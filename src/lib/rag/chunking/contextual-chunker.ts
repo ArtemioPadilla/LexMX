@@ -1,7 +1,7 @@
 // Contextual chunker for legal documents
 // Preserves legal structure and context when creating chunks
 
-import type { LegalDocument, LegalChunk } from '@/types/legal';
+import type { LegalDocument, LegalChunk, LegalContent } from '@/types/legal';
 
 export interface ChunkerConfig {
   maxChunkSize?: number;      // Maximum characters per chunk
@@ -67,10 +67,9 @@ export class ContextualChunker {
    */
   private async addMetadataAsync(chunks: LegalChunk[], document: LegalDocument): Promise<LegalChunk[]> {
     const processedChunks: LegalChunk[] = [];
-    
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
-      
+    let i = 0;
+
+    for (const chunk of chunks) {
       processedChunks.push({
         ...chunk,
         metadata: {
@@ -88,8 +87,9 @@ export class ContextualChunker {
       if (i % 100 === 0 && i > 0) {
         await new Promise(resolve => setTimeout(resolve, 0));
       }
+      i++;
     }
-    
+
     return processedChunks;
   }
 
@@ -106,11 +106,12 @@ export class ContextualChunker {
     if (!document.content) return chunks;
     
     const totalSections = document.content.length;
-    
+
     // Process each section maintaining hierarchy
     for (let i = 0; i < document.content.length; i++) {
       const section = document.content[i];
-      
+      if (!section) continue;
+
       onProgress?.(
         Math.round((i / totalSections) * 80), // Reserve 20% for final processing
         `Processing section ${i + 1}/${totalSections}: ${section.title || 'Untitled'}`
@@ -140,37 +141,10 @@ export class ContextualChunker {
   }
 
   /**
-   * Hierarchical chunking - preserves document structure (ORIGINAL SYNC VERSION)
-   */
-  private hierarchicalChunking(document: LegalDocument): LegalChunk[] {
-    const chunks: LegalChunk[] = [];
-    let chunkIndex = 0;
-    
-    if (!document.content) return chunks;
-    
-    // Process each section maintaining hierarchy
-    for (const section of document.content) {
-      const sectionChunks = this.chunkSection(
-        section,
-        document,
-        chunkIndex
-      );
-      
-      chunks.push(...sectionChunks);
-      chunkIndex += sectionChunks.length;
-    }
-    
-    // Add cross-references between related chunks
-    this.addCrossReferences(chunks);
-    
-    return chunks;
-  }
-
-  /**
    * Chunk a single section (ASYNC VERSION)
    */
   private async chunkSectionAsync(
-    section: any,
+    section: LegalContent,
     document: LegalDocument,
     startIndex: number
   ): Promise<LegalChunk[]> {
@@ -313,7 +287,7 @@ export class ContextualChunker {
    * Chunk a single section (ORIGINAL SYNC VERSION)
    */
   private chunkSection(
-    section: any,
+    section: LegalContent,
     document: LegalDocument,
     startIndex: number
   ): LegalChunk[] {
@@ -358,96 +332,21 @@ export class ContextualChunker {
   }
 
   /**
-   * Contextual chunking - preserves surrounding context
-   */
-  private contextualChunking(document: LegalDocument): LegalChunk[] {
-    const chunks: LegalChunk[] = [];
-    const text = document.fullText || '';
-    
-    // Split into paragraphs first
-    const paragraphs = text.split(/\n\n+/);
-    let chunkIndex = 0;
-    let currentChunk = '';
-    let chunkContext = '';
-    
-    for (let i = 0; i < paragraphs.length; i++) {
-      const paragraph = paragraphs[i];
-      
-      // Check if adding this paragraph exceeds max size
-      if (currentChunk.length + paragraph.length > this.config.maxChunkSize) {
-        // Save current chunk if it meets minimum size
-        if (currentChunk.length >= this.config.minChunkSize) {
-          chunks.push({
-            id: `${document.id}_chunk_${chunkIndex}`,
-            documentId: document.id,
-            content: chunkContext + currentChunk,
-            metadata: {
-              type: 'paragraph',
-              hierarchy: document.hierarchy,
-              legalArea: document.primaryArea,
-              documentTitle: document.title,
-              chunkIndex,
-              startParagraph: Math.max(0, i - this.config.contextWindow),
-              endParagraph: i
-            },
-            keywords: this.extractKeywords(currentChunk)
-          });
-          
-          chunkIndex++;
-          
-          // Create overlap for next chunk
-          chunkContext = this.createOverlapContext(
-            paragraphs,
-            i - 1,
-            this.config.contextWindow
-          );
-        }
-        
-        currentChunk = paragraph;
-      } else {
-        currentChunk += (currentChunk ? '\n\n' : '') + paragraph;
-      }
-    }
-    
-    // Add final chunk
-    if (currentChunk.length >= this.config.minChunkSize) {
-      chunks.push({
-        id: `${document.id}_chunk_${chunkIndex}`,
-        documentId: document.id,
-        content: chunkContext + currentChunk,
-        metadata: {
-          type: 'paragraph',
-          hierarchy: document.hierarchy,
-          legalArea: document.primaryArea,
-          documentTitle: document.title,
-          chunkIndex,
-          isComplete: true
-        },
-        keywords: this.extractKeywords(currentChunk)
-      });
-    }
-    
-    return chunks;
-  }
-
-  /**
    * Create chunks from sentences with smart boundaries
    */
   private createChunksFromSentences(
     sentences: string[],
-    section: any,
+    section: LegalContent,
     document: LegalDocument,
     startIndex: number
   ): LegalChunk[] {
     const chunks: LegalChunk[] = [];
     let currentChunk = '';
-    let chunkSentences: string[] = [];
     let localIndex = 0;
-    
-    for (let i = 0; i < sentences.length; i++) {
-      const sentence = sentences[i];
+
+    for (const sentence of sentences) {
       const potentialChunk = currentChunk + (currentChunk ? ' ' : '') + sentence;
-      
+
       // Check if we should start a new chunk
       if (potentialChunk.length > this.config.maxChunkSize && currentChunk) {
         // Create chunk with context
@@ -477,10 +376,8 @@ export class ContextualChunker {
         
         // Start new chunk with minimal overlap
         currentChunk = sentence;
-        chunkSentences = [sentence];
       } else {
         currentChunk = potentialChunk;
-        chunkSentences.push(sentence);
       }
     }
     
@@ -514,7 +411,7 @@ export class ContextualChunker {
   /**
    * Add contextual information to chunk
    */
-  private addContextualInfo(section: any, content: string): string {
+  private addContextualInfo(section: LegalContent, content: string): string {
     const prefix = this.getArticleContext(section);
     return prefix + content;
   }
@@ -522,7 +419,7 @@ export class ContextualChunker {
   /**
    * Get article context for legal clarity
    */
-  private getArticleContext(section: any): string {
+  private getArticleContext(section: LegalContent): string {
     const parts: string[] = [];
     
     if (section.type === 'article' && section.number) {
@@ -559,19 +456,6 @@ export class ContextualChunker {
   }
 
   /**
-   * Create sentence overlap for chunk continuity
-   */
-  private createSentenceOverlap(sentences: string[]): string {
-    if (sentences.length === 0) return '';
-    
-    // Take last 1-2 sentences for overlap
-    const overlapCount = Math.min(2, sentences.length);
-    const overlapSentences = sentences.slice(-overlapCount);
-    
-    return overlapSentences.join(' ') + ' [...]';
-  }
-
-  /**
    * Split text into sentences (legal-aware)
    */
   private splitIntoSentences(text: string): string[] {
@@ -600,11 +484,11 @@ export class ContextualChunker {
         const words = sentence.split(/\s+/);
         
         // Handle case where there's a single very long word
-        if (words.length === 1 && words[0].length > maxSentenceLength) {
+        const onlyWord = words.length === 1 ? words[0] : undefined;
+        if (onlyWord && onlyWord.length > maxSentenceLength) {
           // Force split at character level
-          const word = words[0];
-          for (let i = 0; i < word.length; i += maxSentenceLength) {
-            finalSentences.push(word.substring(i, i + maxSentenceLength));
+          for (let i = 0; i < onlyWord.length; i += maxSentenceLength) {
+            finalSentences.push(onlyWord.substring(i, i + maxSentenceLength));
           }
         } else {
           let currentSentence = '';
@@ -670,7 +554,7 @@ export class ContextualChunker {
     // Extract law references - more flexible pattern
     const lawMatches = text.matchAll(/\b(?:ley|código)\s+(?:federal\s+)?(?:de(?:l)?\s+)?([\w\s]+?)(?:\.|,|;|\n|$)/gi);
     for (const match of lawMatches) {
-      const lawName = match[1].trim().toLowerCase().replace(/\s+/g, '_');
+      const lawName = (match[1] ?? '').trim().toLowerCase().replace(/\s+/g, '_');
       if (lawName.length < 50 && lawName.length > 0) {
         keywords.add(`ley_${lawName}`);
       }
@@ -690,7 +574,7 @@ export class ContextualChunker {
   /**
    * Find related chunk IDs based on legal references
    */
-  private findRelatedChunkIds(section: any, document: LegalDocument): string[] {
+  private findRelatedChunkIds(section: LegalContent, document: LegalDocument): string[] {
     const related: string[] = [];
     
     // Add parent section chunks

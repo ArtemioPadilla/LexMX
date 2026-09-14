@@ -6,7 +6,7 @@ import type {
   RAGSearchResult,
   RAGProgressEvent 
 } from '@/types/embeddings';
-import type { LegalDocument, LegalContent as _LegalContent } from '@/types/legal';
+import type { LegalDocument } from '@/types/legal';
 
 export interface VectorSearchConfig {
   chunkSize?: number;
@@ -71,14 +71,14 @@ export class VectorSearch {
       const embeddings = await this.embeddingManager.embedBatch(texts);
 
       // Store chunks and embeddings
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
+      chunks.forEach((chunk, i) => {
         const embedding = embeddings[i];
-        
+        if (!embedding) return;
+
         this.documentChunks.set(chunk.id, chunk);
         this.chunkEmbeddings.set(chunk.id, embedding);
         chunk.embedding = embedding;
-      }
+      });
 
       this.emitProgress('document_search', 'completed', `Indexed ${chunks.length} chunks from ${document.title}`);
     } catch (error) {
@@ -295,7 +295,7 @@ export class VectorSearch {
     stage: RAGProgressEvent['stage'],
     status: RAGProgressEvent['status'],
     message?: string,
-    details?: any
+    details?: RAGProgressEvent['details']
   ): void {
     if (this.progressCallback) {
       this.progressCallback({

@@ -1,8 +1,7 @@
 // Hybrid search engine combining semantic and keyword search for legal documents
 
-import type { SearchResult, SearchOptions } from '@/types/rag';
+import type { SearchResult, SearchOptions, DocumentMetadata, VectorStore } from '@/types/rag';
 import type { LegalArea, QueryType } from '@/types/legal';
-import type { StorageMetadata } from '@/types/common';
 
 export interface HybridSearchOptions extends SearchOptions {
   semanticWeight?: number;
@@ -20,6 +19,7 @@ export interface KeywordSearchResult {
   id: string;
   content: string;
   score: number;
+  metadata?: Partial<DocumentMetadata>;
   matches: Array<{
     term: string;
     frequency: number;
@@ -32,19 +32,40 @@ export interface SemanticSearchResult {
   content: string;
   score: number;
   embedding?: number[];
+  metadata?: Partial<DocumentMetadata>;
+}
+
+// A document as indexed internally by BM25Search: keyword-search bookkeeping
+// (tokens) plus whatever legal metadata (hierarchy, legalArea, ...) was
+// supplied, used for boosting and propagated into search results.
+interface BM25IndexedDocument {
+  id: string;
+  content: string;
+  tokens: string[];
+  metadata?: Partial<DocumentMetadata>;
+}
+
+// Fill in a full DocumentMetadata from whatever partial metadata a caller
+// supplied, so both the vector store and downstream re-ranking always see
+// well-formed values instead of tripping over missing required fields.
+function toDocumentMetadata(partial?: Partial<DocumentMetadata>): DocumentMetadata {
+  return {
+    title: partial?.title ?? '',
+    type: partial?.type ?? '',
+    legalArea: partial?.legalArea ?? '',
+    hierarchy: partial?.hierarchy ?? 7,
+    lastUpdated: partial?.lastUpdated ?? '',
+    url: partial?.url,
+    article: partial?.article
+  };
 }
 
 /**
  * BM25 (Best Matching 25) implementation for keyword search
  */
 export class BM25Search {
-  private documents: Map<string, {
-    id: string;
-    content: string;
-    tokens: string[];
-    metadata?: StorageMetadata;
-  }> = new Map();
-  
+  private documents: Map<string, BM25IndexedDocument> = new Map();
+
   private termFrequencies: Map<string, Map<string, number>> = new Map();
   private documentFrequencies: Map<string, number> = new Map();
   private averageDocumentLength = 0;
@@ -56,7 +77,7 @@ export class BM25Search {
   /**
    * Add document to the search index
    */
-  addDocument(id: string, content: string, metadata?: StorageMetadata): void {
+  addDocument(id: string, content: string, metadata?: Partial<DocumentMetadata>): void {
     const tokens = this.tokenize(content);
     const document = { id, content, tokens, metadata };
     
@@ -120,6 +141,7 @@ export class BM25Search {
         id: docId,
         content: document.content,
         score,
+        metadata: document.metadata,
         matches: matches.get(docId) || []
       };
     });
@@ -195,8 +217,8 @@ export class BM25Search {
   }
 
   private calculateBoostFactor(
-    document: SearchResult, 
-    queryTerms: string[], 
+    document: BM25IndexedDocument,
+    queryTerms: string[],
     boostConfig?: Record<string, number>
   ): number {
     let boost = 1.0;
@@ -254,16 +276,16 @@ export class BM25Search {
  */
 export class HybridSearchEngine {
   private bm25Search = new BM25Search();
-  private vectorStore: unknown; // Will be injected
+  private vectorStore?: VectorStore;
 
-  constructor(vectorStore?: unknown) {
+  constructor(vectorStore?: VectorStore) {
     this.vectorStore = vectorStore;
   }
 
   /**
    * Add document to both search indices
    */
-  async addDocument(id: string, content: string, embedding: number[], metadata?: StorageMetadata): Promise<void> {
+  async addDocument(id: string, content: string, embedding: number[], metadata?: Partial<DocumentMetadata>): Promise<void> {
     // Add to keyword search index
     this.bm25Search.addDocument(id, content, metadata);
 
@@ -273,15 +295,7 @@ export class HybridSearchEngine {
         id,
         content,
         embedding,
-        metadata: {
-          title: metadata?.title || '',
-          type: metadata?.type || '',
-          legalArea: metadata?.legalArea || '',
-          hierarchy: metadata?.hierarchy || 7,
-          lastUpdated: metadata?.lastUpdated || new Date().toISOString(),
-          url: metadata?.url,
-          article: metadata?.article
-        }
+        metadata: toDocumentMetadata(metadata)
       });
     }
   }
@@ -325,7 +339,8 @@ export class HybridSearchEngine {
         id: result.id,
         content: result.content,
         score: result.score,
-        embedding: result.embedding
+        embedding: result.embedding,
+        metadata: result.metadata
       }));
     }
 
@@ -354,7 +369,7 @@ export class HybridSearchEngine {
     if (!queryType) return { semantic: semanticWeight, keyword: keywordWeight };
 
     // Adjust weights based on query characteristics
-    const adjustments = {
+    const adjustments: Partial<Record<QueryType, { semantic: number; keyword: number }>> = {
       citation: { semantic: 0.3, keyword: 0.7 }, // "Artículo 123 constitucional"
       procedural: { semantic: 0.6, keyword: 0.4 }, // "Cómo tramitar divorcio"
       conceptual: { semantic: 0.8, keyword: 0.2 }, // "Qué es usucapión"
@@ -379,14 +394,15 @@ export class HybridSearchEngine {
     keywordWeight: number,
     semanticWeight: number
   ): SearchResult[] {
-    const scoreMap = new Map<string, { score: number; content: string; metadata?: StorageMetadata }>();
+    const scoreMap = new Map<string, { score: number; content: string; metadata?: Partial<DocumentMetadata> }>();
 
     // Process keyword results
     keywordResults.forEach((result, rank) => {
       const rrfScore = keywordWeight / (60 + rank + 1);
       scoreMap.set(result.id, {
         score: rrfScore,
-        content: result.content
+        content: result.content,
+        metadata: result.metadata
       });
     });
 
@@ -394,13 +410,15 @@ export class HybridSearchEngine {
     semanticResults.forEach((result, rank) => {
       const rrfScore = semanticWeight / (60 + rank + 1);
       const existing = scoreMap.get(result.id);
-      
+
       if (existing) {
         existing.score += rrfScore;
+        existing.metadata = existing.metadata || result.metadata;
       } else {
         scoreMap.set(result.id, {
           score: rrfScore,
-          content: result.content
+          content: result.content,
+          metadata: result.metadata
         });
       }
     });
@@ -411,7 +429,7 @@ export class HybridSearchEngine {
         id,
         content: data.content,
         score: data.score,
-        metadata: data.metadata || {}
+        metadata: toDocumentMetadata(data.metadata)
       }))
       .sort((a, b) => b.score - a.score);
   }

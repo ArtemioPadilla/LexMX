@@ -1,10 +1,9 @@
 // Main RAG engine for LexMX legal queries
 
-import type { RAGConfig, RAGResponse as _RAGResponse, ProcessedQuery, SearchResult } from '@/types/rag';
+import type { RAGConfig, ProcessedQuery, SearchResult, VectorStore } from '@/types/rag';
 import type { LLMRequest, LLMResponse, QueryContext } from '@/types/llm';
-import type { LegalResponse, LegalArea, QueryType } from '@/types/legal';
+import type { LegalResponse, LegalArea, LegalHierarchy, QueryType } from '@/types/legal';
 import type { RAGProgressEvent, RAGSearchResult } from '@/types/embeddings';
-import type { JsonValue as _JsonValue, NavigationItem } from '@/types/common';
 
 import { IndexedDBVectorStore } from '@/lib/storage/indexeddb-vector-store';
 import { HybridSearchEngine } from './hybrid-search';
@@ -24,21 +23,52 @@ export interface RAGEngineConfig extends RAGConfig {
   enableLegalValidation: boolean;
 }
 
+/**
+ * Optional collaborators the engine will use instead of constructing its own.
+ * Lets tests (and future callers) inject a fake vector store or embedding
+ * manager without touching IndexedDB or a real embedding provider.
+ */
+export interface RAGEngineDependencies {
+  vectorStore?: VectorStore;
+  embeddingManager?: EmbeddingManager;
+}
+
+// Whether the corpus currently backing retrieval is the real legal corpus,
+// the small hardcoded mock document set, or nothing at all.
+export type CorpusStatus = 'real' | 'mock' | 'empty';
+// Whether embeddings come from the configured provider or a mock fallback.
+export type EmbeddingsStatus = 'real' | 'mock';
+
+export interface RAGEngineStatus {
+  corpus: CorpusStatus;
+  embeddings: EmbeddingsStatus;
+  documentCount: number;
+}
+
+// A LegalResponse plus an explicit "was this actually grounded in retrieved
+// documents" flag, so callers never mistake a mock-corpus answer for one
+// backed by the real legal corpus. See `getStatus()` for the engine-level view.
+export interface GroundedLegalResponse extends LegalResponse {
+  grounded: boolean;
+}
+
 export class LegalRAGEngine extends EventEmitter {
-  private vectorStore: IndexedDBVectorStore;
+  private vectorStore: VectorStore;
   private searchEngine: HybridSearchEngine;
   private documentProcessor: MexicanLegalDocumentProcessor;
   private embeddingManager: EmbeddingManager;
   private vectorSearch: VectorSearch;
-  private cache: Map<string, { response: LegalResponse; timestamp: number }> = new Map();
+  private cache: Map<string, { response: GroundedLegalResponse; timestamp: number }> = new Map();
   private progressEvents: RAGProgressEvent[] = [];
   private useRealEmbeddings = false; // Toggle for real vs mock embeddings
-  
+  private corpusStatus: CorpusStatus = 'empty';
+  private documentCount = 0;
+
   private config: RAGEngineConfig;
 
   private initialized = false;
 
-  constructor(config?: Partial<RAGEngineConfig>) {
+  constructor(config?: Partial<RAGEngineConfig>, dependencies?: RAGEngineDependencies) {
     super();
     
     // Get base path from environment
@@ -60,16 +90,16 @@ export class LegalRAGEngine extends EventEmitter {
       enableLegalValidation: true,
       ...config
     };
-    this.vectorStore = new IndexedDBVectorStore();
+    this.vectorStore = dependencies?.vectorStore ?? new IndexedDBVectorStore();
     this.searchEngine = new HybridSearchEngine(this.vectorStore);
     this.documentProcessor = new MexicanLegalDocumentProcessor();
-    
+
     // Initialize embedding system
-    this.embeddingManager = new EmbeddingManager({
+    this.embeddingManager = dependencies?.embeddingManager ?? new EmbeddingManager({
       defaultProvider: 'transformers',
       onProgress: (event) => this.handleProgressEvent(event)
     });
-    
+
     this.vectorSearch = new VectorSearch(
       this.embeddingManager,
       {
@@ -99,34 +129,47 @@ export class LegalRAGEngine extends EventEmitter {
       });
 
       // Initialize vector store with error handling
-      await this.vectorStore.initialize().catch(err => {
+      await this.vectorStore.initialize(this.config).catch(err => {
         console.warn('Vector store initialization warning:', err);
       });
-      
+
       // Load documents into vector store
       try {
         const vectorDocuments = await documentLoader.convertToVectorDocuments();
         if (vectorDocuments.length > 0) {
-          console.log(`Loading ${vectorDocuments.length} documents into vector store...`);
           for (const doc of vectorDocuments) {
             await this.vectorStore.addDocument(doc);
           }
           this.useRealEmbeddings = true;
-          console.log('RAG Engine: Using real documents from corpus');
+          this.corpusStatus = 'real';
+          this.documentCount = vectorDocuments.length;
         } else {
-          console.warn('No documents found in corpus, will use fallback');
           this.useRealEmbeddings = false;
+          this.corpusStatus = 'empty';
+          this.documentCount = 0;
+          this.emitProgress(
+            'document_search',
+            'error',
+            'No documents found in the legal corpus; queries will fall back to a small set of mock legal documents and will not be grounded.'
+          );
         }
       } catch (err) {
         console.warn('Failed to load corpus documents:', err);
         this.useRealEmbeddings = false;
+        this.corpusStatus = 'empty';
+        this.documentCount = 0;
+        this.emitProgress(
+          'document_search',
+          'error',
+          `Failed to load corpus documents (${err instanceof Error ? err.message : String(err)}); queries will fall back to mock legal documents.`
+        );
       }
-      
+
       // Initialize provider manager with error handling
       await providerManager.initialize().catch(err => {
         console.warn('Provider manager initialization warning:', err);
       });
-      
+
       // Initialize embedding manager
       try {
         await this.embeddingManager.initialize();
@@ -135,13 +178,26 @@ export class LegalRAGEngine extends EventEmitter {
       }
 
       this.initialized = true;
-      console.log('RAG Engine initialized successfully');
     } catch (error) {
       console.error('Failed to initialize RAG Engine:', error);
       // Mark as initialized anyway to prevent blocking in tests
       this.initialized = true;
       // Don't throw - just log the error
     }
+  }
+
+  /**
+   * Explicit view of what is currently backing retrieval: whether the real
+   * corpus is loaded, we've fallen back to mock documents, or nothing has
+   * been loaded at all, plus whether embeddings are real or mocked.
+   */
+  getStatus(): RAGEngineStatus {
+    const embeddingStatus = this.embeddingManager.getStatus();
+    return {
+      corpus: this.corpusStatus,
+      embeddings: embeddingStatus.isFallback ? 'mock' : 'real',
+      documentCount: this.documentCount
+    };
   }
 
   /**
@@ -160,7 +216,7 @@ export class LegalRAGEngine extends EventEmitter {
         documents?: string[];
       };
     } = {}
-  ): Promise<LegalResponse> {
+  ): Promise<GroundedLegalResponse> {
     if (!this.initialized) {
       await this.initialize();
     }
@@ -190,17 +246,7 @@ export class LegalRAGEngine extends EventEmitter {
       });
 
       // Retrieve relevant legal documents
-      let searchResults: SearchResult[];
-      if (this.useRealEmbeddings) {
-        // Use real vector search
-        const ragResults = await this.vectorSearch.search(processedQuery.originalQuery, {
-          topK: options.maxResults || 5
-        });
-        searchResults = this.convertRAGResultsToSearchResults(ragResults);
-      } else {
-        // Fall back to mock documents
-        searchResults = await this.retrieveRelevantDocuments(processedQuery, options.maxResults || 5);
-      }
+      const { results: searchResults, grounded } = await this.retrieveDocumentsForQuery(processedQuery, options.maxResults || 5);
 
       // Build legal context
       this.emitProgress('context_building', 'active', 'Building legal context...');
@@ -217,23 +263,15 @@ export class LegalRAGEngine extends EventEmitter {
       this.emitProgress('response_generation', 'completed', 'Response generated');
 
       // Create final legal response
-      const legalResponse: LegalResponse = {
+      const legalResponse: GroundedLegalResponse = {
         answer: llmResponse.content,
-        sources: searchResults.map(result => ({
-          documentId: result.id,
-          title: result.metadata?.title || 'Unknown Document',
-          article: result.metadata?.article,
-          excerpt: this.createExcerpt(result.content, 200),
-          relevanceScore: result.score,
-          hierarchy: result.metadata?.hierarchy || 7,
-          url: result.metadata?.url,
-          lastUpdated: result.metadata?.lastUpdated
-        })),
+        sources: grounded ? this.buildLegalSources(searchResults) : [],
         confidence: this.calculateConfidence(searchResults, llmResponse),
         queryType: this.isValidQueryType(processedQuery.queryType) ? processedQuery.queryType : 'conceptual',
         legalArea: (processedQuery.legalArea || 'constitutional') as LegalArea,
         processingTime: Date.now() - startTime,
         fromCache: false,
+        grounded,
         legalWarning: this.generateLegalWarning(),
         recommendedActions: this.generateRecommendedActions(processedQuery.queryType as QueryType),
         relatedQueries: this.generateRelatedQueries(processedQuery)
@@ -248,7 +286,7 @@ export class LegalRAGEngine extends EventEmitter {
 
     } catch (error) {
       console.error('Error processing legal query:', error);
-      
+
       // Return error response
       return {
         answer: 'Lo siento, ocurrió un error al procesar tu consulta legal. Por favor, intenta nuevamente o consulta directamente con un abogado.',
@@ -258,6 +296,7 @@ export class LegalRAGEngine extends EventEmitter {
         legalArea: 'constitutional' as LegalArea,
         processingTime: Date.now() - startTime,
         fromCache: false,
+        grounded: false,
         legalWarning: this.generateLegalWarning()
       };
     }
@@ -281,7 +320,7 @@ export class LegalRAGEngine extends EventEmitter {
         documents?: string[];
       };
     } = {}
-  ): Promise<LegalResponse> {
+  ): Promise<GroundedLegalResponse> {
     if (!this.initialized) {
       await this.initialize();
     }
@@ -337,20 +376,11 @@ export class LegalRAGEngine extends EventEmitter {
       }
 
       // Retrieve relevant legal documents
-      let searchResults: SearchResult[];
-      if (this.useRealEmbeddings) {
-        // Use real vector search
-        const ragResults = await this.vectorSearch.search(processedQuery.originalQuery, {
-          topK: options.maxResults || 5
-        });
-        searchResults = this.convertRAGResultsToSearchResults(ragResults);
-      } else {
-        // Fall back to mock documents
-        searchResults = await this.retrieveRelevantDocuments(processedQuery, options.maxResults || 5);
-      }
-      
+      const { results: searchResults, grounded } = await this.retrieveDocumentsForQuery(processedQuery, options.maxResults || 5);
+
       // Emit document search completed with results
       this.emitProgress('document_search', 'completed', `Found ${searchResults.length} relevant documents`, {
+        grounded,
         results: searchResults.map(result => ({
           documentId: result.id,
           content: result.content,
@@ -393,23 +423,15 @@ export class LegalRAGEngine extends EventEmitter {
       this.emitProgress('response_generation', 'completed', 'Response generated');
 
       // Create final legal response
-      const legalResponse: LegalResponse = {
+      const legalResponse: GroundedLegalResponse = {
         answer: llmResponse.content,
-        sources: searchResults.map(result => ({
-          documentId: result.id,
-          title: result.metadata?.title || 'Unknown Document',
-          article: result.metadata?.article,
-          excerpt: this.createExcerpt(result.content, 200),
-          relevanceScore: result.score,
-          hierarchy: result.metadata?.hierarchy || 7,
-          url: result.metadata?.url,
-          lastUpdated: result.metadata?.lastUpdated
-        })),
+        sources: grounded ? this.buildLegalSources(searchResults) : [],
         confidence: this.calculateConfidence(searchResults, llmResponse),
         queryType: processedQuery.queryType as QueryType,
         legalArea: (processedQuery.legalArea || 'constitutional') as LegalArea,
         processingTime: Date.now() - startTime,
         fromCache: false,
+        grounded,
         legalWarning: this.generateLegalWarning(),
         recommendedActions: this.generateRecommendedActions(processedQuery.queryType as QueryType),
         relatedQueries: this.generateRelatedQueries(processedQuery)
@@ -424,7 +446,7 @@ export class LegalRAGEngine extends EventEmitter {
 
     } catch (error) {
       console.error('Error processing legal query with streaming:', error);
-      
+
       // Return error response
       return {
         answer: 'Lo siento, ocurrió un error al procesar tu consulta legal. Por favor, intenta nuevamente o consulta directamente con un abogado.',
@@ -434,6 +456,7 @@ export class LegalRAGEngine extends EventEmitter {
         legalArea: 'constitutional' as LegalArea,
         processingTime: Date.now() - startTime,
         fromCache: false,
+        grounded: false,
         legalWarning: this.generateLegalWarning()
       };
     }
@@ -587,7 +610,7 @@ export class LegalRAGEngine extends EventEmitter {
    * Detect query intent
    */
   private detectQueryIntent(_query: string, queryType: QueryType): string {
-    const intentMap = {
+    const intentMap: Partial<Record<QueryType, string>> = {
       citation: 'citation',
       procedural: 'procedure',
       conceptual: 'information',
@@ -599,19 +622,38 @@ export class LegalRAGEngine extends EventEmitter {
   }
 
   /**
-   * Retrieve relevant legal documents using hybrid search
+   * Retrieve relevant documents for a query, using real vector search when
+   * the corpus is loaded and falling back to mock legal documents otherwise.
+   * The returned `grounded` flag tells callers whether `results` actually
+   * came from real retrieval (real corpus, real hits) so they never present
+   * mock content as if it were a cited legal source.
+   */
+  private async retrieveDocumentsForQuery(
+    processedQuery: ProcessedQuery,
+    maxResults: number
+  ): Promise<{ results: SearchResult[]; grounded: boolean }> {
+    if (this.useRealEmbeddings) {
+      const ragResults = await this.vectorSearch.search(processedQuery.originalQuery, { topK: maxResults });
+      const results = this.convertRAGResultsToSearchResults(ragResults);
+      return { results, grounded: results.length > 0 };
+    }
+    return this.retrieveRelevantDocuments(processedQuery, maxResults);
+  }
+
+  /**
+   * Retrieve relevant legal documents when no real embeddings are available:
+   * try the vector store directly first (it may hold documents added outside
+   * `initialize()`, e.g. an injected store in tests), then fall back to a
+   * small hardcoded set of mock legal documents.
    */
   private async retrieveRelevantDocuments(
     processedQuery: ProcessedQuery,
     maxResults: number
-  ): Promise<any[]> {
+  ): Promise<{ results: SearchResult[]; grounded: boolean }> {
     try {
-      // Try to search in the vector store first
       if (this.vectorStore) {
-        // Generate embedding for the query
         const queryEmbedding = await this.embeddingManager.embed(processedQuery.normalizedQuery);
-        
-        // Search in vector store
+
         const searchResults = await this.vectorStore.search(
           queryEmbedding.values,
           {
@@ -622,20 +664,31 @@ export class LegalRAGEngine extends EventEmitter {
             }
           }
         );
-        
+
         if (searchResults.length > 0) {
-          console.log(`Found ${searchResults.length} relevant documents from corpus`);
-          return searchResults;
+          if (this.corpusStatus !== 'real') {
+            this.corpusStatus = 'real';
+          }
+          return { results: searchResults, grounded: true };
         }
       }
     } catch (error) {
       console.warn('Failed to search in vector store, using fallback:', error);
     }
-    
-    // Fallback to mock documents if no real documents found
-    console.warn('No documents found in corpus, using mock documents');
-    
-    const mockDocuments = [
+
+    // Explicit fallback: nothing real was retrieved. Mark it so callers know
+    // and so the engine's own status reflects reality instead of pretending
+    // the corpus is loaded.
+    if (this.corpusStatus === 'empty') {
+      this.corpusStatus = 'mock';
+    }
+    this.emitProgress(
+      'document_search',
+      'error',
+      'No real legal documents matched this query; falling back to built-in mock legal documents (response will not be grounded).'
+    );
+
+    const mockDocuments: SearchResult[] = [
       {
         id: 'const-art-123',
         content: `Artículo 123. Toda persona tiene derecho al trabajo digno y socialmente útil; al efecto, se promoverán la creación de empleos y la organización social de trabajo, conforme a la ley.
@@ -649,6 +702,7 @@ II. La jornada máxima de trabajo nocturno será de 7 horas. Quedan prohibidas: 
 III. Queda prohibida la utilización del trabajo de los menores de quince años. Los mayores de esta edad y menores de dieciséis tendrán como jornada máxima la de seis horas.`,
         metadata: {
           title: 'Constitución Política de los Estados Unidos Mexicanos',
+          type: 'constitution',
           article: '123',
           hierarchy: 1,
           legalArea: 'labor',
@@ -665,6 +719,7 @@ II. Incurrir el trabajador, durante sus labores, en faltas de probidad u honrade
 III. Cometer el trabajador contra alguno de sus compañeros, cualquiera de los actos enumerados en la fracción anterior, si como consecuencia de ellos se altera la disciplina del lugar en que se desempeña el trabajo.`,
         metadata: {
           title: 'Ley Federal del Trabajo',
+          type: 'law',
           article: '47',
           hierarchy: 3,
           legalArea: 'labor',
@@ -682,6 +737,7 @@ El amparo protege a las personas contra:
 - Actos de autoridad que carezcan de fundamentación y motivación`,
         metadata: {
           title: 'Ley de Amparo',
+          type: 'law',
           article: 'Introducción',
           hierarchy: 2,
           legalArea: 'constitutional',
@@ -694,13 +750,12 @@ El amparo protege a las personas contra:
     // Filter based on legal area if specified
     let results = mockDocuments;
     if (processedQuery.legalArea) {
-      results = mockDocuments.filter(doc => 
+      results = mockDocuments.filter(doc =>
         doc.metadata.legalArea === processedQuery.legalArea
       );
     }
 
-    // Return top results
-    return results.slice(0, maxResults);
+    return { results: results.slice(0, maxResults), grounded: false };
   }
 
   /**
@@ -722,6 +777,34 @@ El amparo protege a las personas contra:
     }
 
     return context;
+  }
+
+  /**
+   * Map retrieved search results to the `LegalSource[]` shape shown to
+   * users. Only called with grounded results (see `retrieveDocumentsForQuery`);
+   * callers must pass `sources: []` themselves when `grounded` is false.
+   */
+  private buildLegalSources(searchResults: SearchResult[]): LegalResponse['sources'] {
+    return searchResults.map(result => ({
+      documentId: result.id,
+      title: result.metadata?.title || 'Unknown Document',
+      article: result.metadata?.article,
+      excerpt: this.createExcerpt(result.content, 200),
+      relevanceScore: result.score,
+      hierarchy: this.toLegalHierarchy(result.metadata?.hierarchy),
+      url: result.metadata?.url,
+      lastUpdated: result.metadata?.lastUpdated
+    }));
+  }
+
+  /**
+   * Clamp an arbitrary numeric hierarchy value into the 1-7 range the
+   * Mexican legal hierarchy uses, defaulting to the lowest authority (7)
+   * when unknown.
+   */
+  private toLegalHierarchy(value?: number): LegalHierarchy {
+    if (!value || value < 1 || value > 7) return 7;
+    return Math.round(value) as LegalHierarchy;
   }
 
   /**
@@ -913,21 +996,20 @@ El amparo protege a las personas contra:
    * Type guard for QueryType
    */
   private isValidQueryType(type: unknown): type is QueryType {
-    const validTypes: QueryType[] = [
+    const validTypes: readonly string[] = [
       'citation',
       'procedural',
       'conceptual',
       'comparative',
-      'analytical',
-      'conceptual'
+      'analytical'
     ];
-    return validTypes.includes(type);
+    return typeof type === 'string' && validTypes.includes(type);
   }
 
   /**
    * Cache management
    */
-  private getCachedResponse(query: string): LegalResponse | null {
+  private getCachedResponse(query: string): GroundedLegalResponse | null {
     if (!this.config.enableCache) return null;
 
     const cached = this.cache.get(query);
@@ -942,7 +1024,7 @@ El amparo protege a las personas contra:
     return cached.response;
   }
 
-  private cacheResponse(query: string, response: LegalResponse): void {
+  private cacheResponse(query: string, response: GroundedLegalResponse): void {
     if (!this.config.enableCache) return;
 
     this.cache.set(query, {
@@ -989,7 +1071,7 @@ El amparo protege a las personas contra:
     stage: RAGProgressEvent['stage'],
     status: RAGProgressEvent['status'],
     message?: string,
-    details?: JsonValue
+    details?: RAGProgressEvent['details']
   ): void {
     const event: RAGProgressEvent = {
       stage,
@@ -1001,20 +1083,21 @@ El amparo protege a las personas contra:
     this.handleProgressEvent(event);
   }
 
-  // Convert RAG search results to the expected format
-  private convertRAGResultsToSearchResults(ragResults: RAGSearchResult[]): NavigationItem[] {
+  // Convert RAG (vector search) results to the canonical SearchResult shape
+  // used throughout the engine for context building and source citation.
+  private convertRAGResultsToSearchResults(ragResults: RAGSearchResult[]): SearchResult[] {
     return ragResults.map(result => ({
       id: result.documentId,
       content: result.content,
+      score: result.score,
       metadata: {
         title: result.metadata?.title || 'Unknown Document',
+        type: 'chunk',
         article: result.metadata?.article,
-        section: result.metadata?.section,
         hierarchy: result.metadata?.hierarchy || 7,
-        legalArea: result.metadata?.legalArea,
-        lastUpdated: result.metadata?.lastUpdated
-      },
-      score: result.score
+        legalArea: result.metadata?.legalArea || '',
+        lastUpdated: result.metadata?.lastUpdated || ''
+      }
     }));
   }
 
