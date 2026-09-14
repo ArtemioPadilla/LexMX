@@ -33,7 +33,8 @@
     "new-issue": "bash scripts/new-issue.sh",
     "hooks:install": "git config core.hooksPath scripts/hooks && echo 'Pre-commit hooks installed.'",
     "corpus:import": "node --experimental-strip-types scripts/corpus/import-legalia.ts",
-    "corpus:embeddings": "node --experimental-strip-types scripts/corpus/build-embeddings.ts"
+    "corpus:embeddings": "node --experimental-strip-types scripts/corpus/build-embeddings.ts",
+    "eval:retrieval": "node --experimental-strip-types scripts/eval/retrieval.ts"
   },
   "dependencies": {
     "@astrojs/react": "^5.0.7",

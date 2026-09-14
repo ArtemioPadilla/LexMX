@@ -1,0 +1,43 @@
+{"id":"cpeum-123","query":"¿Qué artículo de la Constitución regula el derecho al trabajo y las relaciones laborales?","expect":{"doc":"cpeum","article":"123"},"area":"labor"}
+{"id":"cpeum-1","query":"¿Dónde establece la Constitución que todas las personas gozan de los derechos humanos y prohíbe la discriminación?","expect":{"doc":"cpeum","article":"1"},"area":"constitutional"}
+{"id":"cpeum-14","query":"¿Qué artículo constitucional prohíbe dar efecto retroactivo a las leyes en perjuicio de persona alguna?","expect":{"doc":"cpeum","article":"14"},"area":"constitutional"}
+{"id":"cpeum-16","query":"Nadie puede ser molestado en su persona, familia, domicilio, papeles o posesiones sino por mandamiento escrito de autoridad competente","expect":{"doc":"cpeum","article":"16"},"area":"constitutional"}
+{"id":"cpeum-8","query":"¿Qué artículo garantiza el derecho de petición y obliga a la autoridad a responder por escrito?","expect":{"doc":"cpeum","article":"8"},"area":"constitutional"}
+{"id":"cpeum-31","query":"Obligación de los mexicanos de contribuir a los gastos públicos de manera proporcional y equitativa","expect":{"doc":"cpeum","article":"31"},"area":"tax"}
+{"id":"cpeum-107","query":"Bases del juicio de amparo: instancia de parte agraviada y relatividad de las sentencias","expect":{"doc":"cpeum","article":"107"},"area":"constitutional"}
+{"id":"lft-47","query":"¿Cuáles son las causas de rescisión de la relación de trabajo sin responsabilidad para el patrón?","expect":{"doc":"lft","article":"47"},"area":"labor"}
+{"id":"lft-48","query":"Si me despiden injustificadamente, ¿puedo pedir reinstalación o indemnización de tres meses de salario?","expect":{"doc":"lft","article":"48"},"area":"labor"}
+{"id":"lft-51","query":"Causas de rescisión de la relación de trabajo sin responsabilidad para el trabajador","expect":{"doc":"lft","article":"51"},"area":"labor"}
+{"id":"lft-87","query":"¿Cuántos días de aguinaldo me corresponden y cuándo debe pagarse?","expect":{"doc":"lft","article":"87"},"area":"labor"}
+{"id":"lft-76","query":"¿Cuántos días de vacaciones tiene derecho un trabajador después de un año de servicios?","expect":{"doc":"lft","article":"76"},"area":"labor"}
+{"id":"lft-80","query":"Prima vacacional del veinticinco por ciento sobre los salarios durante el periodo de vacaciones","expect":{"doc":"lft","article":"80"},"area":"labor"}
+{"id":"lft-162","query":"Prima de antigüedad de doce días de salario por cada año de servicios","expect":{"doc":"lft","article":"162"},"area":"labor"}
+{"id":"lft-61","query":"Duración máxima de la jornada diurna, nocturna y mixta","expect":{"doc":"lft","article":"61"},"area":"labor"}
+{"id":"lft-132","query":"Obligaciones de los patrones frente a sus trabajadores","expect":{"doc":"lft","article":"132"},"area":"labor"}
+{"id":"lft-170","query":"Derechos de las madres trabajadoras durante el embarazo y la lactancia, descanso de seis semanas antes y después del parto","expect":{"doc":"lft","article":"170"},"area":"labor"}
+{"id":"lft-25","query":"¿Qué debe contener el escrito en que consten las condiciones de trabajo?","expect":{"doc":"lft","article":"25"},"area":"labor"}
+{"id":"cff-17-h","query":"¿En qué casos el SAT puede dejar sin efectos los certificados de sello digital?","expect":{"doc":"cff","article":"17-H"},"area":"tax"}
+{"id":"cff-29","query":"Obligación de expedir comprobantes fiscales digitales por internet por los actos o actividades que realicen","expect":{"doc":"cff","article":"29"},"area":"tax"}
+{"id":"cff-67","query":"¿En cuánto tiempo caducan las facultades de las autoridades fiscales para determinar contribuciones omitidas?","expect":{"doc":"cff","article":"67"},"area":"tax"}
+{"id":"cff-6","query":"Las contribuciones se causan conforme se realizan las situaciones jurídicas o de hecho y corresponde a los contribuyentes determinarlas","expect":{"doc":"cff","article":"6"},"area":"tax"}
+{"id":"lisr-93","query":"¿Qué ingresos de las personas físicas están exentos del impuesto sobre la renta?","expect":{"doc":"lisr","article":"93"},"area":"tax"}
+{"id":"lisr-151","query":"Deducciones personales que pueden aplicar las personas físicas en su declaración anual, como honorarios médicos y gastos funerarios","expect":{"doc":"lisr","article":"151"},"area":"tax"}
+{"id":"lisr-9","query":"Tasa del impuesto sobre la renta aplicable a las personas morales sobre el resultado fiscal","expect":{"doc":"lisr","article":"9"},"area":"tax"}
+{"id":"liva-1","query":"¿Quiénes están obligados al pago del impuesto al valor agregado y cuál es la tasa general?","expect":{"doc":"liva","article":"1"},"area":"tax"}
+{"id":"liva-2-a","query":"Actos o actividades a los que se aplica la tasa del 0% del IVA, como enajenación de animales y vegetales no industrializados","expect":{"doc":"liva","article":"2-A"},"area":"tax"}
+{"id":"ccf-1910","query":"El que obrando ilícitamente cause daño a otro está obligado a repararlo","expect":{"doc":"ccf","article":"1910"},"area":"civil"}
+{"id":"ccf-2398","query":"Definición del contrato de arrendamiento en el Código Civil Federal","expect":{"doc":"ccf","article":"2398"},"area":"civil"}
+{"id":"ccf-1792","query":"Definición de convenio como acuerdo de dos o más personas para crear, transferir, modificar o extinguir obligaciones","expect":{"doc":"ccf","article":"1792"},"area":"civil"}
+{"id":"ccf-1135","query":"Prescripción como medio de adquirir bienes o librarse de obligaciones por el transcurso del tiempo","expect":{"doc":"ccf","article":"1135"},"area":"civil"}
+{"id":"cpf-367","query":"¿Cómo define el Código Penal Federal el delito de robo?","expect":{"doc":"cpf","article":"367"},"area":"criminal"}
+{"id":"cpf-302","query":"Comete el delito de homicidio el que priva de la vida a otro","expect":{"doc":"cpf","article":"302"},"area":"criminal"}
+{"id":"cpf-386","query":"Definición del delito de fraude: engañar a uno o aprovecharse del error para hacerse ilícitamente de una cosa","expect":{"doc":"cpf","article":"386"},"area":"criminal"}
+{"id":"cnpp-146","query":"Supuestos de flagrancia para detener a una persona sin orden judicial","expect":{"doc":"cnpp","article":"146"},"area":"criminal"}
+{"id":"lss-15","query":"Obligaciones de los patrones ante el IMSS: registrarse e inscribir a sus trabajadores","expect":{"doc":"lss","article":"15"},"area":"labor"}
+{"id":"lss-12","query":"¿Quiénes son sujetos de aseguramiento del régimen obligatorio del Seguro Social?","expect":{"doc":"lss","article":"12"},"area":"labor"}
+{"id":"ccom-75","query":"¿Qué actos reputa la ley como actos de comercio?","expect":{"doc":"ccom","article":"75"},"area":"commercial"}
+{"id":"lgsm-87","query":"Definición de la sociedad anónima y su capital dividido en acciones","expect":{"doc":"lgsm","article":"87"},"area":"commercial"}
+{"id":"lgsm-6","query":"¿Qué debe contener la escritura constitutiva de una sociedad mercantil?","expect":{"doc":"lgsm","article":"6"},"area":"commercial"}
+{"id":"lfpc-1","query":"Objeto de la Ley Federal de Protección al Consumidor y principios básicos en las relaciones de consumo","expect":{"doc":"lfpc","article":"1"},"area":"consumer"}
+{"id":"lgtaip-113","query":"¿Qué información puede clasificarse como reservada por seguridad nacional o por poner en riesgo la vida de una persona?","expect":{"doc":"lgtaip","article":"113"},"area":"administrative"}
+{"id":"lgtaip-116","query":"Información confidencial: datos personales concernientes a una persona identificada o identificable","expect":{"doc":"lgtaip","article":"116"},"area":"administrative"}
