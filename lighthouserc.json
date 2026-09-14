@@ -49,12 +49,6 @@
               {
                 "maxNumericValue": 40960
               }
-            ],
-            "resource-summary:third-party:count": [
-              "error",
-              {
-                "maxNumericValue": 2
-              }
             ]
           }
         },
@@ -77,6 +71,12 @@
               "error",
               {
                 "maxNumericValue": 30
+              }
+            ],
+            "resource-summary:third-party:count": [
+              "error",
+              {
+                "maxNumericValue": 2
               }
             ]
           }

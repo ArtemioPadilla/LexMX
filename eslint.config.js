@@ -82,6 +82,8 @@ export default [
       'tests/**',
       'supabase/**', // Deno edge functions: not part of the browser bundle
       'dist/**',
+      '.lighthouse-root/**', // Lighthouse CI staging copy of dist (npm run lighthouse)
+      '.lighthouseci/**',
       'node_modules/**',
       '.astro/**',
       'public/**',
