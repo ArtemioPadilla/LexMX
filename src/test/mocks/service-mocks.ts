@@ -16,8 +16,10 @@ import {
   createMockPerformanceReport,
   createMockAsyncOperation
 } from './factories';
-import type { 
-  LegalDocument as _LegalDocument
+import type {
+  LegalDocument as _LegalDocument,
+  LegalArea,
+  QueryType
 } from '@/types';
 
 import type { QueryMetrics as _QueryMetrics, PerformanceReport as _PerformanceReport } from '../../lib/admin/query-analyzer';
@@ -155,7 +157,7 @@ export function createMockQueryAnalyzer() {
       query: string,
       latency: number,
       success: boolean,
-      legalArea?: string,
+      legalArea?: LegalArea,
       relevanceScore?: number,
       cached?: boolean
     ) => {
@@ -163,7 +165,7 @@ export function createMockQueryAnalyzer() {
         query,
         latency,
         success,
-        legalArea: legalArea as any,
+        legalArea,
         relevanceScore: relevanceScore || 0.8,
         cached: cached || false
       });
@@ -521,7 +523,6 @@ export function createMockQualityTestSuite() {
             // Create mock result inline to avoid 'this' context issues
             const result = createMockTestResult({
               testId: test.id,
-              testName: test.name,
               passed: Math.random() > 0.3,
               score: 70 + Math.random() * 30
             });
@@ -616,7 +617,7 @@ export function createMockEmbeddingsService() {
       return createMockAsyncOperation(results, { delay: 80 });
     }),
 
-    addDocuments: vi.fn().mockImplementation((documents: any[]) => {
+    addDocuments: vi.fn().mockImplementation((documents: unknown[]) => {
       return createMockAsyncOperation(undefined, { 
         delay: 200 * documents.length,
         failureRate: 0.02 // 2% failure rate
@@ -753,12 +754,12 @@ export function createMockAdminDataService() {
 export function createMockEventEmitterUtils() {
   return {
     captureEvents: (emitter: EventEmitter, eventName: string, timeout = 1000) => {
-      const events: any[] = [];
-      
-      return new Promise<any[]>((resolve) => {
-        const handler = (event: any) => events.push(event);
+      const events: unknown[] = [];
+
+      return new Promise<unknown[]>((resolve) => {
+        const handler = (event: unknown) => events.push(event);
         emitter.on(eventName, handler);
-        
+
         setTimeout(() => {
           emitter.off(eventName, handler);
           resolve(events);
@@ -767,14 +768,14 @@ export function createMockEventEmitterUtils() {
     },
 
     waitForEvent: (emitter: EventEmitter, eventName: string, timeout = 1000) => {
-      return new Promise<any>((resolve, reject) => {
-        const handler = (event: any) => {
+      return new Promise<unknown>((resolve, reject) => {
+        const handler = (event: unknown) => {
           emitter.off(eventName, handler);
           resolve(event);
         };
-        
+
         emitter.on(eventName, handler);
-        
+
         setTimeout(() => {
           emitter.off(eventName, handler);
           reject(new Error(`Event ${eventName} not received within ${timeout}ms`));
@@ -782,7 +783,7 @@ export function createMockEventEmitterUtils() {
       });
     },
 
-    emitSequence: async (emitter: EventEmitter, events: Array<{ event: string; data: any; delay?: number }>) => {
+    emitSequence: async (emitter: EventEmitter, events: Array<{ event: string; data: unknown; delay?: number }>) => {
       for (const { event, data, delay = 0 } of events) {
         if (delay > 0) {
           await new Promise(resolve => setTimeout(resolve, delay));
@@ -811,8 +812,8 @@ export function createMockLegalRAGEngine() {
       }
     ],
     confidence: 0.85,
-    legalArea: 'constitutional' as any, // Allow changing in mocks
-    queryType: 'citation' as any, // Allow changing in mocks
+    legalArea: 'constitutional' as LegalArea, // Allow changing in mocks
+    queryType: 'citation' as QueryType, // Allow changing in mocks
     timestamp: Date.now(),
     processingTime: 150
   };
@@ -820,7 +821,7 @@ export function createMockLegalRAGEngine() {
   return createMockService({
     initialize: vi.fn().mockResolvedValue(undefined),
     
-    search: vi.fn().mockImplementation(async (query: string, _options?: any) => {
+    search: vi.fn().mockImplementation(async (query: string, _options?: unknown) => {
       // Simulate processing time based on query complexity
       const processingTime = Math.max(50, Math.min(300, query.length * 2));
       await new Promise(resolve => setTimeout(resolve, processingTime));

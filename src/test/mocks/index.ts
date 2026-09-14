@@ -2,7 +2,7 @@
  * Mock Infrastructure Index
  * Central export point for all mock utilities, factories, and helpers
  */
-import { vi, expect } from 'vitest';
+import { vi, expect, type MockedFunction } from 'vitest';
 import {
   createMockDocument,
   createMockQueryMetrics,
@@ -60,6 +60,23 @@ export { default as queryMetricsFixture } from '../fixtures/query-metrics.json';
 export { default as testResultsFixture } from '../fixtures/test-results.json';
 export { default as embeddingsFixture } from '../fixtures/embeddings.json';
 
+/** Minimal `Storage` mock that also exposes its backing map for test resets. */
+type MockStorage = Storage & { data: Map<string, string> };
+
+function createMockStorage(): MockStorage {
+  const data = new Map<string, string>();
+  const storage = {
+    data,
+    getItem: vi.fn((key: string) => data.get(key) ?? null),
+    setItem: vi.fn((key: string, value: string) => { data.set(key, value); }),
+    removeItem: vi.fn((key: string) => { data.delete(key); }),
+    clear: vi.fn(() => data.clear()),
+    length: 0,
+    key: vi.fn()
+  };
+  return storage as unknown as MockStorage;
+}
+
 /**
  * Quick setup function for common test scenarios
  */
@@ -76,21 +93,14 @@ export function setupTestEnvironment(config: {
     resetBetweenTests = true
   } = config;
 
+  let localStorageMock: MockStorage | undefined;
+  let sessionStorageMock: MockStorage | undefined;
+
   if (mockLocalStorage) {
-    const createMockStorage = () => {
-      const data = new Map<string, string>();
-      return {
-        data,
-        getItem: vi.fn((key: string) => data.get(key) || null),
-        setItem: vi.fn((key: string, value: string) => data.set(key, value)),
-        removeItem: vi.fn((key: string) => data.delete(key)),
-        clear: vi.fn(() => data.clear()),
-        length: 0,
-        key: vi.fn()
-      };
-    };
-    global.localStorage = createMockStorage() as any;
-    global.sessionStorage = createMockStorage() as any;
+    localStorageMock = createMockStorage();
+    sessionStorageMock = createMockStorage();
+    global.localStorage = localStorageMock;
+    global.sessionStorage = sessionStorageMock;
   }
 
   if (mockConsole) {
@@ -104,22 +114,23 @@ export function setupTestEnvironment(config: {
   }
 
   if (mockFetch) {
-    global.fetch = vi.fn().mockResolvedValue({
+    const mockResponse: Partial<Response> = {
       ok: true,
       status: 200,
       json: vi.fn().mockResolvedValue({}),
       text: vi.fn().mockResolvedValue(''),
       blob: vi.fn().mockResolvedValue(new Blob()),
       headers: new Headers()
-    } as any);
+    };
+    global.fetch = vi.fn().mockResolvedValue(mockResponse) as unknown as typeof fetch;
   }
 
   if (resetBetweenTests) {
     return {
       beforeEach: () => {
         if (mockLocalStorage) {
-          (global.localStorage as any).data.clear();
-          (global.sessionStorage as any).data.clear();
+          localStorageMock?.data.clear();
+          sessionStorageMock?.data.clear();
         }
         resetAllMocks();
       },
@@ -148,7 +159,7 @@ export const testAssertions = {
   /**
    * Assert that async operations have realistic timing
    */
-  async assertRealisticTiming(operation: () => Promise<any>, minMs = 10, maxMs = 5000) {
+  async assertRealisticTiming<T>(operation: () => Promise<T>, minMs = 10, maxMs = 5000) {
     const start = Date.now();
     await operation();
     const duration = Date.now() - start;
@@ -173,8 +184,8 @@ export const testAssertions = {
   /**
    * Assert that a mock was called with expected patterns
    */
-  assertMockCallPattern(mockFn: any, patterns: Array<{
-    args?: any[];
+  assertMockCallPattern(mockFn: MockedFunction<(...args: unknown[]) => unknown>, patterns: Array<{
+    args?: unknown[];
     times?: number;
     nthCall?: number;
   }>) {
@@ -201,7 +212,7 @@ export const performanceUtils = {
   /**
    * Measure average execution time over multiple runs
    */
-  async measureAverageTime(operation: () => Promise<any>, runs = 10): Promise<number> {
+  async measureAverageTime<T>(operation: () => Promise<T>, runs = 10): Promise<number> {
     const times: number[] = [];
     
     for (let i = 0; i < runs; i++) {
@@ -279,22 +290,34 @@ export const dataGenerators = {
 /**
  * Common test patterns and helpers
  */
+/** Minimal shape used by {@link commonPatterns.testServiceLifecycle}. */
+interface LifecycleService {
+  initialize?: () => Promise<void>;
+  getStatus?: () => unknown;
+  destroy?: () => Promise<void>;
+}
+
+/** Minimal shape used by {@link commonPatterns.testEventEmission}. */
+interface MinimalEmitter {
+  on: (event: string, listener: (data: unknown) => void) => void;
+}
+
 export const commonPatterns = {
   /**
    * Test a service's full lifecycle
    */
-  async testServiceLifecycle(service: any) {
+  async testServiceLifecycle(service: LifecycleService) {
     // Initialize
     if (typeof service.initialize === 'function') {
       await service.initialize();
     }
-    
+
     // Test basic operations
     if (typeof service.getStatus === 'function') {
       const status = service.getStatus();
       expect(status).toBeDefined();
     }
-    
+
     // Cleanup
     if (typeof service.destroy === 'function') {
       await service.destroy();
@@ -304,7 +327,7 @@ export const commonPatterns = {
   /**
    * Test error handling patterns
    */
-  async testErrorHandling(operation: () => Promise<any>, expectedErrorTypes: string[] = []) {
+  async testErrorHandling<T>(operation: () => Promise<T>, expectedErrorTypes: string[] = []) {
     try {
       await operation();
       // If we reach here, the operation didn't throw as expected
@@ -327,16 +350,16 @@ export const commonPatterns = {
   /**
    * Test event emission patterns
    */
-  async testEventEmission(
-    emitter: any, 
-    operation: () => Promise<any>,
+  async testEventEmission<T>(
+    emitter: MinimalEmitter,
+    operation: () => Promise<T>,
     expectedEvents: string[]
   ) {
-    const capturedEvents: { event: string; data: any }[] = [];
-    
+    const capturedEvents: { event: string; data: unknown }[] = [];
+
     // Set up event listeners
     expectedEvents.forEach(eventName => {
-      emitter.on(eventName, (data: any) => {
+      emitter.on(eventName, (data: unknown) => {
         capturedEvents.push({ event: eventName, data });
       });
     });

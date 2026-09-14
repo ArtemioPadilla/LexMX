@@ -213,9 +213,29 @@ export function createMockEmbedding(dimensions = 1536): number[] {
 
 /**
  * Vector document factory for search operations
+ * Not a `@/types/rag` `VectorDocument` (which lacks a `score` field and has a
+ * different metadata shape) — this mirrors the loosely-typed search-result
+ * documents produced by the mock embeddings/RAG services below.
  */
-export function createMockVectorDocument(overrides: Partial<any> = {}) {
-  const defaultVectorDoc = {
+export interface MockVectorDocumentMetadata {
+  documentId: string;
+  documentTitle: string;
+  legalArea: string;
+  type: string;
+  number: string;
+  hierarchy: number;
+}
+
+export interface MockVectorDocument {
+  id: string;
+  content: string;
+  embedding: number[];
+  metadata: MockVectorDocumentMetadata;
+  score: number;
+}
+
+export function createMockVectorDocument(overrides: Partial<MockVectorDocument> = {}): MockVectorDocument {
+  const defaultVectorDoc: MockVectorDocument = {
     id: `vec-${Math.random().toString(36).substr(2, 9)}`,
     content: 'Las disposiciones de esta Ley son de orden público e interés social.',
     embedding: createMockEmbedding(),
@@ -418,25 +438,25 @@ export function createMockAsyncOperation<T>(
 /**
  * Batch operation factory for testing bulk operations
  */
-export function createMockBatchOperation<T>(
+export function createMockBatchOperation<T, R = unknown>(
   items: T[],
-  processor: (item: T) => Promise<any>,
+  processor: (item: T) => Promise<R>,
   options: {
     batchSize?: number;
     delay?: number;
     failureRate?: number;
   } = {}
-): Promise<any[]> {
+): Promise<R[]> {
   const { batchSize = 5, delay = 10, failureRate = 0 } = options;
-  const results: any[] = [];
-  
+  const results: R[] = [];
+
   return new Promise((resolve, reject) => {
     (async () => {
       try {
         for (let i = 0; i < items.length; i += batchSize) {
           const batch = items.slice(i, i + batchSize);
           const batchResults = await Promise.all(
-            batch.map(item => 
+            batch.map(item =>
             createMockAsyncOperation(
               processor(item),
               { delay, failureRate }

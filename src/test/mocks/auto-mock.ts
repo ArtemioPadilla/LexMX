@@ -6,6 +6,9 @@
 import { vi, type MockedFunction } from 'vitest';
 import { EventEmitter } from 'events';
 
+/** Generic callable shape used where the real signature is intentionally erased. */
+type UnknownFn = (...args: unknown[]) => unknown;
+
 /**
  * Configuration for auto-mocking behavior
  */
@@ -13,7 +16,7 @@ export interface AutoMockConfig {
   /** Whether to include EventEmitter methods in mocking */
   includeEventEmitter?: boolean;
   /** Default return values for specific method name patterns */
-  defaultReturns?: Record<string, any>;
+  defaultReturns?: Record<string, unknown>;
   /** Methods to skip during auto-mocking */
   skipMethods?: string[];
   /** Whether to mock async methods with Promise.resolve */
@@ -29,22 +32,22 @@ export interface AutoMockConfig {
  */
 export interface MockCallTracker {
   method: string;
-  args: any[];
+  args: unknown[];
   timestamp: number;
-  returned?: any;
+  returned?: unknown;
   threw?: Error;
 }
 
 /**
  * Automatically mock all methods of a service class
  */
-export function autoMockService<T extends object>(
-  serviceClass: new (...args: any[]) => T,
+export function autoMockService<T extends object, TArgs extends unknown[] = unknown[]>(
+  serviceClass: new (...args: TArgs) => T,
   config: AutoMockConfig = {}
 ): T & {
   __mockCalls: MockCallTracker[];
   __resetMocks: () => void;
-  __validateCalls: (expectations: Record<string, any>) => boolean;
+  __validateCalls: (expectations: Record<string, unknown>) => boolean;
 } {
   const {
     includeEventEmitter = true,
@@ -55,8 +58,12 @@ export function autoMockService<T extends object>(
     failureRate = 0
   } = config;
 
-  // Create a mock instance
-  const mockInstance = includeEventEmitter ? new EventEmitter() : {};
+  // Untyped bag we populate via defineProperty, then cast to the declared
+  // return shape at the end — the whole point of auto-mocking is building an
+  // object whose real shape isn't known until runtime reflection below.
+  const mockInstance: Record<string, unknown> = includeEventEmitter
+    ? (new EventEmitter() as unknown as Record<string, unknown>)
+    : {};
   const mockCalls: MockCallTracker[] = [];
 
   // Get all methods from the service prototype
@@ -94,7 +101,7 @@ export function autoMockService<T extends object>(
       );
 
       // Create mock function with intelligent defaults
-      const mockFn = vi.fn().mockImplementation((...args: any[]) => {
+      const mockFn = vi.fn().mockImplementation((...args: unknown[]) => {
         const callRecord: MockCallTracker = {
           method: propName,
           args: [...args],
@@ -102,7 +109,7 @@ export function autoMockService<T extends object>(
         };
 
         try {
-          let result;
+          let result: unknown;
 
           // Check for specific default return
           if (defaultReturns[propName] !== undefined) {
@@ -145,7 +152,7 @@ export function autoMockService<T extends object>(
     value: () => {
       mockCalls.length = 0;
       Object.keys(mockInstance).forEach(key => {
-        const value = mockInstance[key as keyof typeof mockInstance];
+        const value = mockInstance[key];
         if (vi.isMockFunction(value)) {
           value.mockClear();
         }
@@ -155,26 +162,27 @@ export function autoMockService<T extends object>(
   });
 
   Object.defineProperty(mockInstance, '__validateCalls', {
-    value: (expectations: Record<string, any>) => {
+    value: (expectations: Record<string, unknown>) => {
       for (const [method, expectation] of Object.entries(expectations)) {
         const calls = mockCalls.filter(call => call.method === method);
-        
+
         if (typeof expectation === 'number') {
           if (calls.length !== expectation) {
             console.error(`Expected ${expectation} calls to ${method}, got ${calls.length}`);
             return false;
           }
-        } else if (typeof expectation === 'object') {
-          if (expectation.times !== undefined && calls.length !== expectation.times) {
-            console.error(`Expected ${expectation.times} calls to ${method}, got ${calls.length}`);
+        } else if (expectation !== null && typeof expectation === 'object') {
+          const exp = expectation as { times?: number; with?: unknown };
+          if (exp.times !== undefined && calls.length !== exp.times) {
+            console.error(`Expected ${exp.times} calls to ${method}, got ${calls.length}`);
             return false;
           }
-          if (expectation.with !== undefined) {
-            const matchingCalls = calls.filter(call => 
-              JSON.stringify(call.args) === JSON.stringify(expectation.with)
+          if (exp.with !== undefined) {
+            const matchingCalls = calls.filter(call =>
+              JSON.stringify(call.args) === JSON.stringify(exp.with)
             );
             if (matchingCalls.length === 0) {
-              console.error(`Expected call to ${method} with args ${JSON.stringify(expectation.with)}, but not found`);
+              console.error(`Expected call to ${method} with args ${JSON.stringify(exp.with)}, but not found`);
               return false;
             }
           }
@@ -188,7 +196,7 @@ export function autoMockService<T extends object>(
   return mockInstance as T & {
     __mockCalls: MockCallTracker[];
     __resetMocks: () => void;
-    __validateCalls: (expectations: Record<string, any>) => boolean;
+    __validateCalls: (expectations: Record<string, unknown>) => boolean;
   };
 }
 
@@ -198,9 +206,9 @@ export function autoMockService<T extends object>(
 export function spyOnAllMethods<T extends object>(
   target: T,
   config: { skipMethods?: string[]; mockImplementation?: boolean } = {}
-): T & Record<string, MockedFunction<any>> {
+): T & Record<string, MockedFunction<UnknownFn>> {
   const { skipMethods = [], mockImplementation = false } = config;
-  const spiedObject = { ...target } as any;
+  const spiedObject: Record<string, unknown> = { ...target } as Record<string, unknown>;
 
   Object.getOwnPropertyNames(target).forEach(propName => {
     if (
@@ -211,13 +219,13 @@ export function spyOnAllMethods<T extends object>(
       return;
     }
 
-    const originalMethod = target[propName as keyof T] as any;
-    spiedObject[propName] = mockImplementation 
+    const originalMethod = target[propName as keyof T] as unknown as UnknownFn;
+    spiedObject[propName] = mockImplementation
       ? vi.fn().mockImplementation(originalMethod)
       : vi.fn(originalMethod);
   });
 
-  return spiedObject;
+  return spiedObject as T & Record<string, MockedFunction<UnknownFn>>;
 }
 
 /**
@@ -233,13 +241,13 @@ export function resetAllMocks(): void {
  * Validate mock calls against expectations
  */
 export function validateMockCalls(
-  mock: MockedFunction<any>,
+  mock: MockedFunction<UnknownFn>,
   expectations: {
     times?: number;
-    calledWith?: any[];
-    returned?: any;
+    calledWith?: unknown[];
+    returned?: unknown;
     threw?: Error;
-    nthCall?: { n: number; args: any[] };
+    nthCall?: { n: number; args: unknown[] };
   }
 ): boolean {
   if (expectations.times !== undefined) {
@@ -294,15 +302,15 @@ export function validateMockCalls(
 /**
  * Create a mock that tracks method call sequences
  */
-export function createSequenceMock<T>(
+export function createSequenceMock<T extends object>(
   methods: (keyof T)[],
   expectedSequence: (keyof T)[]
 ): T & { __validateSequence: () => boolean; __getCallSequence: () => (keyof T)[] } {
   const callSequence: (keyof T)[] = [];
-  const mockObj = {} as any;
+  const mockObj: Record<string, unknown> = {};
 
   methods.forEach(method => {
-    mockObj[method] = vi.fn().mockImplementation((..._args: any[]) => {
+    mockObj[method as string] = vi.fn().mockImplementation((..._args: unknown[]) => {
       callSequence.push(method);
       return Promise.resolve(undefined);
     });
@@ -326,13 +334,13 @@ export function createSequenceMock<T>(
 
   mockObj.__getCallSequence = () => [...callSequence];
 
-  return mockObj;
+  return mockObj as T & { __validateSequence: () => boolean; __getCallSequence: () => (keyof T)[] };
 }
 
 /**
  * Create a mock with conditional behavior
  */
-export function createConditionalMock<T extends (...args: any[]) => any>(
+export function createConditionalMock<T extends UnknownFn>(
   conditions: Array<{
     when: (...args: Parameters<T>) => boolean;
     then: ReturnType<T> | ((...args: Parameters<T>) => ReturnType<T>);
@@ -342,8 +350,8 @@ export function createConditionalMock<T extends (...args: any[]) => any>(
   return vi.fn().mockImplementation((...args: Parameters<T>) => {
     for (const condition of conditions) {
       if (condition.when(...args)) {
-        return typeof condition.then === 'function' 
-          ? (condition.then as any)(...args)
+        return typeof condition.then === 'function'
+          ? (condition.then as (...args: Parameters<T>) => ReturnType<T>)(...args)
           : condition.then;
       }
     }
@@ -371,19 +379,19 @@ export function createMockFactory<T>(
  * Utility functions
  */
 
-function getAllPropertyNames(obj: any): string[] {
+function getAllPropertyNames(obj: object): string[] {
   const props = new Set<string>();
-  let current = obj;
-  
+  let current: object | null = obj;
+
   while (current && current !== Object.prototype) {
     Object.getOwnPropertyNames(current).forEach(name => props.add(name));
     current = Object.getPrototypeOf(current);
   }
-  
+
   return Array.from(props);
 }
 
-function inferReturnValue(methodName: string, _args: any[]): any {
+function inferReturnValue(methodName: string, _args: unknown[]): unknown {
   // Boolean methods
   if (methodName.startsWith('is') || methodName.startsWith('has') || methodName.startsWith('can')) {
     return true;
@@ -437,7 +445,7 @@ function inferReturnValue(methodName: string, _args: any[]): any {
   return undefined;
 }
 
-function createAsyncResult(result: any, delay: number, failureRate: number): Promise<any> {
+function createAsyncResult(result: unknown, delay: number, failureRate: number): Promise<unknown> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (Math.random() < failureRate) {
