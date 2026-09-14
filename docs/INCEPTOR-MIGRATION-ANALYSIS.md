@@ -655,18 +655,18 @@ fuera a propósito lo que exige backend, y es **solo México**. Detalle:
 | Legislación federal vigente con vigencia | 6 | ✅ | vía SCOW/LegalIA |
 | Jurisprudencia SCJN con registro | 6 | ✅ | repositorio abierto |
 | DOF con detección de reformas | 6 | ✅ | SIDOF |
-| Legislación de los 32 estados | 6 | ⚠️ parcial | 4 estados en la primera oleada; sin API común, es cola larga de meses. Vigencia estatal no la da ninguna fuente abierta |
+| Legislación de los 32 estados | 6 | ⚠️ cola larga | El pipeline acepta adaptadores por fuente (`src/pipeline/legalia.ts`, `leychile.ts`); los congresos estatales no exponen una API común, así que cada estado es un adaptador propio que entra por `/requests` según demanda |
 | Fiscal: SAT, RMF, criterios normativos, TFJA | — | ❌ | añadir como oleada de la Fase 6; la fuente fiscal es la más pedida por despachos mixtos |
 | Sentencias CJF y tribunales estatales | — | ❌ | fuera; solo tesis |
 | Cita verificable a un clic | 7 | ✅ | |
 | Derogadas excluidas | 6 | ✅ federal | |
 | Modo público / modo abogado | 7 | ✅ | |
 | Filtro jurisdiccional por estado | 6 | ✅ implícito | shards por estado; hacerlo explícito en la UI |
-| Análisis de documentos subidos | 8 | ⚠️ | solo PDF con capa de texto y Word. **Sin OCR**: añadir Tesseract.js en navegador para escaneos |
+| Análisis de documentos subidos | 8 | ✅ | PDF, Word y texto; escaneos y fotos por OCR en el navegador (Tesseract.js, automático en el extractor de PDF y como herramienta); comparación y revisión tabular |
 | Comparación de documentos sin subir | 8 | ✅ | |
 | Extracción tabular | 8 | ✅ | |
-| **Redacción de escritos y contratos** | — | ❌ | **Es piso del mercado y no está en el plan.** Añadir Fase 8b: plantillas por tipo (demanda, contestación, contrato, amparo) + generación anclada al corpus + exportación |
-| Exportar a Word/PDF | — | ❌ | trivial con `docx` en cliente; sin esto la redacción no sirve |
+| **Redacción de escritos y contratos** | 8 | ✅ | plantillas por jurisdicción ancladas a artículos (`/plantillas`), campos → escrito, exportación; la generación libre con modelo pasa por el chat con el prompt preparado |
+| Exportar a Word/PDF | 8 | ✅ | `docx` en cliente (`/plantillas`), Markdown y PDF por impresión |
 | Calculadoras | 8 | ✅ | laborales (LFT), ISR mensual (art. 96 LISR), IVA, actualización y recargos (CFF) y plazos en días hábiles (art. 74 LFT), puras con tests |
 | Notas de voz / transcripción | C | ✅ | dictado (SpeechRecognition) y Whisper local vía transformers.js en `/herramientas` y el chat |
 | Alertas de reformas sobre leyes que sigo | C, D | ✅ | novedades desde la última visita (local) y `law_watches` + Web Push (servidor) |
