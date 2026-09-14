@@ -25,6 +25,7 @@
     "src/lib/legal/**/*.ts",
     "src/lib/corpus/**/*.ts",
     "src/lib/embeddings/**/*.ts",
-    "src/lib/utils/**/*.ts"
+    "src/lib/utils/**/*.ts",
+    "src/jurisdictions/**/*.ts"
   ]
 }
