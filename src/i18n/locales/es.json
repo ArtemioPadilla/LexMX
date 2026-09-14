@@ -411,7 +411,8 @@
     "quickActions": "Acciones Rápidas",
     "resources": "Recursos",
     "account": "Cuenta",
-    "tools": "Herramientas"
+    "tools": "Herramientas",
+    "library": "Biblioteca"
   },
   "hero": {
     "title": "Tu Asistente Legal Mexicano con IA",
@@ -1988,5 +1989,25 @@
     "notes": "Notas",
     "deterministic": "Cálculo determinista",
     "disclaimer": "Orientación general: el cálculo definitivo depende del salario integrado, las prestaciones pactadas y el caso concreto. Verifica los artículos citados en la fuente oficial."
+  },
+  "library": {
+    "title": "Biblioteca",
+    "subtitle": "Lo que tienes instalado en este dispositivo: corpus, documentos y espacio usado. Todo es local.",
+    "documents": "Documentos instalados",
+    "chunks": "Fragmentos indexados",
+    "storage": "Espacio usado",
+    "of": "de",
+    "upToDate": "Corpus al día",
+    "updateAvailable": "Hay una versión nueva",
+    "notInstalled": "Corpus no instalado",
+    "published": "Publicado",
+    "checkUpdates": "Buscar actualizaciones",
+    "remove": "Borrar copia local",
+    "confirmRemove": "¿Borrar el corpus de este dispositivo? Se volverá a descargar la próxima vez que lo uses.",
+    "noCorpus": "Sin corpus publicado",
+    "noCorpusBody": "Esta instalación no incluye corpus. Ejecuta el flujo \"Corpus MX federal\" o coloca los archivos en public/legal-corpus.",
+    "installed": "instalado",
+    "pending": "pendiente",
+    "localNote": "La biblioteca vive en IndexedDB (lexmx_vectors). Nada se envía a ningún servidor."
   }
 }

@@ -411,7 +411,8 @@
     "quickActions": "Quick Actions",
     "resources": "Resources",
     "account": "Account",
-    "tools": "Tools"
+    "tools": "Tools",
+    "library": "Library"
   },
   "hero": {
     "title": "Your Mexican Legal AI Assistant",
@@ -1988,5 +1989,25 @@
     "notes": "Notes",
     "deterministic": "Deterministic",
     "disclaimer": "General guidance: the final figure depends on the integrated wage, agreed benefits and the specific case. Verify the cited articles at the official source."
+  },
+  "library": {
+    "title": "Library",
+    "subtitle": "What is installed on this device: corpus, documents and storage used. All local.",
+    "documents": "Installed documents",
+    "chunks": "Indexed chunks",
+    "storage": "Storage used",
+    "of": "of",
+    "upToDate": "Corpus up to date",
+    "updateAvailable": "New version available",
+    "notInstalled": "Corpus not installed",
+    "published": "Published",
+    "checkUpdates": "Check for updates",
+    "remove": "Remove local copy",
+    "confirmRemove": "Remove the corpus from this device? It will download again next time you use it.",
+    "noCorpus": "No published corpus",
+    "noCorpusBody": "This installation ships no corpus. Run the \"Corpus MX federal\" workflow or place the files in public/legal-corpus.",
+    "installed": "installed",
+    "pending": "pending",
+    "localNote": "The library lives in IndexedDB (lexmx_vectors). Nothing is sent to any server."
   }
 }
