@@ -366,7 +366,7 @@ export function createMockPerformanceReport(overrides: Partial<PerformanceReport
     ),
     
     dailyTrends: Array.from({ length: 7 }, (_, i) => ({
-      date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
       queries: Math.floor(Math.random() * 200) + 100,
       averageLatency: 140 + Math.random() * 60,
       successRate: 0.85 + Math.random() * 0.1
@@ -387,7 +387,7 @@ export function createMockLegalContent(overrides: Partial<LegalContent> = {}): L
     { number: '2', content: 'Las normas del trabajo tienden a conseguir el equilibrio entre los factores de la producción.' }
   ];
   
-  const randomArticle = articles[Math.floor(Math.random() * articles.length)];
+  const randomArticle = articles[Math.floor(Math.random() * articles.length)] ?? articles[0]!;
   
   const defaultContent: LegalContent = {
     id: `content-${Math.random().toString(36).substr(2, 9)}`,

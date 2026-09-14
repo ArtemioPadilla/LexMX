@@ -28,6 +28,19 @@
     "src/lib/utils/**/*.ts",
     "src/lib/rag/**/*.ts",
     "src/lib/ingestion/**/*.ts",
-    "src/jurisdictions/**/*.ts"
+    "src/lib/admin/**/*.ts",
+    "src/jurisdictions/**/*.ts",
+    "src/types/background-sync.d.ts",
+    "src/lib/document-requests/**/*.ts",
+    "src/lib/document-viewer/**/*.ts",
+    "src/lib/offline/**/*.ts",
+    "src/lib/notifications/**/*.ts",
+    "src/lib/pwa/**/*.ts",
+    "src/lib/config/**/*.ts",
+    "src/lib/dev/**/*.ts",
+    "src/utils/test-ids.ts",
+    "src/i18n/index.ts",
+    "src/i18n/utils.ts",
+    "src/i18n/server.ts"
   ]
 }
