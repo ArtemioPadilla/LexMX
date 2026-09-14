@@ -38,6 +38,11 @@ class MemoryStore implements VectorStore {
   async count(): Promise<number> { return this.docs.size; }
   async getMeta<T>(key: string): Promise<T | null> { return (this.meta.get(key) as T) ?? null; }
   async setMeta(key: string, value: unknown): Promise<void> { this.meta.set(key, value); }
+  async deleteByPrefix(prefix: string): Promise<number> {
+    let n = 0;
+    for (const id of [...this.docs.keys()]) if (id.startsWith(prefix)) { this.docs.delete(id); n++; }
+    return n;
+  }
 }
 
 function fakeLoader(ids: string[], version: string, opts: { failing?: string[]; embeddingsFor?: string[] } = {}) {
@@ -115,5 +120,32 @@ describe('CorpusInstaller', () => {
     expect((await new CorpusInstaller(fakeLoader([], 'v1').loader, store).ensureInstalled()).status).toBe('empty');
     const r = await new CorpusInstaller(fakeLoader(['lft'], 'v1', { embeddingsFor: [] }).loader, new MemoryStore()).ensureInstalled();
     expect(r.mockEmbeddings).toBe(true);
+  });
+
+  it('installs a secondary jurisdiction under scoped keys and only removes its own chunks on a new version', async () => {
+    const store = new MemoryStore();
+    // Mexican corpus already installed under the historical keys.
+    await new CorpusInstaller(fakeLoader(['lft'], 'mx-v1').loader, store).ensureInstalled();
+    expect(store.meta.get('corpusVersion')).toBe('mx-v1');
+
+    const cl1 = await new CorpusInstaller(fakeLoader(['cl-ct'], 'cl-v1').loader, store, () => {}, 'cl').ensureInstalled();
+    expect(cl1.status).toBe('real');
+    expect(store.meta.get('corpusVersion:cl')).toBe('cl-v1');
+    expect(store.meta.get('installedDocuments:cl')).toEqual(['cl-ct']);
+    expect(store.meta.get('corpusVersion')).toBe('mx-v1');
+    expect([...store.docs.keys()].sort()).toEqual(['cl-ct_chunk_0', 'cl-ct_chunk_1', 'lft_chunk_0', 'lft_chunk_1']);
+
+    // New Chilean version: Chilean chunks are replaced, Mexican ones untouched, store never cleared.
+    const cl2 = await new CorpusInstaller(fakeLoader(['cl-cpr'], 'cl-v2').loader, store, () => {}, 'cl').ensureInstalled();
+    expect(cl2.status).toBe('real');
+    expect(store.cleared).toBe(0);
+    expect([...store.docs.keys()].sort()).toEqual(['cl-cpr_chunk_0', 'cl-cpr_chunk_1', 'lft_chunk_0', 'lft_chunk_1']);
+    expect(store.meta.get('installedDocuments:cl')).toEqual(['cl-cpr']);
+
+    // Same version again: served from cache without refetching.
+    const { loader, loadDocument } = fakeLoader(['cl-cpr'], 'cl-v2');
+    const cl3 = await new CorpusInstaller(loader, store, () => {}, 'cl').ensureInstalled();
+    expect(cl3.fromCache).toBe(true);
+    expect(loadDocument).not.toHaveBeenCalled();
   });
 });

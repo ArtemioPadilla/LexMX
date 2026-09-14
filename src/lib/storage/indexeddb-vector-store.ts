@@ -395,6 +395,28 @@ export class IndexedDBVectorStore implements VectorStore {
     }
   }
 
+  async deleteByPrefix(prefix: string): Promise<number> {
+    if (!this.db) throw new Error('Vector store not initialized');
+    const range = IDBKeyRange.bound(prefix, `${prefix}\uffff`, false, false);
+    const transaction = this.db.transaction([this.STORES.DOCUMENTS, this.STORES.EMBEDDINGS], 'readwrite');
+    let removed = 0;
+    try {
+      const documentsStore = transaction.objectStore(this.STORES.DOCUMENTS);
+      const embeddingsStore = transaction.objectStore(this.STORES.EMBEDDINGS);
+      const keys = await this.promisifyRequest<IDBValidKey[]>(documentsStore.getAllKeys(range));
+      for (const key of keys) {
+        await this.promisifyRequest(documentsStore.delete(key));
+        await this.promisifyRequest(embeddingsStore.delete(key));
+        removed++;
+      }
+      await this.promisifyTransaction(transaction);
+      return removed;
+    } catch (error) {
+      transaction.abort();
+      throw new Error(`Failed to delete by prefix ${prefix}: ${error}`);
+    }
+  }
+
   // Admin methods
   async deleteDocument(documentId: string): Promise<void> {
     if (!this.db) throw new Error('Vector store not initialized');

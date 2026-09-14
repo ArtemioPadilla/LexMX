@@ -20,6 +20,8 @@ export interface VectorStore {
   clear(): Promise<void>;
   /** Number of stored chunks. */
   count?(): Promise<number>;
+  /** Removes every chunk whose id starts with `prefix` (one corpus document or one jurisdiction). Returns how many. */
+  deleteByPrefix?(prefix: string): Promise<number>;
   /** Collection-level metadata (installed corpus version, installed documents…). */
   getMeta?<T = unknown>(key: string): Promise<T | null>;
   setMeta?(key: string, value: unknown): Promise<void>;

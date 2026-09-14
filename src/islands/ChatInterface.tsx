@@ -17,7 +17,7 @@ import { createDisposer } from '@/lib/disposer';
 import { buildIssueUrl } from '@/lib/report-issue';
 import { useTranslation } from '@/i18n';
 import { TEST_IDS } from '@/utils/test-ids';
-import { $corpusInstall } from '@/stores/corpus';
+import { $corpusInstall, $corpusJurisdictions } from '@/stores/corpus';
 import { $jurisdictionCode, setJurisdiction } from '@/stores/jurisdiction';
 import { listJurisdictions } from '@/jurisdictions';
 import { $chatMessages, $chatMode, appendMessage, nextMessageId, resetThread, takePendingPrompt, updateMessage, type ChatMessage as ThreadMessage, type ChatMode } from '@/stores/chat';
@@ -76,6 +76,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
   const mode = useStore($chatMode);
   const corpus = useStore($corpusInstall);
   const jurisdiction = useStore($jurisdictionCode);
+  const corpusJurisdictions = useStore($corpusJurisdictions);
 
   const [currentInput, setCurrentInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -149,6 +150,11 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
     d.add(() => { cancelled = true; });
     return d.dispose;
   }, [ragEngine]);
+
+  // Secondary corpora install on demand when the user picks the jurisdiction.
+  useEffect(() => {
+    if (isInitialized && jurisdiction !== 'mx') void ragEngine.installJurisdictionCorpus(jurisdiction);
+  }, [isInitialized, jurisdiction, ragEngine]);
 
   const handleSubmit = async () => {
     const text = currentInput.trim();
@@ -267,7 +273,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
               className="mr-2 h-8 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {listJurisdictions().map((j) => (
-                <option key={j.code} value={j.code}>{j.code !== 'mx' ? `${j.name} · ${t('chat.corpusPending')}` : j.name}</option>
+                <option key={j.code} value={j.code}>{j.code === 'mx' || corpusJurisdictions[j.code] === 'ready' ? j.name : corpusJurisdictions[j.code] === 'installing' ? `${j.name} · ${t('common.loading')}` : `${j.name} · ${t('chat.corpusPending')}`}</option>
               ))}
             </select>
             <div role="radiogroup" aria-label="Modo" className="mr-2 inline-flex rounded-lg border border-border p-0.5 text-xs">

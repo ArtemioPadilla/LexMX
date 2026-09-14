@@ -135,4 +135,15 @@ describe('corpus DocumentLoader · embeddings layouts', () => {
     await loader.initialize();
     expect(loader.getCorpusVersion()).toBe('1.0.0|2025-08-18T19:47:39.874Z|abc123');
   });
+
+  it('resolves secondary corpora under corpus/<code>/ and keeps Mexico at the root', async () => {
+    const { documentLoader, loaderForJurisdiction, DocumentLoader } = await import('../document-loader');
+    expect(loaderForJurisdiction('mx')).toBe(documentLoader);
+    const cl = loaderForJurisdiction('cl');
+    expect(cl).toBe(loaderForJurisdiction('cl'));
+    expect(cl.paths.corpus.endsWith('corpus/cl/legal-corpus/')).toBe(true);
+    expect(cl.paths.embeddings.endsWith('corpus/cl/embeddings/')).toBe(true);
+    expect(new DocumentLoader().paths.corpus.endsWith('/legal-corpus/')).toBe(true);
+    expect(new DocumentLoader().paths.corpus).not.toContain('/corpus/');
+  });
 });

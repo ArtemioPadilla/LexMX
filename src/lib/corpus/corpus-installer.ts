@@ -45,11 +45,22 @@ const META_VERSION = 'corpusVersion';
 const META_INSTALLED = 'installedDocuments';
 
 export class CorpusInstaller {
+  /**
+   * @param scope Jurisdiction code of a secondary corpus (e.g. 'cl'). The
+   *   Mexican corpus (no scope) keeps the historical metadata keys; scoped
+   *   corpora use `corpusVersion:<code>` / `installedDocuments:<code>` and
+   *   only ever delete their own chunks, so several corpora share one store.
+   */
   constructor(
     private readonly loader: DocumentLoader,
     private readonly store: VectorStore,
     private readonly onProgress: (p: CorpusInstallProgress) => void = () => {},
+    private readonly scope?: string,
   ) {}
+
+  private key(base: string): string {
+    return this.scope ? `${base}:${this.scope}` : base;
+  }
 
   async ensureInstalled(): Promise<CorpusInstallResult> {
     this.onProgress({ phase: 'checking', installed: 0, total: 0, chunks: 0 });
@@ -63,9 +74,9 @@ export class CorpusInstaller {
       return { status: 'empty', chunks: 0, documents: 0, fromCache: false, mockEmbeddings: false };
     }
 
-    const installedVersion = (await this.store.getMeta?.<string>(META_VERSION)) ?? null;
-    let installed = new Set<string>((await this.store.getMeta?.<string[]>(META_INSTALLED)) ?? []);
-    let existingChunks = (await this.store.count?.()) ?? 0;
+    const installedVersion = (await this.store.getMeta?.<string>(this.key(META_VERSION))) ?? null;
+    let installed = new Set<string>((await this.store.getMeta?.<string[]>(this.key(META_INSTALLED))) ?? []);
+    let existingChunks = this.scope ? installed.size : ((await this.store.count?.()) ?? 0);
 
     if (installedVersion === version && installed.size >= docs.length && existingChunks > 0) {
       this.onProgress({ phase: 'ready', installed: docs.length, total: docs.length, chunks: existingChunks, fromCache: true });
@@ -74,13 +85,18 @@ export class CorpusInstaller {
 
     if (installedVersion !== null && installedVersion !== version) {
       // A different corpus was published: drop the old vectors so stale
-      // articles never rank against current law.
-      await this.store.clear();
+      // articles never rank against current law. A scoped corpus removes
+      // only its own documents; the Mexican one owns the store.
+      if (this.scope && this.store.deleteByPrefix) {
+        for (const id of installed) await this.store.deleteByPrefix(`${id}_chunk_`);
+      } else if (!this.scope) {
+        await this.store.clear();
+      }
       installed = new Set();
       existingChunks = 0;
-      await this.store.setMeta?.(META_INSTALLED, []);
+      await this.store.setMeta?.(this.key(META_INSTALLED), []);
     }
-    await this.store.setMeta?.(META_VERSION, version);
+    await this.store.setMeta?.(this.key(META_VERSION), version);
 
     let chunks = existingChunks;
     let mockEmbeddings = false;
@@ -106,7 +122,7 @@ export class CorpusInstaller {
         }
         chunks += vectorDocs.length;
         installed.add(meta.id);
-        await this.store.setMeta?.(META_INSTALLED, [...installed]);
+        await this.store.setMeta?.(this.key(META_INSTALLED), [...installed]);
       } catch (error) {
         failures++;
         console.warn(`Corpus install: ${meta.id} failed`, error);

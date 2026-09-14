@@ -15,9 +15,9 @@ import { i18n } from '@/i18n';
 import { EmbeddingManager } from '@/lib/embeddings/embedding-manager';
 import { VectorSearch } from './vector-search';
 import { EventEmitter } from 'events';
-import { documentLoader } from '@/lib/corpus/document-loader';
+import { documentLoader, loaderForJurisdiction } from '@/lib/corpus/document-loader';
 import { CorpusInstaller } from '@/lib/corpus/corpus-installer';
-import { reportCorpusInstall } from '@/stores/corpus';
+import { $corpusJurisdictions, reportCorpusInstall, setJurisdictionCorpusState } from '@/stores/corpus';
 
 export interface RAGEngineConfig extends RAGConfig {
   enableCache: boolean;
@@ -199,6 +199,39 @@ export class LegalRAGEngine extends EventEmitter {
       this.initialized = true;
       // Don't throw - just log the error
     }
+  }
+
+  private jurisdictionInstalls = new Map<string, Promise<void>>();
+
+  /**
+   * Installs the corpus of a secondary jurisdiction (published under
+   * `corpus/<code>/`) into the shared vector store, once per session. The
+   * Mexican corpus is installed by `initialize()`. Retrieval then filters by
+   * `metadata.jurisdiction`, so both corpora coexist.
+   */
+  installJurisdictionCorpus(code: string): Promise<void> {
+    if (code === 'mx' || typeof window === 'undefined') return Promise.resolve();
+    const current = $corpusJurisdictions.get()[code];
+    if (current === 'ready' || current === 'unavailable') return Promise.resolve();
+    let pending = this.jurisdictionInstalls.get(code);
+    if (!pending) {
+      pending = (async () => {
+        setJurisdictionCorpusState(code, 'installing');
+        try {
+          const installer = new CorpusInstaller(loaderForJurisdiction(code), this.vectorStore, reportCorpusInstall, code);
+          const result = await installer.ensureInstalled();
+          setJurisdictionCorpusState(code, result.status === 'real' ? 'ready' : 'unavailable');
+          if (result.status === 'real') this.documentCount += result.fromCache ? 0 : result.chunks;
+        } catch (err) {
+          console.warn(`Corpus install for ${code} failed`, err);
+          setJurisdictionCorpusState(code, 'unavailable');
+        } finally {
+          this.jurisdictionInstalls.delete(code);
+        }
+      })();
+      this.jurisdictionInstalls.set(code, pending);
+    }
+    return pending;
   }
 
   /**

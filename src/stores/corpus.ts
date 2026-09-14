@@ -11,3 +11,12 @@ export const $corpusInstall = atom<CorpusInstallProgress>({ phase: 'idle', insta
 export function reportCorpusInstall(progress: CorpusInstallProgress): void {
   $corpusInstall.set(progress);
 }
+
+export type JurisdictionCorpusState = 'unknown' | 'installing' | 'ready' | 'unavailable';
+
+/** Secondary corpora (plan § 11.4 B): code → install state. Mexico is the root corpus and is not listed here. */
+export const $corpusJurisdictions = atom<Record<string, JurisdictionCorpusState>>({});
+
+export function setJurisdictionCorpusState(code: string, state: JurisdictionCorpusState): void {
+  $corpusJurisdictions.set({ ...$corpusJurisdictions.get(), [code]: state });
+}

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { splitLongArticle } from '../legalia';
 import {
   normalizeArticleNumber,
   areaFromMateria,
@@ -253,5 +254,14 @@ describe('article header shapes across LegalIA snapshots', () => {
     expect(content[1]?.id).toBe('lft-art-47-p2');
     expect(content[1]?.content.startsWith('Artículo 47. ')).toBe(true);
     expect(content[1]?.title).toMatch(/parte 2\//);
+  });
+
+  it('splitLongArticle caps every part even without sentence ends (tables)', () => {
+    const blob = Array.from({ length: 3000 }, (_, i) => `c${i}`).join(' ');
+    const parts = splitLongArticle({ id: 'x-art-61', type: 'article', number: '61', title: 'Artículo 61', content: blob });
+    expect(parts.length).toBeGreaterThan(5);
+    for (const p of parts) expect(p.content.length).toBeLessThanOrEqual(1800 + 'Artículo 61. '.length);
+    expect(parts.map((p) => p.content.replace(/^Artículo 61\. /, '')).join(' ').replace(/\s+/g, ' ')).toBe(blob);
+    expect(parts[0]?.totalParts).toBe(parts.length);
   });
 });

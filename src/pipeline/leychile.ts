@@ -11,6 +11,7 @@
  * articles.
  */
 import type { LegalArea, LegalContent, LegalDocument, LegalHierarchy, DocumentType } from '@/types/legal';
+import { splitLongArticle } from './legalia.ts';
 
 export interface LeyChileNorm {
   id: string;
@@ -154,7 +155,9 @@ export function parseStructures(root: Node, docId: string): LegalContent[] {
         const item: LegalContent = { id, type: 'article', number, title: `Artículo ${number}`, content: body };
         if (inTransitory || child.attrs.transitorio === 'transitorio') item.transitory = true;
         if (parent) item.parent = parent;
-        out.push(item);
+        // Same size cap as the Mexican pipeline: the embedding model truncates
+        // long inputs and the tokenizer chokes on multi-hundred-KB strings.
+        out.push(...splitLongArticle(item));
         // A decree that "fixes" a code nests the whole code under one of its
         // articles (Código Civil, DFL 1/2000): keep walking.
         walk(child, parent);

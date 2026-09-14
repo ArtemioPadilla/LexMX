@@ -46,7 +46,12 @@ export class DocumentLoader {
   private embeddingsCache = new Map<string, number[]>();
   private initialized = false;
 
-  constructor() {
+  /**
+   * @param subdir Folder under the site base holding this corpus, e.g.
+   *   `corpus/cl/` for the Chilean release. Empty for the Mexican corpus at
+   *   the historical root paths (`legal-corpus/`, `embeddings/`).
+   */
+  constructor(private readonly subdir = '') {
     // Get base path from import.meta.env or fall back to root
     let basePath = typeof import.meta !== 'undefined' && import.meta.env 
       ? import.meta.env.BASE_URL || '/' 
@@ -56,9 +61,15 @@ export class DocumentLoader {
     if (!basePath.endsWith('/')) {
       basePath += '/';
     }
+    if (subdir && !subdir.endsWith('/')) subdir += '/';
     
-    this.corpusPath = `${basePath}legal-corpus/`;
-    this.embeddingsPath = `${basePath}embeddings/`;
+    this.corpusPath = `${basePath}${subdir}legal-corpus/`;
+    this.embeddingsPath = `${basePath}${subdir}embeddings/`;
+  }
+
+  /** Where this loader reads from (for tests and diagnostics). */
+  get paths(): { corpus: string; embeddings: string } {
+    return { corpus: this.corpusPath, embeddings: this.embeddingsPath };
   }
 
   private getFullUrl(path: string): string {
@@ -460,3 +471,20 @@ export class DocumentLoader {
 
 // Singleton instance
 export const documentLoader = new DocumentLoader();
+
+const jurisdictionLoaders = new Map<string, DocumentLoader>();
+
+/**
+ * Loader for a jurisdiction's corpus. Mexico keeps the root paths; every
+ * other corpus is published under `corpus/<code>/` (see deploy.yml and
+ * corpus-<code>-update.yml). One instance per code, cached.
+ */
+export function loaderForJurisdiction(code: string): DocumentLoader {
+  if (code === 'mx') return documentLoader;
+  let loader = jurisdictionLoaders.get(code);
+  if (!loader) {
+    loader = new DocumentLoader(`corpus/${code}/`);
+    jurisdictionLoaders.set(code, loader);
+  }
+  return loader;
+}

@@ -15,7 +15,7 @@ anterior. Este contrato se convierte en tests en la Fase 3 del plan
 
 | Base | Versión | Object stores | Dónde |
 |---|---|---|---|
-| `lexmx_vectors` | 1 | `documents`, `embeddings`, `metadata` (claves `corpusVersion`: `version|buildDate|checksum` del corpus instalado; `installedDocuments`: ids instalados, para reanudar) | `src/lib/storage/indexeddb-vector-store.ts`, `src/lib/corpus/corpus-installer.ts` |
+| `lexmx_vectors` | 1 | `documents`, `embeddings`, `metadata` (claves `corpusVersion`: `version|buildDate|checksum` del corpus instalado; `installedDocuments`: ids instalados, para reanudar; corpus secundarios por jurisdicción con `corpusVersion:<code>` / `installedDocuments:<code>`, chunks `cl-*_chunk_*`, que se borran por prefijo sin tocar el corpus mexicano) | `src/lib/storage/indexeddb-vector-store.ts`, `src/lib/corpus/corpus-installer.ts` |
 | `lexmx_metadata` | ver `src/lib/storage/metadata-store.ts` | `lineages`, `audits`, `changeDetection`, `ragMetadata` | `src/lib/storage/metadata-store.ts` |
 | `LexMX_Enhanced_Storage` | 4 | almacenamiento offline y caché | `src/lib/storage/enhanced-offline-storage.ts` |
 | `LexMX_OfflineQueue` | 2 | cola de operaciones offline | `src/lib/offline/offline-queue-manager.ts` |

@@ -154,7 +154,8 @@ export function normalizeArticleNumber(lead: string): string {
 const MAX_ARTICLE_CHARS = 1800;
 const TARGET_PART_CHARS = 1400;
 
-function splitLongArticle(item: LegalContent): LegalContent[] {
+/** Splits an article longer than MAX_ARTICLE_CHARS into parts (shared with the Chile adapter). */
+export function splitLongArticle(item: LegalContent): LegalContent[] {
   if (item.content.length <= MAX_ARTICLE_CHARS) return [item];
   const paragraphs = item.content.split(/\n\n+/);
   const parts: string[] = [];
@@ -183,7 +184,19 @@ function splitLongArticle(item: LegalContent): LegalContent[] {
       }
     }
     if (buf) out.push(buf);
-    return out;
+    // Tables and enumerations without sentence ends: cut on whitespace.
+    return out.flatMap((piece) => {
+      if (piece.length <= MAX_ARTICLE_CHARS) return [piece];
+      const windows: string[] = [];
+      let rest = piece;
+      while (rest.length > MAX_ARTICLE_CHARS) {
+        const cut = Math.max(rest.lastIndexOf(' ', TARGET_PART_CHARS), rest.lastIndexOf('\n', TARGET_PART_CHARS), 600);
+        windows.push(rest.slice(0, cut).trim());
+        rest = rest.slice(cut).trim();
+      }
+      if (rest) windows.push(rest);
+      return windows;
+    });
   });
   if (sized.length <= 1) return [item];
   const lead = item.number ? `${item.title}. ` : '';

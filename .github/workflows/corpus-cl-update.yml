@@ -1,0 +1,91 @@
+name: 📚 Corpus CL nacional (import + embeddings + release)
+
+# Plan § 11.4 B, second wave. Imports Chilean legislation from LeyChile
+# (Biblioteca del Congreso Nacional) with the adapter in
+# src/pipeline/leychile.ts, embeds it with the same model the client uses,
+# runs the Chilean golden set, and publishes the `corpus-cl` release. One
+# corpus per jurisdiction: the client installs whichever the jurisdiction
+# selector asks for.
+
+on:
+  workflow_dispatch:
+    inputs:
+      norms:
+        description: 'Comma-separated LeyChile idNorma values (empty = curated default set)'
+        required: false
+        default: ''
+  schedule:
+    # Mondays 03:00 UTC — LeyChile republishes consolidated texts after each modification.
+    - cron: '0 3 * * 1'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: corpus-cl-update
+  cancel-in-progress: false
+
+jobs:
+  build-corpus:
+    name: Import, embed and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+
+      - name: Cache embedding model
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.0
+        with:
+          path: ~/.cache/lexmx-hf
+          key: hf-multilingual-e5-small-v1
+
+      - name: Import from LeyChile
+        run: |
+          set -euo pipefail
+          mkdir -p build/corpus-cl/legal-corpus build/corpus-cl/embeddings
+          if [ -n "${{ inputs.norms }}" ]; then
+            node --experimental-strip-types scripts/corpus/import-leychile.ts --norms "${{ inputs.norms }}" --out build/corpus-cl/legal-corpus
+          else
+            node --experimental-strip-types scripts/corpus/import-leychile.ts --out build/corpus-cl/legal-corpus
+          fi
+
+      - name: Build embeddings (same model as the client)
+        run: node --experimental-strip-types scripts/corpus/build-embeddings.ts --corpus build/corpus-cl/legal-corpus --out build/corpus-cl/embeddings
+
+      - name: Retrieval benchmark (fails under evals/cl-nacional/baseline.json)
+        run: node --experimental-strip-types scripts/eval/retrieval.ts --cases evals/cl-nacional/retrieval.jsonl --baseline evals/cl-nacional/baseline.json --corpus build/corpus-cl/legal-corpus --embeddings build/corpus-cl/embeddings --out evals/results
+
+      - name: Package
+        id: pkg
+        run: |
+          set -euo pipefail
+          DOCS=$(jq -r '.totalDocuments' build/corpus-cl/legal-corpus/metadata.json)
+          VECS=$(jq -r '.totalEmbeddings' build/corpus-cl/embeddings/index.json)
+          jq -n --arg docs "$DOCS" --arg vecs "$VECS" --arg sha "$GITHUB_SHA" \
+            '{jurisdiction:"cl-nacional", documents:($docs|tonumber), embeddings:($vecs|tonumber), source:"LeyChile (BCN)", builtFrom:$sha, builtAt:(now|todate), model:"Xenova/multilingual-e5-small"}' \
+            > build/corpus-cl/corpus-manifest.json
+          tar -C build/corpus-cl -czf corpus-cl-nacional.tgz legal-corpus embeddings corpus-manifest.json
+          ls -l corpus-cl-nacional.tgz
+          echo "docs=$DOCS" >> "$GITHUB_OUTPUT"
+          echo "vecs=$VECS" >> "$GITHUB_OUTPUT"
+
+      - name: Publish as release `corpus-cl`
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          NOTES="Corpus nacional chileno importado de LeyChile (Biblioteca del Congreso Nacional) y embebido con Xenova/multilingual-e5-small.
+          Documentos: ${{ steps.pkg.outputs.docs }} · Vectores: ${{ steps.pkg.outputs.vecs }} · Build: $GITHUB_SHA
+          Los textos son los consolidados oficiales de LeyChile; las referencias marginales se omiten al convertir."
+          if gh release view corpus-cl >/dev/null 2>&1; then
+            gh release upload corpus-cl corpus-cl-nacional.tgz build/corpus-cl/corpus-manifest.json --clobber
+            gh release edit corpus-cl --notes "$NOTES"
+          else
+            gh release create corpus-cl corpus-cl-nacional.tgz build/corpus-cl/corpus-manifest.json \
+              --title "Corpus CL nacional (latest)" --notes "$NOTES" --prerelease
+          fi
