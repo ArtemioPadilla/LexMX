@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../components/layout/BaseLayout.astro';
+import AccountIsland from '../islands/AccountIsland.tsx';
+import { getTranslation } from '../i18n/utils';
+const t = getTranslation(Astro.url);
+---
+
+<BaseLayout title={`${t('account.title')} - LexMX`} description={t('account.subtitle')}>
+  <main class="min-h-screen bg-white dark:bg-gray-900">
+    <div class="mx-auto max-w-lg px-4 py-12 sm:px-6">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white" data-i18n="account.title">{t('account.title')}</h1>
+      <p class="mt-2 mb-8 text-gray-600 dark:text-gray-300" data-i18n="account.subtitle">{t('account.subtitle')}</p>
+      <AccountIsland client:only="react" />
+    </div>
+  </main>
+</BaseLayout>

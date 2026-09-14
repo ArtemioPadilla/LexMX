@@ -44,6 +44,7 @@
     "@mlc-ai/web-llm": "^0.2.79",
     "@nanostores/persistent": "^1.1.0",
     "@nanostores/react": "^1.1.0",
+    "@supabase/supabase-js": "^2.116.0",
     "@tailwindcss/vite": "^4.3.0",
     "@tanstack/react-table": "^8.21.3",
     "@types/react": "^19.2.0",

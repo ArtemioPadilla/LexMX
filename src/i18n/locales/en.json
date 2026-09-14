@@ -409,7 +409,8 @@
     "openMenu": "Open main menu",
     "closeMenu": "Close menu",
     "quickActions": "Quick Actions",
-    "resources": "Resources"
+    "resources": "Resources",
+    "account": "Account"
   },
   "hero": {
     "title": "Your Mexican Legal AI Assistant",
@@ -1947,5 +1948,27 @@
         "Consult with a legal professional"
       ]
     }
+  },
+  "account": {
+    "title": "Your account",
+    "subtitle": "Optional. Needed for team features (organizations, alerts, monitoring). Without an account LexMX works fully on your device.",
+    "notConfigured": {
+      "title": "Server not configured",
+      "body": "This installation runs in local mode: no accounts and no cloud data. An administrator can enable LexMX Server (Supabase) with PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY."
+    },
+    "usesServer": "This action uses LexMX Server.",
+    "signedInAs": "Signed in as",
+    "emailVerified": "Email verified",
+    "emailUnverified": "Email not verified",
+    "signOut": "Sign out",
+    "login": "Sign in",
+    "register": "Create account",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "invalidCredentials": "Wrong email or password.",
+    "invalidEmail": "Enter a valid email",
+    "passwordTooShort": "Password needs at least 8 characters",
+    "checkEmail": "Check your email to confirm the account."
   }
 }

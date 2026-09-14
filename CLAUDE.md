@@ -98,6 +98,21 @@ ref, PR title = issue title, body `Closes #N`.
 6. ❌ **NEVER add server-rendered routes** (`prerender = false`): the site is static. Server features go to Supabase (plan § 11.9).
 7. ❌ **NEVER mix Radix and Base UI**; prefer Base UI. `framer-motion` is banned (use `motion/react`).
 
+## Auth gating rules (plan § 11.9)
+
+`src/lib/route-guard.tsx` is the **only** gating module: `<RouteGuard>`,
+`hasRole()`, `hasFlag()`. Identity comes from `$guardUser` in
+`src/stores/auth.ts`, adapted once from the Supabase session (roles in
+`app_metadata`, set server-side). Hard rules:
+
+- Permission checks are explicit allowlists / `=== true`, never `!== false`
+  (an absent field passes `!== false` and silently grants access).
+- Deny by default: no user, unknown role or missing flag ⇒ blocked.
+- Never derive identity from props defaults, query params or placeholder ids.
+- `src/lib/supabase.ts` is null when `PUBLIC_SUPABASE_*` are missing: every
+  server feature must render its "servidor no configurado" state and say in
+  the UI that it uses LexMX Servidor (`account.usesServer`).
+
 ## Island lifecycle discipline
 
 Islands that attach listeners, intervals or observers must clean up on unmount.

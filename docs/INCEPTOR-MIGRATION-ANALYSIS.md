@@ -413,7 +413,7 @@ Rama `claude/lex-inceptor-migration-analysis-qmg92a`. Cada fase se cierra con
 | 7 Modo grounded y evaluación | 🔄 | Chat muestra `grounded` y fuentes con enlace oficial; benchmark de recuperación (`evals/`, 43 casos): documento recall@5 = 1.00, artículo recall@5 = 0.79, recall@10 = 0.93 tras corregir el parser; `evals/baseline.json` fija el mínimo |
 | 8-9 | ⏳ | |
 | 11.2 Jurisdicción | 🔄 | `src/jurisdictions/` (contrato + módulo México: entidades, jerarquía, fuentes, citas) en estricto con tests; falta cablear `LegalDocument.jurisdiction` y los demás países |
-| 11.9 Supabase | 🔄 | `supabase/` (6 migraciones con RLS, 4 Edge Functions, `supabase.yml`, test de invariantes); falta `src/lib/supabase.ts`, `$session` y las islas de cuenta |
+| 11.9 Supabase | 🔄 | `supabase/` (6 migraciones con RLS, 4 Edge Functions, `supabase.yml`, test de invariantes); cliente guardado `src/lib/supabase.ts`, `$session`/`$guardUser`, `route-guard.tsx`, `/cuenta` con alta e inicio de sesión (modo local si no hay variables). Falta: organizaciones/asientos en UI, facturación, monitoreo |
 
 Métricas del ratchet: 584 → 234 (PR #73) → 171 (Fase 1) → 169 (Fase 2) → 123
 errores de `tsc` tras la ola 1 → 32 tras la ola 2 → **0** tras las Fases 4-5;

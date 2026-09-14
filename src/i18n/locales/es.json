@@ -409,7 +409,8 @@
     "openMenu": "Abrir menú principal",
     "closeMenu": "Cerrar menú",
     "quickActions": "Acciones Rápidas",
-    "resources": "Recursos"
+    "resources": "Recursos",
+    "account": "Cuenta"
   },
   "hero": {
     "title": "Tu Asistente Legal Mexicano con IA",
@@ -1947,5 +1948,27 @@
         "Consultar con un profesional del derecho"
       ]
     }
+  },
+  "account": {
+    "title": "Tu cuenta",
+    "subtitle": "Opcional. Sirve para funciones de equipo (organizaciones, alertas, monitoreo). Sin cuenta, LexMX funciona completo en tu dispositivo.",
+    "notConfigured": {
+      "title": "Servidor no configurado",
+      "body": "Esta instalación funciona en modo local: no hay cuentas ni datos en la nube. Un administrador puede activar LexMX Servidor (Supabase) con las variables PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY."
+    },
+    "usesServer": "Esta acción usa LexMX Servidor.",
+    "signedInAs": "Sesión iniciada como",
+    "emailVerified": "Correo verificado",
+    "emailUnverified": "Correo sin verificar",
+    "signOut": "Cerrar sesión",
+    "login": "Iniciar sesión",
+    "register": "Crear cuenta",
+    "email": "Correo",
+    "password": "Contraseña",
+    "name": "Nombre",
+    "invalidCredentials": "Correo o contraseña incorrectos.",
+    "invalidEmail": "Escribe un correo válido",
+    "passwordTooShort": "La contraseña necesita al menos 8 caracteres",
+    "checkEmail": "Revisa tu correo para confirmar la cuenta."
   }
 }
