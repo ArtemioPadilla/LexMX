@@ -12,7 +12,7 @@ import type {
   EmbeddingVector,
   RAGProgressEvent
 } from '@/types/embeddings';
-import type { ProgressEvent, JsonValue } from '@/types/common';
+import type { JsonValue } from '@/types/common';
 
 export interface EmbeddingManagerConfig {
   defaultProvider?: EmbeddingProviderType;
