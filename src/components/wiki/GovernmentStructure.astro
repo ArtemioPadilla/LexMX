@@ -1,0 +1,64 @@
+---
+/**
+ * Estructura del gobierno (Fase 5): contenido estático, cero JS. Antes era
+ * una isla React con dos vistas y selección; ahora dos pestañas nativas
+ * (details/summary) accesibles por teclado.
+ */
+interface Item { id: string; name: string; description: string; institutions: string[]; items: string[]; itemsLabel: string; accent: string }
+
+const powers: Item[] = [
+  { id: 'ejecutivo', name: 'Poder Ejecutivo', description: 'Administración pública y ejecución de las leyes', accent: 'border-l-blue-500', itemsLabel: 'Funciones',
+    institutions: ['Presidencia de la República', 'Gabinete y Secretarías de Estado', 'Consejería Jurídica del Ejecutivo Federal', 'Organismos descentralizados'],
+    items: ['Ejecutar las leyes', 'Dirigir la política exterior', 'Comandar las fuerzas armadas', 'Nombrar funcionarios públicos', 'Expedir reglamentos', 'Administrar recursos públicos'] },
+  { id: 'legislativo', name: 'Poder Legislativo', description: 'Creación de leyes y representación popular', accent: 'border-l-green-500', itemsLabel: 'Funciones',
+    institutions: ['Cámara de Diputados', 'Cámara de Senadores', 'Comisión Permanente', 'Auditoría Superior de la Federación'],
+    items: ['Expedir leyes federales', 'Aprobar el presupuesto', 'Ratificar tratados', 'Declarar la guerra', 'Fiscalizar al Ejecutivo', 'Reformar la Constitución'] },
+  { id: 'judicial', name: 'Poder Judicial', description: 'Impartición de justicia e interpretación de las leyes', accent: 'border-l-purple-500', itemsLabel: 'Funciones',
+    institutions: ['Suprema Corte de Justicia de la Nación', 'Tribunal Electoral del Poder Judicial de la Federación', 'Tribunal de Disciplina Judicial', 'Órgano de Administración Judicial', 'Tribunales colegiados y juzgados de distrito'],
+    items: ['Impartir justicia', 'Interpretar la Constitución', 'Resolver controversias constitucionales y acciones de inconstitucionalidad', 'Proteger derechos fundamentales (amparo)', 'Control constitucional', 'Administración y disciplina judicial'] },
+];
+
+const levels: Item[] = [
+  { id: 'federal', name: 'Gobierno Federal', description: 'Gobierno nacional con competencias constitucionales específicas', accent: 'border-l-red-500', itemsLabel: 'Competencias',
+    institutions: ['Presidencia de la República', 'Secretarías de Estado', 'Organismos autónomos', 'Empresas productivas del Estado'],
+    items: ['Relaciones exteriores', 'Defensa nacional', 'Política monetaria', 'Comercio internacional', 'Migración', 'Telecomunicaciones'] },
+  { id: 'estatal', name: 'Gobierno Estatal', description: '32 entidades federativas con autonomía en sus competencias', accent: 'border-l-yellow-500', itemsLabel: 'Competencias',
+    institutions: ['Gobernador o Jefatura de Gobierno', 'Secretarías estatales', 'Congreso local', 'Tribunal Superior de Justicia'],
+    items: ['Educación pública', 'Salud pública', 'Seguridad pública', 'Desarrollo urbano', 'Transporte local', 'Registro civil'] },
+  { id: 'municipal', name: 'Gobierno Municipal', description: 'Municipios y alcaldías con autonomía constitucional (artículo 115)', accent: 'border-l-blue-500', itemsLabel: 'Competencias',
+    institutions: ['Presidencia municipal o alcaldía', 'Cabildo', 'Tesorería municipal', 'Direcciones municipales'],
+    items: ['Servicios públicos', 'Desarrollo urbano local', 'Seguridad pública municipal', 'Mercados y centrales de abasto', 'Panteones', 'Agua potable y drenaje'] },
+];
+
+const groups = [
+  { id: 'poderes', title: 'División de poderes', items: powers, open: true },
+  { id: 'niveles', title: 'Niveles de gobierno', items: levels, open: false },
+];
+---
+
+<div class="space-y-4">
+  {groups.map((group) => (
+    <details class="group rounded-lg border border-gray-200 dark:border-gray-700" open={group.open}>
+      <summary class="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-lg font-semibold text-gray-900 dark:text-white [&::-webkit-details-marker]:hidden">
+        {group.title}
+        <span aria-hidden="true" class="text-gray-400 transition-transform group-open:rotate-180">▾</span>
+      </summary>
+      <div class="grid gap-4 border-t border-gray-200 p-4 dark:border-gray-700 md:grid-cols-3">
+        {group.items.map((item) => (
+          <article class={`rounded-lg border border-gray-200 border-l-4 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 ${item.accent}`}>
+            <h3 class="font-semibold text-gray-900 dark:text-white">{item.name}</h3>
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{item.description}</p>
+            <h4 class="mt-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Instituciones</h4>
+            <ul class="mt-1 list-inside list-disc text-sm text-gray-700 dark:text-gray-300">
+              {item.institutions.map((i) => <li>{i}</li>)}
+            </ul>
+            <h4 class="mt-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{item.itemsLabel}</h4>
+            <ul class="mt-1 list-inside list-disc text-sm text-gray-700 dark:text-gray-300">
+              {item.items.map((i) => <li>{i}</li>)}
+            </ul>
+          </article>
+        ))}
+      </div>
+    </details>
+  ))}
+</div>

@@ -1,11 +1,11 @@
 ---
 import BaseLayout from '../components/layout/BaseLayout.astro';
 import HydrationWrapper from '../components/HydrationWrapper.astro';
-import WikiNavigation from '../islands/WikiNavigation.tsx';
+import WikiNav from '../components/wiki/WikiNav.astro';
 import LegalGlossary from '../islands/LegalGlossary.tsx';
-import LegislativeProcess from '../islands/LegislativeProcess.tsx';
-import GovernmentStructure from '../islands/GovernmentStructure.tsx';
-import NormativeHierarchy from '../islands/NormativeHierarchy.tsx';
+import LegislativeProcess from '../components/wiki/LegislativeProcess.astro';
+import GovernmentStructure from '../components/wiki/GovernmentStructure.astro';
+import NormativeHierarchy from '../components/wiki/NormativeHierarchy.astro';
 import { getUrl } from '../utils/urls';
 ---
 
@@ -16,9 +16,7 @@ import { getUrl } from '../utils/urls';
         <!-- Wiki Navigation -->
         <aside class="hidden lg:block w-64 flex-shrink-0">
           <div class="sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto border-r border-gray-200 dark:border-gray-700 pr-4">
-            <HydrationWrapper name="wiki-navigation" width="100%" height="auto">
-              <WikiNavigation client:load />
-            </HydrationWrapper>
+            <WikiNav />
           </div>
         </aside>
 
@@ -59,9 +57,7 @@ import { getUrl } from '../utils/urls';
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="wiki.governmentStructure.title">
               Estructura del Gobierno
             </h2>
-            <HydrationWrapper name="government-structure">
-              <GovernmentStructure client:visible />
-            </HydrationWrapper>
+            <GovernmentStructure />
           </section>
 
           <!-- Legal System Overview -->
@@ -94,9 +90,7 @@ import { getUrl } from '../utils/urls';
               <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4" data-i18n="wiki.legalSystem.hierarchy.title">
                 Jerarquía Normativa
               </h3>
-              <HydrationWrapper name="normative-hierarchy">
-                <NormativeHierarchy client:visible />
-              </HydrationWrapper>
+              <NormativeHierarchy />
             </div>
           </section>
 
@@ -105,9 +99,7 @@ import { getUrl } from '../utils/urls';
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4" data-i18n="wiki.legislativeProcess.title">
               Proceso Legislativo
             </h2>
-            <HydrationWrapper name="legislative-process">
-              <LegislativeProcess client:visible />
-            </HydrationWrapper>
+            <LegislativeProcess />
           </section>
 
           <!-- Law Areas -->

@@ -1,0 +1,53 @@
+---
+/** Índice del wiki: enlaces de ancla más un scroll-spy mínimo (sin React). */
+import { getTranslation } from '../../i18n/utils';
+const t = getTranslation(Astro.url);
+const sections = [
+  ['introduccion', 'introduction', '📖'],
+  ['estructura-gobierno', 'government', '🏛️'],
+  ['sistema-legal', 'legal', '⚖️'],
+  ['proceso-legislativo', 'legislative', '📜'],
+  ['areas-derecho', 'areas', '📚'],
+  ['glosario', 'glossary', '🔤'],
+  ['recursos', 'resources', '🔗'],
+] as const;
+---
+
+<nav aria-label={t('wiki.title')} data-wiki-nav class="py-4">
+  <h2 class="mb-3 px-3 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400" data-i18n="wiki.navigation.title">{t('wiki.navigation.title')}</h2>
+  <ul class="space-y-1">
+    {sections.map(([id, key, icon]) => (
+      <li>
+        <a href={`#${id}`} class="flex items-start gap-2 rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 aria-[current=true]:bg-legal-50 aria-[current=true]:text-legal-700 dark:text-gray-300 dark:hover:bg-gray-800 dark:aria-[current=true]:bg-legal-900/30 dark:aria-[current=true]:text-legal-300">
+          <span aria-hidden="true">{icon}</span>
+          <span>
+            <span class="block font-medium" data-i18n={`wiki.navigation.sections.${key}.title`}>{t(`wiki.navigation.sections.${key}.title`)}</span>
+            <span class="block text-xs text-gray-500 dark:text-gray-400" data-i18n={`wiki.navigation.sections.${key}.description`}>{t(`wiki.navigation.sections.${key}.description`)}</span>
+          </span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>
+
+<script>
+  // Scroll-spy: marks the link of the section currently in view.
+  const nav = document.querySelector('[data-wiki-nav]');
+  if (nav && 'IntersectionObserver' in window) {
+    const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'));
+    const byId = new Map(links.map((a) => [a.getAttribute('href')!.slice(1), a]));
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (!visible) return;
+        links.forEach((a) => a.removeAttribute('aria-current'));
+        byId.get(visible.target.id)?.setAttribute('aria-current', 'true');
+      },
+      { rootMargin: '-20% 0px -70% 0px' },
+    );
+    byId.forEach((_, id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+  }
+</script>

@@ -1,0 +1,52 @@
+---
+/**
+ * Jerarquía normativa (artículo 133 constitucional), estática. Los textos
+ * salen de i18n en build y llevan data-i18n para el cambio de idioma en
+ * cliente. Los colores siguen la paleta hierarchy-1..7 de global.css.
+ */
+import { getTranslation } from '../../i18n/utils';
+const t = getTranslation(Astro.url);
+const keys = ['constitution', 'treaties', 'federalLaws', 'stateConstitutions', 'stateLaws', 'regulations', 'norms'] as const;
+const icons = ['🏛️', '🌍', '📚', '🏛️', '📖', '📋', '📏'];
+const levels = keys.map((key, i) => ({
+  key,
+  level: i + 1,
+  icon: icons[i],
+  title: t(`wiki.legalSystem.hierarchy.item${i + 1}`),
+  titleKey: `wiki.legalSystem.hierarchy.item${i + 1}`,
+  description: t(`wiki.normativeHierarchy.${key}.description`),
+  descriptionKey: `wiki.normativeHierarchy.${key}.description`,
+  examples: [1, 2].map((n) => ({ text: t(`wiki.normativeHierarchy.${key}.example${n}`), key: `wiki.normativeHierarchy.${key}.example${n}` })),
+}));
+---
+
+<div class="space-y-4">
+  <div class="rounded-lg border border-legal-200 bg-legal-50 p-4 dark:border-legal-800 dark:bg-legal-900/20">
+    <h3 class="font-semibold text-legal-900 dark:text-legal-100" data-i18n="wiki.normativeHierarchy.principleTitle">{t('wiki.normativeHierarchy.principleTitle')}</h3>
+    <p class="mt-1 text-sm text-legal-800 dark:text-legal-200" data-i18n="wiki.normativeHierarchy.principleDescription">{t('wiki.normativeHierarchy.principleDescription')}</p>
+  </div>
+  <ol class="space-y-2">
+    {levels.map((l) => (
+      <li>
+        <details class="group rounded-lg border border-gray-200 dark:border-gray-700" open={l.level === 1}>
+          <summary class="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+            <span aria-hidden="true" class="grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-bold text-white" style={`background: var(--color-hierarchy-${l.level})`}>{l.level}</span>
+            <span class="min-w-0 flex-1">
+              <span class="font-semibold text-gray-900 dark:text-white" data-i18n={l.titleKey}>{l.title}</span>
+              <span class="ml-2 text-xs text-gray-500 dark:text-gray-400"><span data-i18n="wiki.normativeHierarchy.level">{t('wiki.normativeHierarchy.level')}</span> {l.level}</span>
+            </span>
+            <span aria-hidden="true">{l.icon}</span>
+          </summary>
+          <div class="border-t border-gray-200 px-4 py-3 text-sm dark:border-gray-700">
+            <p class="text-gray-700 dark:text-gray-300" data-i18n={l.descriptionKey}>{l.description}</p>
+            <h4 class="mt-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400" data-i18n="wiki.normativeHierarchy.examples">{t('wiki.normativeHierarchy.examples')}</h4>
+            <ul class="mt-1 list-inside list-disc text-gray-700 dark:text-gray-300">
+              {l.examples.map((e) => <li data-i18n={e.key}>{e.text}</li>)}
+            </ul>
+          </div>
+        </details>
+      </li>
+    ))}
+  </ol>
+  <p class="text-xs text-gray-500 dark:text-gray-400" data-i18n="wiki.normativeHierarchy.subordinationNote">{t('wiki.normativeHierarchy.subordinationNote')}</p>
+</div>
