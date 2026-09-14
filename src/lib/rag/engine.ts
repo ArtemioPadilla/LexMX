@@ -187,12 +187,10 @@ export class LegalRAGEngine extends EventEmitter {
         console.warn('Provider manager initialization warning:', err);
       });
 
-      // Initialize embedding manager
-      try {
-        await this.embeddingManager.initialize();
-      } catch (err) {
-        console.warn('Embedding manager initialization warning:', err);
-      }
+      // The embedding model (transformers.js, ~600 KB of script plus the
+      // weights) is NOT loaded here: the corpus installs from published
+      // vectors, and `embedQuery` initializes the provider on first use.
+      // `warmEmbeddings()` lets the UI prefetch it on user intent.
 
       this.initialized = true;
     } catch (error) {
@@ -200,6 +198,19 @@ export class LegalRAGEngine extends EventEmitter {
       // Mark as initialized anyway to prevent blocking in tests
       this.initialized = true;
       // Don't throw - just log the error
+    }
+  }
+
+  /**
+   * Loads the embedding model ahead of the first query (call on prompt
+   * focus). Idempotent; failures fall back to the mock provider as before.
+   */
+  async warmEmbeddings(): Promise<void> {
+    if (this.embeddingManager.getStatus().providerType !== null) return;
+    try {
+      await this.embeddingManager.initialize();
+    } catch (err) {
+      console.warn('Embedding manager initialization warning:', err);
     }
   }
 

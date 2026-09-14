@@ -25,6 +25,8 @@ export interface PromptInputProps {
   sendTestId?: string;
   /** Extra controls rendered before the send button (e.g. dictation). */
   extra?: React.ReactNode;
+  /** Fired when the textarea gains focus (used to prefetch heavy models on intent). */
+  onFocus?: () => void;
 }
 
 export function PromptInput({
@@ -39,6 +41,7 @@ export function PromptInput({
   textareaTestId,
   sendTestId,
   extra,
+  onFocus,
 }: PromptInputProps) {
   const ref = React.useRef<HTMLTextAreaElement>(null);
 
@@ -79,6 +82,7 @@ export function PromptInput({
         data-testid={textareaTestId}
         onChange={(e) => onValueChange(e.target.value)}
         onKeyDown={handleKeyDown}
+        onFocus={onFocus}
         className="max-h-[200px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
       />
       {extra}

@@ -6,7 +6,7 @@
  * text. Two modes: Pregunta (short, top-5 sources) and Investiga (broader,
  * top-12 sources).
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from '@nanostores/react';
 import { Settings2Icon, Trash2Icon, DatabaseIcon, ShieldCheckIcon, ShieldAlertIcon, ChevronDownIcon, CpuIcon } from 'lucide-react';
 import type { LegalArea } from '@/types/legal';
@@ -35,9 +35,11 @@ import { AIFeedback } from '@/components/ui/ai/ai-feedback';
 import MessageContent from '@/components/MessageContent';
 import RAGProgressIndicator from '@/components/RAGProgressIndicator';
 import CorpusSelector from '@/components/CorpusSelector';
-import ModelSelectorModal from '@/components/ModelSelectorModal';
-import WebLLMProgress from '@/components/WebLLMProgress';
-import ProviderRecommendation from './ProviderRecommendation';
+// Loaded on demand: the modal only when opened, the progress panel only while
+// a local model downloads, the recommendation only once the user is typing.
+const ModelSelectorModal = lazy(() => import('@/components/ModelSelectorModal'));
+const WebLLMProgress = lazy(() => import('@/components/WebLLMProgress'));
+const ProviderRecommendation = lazy(() => import('./ProviderRecommendation'));
 
 export type { ThreadMessage as ChatMessage };
 
@@ -400,13 +402,13 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
 
       {currentInput.trim().length > 10 && !isProcessing && (
         <div className="shrink-0 px-4 pb-2">
-          <ProviderRecommendation query={currentInput} />
+          <Suspense fallback={null}><ProviderRecommendation query={currentInput} /></Suspense>
         </div>
       )}
 
       {webllmProgress && (
         <div className="shrink-0 border-t border-border bg-accent/40 p-4">
-          <WebLLMProgress progress={webllmProgress.progress} message={webllmProgress.message} variant="inline" />
+          <Suspense fallback={null}><WebLLMProgress progress={webllmProgress.progress} message={webllmProgress.message} variant="inline" /></Suspense>
         </div>
       )}
 
@@ -431,6 +433,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
           onStop={handleStop}
           placeholder={t('chat.placeholder')}
           disabled={!isInitialized}
+          onFocus={() => { void ragEngine.warmEmbeddings(); }}
           textareaTestId={TEST_IDS.chat.input}
           sendTestId={TEST_IDS.chat.sendButton}
           extra={
@@ -450,17 +453,21 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
         <p className="mt-2 text-xs text-muted-foreground">{isInitialized ? t('chat.inputHelp') : t('common.loading')}</p>
       </div>
 
-      <ModelSelectorModal
-        isOpen={showModelSelector}
-        onClose={() => setShowModelSelector(false)}
-        currentProvider={currentProvider}
-        currentModel={currentModel}
-        onModelSelect={(provider, model) => {
-          setCurrentProvider(provider);
-          setCurrentModel(model || '');
-          if (model) providerManager.setPreferredProvider(provider, model);
-        }}
-      />
+      {showModelSelector && (
+        <Suspense fallback={null}>
+          <ModelSelectorModal
+            isOpen={showModelSelector}
+            onClose={() => setShowModelSelector(false)}
+            currentProvider={currentProvider}
+            currentModel={currentModel}
+            onModelSelect={(provider, model) => {
+              setCurrentProvider(provider);
+              setCurrentModel(model || '');
+              if (model) providerManager.setPreferredProvider(provider, model);
+            }}
+          />
+        </Suspense>
+      )}
       {autoFocus && <AutoFocus />}
     </div>
   );
