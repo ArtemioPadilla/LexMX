@@ -123,11 +123,13 @@ function CalculatorForm({ calculator, currencyLocale }: { calculator: Calculator
                 <tr key={l.label}>
                   <td className="py-2 pr-2">{l.label}{l.note && <span className="block text-xs text-muted-foreground">{l.note}</span>}</td>
                   <td className="py-2 pr-2 text-xs text-muted-foreground">{l.basis}</td>
-                  <td className="py-2 text-right font-mono">{fmt(l.amount, result.currency)}</td>
+                  <td className="py-2 text-right font-mono">{l.text ?? fmt(l.amount, result.currency)}</td>
                 </tr>
               ))}
             </tbody>
-            <tfoot><tr className="border-t border-border font-semibold"><td className="py-2" colSpan={2}>{t('tools.total')}</td><td className="py-2 text-right font-mono">{fmt(result.total, result.currency)}</td></tr></tfoot>
+            {result.lines.some((l) => l.text === undefined) && result.total !== 0 && (
+              <tfoot><tr className="border-t border-border font-semibold"><td className="py-2" colSpan={2}>{t('tools.total')}</td><td className="py-2 text-right font-mono">{fmt(result.total, result.currency)}</td></tr></tfoot>
+            )}
           </table>
           {result.warnings.length > 0 && (
             <Callout title={t('tools.notes')} variant="warning" className="text-xs">

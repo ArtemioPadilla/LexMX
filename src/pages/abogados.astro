@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../components/layout/BaseLayout.astro';
+import LawyersIsland from '../islands/LawyersIsland.tsx';
+import { getTranslation } from '../i18n/utils';
+const t = getTranslation(Astro.url);
+---
+
+<BaseLayout title={`${t('lawyers.title')} - LexMX`} description={t('lawyers.subtitle')}>
+  <div class="min-h-screen bg-white dark:bg-gray-900">
+    <div class="mx-auto max-w-5xl px-4 py-12 sm:px-6">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white" data-i18n="lawyers.title">{t('lawyers.title')}</h1>
+      <p class="mt-2 mb-8 text-gray-600 dark:text-gray-300" data-i18n="lawyers.subtitle">{t('lawyers.subtitle')}</p>
+      <LawyersIsland client:only="react" />
+    </div>
+  </div>
+</BaseLayout>

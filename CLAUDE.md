@@ -33,7 +33,7 @@ migración).
 
 ## File organization
 
-- `src/pages/` — Astro routes (`chat`, `setup`, `casos`, `wiki`, `biblioteca`, `herramientas`, `plantillas`, `comparar`, `tablas`, `cuenta`, `seguridad`, `document/[id]` generated from the corpus manifest, `requests/*`, `admin/*`)
+- `src/pages/` — Astro routes (`chat`, `setup`, `casos`, `wiki`, `biblioteca`, `herramientas`, `plantillas`, `comparar`, `tablas`, `abogados`, `cuenta`, `seguridad`, `document/[id]` generated from the corpus manifest, `requests/*`, `admin/*`)
 - `src/components/layout/BaseLayout.astro` — the single layout (mounts `HydrationCanary` + `FeedbackFAB`)
 - `src/components/` — Astro/React presentational components; `common/` holds Inceptor pieces (FeedbackFAB)
 - `src/islands/` — React islands hydrated with `client:*` (+ `ErrorBoundary`, `HydrationCanary`)

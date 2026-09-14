@@ -83,6 +83,8 @@ export interface CalculatorField {
 export interface CalculatorLine {
   label: string;
   amount: number;
+  /** Non-monetary result (a date, a count) shown instead of the amount. */
+  text?: string;
   /** Fundamento legal en formato de la jurisdicción. */
   basis: string;
   note?: string;

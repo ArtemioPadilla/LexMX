@@ -142,4 +142,6 @@ export const mxSeveranceCalculator: Calculator = {
   compute: (input) => computeSeverance(input as unknown as SeveranceInput),
 };
 
-export const mxCalculators: Calculator[] = [mxSeveranceCalculator];
+import { mxFiscalCalculators } from './calculators-fiscal';
+
+export const mxCalculators: Calculator[] = [mxSeveranceCalculator, ...mxFiscalCalculators];

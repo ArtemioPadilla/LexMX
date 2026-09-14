@@ -415,7 +415,8 @@
     "library": "Biblioteca",
     "templates": "Plantillas",
     "compare": "Comparar",
-    "tables": "Tablas"
+    "tables": "Tablas",
+    "lawyers": "Abogados"
   },
   "hero": {
     "title": "Tu Asistente Legal Mexicano con IA",
@@ -2270,5 +2271,77 @@
     "cancel": "Cancelar",
     "saved": "Guardado en «{{title}}».",
     "noCases": "No tienes expedientes; crea uno en Mis Casos."
+  },
+  "lawyers": {
+    "title": "Directorio de abogados",
+    "subtitle": "Perfiles verificados por materia y entidad. LexMX orienta; un abogado te representa. Pide una canalización con un resumen breve; tu expediente nunca sale de tu dispositivo.",
+    "notConfigured": {
+      "title": "Servidor no configurado",
+      "body": "El directorio y las canalizaciones viven en LexMX Servidor. Esta instalación funciona en modo local."
+    },
+    "tabs": {
+      "directory": "Directorio",
+      "referrals": "Mis canalizaciones",
+      "profile": "Mi perfil de abogado"
+    },
+    "signIn": {
+      "title": "Inicia sesión",
+      "body": "Necesitas una cuenta para pedir canalizaciones o registrar tu perfil."
+    },
+    "privacy": "Solo se muestran perfiles verificados por un operador con la cédula profesional.",
+    "entity": "Entidad",
+    "anyEntity": "Cualquier entidad",
+    "area": "Materia",
+    "anyArea": "Cualquier materia",
+    "verified": "Verificado",
+    "areas": {
+      "labor": "Laboral",
+      "civil": "Civil y familiar",
+      "criminal": "Penal",
+      "tax": "Fiscal",
+      "commercial": "Mercantil",
+      "constitutional": "Constitucional y amparo",
+      "administrative": "Administrativo"
+    },
+    "directory": {
+      "title": "Abogados verificados",
+      "intro": "Filtra por entidad y materia. El contacto es directo con el abogado.",
+      "empty": "No hay perfiles verificados con esos filtros.",
+      "emptyHelp": "Amplía los filtros o vuelve más tarde; los perfiles se verifican uno a uno."
+    },
+    "referral": {
+      "ask": "Pedir canalización",
+      "summary": "Resumen del asunto (10 a 1000 caracteres)",
+      "placeholder": "Qué pasó, cuándo y qué buscas. Sin nombres ni datos sensibles.",
+      "note": "Solo se envía este resumen; el expediente no.",
+      "send": "Enviar",
+      "cancel": "Cancelar",
+      "sentTitle": "Canalización enviada",
+      "sent": "Tu resumen llegó a «{{name}}»; te contactará por el medio que indicó."
+    },
+    "referrals": {
+      "title": "Mis canalizaciones",
+      "empty": "No has pedido canalizaciones.",
+      "close": "Cerrar",
+      "status": {
+        "open": "Abierta",
+        "matched": "Con abogado",
+        "closed": "Cerrada"
+      }
+    },
+    "profile": {
+      "title": "Mi perfil de abogado",
+      "intro": "Aparecerás en el directorio cuando un operador verifique tu cédula.",
+      "headline": "Presentación (160 caracteres)",
+      "bio": "Semblanza",
+      "email": "Correo de contacto",
+      "accepting": "Acepto nuevos asuntos",
+      "credential": "La cédula se entrega al operador por el canal seguro indicado en /seguridad; no se sube aquí.",
+      "save": "Guardar perfil",
+      "delete": "Eliminar perfil",
+      "saved": "Perfil guardado.",
+      "deleted": "Perfil eliminado.",
+      "pending": "Pendiente de verificación"
+    }
   }
 }

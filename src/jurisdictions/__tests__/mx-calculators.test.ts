@@ -49,7 +49,7 @@ describe('finiquito y liquidación', () => {
   });
 
   it('is exposed through the jurisdiction module', () => {
-    expect(mx.calculators?.map((c) => c.id)).toEqual(['mx-finiquito-liquidacion']);
+    expect(mx.calculators?.map((c) => c.id)).toEqual(['mx-finiquito-liquidacion', 'mx-isr-mensual', 'mx-iva', 'mx-recargos', 'mx-plazos']);
     expect(mx.calculators?.[0]?.parameters.salarioMinimoGeneral?.asOf).toBe('2026-01-01');
   });
 });

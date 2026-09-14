@@ -415,7 +415,8 @@
     "library": "Library",
     "templates": "Templates",
     "compare": "Compare",
-    "tables": "Tables"
+    "tables": "Tables",
+    "lawyers": "Lawyers"
   },
   "hero": {
     "title": "Your Mexican Legal AI Assistant",
@@ -2270,5 +2271,77 @@
     "cancel": "Cancel",
     "saved": "Saved to “{{title}}”.",
     "noCases": "You have no cases; create one in My Cases."
+  },
+  "lawyers": {
+    "title": "Lawyer directory",
+    "subtitle": "Verified profiles by subject and state. LexMX guides; a lawyer represents you. Ask for a referral with a short summary; your case file never leaves your device.",
+    "notConfigured": {
+      "title": "Server not configured",
+      "body": "The directory and referrals live on LexMX Server. This installation runs in local mode."
+    },
+    "tabs": {
+      "directory": "Directory",
+      "referrals": "My referrals",
+      "profile": "My lawyer profile"
+    },
+    "signIn": {
+      "title": "Sign in",
+      "body": "You need an account to ask for referrals or register your profile."
+    },
+    "privacy": "Only profiles verified by an operator with the professional license are shown.",
+    "entity": "State",
+    "anyEntity": "Any state",
+    "area": "Subject",
+    "anyArea": "Any subject",
+    "verified": "Verified",
+    "areas": {
+      "labor": "Labor",
+      "civil": "Civil and family",
+      "criminal": "Criminal",
+      "tax": "Tax",
+      "commercial": "Commercial",
+      "constitutional": "Constitutional and amparo",
+      "administrative": "Administrative"
+    },
+    "directory": {
+      "title": "Verified lawyers",
+      "intro": "Filter by state and subject. Contact is direct with the lawyer.",
+      "empty": "No verified profiles match those filters.",
+      "emptyHelp": "Widen the filters or come back later; profiles are verified one by one."
+    },
+    "referral": {
+      "ask": "Request referral",
+      "summary": "Summary of the matter (10 to 1000 characters)",
+      "placeholder": "What happened, when, and what you are looking for. No names or sensitive data.",
+      "note": "Only this summary is sent; the case file is not.",
+      "send": "Send",
+      "cancel": "Cancel",
+      "sentTitle": "Referral sent",
+      "sent": "Your summary reached “{{name}}”; they will contact you through the channel they listed."
+    },
+    "referrals": {
+      "title": "My referrals",
+      "empty": "You have not requested referrals.",
+      "close": "Close",
+      "status": {
+        "open": "Open",
+        "matched": "With lawyer",
+        "closed": "Closed"
+      }
+    },
+    "profile": {
+      "title": "My lawyer profile",
+      "intro": "You appear in the directory once an operator verifies your license.",
+      "headline": "Headline (160 characters)",
+      "bio": "Bio",
+      "email": "Contact email",
+      "accepting": "Accepting new matters",
+      "credential": "The license goes to the operator through the secure channel described in /seguridad; it is not uploaded here.",
+      "save": "Save profile",
+      "delete": "Delete profile",
+      "saved": "Profile saved.",
+      "deleted": "Profile deleted.",
+      "pending": "Pending verification"
+    }
   }
 }
