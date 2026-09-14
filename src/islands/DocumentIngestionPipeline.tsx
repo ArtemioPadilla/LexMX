@@ -847,7 +847,7 @@ export default function DocumentIngestionPipeline({
             <span className="text-2xl">🔒</span>
             <div className="flex-1">
               <h3 className="font-medium text-amber-800 dark:text-amber-200 mb-2">
-                {urlAnalysis.corsAnalysis.title}
+                {urlAnalysis.corsAnalysis?.title}
               </h3>
               <p className="text-sm text-amber-700 dark:text-amber-300 mb-4">
                 {urlAnalysis.corsAnalysis.description}
@@ -934,7 +934,7 @@ export default function DocumentIngestionPipeline({
                         onClick={() => {
                           // Create document request for community processing
                           const githubIssueUrl = `https://github.com/artemiopadilla/LexMX/issues/new?` +
-                            `title=${encodeURIComponent(`Solicitud de Documento: ${urlAnalysis.corsAnalysis.title || 'Documento Legal'}`)}&` +
+                            `title=${encodeURIComponent(`Solicitud de Documento: ${urlAnalysis.corsAnalysis?.title || 'Documento Legal'}`)}&` +
                             `body=${encodeURIComponent(
                               `**URL del Documento:**\n${manualUrl}\n\n` +
                               `**Tipo:** ${urlAnalysis.detectedFormat}\n\n` +
@@ -971,7 +971,7 @@ export default function DocumentIngestionPipeline({
                                 💝 Beneficios:
                               </h5>
                               <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
-                                {(t('corsGuidance.documentQueue.benefits') as string[]).map((benefit, index) => (
+                                {(t('corsGuidance.documentQueue.benefits') as unknown as string[]).map((benefit, index) => (
                                   <li key={index} className="flex items-start space-x-2">
                                     <span className="text-green-600 dark:text-green-400 flex-shrink-0 mt-1">✓</span>
                                     <span>{benefit}</span>
@@ -985,7 +985,7 @@ export default function DocumentIngestionPipeline({
                                 🔄 {t('corsGuidance.documentQueue.howItWorks')}
                               </h5>
                               <ol className="text-sm text-green-700 dark:text-green-300 space-y-1">
-                                {(t('corsGuidance.documentQueue.steps') as string[]).map((step, index) => (
+                                {(t('corsGuidance.documentQueue.steps') as unknown as string[]).map((step, index) => (
                                   <li key={index} className="flex items-start space-x-2">
                                     <span className="text-green-600 dark:text-green-400 flex-shrink-0 mt-1 text-xs font-bold min-w-[1rem]">
                                       {index + 1}.
@@ -1000,7 +1000,7 @@ export default function DocumentIngestionPipeline({
                               <button
                                 onClick={() => {
                                   const githubIssueUrl = `https://github.com/artemiopadilla/LexMX/issues/new?` +
-                                    `title=${encodeURIComponent(`Solicitud de Documento: ${urlAnalysis.corsAnalysis.title || 'Documento Legal'}`)}&` +
+                                    `title=${encodeURIComponent(`Solicitud de Documento: ${urlAnalysis.corsAnalysis?.title || 'Documento Legal'}`)}&` +
                                     `body=${encodeURIComponent(
                                       `**URL del Documento:**\n${manualUrl}\n\n` +
                                       `**Tipo:** ${urlAnalysis.detectedFormat}\n\n` +

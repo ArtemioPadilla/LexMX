@@ -12,7 +12,7 @@ interface BreadcrumbNavigationProps {
 export function BreadcrumbNavigation({ document, currentSection, className = '' }: BreadcrumbNavigationProps) {
   const { t } = useTranslation();
   // Build breadcrumb path
-  const breadcrumbs = [
+  const breadcrumbs: Array<{ name: string; href: string; icon?: React.ReactNode; current?: boolean }> = [
     {
       name: 'LexMX',
       href: getUrl(''),

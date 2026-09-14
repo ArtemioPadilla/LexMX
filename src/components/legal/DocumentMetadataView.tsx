@@ -121,24 +121,26 @@ export function DocumentMetadataView({ document }: DocumentMetadataViewProps) {
     type = 'text' 
   }: { 
     label: string; 
-    value: string | string[] | Date | null | undefined; 
+    value: string | number | string[] | Date | null | undefined; 
     type?: 'text' | 'date' | 'badge' | 'list' | 'link'; 
-  }) => (
+  }) => {
+    const text = value == null ? '' : Array.isArray(value) ? value.join(', ') : value instanceof Date ? value.toISOString() : String(value);
+    return (
     <div className="py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
       <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
         {label}
       </dt>
       <dd className="text-sm text-gray-900 dark:text-white">
-        {type === 'date' && formatDate(value)}
-        {type === 'text' && (value || 'No especificado')}
-        {type === 'badge' && value && (
+        {type === 'date' && formatDate(text)}
+        {type === 'text' && (text || 'No especificado')}
+        {type === 'badge' && text && (
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-            label.includes('Estado') ? getStatusColor(value) :
-            label.includes('Importancia') ? getImportanceColor(value) :
-            label.includes('Frecuencia') ? getUpdateFrequencyColor(value) :
+            label.includes('Estado') ? getStatusColor(text) :
+            label.includes('Importancia') ? getImportanceColor(text) :
+            label.includes('Frecuencia') ? getUpdateFrequencyColor(text) :
             'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
           }`}>
-            {value}
+            {text}
           </span>
         )}
         {type === 'list' && Array.isArray(value) && (
@@ -148,14 +150,14 @@ export function DocumentMetadataView({ document }: DocumentMetadataViewProps) {
             ))}
           </ul>
         )}
-        {type === 'link' && value && (
+        {type === 'link' && text && (
           <a 
-            href={value} 
+            href={text} 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-legal-600 dark:text-legal-400 hover:text-legal-800 dark:hover:text-legal-200 flex items-center"
           >
-            {value}
+            {text}
             <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                     d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -164,7 +166,8 @@ export function DocumentMetadataView({ document }: DocumentMetadataViewProps) {
         )}
       </dd>
     </div>
-  );
+    );
+  };
 
   // Calculate content statistics
   const contentStats = document.content ? {

@@ -183,5 +183,5 @@ export function getMockMessage(type: 'welcome' | 'userQuery' | 'assistantRespons
 }
 
 export function getTranslation(key: string, lang: 'es' | 'en' = 'es'): string {
-  return TEST_DATA.translations[lang][key] || key;
+  return (TEST_DATA.translations[lang] as Record<string, string>)[key] || key;
 }

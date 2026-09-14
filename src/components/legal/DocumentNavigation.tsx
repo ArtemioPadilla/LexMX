@@ -15,6 +15,10 @@ interface SearchResult {
   section?: string;
   relevance?: number;
   matchedText?: string;
+  number?: string;
+  title?: string;
+  content?: string;
+  type?: string;
 }
 
 interface DocumentTreeItem extends DocumentStructureItem {
@@ -74,7 +78,7 @@ export function DocumentNavigation({
     if (filter === 'all') return hierarchicalStructure;
     
     const filterItems = (items: DocumentTreeItem[]): DocumentTreeItem[] => {
-      return items.reduce((acc, item) => {
+      return items.reduce<DocumentTreeItem[]>((acc, item) => {
         const matchesFilter = 
           (filter === 'titles' && ['title', 'chapter', 'section'].includes(item.type)) ||
           (filter === 'articles' && item.type === 'article');
@@ -227,7 +231,7 @@ export function DocumentNavigation({
               </span>
               {hasChildren && (
                 <span className="text-xs text-gray-400">
-                  {item.children.length} elemento{item.children.length !== 1 ? 's' : ''}
+                  {item.children?.length ?? 0} elemento{(item.children?.length ?? 0) !== 1 ? 's' : ''}
                 </span>
               )}
             </div>
@@ -304,10 +308,10 @@ export function DocumentNavigation({
               >
                 <div className="font-medium text-yellow-900 dark:text-yellow-100">
                   {result.number && `${result.number} - `}
-                  {highlightSearchTerms(result.title || result.content.substring(0, 50) + '...', searchQuery)}
+                  {highlightSearchTerms(result.title || (result.content ?? '').substring(0, 50) + '...', searchQuery)}
                 </div>
                 <div className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-                  {result.type} • {result.content.length} caracteres
+                  {result.type} • {(result.content ?? '').length} caracteres
                 </div>
               </button>
             ))}

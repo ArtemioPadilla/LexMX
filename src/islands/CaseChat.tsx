@@ -47,7 +47,7 @@ export default function CaseChat({
   statusChanges = [],
   summary,
   createdAt,
-  _updatedAt,
+  updatedAt: _updatedAt,
   status,
   onConversationUpdate
 }: CaseChatProps) {
@@ -536,11 +536,7 @@ export default function CaseChat({
               }`}
             >
               {message.type === 'assistant' ? (
-                <MessageContent 
-                  content={message.content} 
-                  legalResponse={message.legalResponse}
-                  isStreaming={message.isStreaming}
-                />
+                <MessageContent content={message.content} />
               ) : (
                 <div className="whitespace-pre-wrap">{message.content}</div>
               )}
