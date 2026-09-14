@@ -255,16 +255,25 @@ export function areaFromMateria(materia: string | null | undefined, nombre = '')
   return 'administrative';
 }
 
-/** Tipo y jerarquía a partir del nombre ("CÓDIGO Civil Federal") y la categoría. */
+/**
+ * Tipo y jerarquía. El NOMBRE del instrumento manda ("LEY…", "CÓDIGO…"): la
+ * `categoria` de la cabecera describe la reforma más reciente (DECRETO,
+ * ACUERDO, FE DE ERRATAS…), no el instrumento, y solo se usa si el nombre
+ * no es concluyente.
+ */
 export function typeFromName(nombre: string, categoria?: string): { type: DocumentType; hierarchy: LegalHierarchy } {
-  const head = `${categoria ?? ''} ${nombre}`.toUpperCase();
-  if (/CONSTITUCI[ÓO]N/.test(head)) return { type: 'constitution', hierarchy: 1 };
-  if (/\bC[ÓO]DIGO\b/.test(head)) return { type: 'code', hierarchy: 3 };
-  if (/REGLAMENTO/.test(head)) return { type: 'regulation', hierarchy: 4 };
-  if (/\bNOM\b|NORMA OFICIAL/.test(head)) return { type: 'norm', hierarchy: 5 };
-  if (/TRATADO|CONVENI/.test(head)) return { type: 'treaty', hierarchy: 2 };
-  if (/LINEAMIENTO|ACUERDO|MANUAL|FORMATO/.test(head)) return { type: 'format', hierarchy: 7 };
-  return { type: 'law', hierarchy: 3 };
+  const classify = (text: string): { type: DocumentType; hierarchy: LegalHierarchy } | undefined => {
+    const head = text.toUpperCase();
+    if (/CONSTITUCI[ÓO]N/.test(head)) return { type: 'constitution', hierarchy: 1 };
+    if (/\bC[ÓO]DIGO\b/.test(head)) return { type: 'code', hierarchy: 3 };
+    if (/^\s*LEY\b|\bLEY\s+(GENERAL|FEDERAL|ORG[ÁA]NICA|REGLAMENTARIA|NACIONAL|DE|DEL|PARA|SOBRE|QUE)\b/.test(head)) return { type: 'law', hierarchy: 3 };
+    if (/REGLAMENTO/.test(head)) return { type: 'regulation', hierarchy: 4 };
+    if (/\bNOM\b|NORMA OFICIAL/.test(head)) return { type: 'norm', hierarchy: 5 };
+    if (/TRATADO|CONVENI/.test(head)) return { type: 'treaty', hierarchy: 2 };
+    if (/LINEAMIENTO|ACUERDO|MANUAL|FORMATO|ESTATUTO/.test(head)) return { type: 'format', hierarchy: 7 };
+    return undefined;
+  };
+  return classify(nombre) ?? (categoria ? classify(categoria) : undefined) ?? { type: 'law', hierarchy: 3 };
 }
 
 /** "VIGENTE" | "ABROGADO" | "DEROGADO" | "SIN EFECTO" | … → estado LexMX. */

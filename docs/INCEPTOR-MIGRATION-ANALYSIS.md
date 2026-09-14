@@ -396,6 +396,26 @@ Hallazgos no aceptados: ninguno. Diferencia de conteo de tests (481/504 aquí
 vs 491/514 en la corrida del revisor) atribuida a entorno; se reporta la
 corrida propia.
 
+## 8b. Estado de ejecución (bitácora)
+
+Rama `claude/lex-inceptor-migration-analysis-qmg92a`. Cada fase se cierra con
+`npm run check` verde.
+
+| Fase | Estado | Evidencia |
+|---|---|---|
+| 0 Congelar y limpiar | ✅ | Commit "Fase 0": PR #73 fusionado en la rama, basura y código muerto fuera, Dependabot y cron pausados |
+| 1 Upgrade en sitio | ✅ | Astro 5.18, React 19, Tailwind 4, Vitest 4, Node 22; capa API y quality borradas; `docs/DATA-COMPATIBILITY.md` |
+| 2 Capa Inceptor y ratchet | ✅ | Agentes, checklists, scripts, ErrorBoundary/HydrationCanary/FeedbackFAB, `ratchet.mjs`, `tsconfig.strict.json`, `ci.yml`, CLAUDE.md nuevo |
+| 3 Saneamiento del núcleo | 🔄 | Ola 1 (security, storage, legal, corpus, embeddings, utils) ✅ con tests y estricto; ola 2 (llm, rag, admin, ingestion, módulos menores, infraestructura de tests) en curso |
+| 4 Chat y configuración | ⏳ | Depende de la ola 2 y de instalar el kit UI de Inceptor |
+| 5 Resto de UI | ⏳ | |
+| 6 Corpus real | 🔄 | Importador desde LegalIA (`src/pipeline/legalia.ts`, `scripts/corpus/*`) probado con la LFT real; `corpus-update.yml` publica el release `corpus-latest` y `deploy.yml` lo consume |
+| 7-9 | ⏳ | |
+
+Métricas del ratchet: 584 → 234 (PR #73) → 171 (Fase 1) → 169 (Fase 2) → 123
+errores de `tsc` tras la ola 1; `any` 282 → 256; tests 502 → 410 reales tras
+borrar rutas API y casos obsoletos (todos verdes).
+
 ## 9. Estado del arte comercial y complemento al plan
 
 Se revisaron las páginas públicas, planes, fichas de tiendas de apps y

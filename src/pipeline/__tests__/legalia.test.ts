@@ -136,6 +136,10 @@ describe('metadata mapping', () => {
     expect(typeFromName('CÓDIGO Penal Federal')).toEqual({ type: 'code', hierarchy: 3 });
     expect(typeFromName('LEY Federal del Trabajo', 'LEY')).toEqual({ type: 'law', hierarchy: 3 });
     expect(typeFromName('REGLAMENTO de la Ley Federal del Trabajo')).toEqual({ type: 'regulation', hierarchy: 4 });
+    // The header's categoria describes the latest reform, not the instrument.
+    expect(typeFromName('LEY Federal de Protección al Consumidor', 'ACUERDO')).toEqual({ type: 'law', hierarchy: 3 });
+    expect(typeFromName('LEY Federal del Trabajo', 'DECRETO')).toEqual({ type: 'law', hierarchy: 3 });
+    expect(typeFromName('ESTATUTO de Gobierno del Distrito Federal')).toEqual({ type: 'format', hierarchy: 7 });
   });
 
   it('maps vigencia to status', () => {
