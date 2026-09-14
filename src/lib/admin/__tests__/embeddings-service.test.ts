@@ -1,11 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { Mock } from 'vitest';
 import { EventEmitter } from 'events';
-import { createMockDocument as _createMockDocument } from '../../../test/mocks/factories';
-import { 
-  createMockEventEmitterUtils as _createMockEventEmitterUtils
-} from '../../../test/mocks/service-mocks';
 import { resetAllMocks } from '../../../test/mocks/auto-mock';
-import type { LegalDocument as _LegalDocument, VectorDocument as _VectorDocument } from '@/types/legal';
+
+// `src/test/setupTests.ts` globally auto-mocks this module (with a factory
+// that can't be `new`ed) so every *other* admin test gets a safe fake
+// EmbeddingsService. Undo that here so the "real implementation" describe
+// block below exercises the actual class.
+vi.unmock('../embeddings-service');
 
 // Mock the dependencies before importing EmbeddingsService
 vi.mock('../../corpus/document-loader');
@@ -15,33 +17,63 @@ vi.mock('../../embeddings/openai-embeddings');
 vi.mock('../../embeddings/mock-embeddings');
 
 // Import after mocking
-import { EmbeddingsService as _EmbeddingsService } from '../embeddings-service';
+import {
+  EmbeddingsService,
+  type EmbeddingStats,
+  type GenerationResult,
+  type BatchResult,
+  type TestResult,
+  type ProviderType
+} from '../embeddings-service';
+import { DocumentLoader } from '../../corpus/document-loader';
+import { IndexedDBVectorStore } from '../../storage/indexeddb-vector-store';
+import { TransformersEmbeddings } from '../../embeddings/transformers-embeddings';
+import { OpenAIEmbeddings } from '../../embeddings/openai-embeddings';
+import { MockEmbeddings } from '../../embeddings/mock-embeddings';
 
-interface MockEmbeddingsService extends EventEmitter {
-  initialize: any;
-  generateEmbeddings: any;
-  generateAllEmbeddings: any;
-  clearEmbeddings: any;
-  getStats: any;
-  switchProvider: any;
-  testProvider: any;
+// Shape of the events emitted across generateEmbeddings/generateAllEmbeddings/
+// clearEmbeddings/switchProvider progress reporting; fields are a union of
+// what each stage emits (see embeddings-service.ts `emit(...)` call sites).
+interface CapturedEvent {
+  stage?: string;
+  documentId?: string;
+  progress?: number;
+  total?: number;
+  successful?: number;
+  failed?: number;
+  batchNumber?: number;
+  totalBatches?: number;
+  provider?: string;
+  error?: unknown;
 }
 
-describe('EmbeddingsService', () => {
-  let service: MockEmbeddingsService;
-  let capturedEvents: { [key: string]: any[] };
+interface MockEmbeddingsService extends EventEmitter {
+  initialize: Mock<(provider?: ProviderType) => Promise<void>>;
+  generateEmbeddings: Mock<(documentId: string) => Promise<GenerationResult>>;
+  generateAllEmbeddings: Mock<(batchSize?: number) => Promise<BatchResult>>;
+  clearEmbeddings: Mock<() => Promise<void>>;
+  getStats: Mock<() => Promise<EmbeddingStats>>;
+  switchProvider: Mock<(provider: ProviderType) => Promise<void>>;
+  testProvider: Mock<(query: string) => Promise<TestResult>>;
+}
 
-  // Helper function to capture events
-  const captureEvents = (eventName: string) => {
-    if (!capturedEvents[eventName]) {
-      capturedEvents[eventName] = [];
-    }
+describe('EmbeddingsService (hand-rolled fake, contract-level)', () => {
+  let service: MockEmbeddingsService;
+  let capturedEvents: Record<string, CapturedEvent[]>;
+
+  // Helper function to capture events. Returns the (stable) backing array
+  // directly so callers don't need to re-index `capturedEvents` later under
+  // `noUncheckedIndexedAccess`.
+  const captureEvents = (eventName: string): CapturedEvent[] => {
+    const events = capturedEvents[eventName] ?? [];
+    capturedEvents[eventName] = events;
     // Remove any existing listeners first
     service.removeAllListeners(eventName);
     // Add new listener
     service.on(eventName, (event) => {
-      capturedEvents[eventName].push(event);
+      events.push(event);
     });
+    return events;
   };
 
   beforeEach(() => {
@@ -60,6 +92,7 @@ describe('EmbeddingsService', () => {
       getStats: vi.fn().mockResolvedValue({
         totalVectors: 1000,
         storageSize: 5242880,
+        averageQueryTime: 50,
         averageGenerationTime: 50,
         modelsAvailable: ['transformers', 'openai', 'mock'],
         currentModel: 'transformers',
@@ -72,7 +105,7 @@ describe('EmbeddingsService', () => {
         dimensions: 384,
         latency: 150
       })
-    });
+    }) as unknown as MockEmbeddingsService;
     
     // Override the mock service methods to emit events properly
     service.generateEmbeddings = vi.fn().mockImplementation(async (documentId: string) => {
@@ -192,7 +225,7 @@ describe('EmbeddingsService', () => {
   describe('generateEmbeddings', () => {
     it('should generate embeddings for a document', async () => {
       await service.initialize();
-      captureEvents('progress');
+      const progressEvents = captureEvents('progress');
 
       const result = await service.generateEmbeddings('doc1');
 
@@ -202,7 +235,6 @@ describe('EmbeddingsService', () => {
       expect(result.tokensPerSecond).toBe(16.7);
       
       // Check progress events
-      const progressEvents = capturedEvents['progress'];
       expect(progressEvents.find(e => e.stage === 'loading')).toBeDefined();
       expect(progressEvents.find(e => e.stage === 'generating')).toBeDefined();
       expect(progressEvents.find(e => e.stage === 'storing')).toBeDefined();
@@ -266,7 +298,7 @@ describe('EmbeddingsService', () => {
     it('should generate embeddings for all documents', async () => {
       await service.initialize();
       
-      captureEvents('progress');
+      const progressEvents = captureEvents('progress');
       captureEvents('batch');
 
       const result = await service.generateAllEmbeddings();
@@ -274,8 +306,7 @@ describe('EmbeddingsService', () => {
       expect(result.totalDocuments).toBe(10);
       expect(result.successfulDocuments).toBe(10);
       expect(result.failedDocuments).toBe(0);
-      
-      const progressEvents = capturedEvents['progress'];
+
       expect(progressEvents.filter(e => e.stage === 'document_complete')).toHaveLength(10);
       expect(progressEvents.find(e => e.stage === 'starting')).toBeDefined();
       expect(progressEvents.find(e => e.stage === 'complete')).toBeDefined();
@@ -306,8 +337,8 @@ describe('EmbeddingsService', () => {
       expect(result.successfulDocuments).toBe(8);
       expect(result.failedDocuments).toBe(2);
       expect(result.errors).toHaveLength(2);
-      expect(result.errors[0].documentId).toBe('doc2');
-      expect(result.errors[0].error).toBe('Embedding failed');
+      expect(result.errors[0]?.documentId).toBe('doc2');
+      expect(result.errors[0]?.error).toBe('Embedding failed');
       
       // Restore original mock
       if (originalImplementation) {
@@ -318,11 +349,10 @@ describe('EmbeddingsService', () => {
     it('should respect batch size', async () => {
       await service.initialize();
       
-      captureEvents('batch');
-      
+      const batchEvents = captureEvents('batch');
+
       await service.generateAllEmbeddings(3); // Batch size of 3
 
-      const batchEvents = capturedEvents['batch'];
       const batchStartEvents = batchEvents.filter(e => e.stage === 'batch_start');
       const batchCompleteEvents = batchEvents.filter(e => e.stage === 'batch_complete');
       
@@ -333,13 +363,12 @@ describe('EmbeddingsService', () => {
 
   describe('clearEmbeddings', () => {
     it('should clear all embeddings', async () => {
-      captureEvents('progress');
+      const progressEvents = captureEvents('progress');
 
       await service.clearEmbeddings();
 
       expect(service.clearEmbeddings).toHaveBeenCalled();
-      
-      const progressEvents = capturedEvents['progress'];
+
       expect(progressEvents.find(e => e.stage === 'clearing')).toBeDefined();
       expect(progressEvents.find(e => e.stage === 'complete')).toBeDefined();
     });
@@ -381,6 +410,7 @@ describe('EmbeddingsService', () => {
       service.getStats.mockResolvedValueOnce({
         totalVectors: 0,
         storageSize: 0,
+        averageQueryTime: 0,
         averageGenerationTime: 0,
         modelsAvailable: ['transformers', 'openai', 'mock'],
         currentModel: 'transformers',
@@ -426,15 +456,14 @@ describe('EmbeddingsService', () => {
     it('should switch embedding provider', async () => {
       await service.initialize();
       
-      captureEvents('provider-changed');
-      
+      const providerEvents = captureEvents('provider-changed');
+
       await service.switchProvider('openai');
 
       expect(service.switchProvider).toHaveBeenCalledWith('openai');
-      
-      const providerEvents = capturedEvents['provider-changed'];
+
       expect(providerEvents).toHaveLength(1);
-      expect(providerEvents[0].provider).toBe('openai');
+      expect(providerEvents[0]?.provider).toBe('openai');
     });
 
     it('should handle invalid provider', async () => {
@@ -443,7 +472,7 @@ describe('EmbeddingsService', () => {
       const originalImplementation = service.switchProvider.getMockImplementation();
       service.switchProvider.mockRejectedValueOnce(new Error('Unknown provider: invalid'));
       
-      await expect(service.switchProvider('invalid' as any)).rejects.toThrow('Unknown provider: invalid');
+      await expect(service.switchProvider('invalid' as unknown as ProviderType)).rejects.toThrow('Unknown provider: invalid');
       
       // Restore original mock
       if (originalImplementation) {
@@ -498,9 +527,7 @@ describe('EmbeddingsService', () => {
         provider: 'transformers',
         dimensions: 0,
         latency: 150,
-        error: 'Test failed',
-        testQuery: 'Test query',
-        responseTime: 150
+        error: 'Test failed'
       });
 
       const result = await service.testProvider('Test query');
@@ -542,36 +569,34 @@ describe('EmbeddingsService', () => {
   describe('event emission', () => {
     it('should emit batch progress events', async () => {
       await service.initialize();
-      captureEvents('batch');
+      const batchEvents = captureEvents('batch');
 
       await service.generateAllEmbeddings(2);
 
-      const batchEvents = capturedEvents['batch'];
       expect(batchEvents.filter(e => e.stage === 'batch_start')).toHaveLength(5); // 10 docs in batches of 2
       expect(batchEvents.filter(e => e.stage === 'batch_complete')).toHaveLength(5);
-      
+
       // Check batch numbering
       const startEvents = batchEvents.filter(e => e.stage === 'batch_start');
-      expect(startEvents[0].batchNumber).toBe(1);
-      expect(startEvents[1].batchNumber).toBe(2);
-      expect(startEvents[0].totalBatches).toBe(5);
+      expect(startEvents[0]?.batchNumber).toBe(1);
+      expect(startEvents[1]?.batchNumber).toBe(2);
+      expect(startEvents[0]?.totalBatches).toBe(5);
     });
 
     it('should emit progress percentage', async () => {
       await service.initialize();
-      captureEvents('progress');
+      const progressEvents = captureEvents('progress');
 
       await service.generateAllEmbeddings();
 
-      const progressEvents = capturedEvents['progress'];
       const completeEvents = progressEvents.filter(e => e.stage === 'document_complete');
-      
+
       expect(completeEvents.length).toBe(10);
-      
+
       // Check that progress increases
-      expect(completeEvents[4].progress).toBe(50);
-      expect(completeEvents[9].progress).toBe(100);
-      
+      expect(completeEvents[4]?.progress).toBe(50);
+      expect(completeEvents[9]?.progress).toBe(100);
+
       // Check start and end events
       expect(progressEvents.find(e => e.stage === 'starting')).toBeDefined();
       expect(progressEvents.find(e => e.stage === 'complete')).toBeDefined();
@@ -579,26 +604,25 @@ describe('EmbeddingsService', () => {
 
     it('should emit error events on failures', async () => {
       await service.initialize();
-      
+
       // Mock to simulate error event emission during failure
       const originalImplementation = service.generateEmbeddings.getMockImplementation();
       service.generateEmbeddings.mockImplementationOnce(async (documentId: string) => {
         service.emit('error', { documentId, error: new Error('Processing failed') });
         throw new Error('Processing failed');
       });
-      
-      captureEvents('error');
-      
+
+      const errorEvents = captureEvents('error');
+
       try {
         await service.generateEmbeddings('doc1');
       } catch {
         // Expected to fail
       }
-      
-      const errorEvents = capturedEvents['error'];
+
       expect(errorEvents).toHaveLength(1);
-      expect(errorEvents[0].documentId).toBe('doc1');
-      expect(errorEvents[0].error).toBeDefined();
+      expect(errorEvents[0]?.documentId).toBe('doc1');
+      expect(errorEvents[0]?.error).toBeDefined();
       
       // Restore original mock
       if (originalImplementation) {
@@ -648,5 +672,88 @@ describe('EmbeddingsService', () => {
       // Both should have recorded some latency
       expect(result.dimensions).toBe(384);
     });
+  });
+});
+
+// The suite above drives a hand-rolled fake that never touches the real
+// `EmbeddingsService`. These tests exercise the real class instead, using
+// `MockEmbeddings` (a real adapter class, see ../../embeddings/mock-embeddings.ts)
+// as a controllable fake adapter and the auto-mocked `DocumentLoader` /
+// `IndexedDBVectorStore` for the storage layer.
+describe('EmbeddingsService (real implementation, fake adapter)', () => {
+  let realService: EmbeddingsService;
+  // Kept as a variable (rather than re-assigning `prototype.getStats`) so
+  // `.mockRejectedValueOnce()` affects the instance `realService` already
+  // holds a reference to; the automocked class binds methods per-instance.
+  let vectorStoreGetStats: Mock<() => Promise<{ documentCount: number; storageSize: number; collections: string[] }>>;
+
+  beforeEach(() => {
+    resetAllMocks();
+
+    vi.mocked(DocumentLoader.prototype).initialize = vi.fn().mockResolvedValue(undefined);
+
+    vi.mocked(IndexedDBVectorStore.prototype).initialize = vi.fn().mockResolvedValue(undefined);
+    vectorStoreGetStats = vi.fn().mockResolvedValue({
+      documentCount: 42,
+      storageSize: 123456,
+      collections: ['labor']
+    });
+    vi.mocked(IndexedDBVectorStore.prototype).getStats = vectorStoreGetStats;
+    vi.mocked(IndexedDBVectorStore.prototype).clear = vi.fn().mockResolvedValue(undefined);
+
+    vi.mocked(TransformersEmbeddings.prototype).initialize = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(OpenAIEmbeddings.prototype).initialize = vi.fn().mockResolvedValue(undefined);
+
+    // Fake adapter: a controllable stand-in for the real transformers/OpenAI
+    // adapters, used to drive switchProvider()/testProvider() deterministically.
+    vi.mocked(MockEmbeddings.prototype).initialize = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(MockEmbeddings.prototype).embedQuery = vi.fn().mockResolvedValue([0.1, 0.2, 0.3, 0.4]);
+
+    realService = new EmbeddingsService();
+  });
+
+  it('getStats() reports vector store totals through the real code path', async () => {
+    await realService.initialize();
+
+    const stats = await realService.getStats();
+
+    expect(stats.totalVectors).toBe(42);
+    expect(stats.storageSize).toBe(123456);
+    expect(stats.currentModel).toBe('transformers');
+    expect(stats.indexStatus).toBe('ready');
+  });
+
+  it('getStats() reports an error status when the vector store throws', async () => {
+    await realService.initialize();
+    vectorStoreGetStats.mockRejectedValueOnce(new Error('boom'));
+
+    const stats = await realService.getStats();
+
+    expect(stats.indexStatus).toBe('error');
+    expect(stats.totalVectors).toBe(0);
+  });
+
+  it('switchProvider() swaps the active adapter and emits provider-changed', async () => {
+    await realService.initialize();
+
+    const events: Array<{ provider: ProviderType }> = [];
+    realService.on('provider-changed', (event: { provider: ProviderType }) => events.push(event));
+
+    await realService.switchProvider('mock');
+
+    expect(vi.mocked(MockEmbeddings.prototype).initialize).toHaveBeenCalledTimes(1);
+    expect(events).toEqual([{ provider: 'mock' }]);
+  });
+
+  it('testProvider() records latency against the fake adapter, reflected in getStats()', async () => {
+    await realService.initialize('mock');
+
+    const result = await realService.testProvider('¿Qué dice el artículo 123?');
+
+    expect(result.success).toBe(true);
+    expect(result.dimensions).toBe(4);
+
+    const stats = await realService.getStats();
+    expect(stats.averageQueryTime).toBeGreaterThanOrEqual(0);
   });
 });

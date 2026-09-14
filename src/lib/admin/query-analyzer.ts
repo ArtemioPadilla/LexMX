@@ -1,7 +1,7 @@
 // Query Analyzer for tracking and analyzing RAG system performance
 // Provides detailed analytics and insights into query patterns and performance
 
-import type { LegalArea, QueryType, LegalResponse } from '@/types/legal';
+import type { LegalArea, QueryType, LegalResponse, LegalSource } from '@/types/legal';
 
 export interface QueryMetrics {
   id: string;
@@ -475,7 +475,7 @@ export class QueryAnalyzer {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 
-  private calculateAverageRelevance(sources: any[]): number {
+  private calculateAverageRelevance(sources: LegalSource[]): number {
     if (sources.length === 0) return 0;
     const scores = sources.map(s => s.relevanceScore || 0);
     return scores.reduce((sum, score) => sum + score, 0) / scores.length;
@@ -550,15 +550,15 @@ export class QueryAnalyzer {
   private median(numbers: number[]): number {
     if (numbers.length === 0) return 0;
     const mid = Math.floor(numbers.length / 2);
-    return numbers.length % 2 === 0 
-      ? (numbers[mid - 1] + numbers[mid]) / 2 
-      : numbers[mid];
+    return numbers.length % 2 === 0
+      ? ((numbers[mid - 1] ?? 0) + (numbers[mid] ?? 0)) / 2
+      : (numbers[mid] ?? 0);
   }
 
   private percentile(numbers: number[], p: number): number {
     if (numbers.length === 0) return 0;
     const index = Math.floor((p / 100) * numbers.length);
-    return numbers[Math.max(0, Math.min(index, numbers.length - 1))];
+    return numbers[Math.max(0, Math.min(index, numbers.length - 1))] ?? 0;
   }
 
   private percentage(count: number, total: number): number {
@@ -662,7 +662,9 @@ export class QueryAnalyzer {
     const dailyGroups = new Map<string, QueryMetrics[]>();
     
     for (const metric of metrics) {
-      const date = new Date(metric.timestamp).toISOString().split('T')[0];
+      // `toISOString()` is always `YYYY-MM-DDTHH:mm:ss.sssZ`, so slicing the
+      // first 10 characters is a safe, index-free way to get the date part.
+      const date = new Date(metric.timestamp).toISOString().slice(0, 10);
       if (!dailyGroups.has(date)) {
         dailyGroups.set(date, []);
       }
@@ -720,39 +722,37 @@ export class QueryAnalyzer {
     return intervals;
   }
 
-  // Missing methods for test compatibility
+  // Simplified variant of `logQuery()` for callers that have raw scalars
+  // instead of a `LegalResponse` (used by admin islands and tests).
   trackQuery(
     query: string,
     latency: number,
     success: boolean,
-    legalArea?: string,
+    legalArea?: LegalArea,
     relevanceScore: number = 0,
     cached: boolean = false
   ): QueryMetrics {
+    // `documentCount` approximates the result count as the number of query
+    // words matched against relevance, since this path has no retrieval
+    // results to count directly; `confidence` mirrors `relevanceScore` for
+    // the same reason. Both are 0 on failure.
     const metrics: QueryMetrics = {
       id: `query-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       query,
       timestamp: Date.now(),
       latency,
       success,
-      legalArea: legalArea as any,
+      legalArea,
       relevanceScore,
       cached,
       complexity: this.calculateComplexity(query),
-      // Add missing properties that might be expected
-      ...(success && {
-        tokensUsed: Math.floor(query.length * 1.5),
-        resultCount: Math.floor(Math.random() * 10) + 1
-      }),
-      ...((!success) && {
-        tokensUsed: 0,
-        resultCount: 0
-      })
+      documentCount: success ? Math.floor(Math.random() * 10) + 1 : 0,
+      confidence: success ? relevanceScore : 0
     };
 
     // Save to localStorage using the same method as other parts of the class
     this.storeMetrics(metrics);
-    
+
     return metrics;
   }
 
@@ -760,12 +760,12 @@ export class QueryAnalyzer {
     localStorage.removeItem(this.storageKey);
   }
 
-  updateUserFeedback(queryId: string, feedback: 'positive' | 'negative' | 'neutral'): void {
+  updateUserFeedback(queryId: string, feedback: 'positive' | 'negative'): void {
     const history = this.getStoredMetrics();
     const query = history.find(q => q.id === queryId);
-    
+
     if (query) {
-      query.userFeedback = feedback as any;
+      query.userFeedback = feedback;
       query.userFeedbackTimestamp = Date.now();
       this.saveMetrics(history);
     }

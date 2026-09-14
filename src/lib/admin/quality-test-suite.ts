@@ -36,7 +36,7 @@ export interface TestResult {
 export interface TestResultDetail {
   expectation: TestExpectation;
   passed: boolean;
-  actualValue: any;
+  actualValue: string | number | boolean | null;
   score: number;
   message: string;
 }
@@ -313,8 +313,6 @@ export class QualityTestSuite {
     const startTime = Date.now();
     
     try {
-      console.log(`Running quality test: ${test.name}`);
-      
       // Execute the query using RAG engine
       const response = await Promise.race([
         this.ragEngine.processLegalQuery(test.query),
@@ -381,13 +379,10 @@ export class QualityTestSuite {
     const startTime = Date.now();
     const results: TestResult[] = [];
 
-    console.log(`Running ${this.predefinedTests.length} quality tests...`);
-
     for (const test of this.predefinedTests) {
       try {
         const result = await this.runTest(test.id);
         results.push(result);
-        console.log(`Test ${test.name}: ${result.passed ? 'PASS' : 'FAIL'} (${(result.score * 100).toFixed(1)}%)`);
       } catch (error) {
         console.error(`Failed to run test ${test.id}:`, error);
         results.push({
@@ -432,8 +427,6 @@ export class QualityTestSuite {
     const startTime = Date.now();
     const results: TestResult[] = [];
 
-    console.log(`Running ${categoryTests.length} ${category} tests...`);
-
     for (const test of categoryTests) {
       const result = await this.runTest(test.id);
       results.push(result);
@@ -466,7 +459,7 @@ export class QualityTestSuite {
   ): Promise<TestResultDetail> {
     let passed = false;
     let score = 0;
-    let actualValue: any;
+    let actualValue: string | number | boolean | null = null;
     let message = '';
 
     switch (expectation.type) {
@@ -480,7 +473,7 @@ export class QualityTestSuite {
         break;
 
       case 'min_relevance':
-        actualValue = response.sources.length > 0 ? response.sources[0].relevanceScore : 0;
+        actualValue = response.sources[0]?.relevanceScore ?? 0;
         passed = actualValue >= Number(expectation.value);
         score = Math.min(actualValue / Number(expectation.value), 1);
         message = `Relevance score: ${actualValue.toFixed(3)} (required: ${expectation.value})`;

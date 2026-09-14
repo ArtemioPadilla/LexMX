@@ -1,31 +1,64 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { Mock } from 'vitest';
 import type { CorpusFilter } from '../corpus-service';
+import type { LegalHierarchy } from '@/types/legal';
 import {
-  legalDocumentsFixture
+  legalDocumentsFixture,
+  createMockDocument
 } from '@/test/mocks';
 
 // Mock the dependencies before importing CorpusService
 vi.mock('../../corpus/document-loader');
-vi.mock('../../storage/indexeddb-vector-store');
-vi.mock('../../storage/metadata-store');
+// CorpusService never imports IndexedDBVectorStore or MetadataStore directly
+// (it goes through adminDataService/documentLoader), so those two used to be
+// mocked here for nothing.
 vi.mock('../../ingestion/document-ingestion-pipeline');
 vi.mock('../admin-data-service');
 
 // Import after mocking
 import { CorpusService } from '../corpus-service';
 import { DocumentLoader } from '../../corpus/document-loader';
-import { IndexedDBVectorStore } from '../../storage/indexeddb-vector-store';
-import { MetadataStore } from '../../storage/metadata-store';
 import { DocumentIngestionPipeline } from '../../ingestion/document-ingestion-pipeline';
 import { adminDataService } from '../admin-data-service';
 
+// Minimal per-method mock shapes for the auto-mocked classes/singleton above.
+// Using bare `Mock` (rather than trying to match every field of the real
+// return types, several of which this suite intentionally exercises with
+// partial/irrelevant data) keeps this file `any`-free without over-fitting
+// to interfaces that CorpusService itself never fully consumes.
+interface MockedDocumentLoader {
+  initialize: Mock;
+  loadAllDocuments: Mock;
+  loadDocument: Mock;
+  clearDocument: Mock;
+}
+
+interface MockedIngestionPipeline {
+  initialize: Mock;
+  ingestDocument: Mock;
+}
+
+interface MockedAdminDataService {
+  getCorpusStats: Mock;
+  getEmbeddingsStats: Mock;
+  deleteDocument: Mock;
+}
+
+// Shape of CorpusService's own `operation:start`/`operation:complete`/
+// `operation:error` events (see the `this.emit('operation:...', ...)` call
+// sites in corpus-service.ts).
+interface CorpusOperationEvent {
+  type: string;
+  documentId: string;
+  result?: unknown;
+  error?: unknown;
+}
+
 describe('CorpusService', () => {
   let service: CorpusService;
-  let mockDocumentLoader: any;
-  let mockVectorStore: any;
-  let mockMetadataStore: any;
-  let mockIngestionPipeline: any;
-  let mockAdminDataService: any;
+  let mockDocumentLoader: MockedDocumentLoader;
+  let mockIngestionPipeline: MockedIngestionPipeline;
+  let mockAdminDataService: MockedAdminDataService;
 
   // Use mock documents from fixture data
   const mockDocuments = legalDocumentsFixture.slice(0, 3).map(doc => ({
@@ -40,7 +73,13 @@ describe('CorpusService', () => {
     }))
   }));
 
-  const mockDocument = mockDocuments[0];
+  // `legalDocumentsFixture` has 5 entries; guard rather than `!` so a future
+  // trimmed fixture fails loudly here instead of via a confusing downstream
+  // `undefined` under `noUncheckedIndexedAccess`.
+  const [mockDocument] = mockDocuments;
+  if (!mockDocument) {
+    throw new Error('legalDocumentsFixture must contain at least one document');
+  }
 
   // Test environment setup
   const mockStorage = {
@@ -54,16 +93,30 @@ describe('CorpusService', () => {
   };
   
   // Setup global mocks
-  global.localStorage = mockStorage as any;
-  global.sessionStorage = { ...mockStorage } as any;
-  
+  global.localStorage = mockStorage as unknown as Storage;
+  global.sessionStorage = { ...mockStorage } as unknown as Storage;
+
+  // Minimal File-like shape accepted by MockFileReader/createMockFile below;
+  // real `File` objects aren't constructible with arbitrary content in jsdom.
+  interface MockFile {
+    name: string;
+    type: string;
+    lastModified: number;
+    mockContent: string;
+    size: number;
+  }
+
+  interface MockFileReaderEvent {
+    target: { result: string | null };
+  }
+
   // Mock FileReader for file import tests
   class MockFileReader {
-    onload: ((event: any) => void) | null = null;
-    onerror: ((event: any) => void) | null = null;
+    onload: ((event: MockFileReaderEvent) => void) | null = null;
+    onerror: ((event: unknown) => void) | null = null;
     result: string | null = null;
-    
-    readAsText(file: any) {
+
+    readAsText(file: MockFile) {
       // Simulate async file reading
       setTimeout(() => {
         try {
@@ -72,23 +125,23 @@ describe('CorpusService', () => {
           } else {
             throw new Error('Invalid file content');
           }
-          
+
           if (this.onload) {
-            this.onload({ target: { result: this.result } } as any);
+            this.onload({ target: { result: this.result } });
           }
         } catch (error) {
           if (this.onerror) {
-            this.onerror(error as any);
+            this.onerror(error);
           }
         }
       }, 0);
     }
   }
-  
-  global.FileReader = MockFileReader as any;
-  
+
+  global.FileReader = MockFileReader as unknown as typeof FileReader;
+
   // Create a helper to create File-like objects for testing
-  function createMockFile(content: string, filename: string, type: string) {
+  function createMockFile(content: string, filename: string, type: string): MockFile {
     return {
       name: filename,
       type: type,
@@ -104,59 +157,61 @@ describe('CorpusService', () => {
     
     // Get mock instances
     mockDocumentLoader = vi.mocked(DocumentLoader.prototype);
-    mockVectorStore = vi.mocked(IndexedDBVectorStore.prototype);
-    mockMetadataStore = vi.mocked(MetadataStore.prototype);
     mockIngestionPipeline = vi.mocked(DocumentIngestionPipeline.prototype);
     mockAdminDataService = vi.mocked(adminDataService);
-    
+
     // Setup default mock implementations
     mockDocumentLoader.initialize = vi.fn().mockResolvedValue(undefined);
-    mockVectorStore.initialize = vi.fn().mockResolvedValue(undefined);
-    mockMetadataStore.initialize = vi.fn().mockResolvedValue(undefined);
     mockIngestionPipeline.initialize = vi.fn().mockResolvedValue(undefined);
-    
+
     mockDocumentLoader.loadAllDocuments = vi.fn().mockResolvedValue(mockDocuments);
     mockDocumentLoader.loadDocument = vi.fn().mockImplementation((id: string) => {
       const doc = mockDocuments.find(d => d.id === id);
       return Promise.resolve(doc || null);
     });
     mockDocumentLoader.clearDocument = vi.fn().mockResolvedValue(undefined);
-    
-    mockVectorStore.search = vi.fn().mockResolvedValue([
-      { id: 'chunk1', score: 0.9 },
-      { id: 'chunk2', score: 0.8 }
-    ]);
-    mockVectorStore.deleteDocument = vi.fn().mockResolvedValue(undefined);
-    
-    mockMetadataStore.deleteLineage = vi.fn().mockResolvedValue(undefined);
-    
+
+    // `chunks`/`embeddings`/`stats` mirror DocumentIngestionPipeline's real
+    // `IngestionResult` shape; corpus-service.ts only reads `.success`, but
+    // typing this mock against the real interface keeps it honest.
     mockIngestionPipeline.ingestDocument = vi.fn().mockResolvedValue({
       success: true,
       document: mockDocument,
-      chunks: 2,
-      embeddings: 2
+      chunks: [],
+      embeddings: new Map(),
+      stats: {
+        fetchTime: 0,
+        parseTime: 0,
+        chunkTime: 0,
+        embeddingTime: 0,
+        totalTime: 0,
+        chunkCount: 0,
+        tokenCount: 0
+      }
     });
-    
+
     // Mock admin data service
     mockAdminDataService.getCorpusStats = vi.fn().mockResolvedValue({
       totalDocuments: mockDocuments.length,
+      totalChunks: 0,
       documentsByType: { law: 2, constitution: 1 },
       documentsByArea: { civil: 1, labor: 1, constitutional: 1 },
       totalSize: 150000,
-      lastUpdated: Date.now()
+      lastUpdate: new Date().toISOString()
     });
-    
+
     mockAdminDataService.getEmbeddingsStats = vi.fn().mockResolvedValue({
       totalVectors: 100,
       dimensions: 1536,
-      indexSize: 100 * 1536 * 4,
-      averageQueryTime: 85,
-      cacheHitRate: 0.35,
-      lastReindexed: Date.now()
+      storageSize: 100 * 1536 * 4,
+      indexStatus: 'ready',
+      modelsAvailable: ['transformers'],
+      currentModel: 'transformers',
+      averageGenerationTime: 85
     });
-    
+
     mockAdminDataService.deleteDocument = vi.fn().mockResolvedValue(undefined);
-    
+
     // Create service instance after setting up mocks
     service = new CorpusService();
   });
@@ -210,7 +265,7 @@ describe('CorpusService', () => {
       const documents = await service.getDocuments(filter);
       
       expect(documents.length).toBeGreaterThan(0);
-      expect(documents[0].title.toLowerCase()).toContain('civil');
+      expect(documents[0]!.title.toLowerCase()).toContain('civil');
     });
 
     it('should filter documents by search term in content', async () => {
@@ -290,7 +345,7 @@ describe('CorpusService', () => {
 
   describe('deleteDocument', () => {
     it('should delete document from all stores', async () => {
-      const progressEvents: any[] = [];
+      const progressEvents: CorpusOperationEvent[] = [];
       service.on('operation:start', (event) => progressEvents.push(event));
       service.on('operation:complete', (event) => progressEvents.push(event));
 
@@ -298,8 +353,8 @@ describe('CorpusService', () => {
 
       expect(mockAdminDataService.deleteDocument).toHaveBeenCalledWith('doc1');
       expect(progressEvents).toHaveLength(2);
-      expect(progressEvents[0].type).toBe('delete');
-      expect(progressEvents[1].type).toBe('delete');
+      expect(progressEvents[0]!.type).toBe('delete');
+      expect(progressEvents[1]!.type).toBe('delete');
     });
 
     it('should handle deletion errors', async () => {
@@ -311,7 +366,7 @@ describe('CorpusService', () => {
 
   describe('reindexDocument', () => {
     it('should reindex document successfully', async () => {
-      const operationEvents: any[] = [];
+      const operationEvents: CorpusOperationEvent[] = [];
       service.on('operation:start', (event) => operationEvents.push(event));
       service.on('operation:complete', (event) => operationEvents.push(event));
 
@@ -319,8 +374,8 @@ describe('CorpusService', () => {
 
       expect(mockIngestionPipeline.ingestDocument).toHaveBeenCalledWith(mockDocument);
       expect(operationEvents).toHaveLength(2);
-      expect(operationEvents[0].type).toBe('reindex');
-      expect(operationEvents[1].type).toBe('reindex');
+      expect(operationEvents[0]!.type).toBe('reindex');
+      expect(operationEvents[1]!.type).toBe('reindex');
     });
 
     it('should handle document not found', async () => {
@@ -346,7 +401,7 @@ describe('CorpusService', () => {
       expect(result.valid).toBe(1);
       expect(result.invalid).toBe(1);
       expect(result.issues).toHaveLength(1);
-      expect(result.issues[0].documentId).toBe('doc2');
+      expect(result.issues[0]!.documentId).toBe('doc2');
     });
 
     it('should detect missing required fields', async () => {
@@ -356,8 +411,8 @@ describe('CorpusService', () => {
       const result = await service.validateCorpus();
 
       expect(result.invalid).toBe(1);
-      expect(result.issues[0].issues).toContain('Missing title');
-      expect(result.issues[0].issues).toContain('No content');
+      expect(result.issues[0]!.issues).toContain('Missing title');
+      expect(result.issues[0]!.issues).toContain('No content');
     });
 
     it('should validate chunk structure', async () => {
@@ -382,6 +437,77 @@ describe('CorpusService', () => {
       expect(result.invalid).toBe(0);
       expect(result.issues).toEqual([]);
     });
+
+    it('should validate two in-memory documents independently', async () => {
+      const validDoc = createMockDocument({ id: 'valid-doc' });
+      const invalidDoc = createMockDocument({
+        id: 'invalid-doc',
+        title: '',
+        content: [],
+        hierarchy: 9 as unknown as LegalHierarchy
+      });
+
+      mockDocumentLoader.loadAllDocuments.mockResolvedValue([validDoc, invalidDoc]);
+
+      const result = await service.validateCorpus();
+
+      expect(result.valid).toBe(1);
+      expect(result.invalid).toBe(1);
+      expect(result.issues).toEqual([
+        {
+          documentId: 'invalid-doc',
+          issues: ['Missing title', 'No content', 'Invalid hierarchy level']
+        }
+      ]);
+    });
+  });
+
+  describe('getStatistics', () => {
+    it('aggregates type/area/hierarchy/size across two in-memory documents', async () => {
+      const docA = createMockDocument({
+        id: 'doc-a',
+        type: 'law',
+        primaryArea: 'labor',
+        hierarchy: 3,
+        content: [
+          { id: 'a-1', type: 'article', number: '1', title: 'Art 1', content: 'uno' },
+          { id: 'a-2', type: 'article', number: '2', title: 'Art 2', content: 'dos' }
+        ]
+      });
+      const docB = createMockDocument({
+        id: 'doc-b',
+        type: 'constitution',
+        primaryArea: 'constitutional',
+        hierarchy: 1,
+        content: [
+          { id: 'b-1', type: 'article', number: '1', title: 'Art 1', content: 'uno' }
+        ]
+      });
+
+      mockDocumentLoader.loadAllDocuments.mockResolvedValue([docA, docB]);
+
+      const stats = await service.getStatistics();
+
+      expect(stats.byType).toEqual({ law: 1, constitution: 1 });
+      expect(stats.byArea).toEqual({ labor: 1, constitutional: 1 });
+      expect(stats.byHierarchy).toEqual({ 3: 1, 1: 1 });
+      expect(stats.averageChunks).toBe(1.5); // (2 + 1) / 2 documents
+      expect(stats.totalSize).toBe(
+        JSON.stringify(docA).length + JSON.stringify(docB).length
+      );
+    });
+
+    it('returns zeroed stats for an empty corpus', async () => {
+      mockDocumentLoader.loadAllDocuments.mockResolvedValue([]);
+
+      const stats = await service.getStatistics();
+
+      expect(stats.byType).toEqual({});
+      expect(stats.byArea).toEqual({});
+      expect(stats.byHierarchy).toEqual({});
+      expect(stats.averageChunks).toBe(0);
+      expect(stats.totalSize).toBe(0);
+    });
   });
 
   describe('importDocument', () => {
@@ -389,7 +515,7 @@ describe('CorpusService', () => {
       const jsonContent = JSON.stringify(mockDocument);
       const file = createMockFile(jsonContent, 'doc.json', 'application/json');
 
-      const result = await service.importDocument(file as any);
+      const result = await service.importDocument(file as unknown as File);
 
       expect(mockIngestionPipeline.ingestDocument).toHaveBeenCalledWith(mockDocument);
       expect(result).toEqual(mockDocument);
@@ -398,7 +524,7 @@ describe('CorpusService', () => {
     it('should handle invalid JSON', async () => {
       const file = createMockFile('invalid json', 'doc.json', 'application/json');
 
-      await expect(service.importDocument(file as any)).rejects.toThrow();
+      await expect(service.importDocument(file as unknown as File)).rejects.toThrow();
     });
 
     it('should handle import errors', async () => {
@@ -412,13 +538,13 @@ describe('CorpusService', () => {
         embeddings: 0
       });
 
-      await expect(service.importDocument(file as any)).rejects.toThrow('Failed to import document');
+      await expect(service.importDocument(file as unknown as File)).rejects.toThrow('Failed to import document');
     });
   });
 
   describe('event emission', () => {
     it('should emit progress events during operations', async () => {
-      const events: any[] = [];
+      const events: Array<CorpusOperationEvent & { stage: string }> = [];
       service.on('operation:start', (event) => events.push({ ...event, stage: 'start' }));
       service.on('operation:complete', (event) => events.push({ ...event, stage: 'complete' }));
 
@@ -494,7 +620,7 @@ describe('CorpusService', () => {
 
       const results = await service.searchDocuments('query');
 
-      expect(results[0].id).toBe('doc1'); // Should rank higher due to more occurrences
+      expect(results[0]!.id).toBe('doc1'); // Should rank higher due to more occurrences
     });
 
     it('should return empty array for no matches', async () => {

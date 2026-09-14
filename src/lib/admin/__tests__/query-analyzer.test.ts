@@ -1,70 +1,85 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { Mock } from 'vitest';
 import { QueryAnalyzer } from '../query-analyzer';
-import type { QueryMetrics as _QueryMetrics, PerformanceReport as _PerformanceReport, PerformanceInsight as _PerformanceInsight } from '../query-analyzer';
-import { setupTestEnvironment, queryMetricsFixture as _queryMetricsFixture } from '../../../test/mocks';
+import { setupTestEnvironment } from '../../../test/mocks';
+
+// `setupTestEnvironment({ mockLocalStorage: true })` (src/test/mocks/index.ts)
+// assigns `global.localStorage` to a `Storage & { data: Map<...> }` mock but
+// only returns `{ beforeEach, afterEach }`, and that richer type isn't
+// exported — redeclare the shape this file actually reads/asserts on.
+interface MockStorage {
+  data: Map<string, string>;
+  getItem: Mock;
+  setItem: Mock;
+  removeItem: Mock;
+  clear: Mock;
+}
+
+// Minimal Blob-like value accepted by MockBlob's constructor below.
+type MockBlobPart = string | ArrayBuffer;
 
 describe('QueryAnalyzer', () => {
   let analyzer: QueryAnalyzer;
-  let mockStorage: any;
+  let mockStorage: MockStorage;
   let fixedDate: Date;
 
   beforeEach(() => {
     // Set up fixed date for consistent timestamps
     fixedDate = new Date('2024-01-15T10:30:00.000Z');
     vi.setSystemTime(fixedDate);
-    
+
     // Set up test environment with localStorage mock
-    const _testEnv = setupTestEnvironment({ mockLocalStorage: true });
-    mockStorage = global.localStorage;
-    
+    setupTestEnvironment({ mockLocalStorage: true });
+    mockStorage = global.localStorage as unknown as MockStorage;
+
     // Clear any existing data
     mockStorage.data.clear();
-    
+
     // Mock Blob for export tests
     class MockBlob {
       size: number;
       type: string;
       data: string;
-      
-      constructor(data: any[], options: any = {}) {
+
+      constructor(data: MockBlobPart[], options: { type?: string } = {}) {
         this.data = data.join('');
         this.size = this.data.length;
         this.type = options?.type || 'text/plain';
       }
-      
+
       text() {
         return Promise.resolve(this.data);
       }
-      
+
       stream() { return {}; }
       arrayBuffer() { return Promise.resolve(new ArrayBuffer(0)); }
       slice() { return new MockBlob([''], {}); }
     }
-    
-    global.Blob = MockBlob as any;
-    
+
+    global.Blob = MockBlob as unknown as typeof Blob;
+
     // Mock FileReader
     class MockFileReader {
       result: string = '';
       onload: (() => void) | null = null;
-      
-      readAsText(blob: any) {
+
+      readAsText(blob: MockBlob | string) {
         // Synchronously set the result to avoid timeout issues
-        if (blob && blob.data) {
+        if (blob && typeof blob === 'object' && 'data' in blob) {
           this.result = blob.data;
         } else {
           this.result = typeof blob === 'string' ? blob : JSON.stringify(blob);
         }
-        
+
         // Call onload immediately
         if (this.onload) {
           this.onload();
         }
       }
     }
-    
-    global.FileReader = MockFileReader as any;
-    
+
+    global.FileReader = MockFileReader as unknown as typeof FileReader;
+
     // Create new analyzer instance
     analyzer = new QueryAnalyzer();
   });
@@ -105,7 +120,7 @@ describe('QueryAnalyzer', () => {
         expect.any(String)
       );
       
-      const savedData = JSON.parse(mockStorage.setItem.mock.calls[0][1]);
+      const savedData = JSON.parse(mockStorage.setItem.mock.calls[0]?.[1]);
       expect(savedData).toHaveLength(1);
       expect(savedData[0].query).toBe('test');
     });
@@ -128,7 +143,7 @@ describe('QueryAnalyzer', () => {
       
       analyzer.trackQuery('new query', 100, true, 'civil', 0.9, false);
       
-      const savedData = JSON.parse(mockStorage.setItem.mock.calls[0][1]);
+      const savedData = JSON.parse(mockStorage.setItem.mock.calls[0]?.[1]);
       expect(savedData.length).toBe(1000);
       expect(savedData[0].query).toBe('new query');
     });
@@ -166,7 +181,7 @@ describe('QueryAnalyzer', () => {
       const recent = analyzer.getRecentQueries(1);
       
       expect(recent).toHaveLength(1);
-      expect(recent[0].query).toBe('query 1');
+      expect(recent[0]?.query).toBe('query 1');
     });
 
     it('should return empty array when no queries exist', () => {
@@ -561,7 +576,7 @@ describe('QueryAnalyzer', () => {
       
       analyzer.updateUserFeedback('query-1', 'positive');
       
-      const savedData = JSON.parse(mockStorage.setItem.mock.calls[0][1]);
+      const savedData = JSON.parse(mockStorage.setItem.mock.calls[0]?.[1]);
       expect(savedData[0].userFeedback).toBe('positive');
     });
 
@@ -673,7 +688,7 @@ describe('QueryAnalyzer', () => {
       const stats = analyzer.getStatsByTimeInterval(Date.now() - 3600000, Date.now(), 'hour');
       
       expect(stats).toHaveLength(1);
-      expect(stats[0].count).toBe(0);
+      expect(stats[0]?.count).toBe(0);
     });
   });
 });

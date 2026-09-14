@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { EventEmitter as _EventEmitter } from 'events';
 import type { QualityTest, TestSuiteResult } from '../quality-test-suite';
-import { createMockLegalRAGEngine, createMockQualityTestSuite, testResultsFixture as _testResultsFixture } from '../../../test/mocks';
+import { createMockLegalRAGEngine, createMockQualityTestSuite } from '../../../test/mocks';
 
 // Mock the RAG engine before importing QualityTestSuite
 vi.mock('../../rag/engine', () => {
@@ -20,13 +19,27 @@ vi.mock('../admin-data-service', () => ({
   }
 }));
 
-// Import after mocking
-import { QualityTestSuite as _QualityTestSuite } from '../quality-test-suite';
-import { LegalRAGEngine as _LegalRAGEngine } from '../../rag/engine';
+// Set up localStorage mock
+function createMockStorage() {
+  const data = new Map<string, string>();
+  return {
+    data,
+    getItem: vi.fn((key: string) => data.get(key) || null),
+    setItem: vi.fn((key: string, value: string) => data.set(key, value)),
+    removeItem: vi.fn((key: string) => data.delete(key)),
+    clear: vi.fn(() => data.clear()),
+    length: 0,
+    key: vi.fn()
+  };
+}
 
 describe('QualityTestSuite', () => {
   let mockSuite: ReturnType<typeof createMockQualityTestSuite>;
-  let mockRagEngine: any;
+  let mockRagEngine: ReturnType<typeof createMockLegalRAGEngine>;
+  // Kept alongside `global.localStorage` (which is cast to the real `Storage`
+  // type) so tests can still reach `.mockReturnValue`/`.mock.calls` on the
+  // same underlying vi.fn() instances without an `any` cast at each call site.
+  let localStorageMock: ReturnType<typeof createMockStorage>;
 
   const mockSearchResult = {
     answer: 'Test answer about Mexican law',
@@ -50,23 +63,11 @@ describe('QualityTestSuite', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Set up localStorage mock
-    const createMockStorage = () => {
-      const data = new Map<string, string>();
-      return {
-        data,
-        getItem: vi.fn((key: string) => data.get(key) || null),
-        setItem: vi.fn((key: string, value: string) => data.set(key, value)),
-        removeItem: vi.fn((key: string) => data.delete(key)),
-        clear: vi.fn(() => data.clear()),
-        length: 0,
-        key: vi.fn()
-      };
-    };
-    global.localStorage = createMockStorage() as any;
-    global.sessionStorage = createMockStorage() as any;
-    
+
+    localStorageMock = createMockStorage();
+    global.localStorage = localStorageMock as unknown as Storage;
+    global.sessionStorage = createMockStorage() as unknown as Storage;
+
     // Create mock suite instance
     mockSuite = createMockQualityTestSuite();
     mockRagEngine = createMockLegalRAGEngine();
@@ -118,7 +119,8 @@ describe('QualityTestSuite', () => {
   describe('runTest', () => {
     it('should run a single test successfully', async () => {
       const tests: QualityTest[] = mockSuite.getAvailableTests();
-      const testId = tests[0].id;
+      const testId = tests[0]?.id;
+      if (!testId) throw new Error('expected at least one available test');
       
       const result = await mockSuite.runTest(testId);
       
@@ -135,19 +137,6 @@ describe('QualityTestSuite', () => {
     });
 
     it('should evaluate citation accuracy test', async () => {
-      mockRagEngine.processLegalQuery = vi.fn().mockResolvedValue({
-        ...mockSearchResult,
-        sources: [
-          {
-            id: 'doc1',
-            content: 'Artículo 123 de la Constitución Política establece el derecho al trabajo',
-            score: 0.95,
-            metadata: { documentTitle: 'CPEUM', legalArea: 'labor' }
-          }
-        ],
-        legalArea: 'labor'
-      });
-      
       const tests: QualityTest[] = mockSuite.getAvailableTests();
       const citationTest = tests.find(t => t.category === 'citation');
       
@@ -162,19 +151,6 @@ describe('QualityTestSuite', () => {
     });
 
     it('should evaluate semantic relevance test', async () => {
-      mockRagEngine.processLegalQuery = vi.fn().mockResolvedValue({
-        ...mockSearchResult,
-        sources: [
-          {
-            id: 'doc1',
-            content: 'El despido justificado requiere causa grave',
-            score: 0.85,
-            metadata: { legalArea: 'labor' }
-          }
-        ],
-        legalArea: 'labor'
-      });
-      
       const tests: QualityTest[] = mockSuite.getAvailableTests();
       const semanticTest = tests.find(t => t.category === 'semantic');
       
@@ -215,7 +191,7 @@ describe('QualityTestSuite', () => {
     });
 
     it('should emit progress events', async () => {
-      const progressEvents: any[] = [];
+      const progressEvents: unknown[] = [];
       
       // Mock suite has EventEmitter functionality
       if (typeof mockSuite.on === 'function') {
@@ -252,7 +228,7 @@ describe('QualityTestSuite', () => {
     });
 
     it('should handle invalid category', async () => {
-      const result = await mockSuite.runTestsByCategory('invalid' as any);
+      const result = await mockSuite.runTestsByCategory('invalid' as unknown as QualityTest['category']);
       
       expect(result.totalTests).toBe(0);
       expect(result.results).toEqual([]);
@@ -275,7 +251,7 @@ describe('QualityTestSuite', () => {
     it('should return empty array when no results stored', () => {
       // Create a separate mock instance that returns empty results
       const emptyMockSuite = createMockQualityTestSuite();
-      (emptyMockSuite.getStoredResults as any).mockReturnValue([]);
+      emptyMockSuite.getStoredResults.mockReturnValue([]);
       
       const results = emptyMockSuite.getStoredResults();
       
@@ -293,13 +269,13 @@ describe('QualityTestSuite', () => {
         results: []
       }));
       
-      (global.localStorage.getItem as any).mockReturnValue(JSON.stringify(mockResults));
-      
+      localStorageMock.getItem.mockReturnValue(JSON.stringify(mockResults));
+
       await mockSuite.runAllTests();
-      
-      const setItemCalls = (global.localStorage.setItem as any).mock.calls;
+
+      const setItemCalls = localStorageMock.setItem.mock.calls;
       const savedCall = setItemCalls.find(
-        (call: any[]) => call[0] === 'lexmx_quality_test_results'
+        (call) => call[0] === 'lexmx_quality_test_results'
       );
       
       if (savedCall) {
@@ -370,17 +346,6 @@ describe('QualityTestSuite', () => {
       );
       
       if (citationTest) {
-        mockRagEngine.processLegalQuery = vi.fn().mockResolvedValue({
-          ...mockSearchResult,
-          sources: [{
-            id: 'doc1',
-            content: 'El artículo 123 de la Constitución establece los derechos laborales',
-            score: 0.95,
-            metadata: { legalArea: 'labor' }
-          }],
-          legalArea: 'labor'
-        });
-        
         const result = await mockSuite.runTest(citationTest.id);
         
         expect(typeof result.passed).toBe('boolean');
@@ -396,15 +361,6 @@ describe('QualityTestSuite', () => {
       );
       
       if (crossRefTest) {
-        mockRagEngine.processLegalQuery = vi.fn().mockResolvedValue({
-          ...mockSearchResult,
-          sources: [
-            { id: 'doc1', content: 'Amparo directo', score: 0.9, metadata: { legalArea: 'constitutional' } },
-            { id: 'doc2', content: 'Amparo indirecto', score: 0.85, metadata: { legalArea: 'constitutional' } }
-          ],
-          legalArea: 'constitutional'
-        });
-        
         const result = await mockSuite.runTest(crossRefTest.id);
         
         expect(result.details).toBeInstanceOf(Array);

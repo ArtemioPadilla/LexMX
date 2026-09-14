@@ -4,8 +4,9 @@ import { IndexedDBVectorStore } from '../storage/indexeddb-vector-store';
 import { TransformersEmbeddings } from '../embeddings/transformers-embeddings';
 import { OpenAIEmbeddings } from '../embeddings/openai-embeddings';
 import { MockEmbeddings } from '../embeddings/mock-embeddings';
-import type { EmbeddingProvider } from '../embeddings/types';
-import type { LegalDocument as _LegalDocument, VectorDocument as _VectorDocument } from '@/types/legal';
+// `EmbeddingsAdapter` (documents/query shape), not `EmbeddingProvider`
+// (embed/embedBatch shape) — see the comment in ../embeddings/types.ts.
+import type { EmbeddingsAdapter } from '../embeddings/types';
 
 export interface EmbeddingStats {
   totalVectors: number;
@@ -46,12 +47,18 @@ export interface TestResult {
 
 export type ProviderType = 'transformers' | 'openai' | 'mock';
 
+// Rolling window for `testProvider` latencies, exposed via `getStats()` as
+// `averageQueryTime`. The vector store itself doesn't track query timing, so
+// this is service-local telemetry rather than a store statistic.
+const QUERY_LATENCY_WINDOW = 20;
+
 export class EmbeddingsService extends EventEmitter {
   private documentLoader: DocumentLoader;
   private vectorStore: IndexedDBVectorStore;
-  private currentProvider: EmbeddingProvider;
+  private currentProvider: EmbeddingsAdapter;
   private currentProviderType: ProviderType;
   private initialized = false;
+  private queryLatencies: number[] = [];
 
   constructor() {
     super();
@@ -129,8 +136,13 @@ export class EmbeddingsService extends EventEmitter {
         progress: 30
       });
 
-      // Convert to vector documents
-      const vectorDocs = await this.documentLoader.convertToVectorDocuments([document]);
+      // convertToVectorDocuments() converts the whole corpus (it has no
+      // per-document overload); keep only the chunks for this document. Chunk
+      // ids are `${documentId}_chunk_${index}` (see document-loader.ts).
+      const allVectorDocs = await this.documentLoader.convertToVectorDocuments();
+      const vectorDocs = allVectorDocs.filter((vectorDoc) =>
+        vectorDoc.id.startsWith(`${document.id}_chunk_`),
+      );
 
       this.emit('progress', {
         stage: 'storing',
@@ -256,11 +268,11 @@ export class EmbeddingsService extends EventEmitter {
   async getStats(): Promise<EmbeddingStats> {
     try {
       const stats = await this.vectorStore.getStats();
-      
+
       return {
         totalVectors: stats.documentCount || 0,
         storageSize: stats.storageSize || 0,
-        averageQueryTime: stats.averageQueryTime || 0,
+        averageQueryTime: this.getAverageQueryTime(),
         modelsAvailable: ['transformers', 'openai', 'mock'],
         currentModel: this.currentProviderType,
         indexStatus: 'ready',
@@ -271,7 +283,7 @@ export class EmbeddingsService extends EventEmitter {
       return {
         totalVectors: 0,
         storageSize: 0,
-        averageQueryTime: 0,
+        averageQueryTime: this.getAverageQueryTime(),
         modelsAvailable: ['transformers', 'openai', 'mock'],
         currentModel: this.currentProviderType,
         indexStatus: 'error',
@@ -280,13 +292,26 @@ export class EmbeddingsService extends EventEmitter {
     }
   }
 
+  private getAverageQueryTime(): number {
+    if (this.queryLatencies.length === 0) return 0;
+    return this.queryLatencies.reduce((a, b) => a + b, 0) / this.queryLatencies.length;
+  }
+
+  private recordQueryLatency(latency: number): void {
+    this.queryLatencies.push(latency);
+    if (this.queryLatencies.length > QUERY_LATENCY_WINDOW) {
+      this.queryLatencies.splice(0, this.queryLatencies.length - QUERY_LATENCY_WINDOW);
+    }
+  }
+
   async testProvider(query: string): Promise<TestResult> {
     const startTime = Date.now();
-    
+
     try {
       const embedding = await this.currentProvider.embedQuery(query);
       const latency = Date.now() - startTime;
-      
+      this.recordQueryLatency(latency);
+
       return {
         success: true,
         provider: this.currentProviderType,
