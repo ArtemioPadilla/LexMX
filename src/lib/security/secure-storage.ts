@@ -131,8 +131,15 @@ export class SecureStorageManager implements SecureStorage {
       if (storedData.encrypted && this.cryptoAvailable) {
         try {
           // Decrypt encrypted data
-          const decrypted = await cryptoManager.decrypt(storedData.data as EncryptedData);
-          return JSON.parse(decrypted) as T;
+          const payload = storedData.data as EncryptedData;
+          const decrypted = await cryptoManager.decrypt(payload);
+          const value = JSON.parse(decrypted) as T;
+          // Payloads written with the legacy constant salt are re-encrypted
+          // with the per-installation salt on their first successful read.
+          if (ClientCryptoManager.isLegacyPayload(payload)) {
+            await this.store(key, value).catch((e) => console.warn('Re-encryption skipped:', e));
+          }
+          return value;
         } catch (decryptError) {
           console.warn('Decryption failed, clearing corrupted data:', decryptError);
           // Clear corrupted data

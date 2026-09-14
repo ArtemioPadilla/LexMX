@@ -53,6 +53,7 @@ reinstalación.
 | `webllm_loaded_models` | modelos WebLLM descargados | `src/lib/llm/providers/webllm-provider.ts` |
 | `lexmx_document_requests` | solicitudes de documentos creadas en este navegador, votos y comentarios locales (`{ requests, votes, comments }`) | `src/lib/document-requests/request-store.ts` |
 | `lexmx_jurisdiction` | código de jurisdicción activa (`mx`, `cl`, …); ausente ⇒ `mx` | `src/stores/jurisdiction.ts` |
+| `lexmx_kdf_salt` | sal PBKDF2 por instalación (base64, 16 bytes). Borrarla hace ilegibles los payloads versión 2 | `src/lib/security/encryption.ts` |
 | `lexmx_request_voter_id` | id anónimo aleatorio para evitar votos duplicados; nunca se envía | `src/lib/document-requests/request-store.ts` |
 
 
@@ -62,7 +63,7 @@ reinstalación.
 |---|---|---|
 | Algoritmo | `AES-GCM`, llave de 256 bits | `src/lib/security/encryption.ts` |
 | Derivación de llave | `PBKDF2`, `SHA-256`, `keyDerivationRounds` (ver config) | `src/lib/security/encryption.ts` |
-| Sal | **Constante** `'lexmx-legal-assistant-2024'` (26 bytes). `saltLength: 16` existe en la config pero no se usa. Hallazgo de la Fase 3: sal fija y no aleatoria; corregirlo exige re-cifrar las llaves guardadas con la contraseña del usuario en el siguiente desbloqueo (migración explícita, ver plan § 5 Fase 3) | `src/lib/security/encryption.ts` |
+| Sal | **Versión 2**: 16 bytes aleatorios por instalación, guardados en `localStorage['lexmx_kdf_salt']` (base64). Los payloads con `version: 1` (sal constante `'lexmx-legal-assistant-2024'`) se siguen descifrando con la sal heredada y `SecureStorage.retrieve` los re-cifra con la versión 2 en su primera lectura correcta; nunca se borran en silencio | `src/lib/security/encryption.ts`, `src/lib/security/secure-storage.ts` |
 | IV | 12 bytes aleatorios | `src/lib/security/encryption.ts` |
 
 Cambiar cualquiera de estos valores hace ilegibles las llaves guardadas. Si se

@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import { webcrypto } from 'node:crypto';
-import { ClientCryptoManager } from '../encryption';
+import { ClientCryptoManager, LEGACY_SALT, ENCRYPTION_VERSION } from '../encryption';
 
 // jsdom (and the global Vitest setup in src/test/setupTests.ts) do not ship a
 // working WebCrypto implementation -- `crypto.subtle` there is a bag of
@@ -96,6 +96,12 @@ describe('ClientCryptoManager', () => {
 // previously-encrypted provider keys unreadable. See also
 // secure-storage.test.ts for the `lexmx_` storage-key prefix contract.
 describe('encryption contract (docs/DATA-COMPATIBILITY.md)', () => {
+  beforeEach(() => {
+    // Real in-memory localStorage: the global setup installs a stub that never persists.
+    const mem = new Map<string, string>();
+    Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => void mem.set(k, v), removeItem: (k: string) => void mem.delete(k), clear: () => mem.clear(), key: () => null, length: 0 } });
+  });
+
   it('uses AES-GCM with a 12-byte IV for every encrypted payload', async () => {
     const manager = new ClientCryptoManager();
     const key = await manager.generateKey('password');
@@ -115,17 +121,30 @@ describe('encryption contract (docs/DATA-COMPATIBILITY.md)', () => {
     const params = deriveKeySpy.mock.calls[0]?.[0] as Pbkdf2LikeParams;
     expect(params.name).toBe('PBKDF2');
     expect(params.hash).toBe('SHA-256');
-    // NOTE: docs/DATA-COMPATIBILITY.md documents the salt as "16 bytes
-    // aleatorios", and `SecurityConfig.saltLength` is set to 16, but the
-    // actual salt baked into generateKey() is the fixed 26-byte string
-    // 'lexmx-legal-assistant-2024' -- constant across installs/passwords,
-    // not random, and not derived from `saltLength`. This test pins the
-    // *current* behaviour rather than the documented one; see the Forja
-    // report for this module for a flag to fix under a proper migration
-    // (changing the salt would make existing encrypted provider keys
-    // unreadable without one).
-    expect(params.salt.byteLength).toBe(26);
+    // Version 2: a random 16-byte salt per installation, persisted in
+    // localStorage (lexmx_kdf_salt); see docs/DATA-COMPATIBILITY.md.
+    expect(params.salt.byteLength).toBe(16);
+    expect(localStorage.getItem('lexmx_kdf_salt')).not.toBeNull();
 
     deriveKeySpy.mockRestore();
+  });
+});
+
+describe('salt migration (version 1 -> 2)', () => {
+  it('decrypts legacy payloads with the constant salt and writes version 2', async () => {
+    const legacy = new ClientCryptoManager();
+    const material = new TextEncoder().encode(`${await legacy.generateFingerprint()}-pw`);
+    const imported = await crypto.subtle.importKey('raw', material, 'PBKDF2', false, ['deriveKey']);
+    const legacyKey = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: new TextEncoder().encode(LEGACY_SALT), iterations: 100000, hash: 'SHA-256' }, imported, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    const v1 = { ...(await legacy.encrypt('secreto', legacyKey)), version: 1 };
+    expect(ClientCryptoManager.isLegacyPayload(v1)).toBe(true);
+
+    const manager = new ClientCryptoManager();
+    await manager.generateKey('pw');
+    expect(await manager.decrypt(v1)).toBe('secreto');
+    const v2 = await manager.encrypt('secreto');
+    expect(v2.version).toBe(ENCRYPTION_VERSION);
+    expect(ClientCryptoManager.isLegacyPayload(v2)).toBe(false);
+    expect(await manager.decrypt(v2)).toBe('secreto');
   });
 });

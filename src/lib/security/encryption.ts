@@ -9,7 +9,59 @@ interface NavigatorWithDeviceMemory extends Navigator {
   deviceMemory?: number;
 }
 
+/** Salt used by every payload written before version 2 (constant, documented in docs/DATA-COMPATIBILITY.md). */
+export const LEGACY_SALT = 'lexmx-legal-assistant-2024';
+/** localStorage key holding the per-installation salt (base64, 16 random bytes). */
+export const SALT_STORAGE_KEY = 'lexmx_kdf_salt';
+/** Payload version written by `encrypt()` since the random salt landed. */
+export const ENCRYPTION_VERSION = 2;
+
 export class ClientCryptoManager implements CryptoManager {
+  private keyMaterialBuffer: Uint8Array<ArrayBuffer> | null = null;
+  private legacyKey: CryptoKey | null = null;
+
+  /** Reads or creates the per-installation salt. Falls back to an in-memory salt when storage is unavailable. */
+  installationSalt(): Uint8Array<ArrayBuffer> {
+    const fresh = (): Uint8Array<ArrayBuffer> => crypto.getRandomValues(new Uint8Array(new ArrayBuffer(this.config.saltLength)));
+    try {
+      const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(SALT_STORAGE_KEY) : null;
+      if (stored) {
+        const decoded = atob(stored);
+        const salt = new Uint8Array(new ArrayBuffer(decoded.length));
+        for (let i = 0; i < decoded.length; i++) salt[i] = decoded.charCodeAt(i);
+        return salt;
+      }
+      const salt = fresh();
+      if (typeof localStorage !== 'undefined') localStorage.setItem(SALT_STORAGE_KEY, btoa(String.fromCharCode(...salt)));
+      return salt;
+    } catch {
+      return fresh();
+    }
+  }
+
+  private deriveWithSalt(importedKey: CryptoKey, salt: BufferSource): Promise<CryptoKey> {
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: this.config.keyDerivationRounds, hash: 'SHA-256' },
+      importedKey,
+      { name: this.config.encryptionAlgorithm, length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  }
+
+  /** Key for version-1 payloads (constant salt), derived lazily from the same key material. */
+  private async legacyMasterKey(): Promise<CryptoKey | null> {
+    if (this.legacyKey) return this.legacyKey;
+    if (!this.keyMaterialBuffer) return null;
+    const importedKey = await crypto.subtle.importKey('raw', this.keyMaterialBuffer, 'PBKDF2', false, ['deriveKey']);
+    this.legacyKey = await this.deriveWithSalt(importedKey, new TextEncoder().encode(LEGACY_SALT));
+    return this.legacyKey;
+  }
+
+  /** True when a payload was written with the legacy constant salt and should be re-encrypted. */
+  static isLegacyPayload(payload: EncryptedData): boolean {
+    return payload.algorithm !== 'FALLBACK' && (payload.version ?? 1) < ENCRYPTION_VERSION;
+  }
   private config: SecurityConfig = {
     encryptionAlgorithm: 'AES-GCM',
     keyDerivationRounds: 100000,
@@ -47,24 +99,13 @@ export class ClientCryptoManager implements CryptoManager {
         ['deriveKey']
       );
 
-      // Generate salt
-      const salt = new TextEncoder().encode('lexmx-legal-assistant-2024');
-
-      // Derive AES key
-      const derivedKey = await crypto.subtle.deriveKey(
-        {
-          name: 'PBKDF2',
-          salt,
-          iterations: this.config.keyDerivationRounds,
-          hash: 'SHA-256'
-        },
-        importedKey,
-        { name: this.config.encryptionAlgorithm, length: 256 },
-        false,
-        ['encrypt', 'decrypt']
-      );
-
+      // Per-installation random salt (version 2). Payloads written before
+      // the salt existed (version 1) are decrypted with the legacy constant
+      // salt and re-encrypted by SecureStorage on their next read.
+      this.keyMaterialBuffer = keyMaterialBuffer;
+      const derivedKey = await this.deriveWithSalt(importedKey, this.installationSalt());
       this.masterKey = derivedKey;
+      this.legacyKey = null;
       return derivedKey;
     } catch (error) {
       console.error('Failed to generate crypto key:', error);
@@ -111,7 +152,7 @@ export class ClientCryptoManager implements CryptoManager {
         data: Array.from(new Uint8Array(encrypted)),
         iv: Array.from(iv),
         algorithm: this.config.encryptionAlgorithm,
-        version: 1
+        version: ENCRYPTION_VERSION
       };
     } catch (error) {
       console.error('Encryption failed:', error);
@@ -142,7 +183,8 @@ export class ClientCryptoManager implements CryptoManager {
       return this.deobfuscateData(encoded, this.fallbackKey || 'default-key');
     }
     
-    const decryptionKey = key || this.masterKey;
+    const legacy = !key && ClientCryptoManager.isLegacyPayload(encryptedData);
+    const decryptionKey = key || (legacy ? await this.legacyMasterKey() : this.masterKey);
     if (!decryptionKey) {
       throw new Error('No decryption key available. Call generateKey() first.');
     }
