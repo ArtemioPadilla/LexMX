@@ -196,3 +196,7 @@ checksums.txt
 !.github/
 !.gitignore
 !.dockerignore
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/

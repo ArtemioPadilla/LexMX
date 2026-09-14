@@ -36,7 +36,9 @@
     "corpus:embeddings": "node --experimental-strip-types scripts/corpus/build-embeddings.ts",
     "eval:retrieval": "node --experimental-strip-types scripts/eval/retrieval.ts",
     "lighthouse": "ASTRO_BASE=/LexMX npm run build && npx --yes @lhci/cli@0.15 autorun",
-    "mcp": "node --experimental-strip-types scripts/mcp/server.ts"
+    "mcp": "node --experimental-strip-types scripts/mcp/server.ts",
+    "desktop:dev": "npx --yes @tauri-apps/cli@^2 dev",
+    "desktop:build": "npx --yes @tauri-apps/cli@^2 build"
   },
   "dependencies": {
     "@astrojs/react": "^5.0.7",

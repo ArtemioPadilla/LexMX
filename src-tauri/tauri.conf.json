@@ -1,0 +1,34 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "LexMX",
+  "version": "0.1.0",
+  "identifier": "mx.lexmx.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:4321",
+    "beforeBuildCommand": "ASTRO_BASE=/ npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "LexMX",
+        "width": 1280,
+        "height": 840,
+        "minWidth": 900,
+        "minHeight": 600
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https: blob: data:; worker-src 'self' blob:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["../public/icon-512.png"],
+    "category": "Productivity",
+    "shortDescription": "Asistente legal mexicano local-first",
+    "longDescription": "LexMX Escritorio: consulta la legislación mexicana con IA en tu equipo. El corpus y el modelo se guardan en disco; nada sale de tu computadora salvo lo que tú envías a tu proveedor."
+  }
+}
