@@ -171,7 +171,7 @@ export class LineageProcessor {
     documentId: string;
     action: LineageAudit['action'];
     actor: string;
-    changes?: Record<string, any>;
+    changes?: Record<string, unknown>;
     reason?: string;
   }): LineageAudit {
     return {

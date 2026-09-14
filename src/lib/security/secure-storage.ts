@@ -113,14 +113,17 @@ export class SecureStorageManager implements SecureStorage {
     }
   }
 
-  async retrieve(key: string): Promise<any | null> {
+  // Generic on the call site (e.g. `retrieve<ProviderConfig>('provider_x')`) so
+  // callers get a real type instead of `any`; defaults to `unknown` to match
+  // the `SecureStorage` interface when no type argument is given.
+  async retrieve<T = unknown>(key: string): Promise<T | null> {
     const storageKey = this.prefix + key;
-    
+
     // Ensure we're initialized
     if (!this.initialized) {
       await this.initialize();
     }
-    
+
     try {
       const storedData = this.retrieveFromBrowser(storageKey);
       if (!storedData) return null;
@@ -129,7 +132,7 @@ export class SecureStorageManager implements SecureStorage {
         try {
           // Decrypt encrypted data
           const decrypted = await cryptoManager.decrypt(storedData.data as EncryptedData);
-          return JSON.parse(decrypted);
+          return JSON.parse(decrypted) as T;
         } catch (decryptError) {
           console.warn('Decryption failed, clearing corrupted data:', decryptError);
           // Clear corrupted data
@@ -140,14 +143,14 @@ export class SecureStorageManager implements SecureStorage {
         // Decode base64 encoded data
         try {
           const decoded = decodeURIComponent(atob(storedData.data as string));
-          return JSON.parse(decoded);
+          return JSON.parse(decoded) as T;
         } catch (decodeError) {
           console.error('Base64 decode failed:', decodeError);
           return null;
         }
       } else {
         // Return plain data
-        return storedData.data;
+        return storedData.data as T;
       }
     } catch (error) {
       console.error('Error retrieving secure data:', error);
@@ -207,7 +210,7 @@ export class SecureStorageManager implements SecureStorage {
   }
 
   async getProviderConfig(providerId: string): Promise<ProviderConfig | null> {
-    return await this.retrieve(`provider_${providerId}`);
+    return await this.retrieve<ProviderConfig>(`provider_${providerId}`);
   }
 
   async getAllProviderConfigs(): Promise<ProviderConfig[]> {
@@ -220,7 +223,7 @@ export class SecureStorageManager implements SecureStorage {
         const key = storage.key(i);
         if (key && key.startsWith(this.prefix + 'provider_')) {
           try {
-            const config = await this.retrieve(key.replace(this.prefix, ''));
+            const config = await this.retrieve<ProviderConfig>(key.replace(this.prefix, ''));
             if (config) configs.push(config);
           } catch (error) {
             console.warn(`Failed to retrieve provider config from key ${key}:`, error);
@@ -242,7 +245,7 @@ export class SecureStorageManager implements SecureStorage {
 
   // Preferred provider management
   async getPreferredProvider(): Promise<string | null> {
-    return await this.retrieve('preferred_provider');
+    return await this.retrieve<string>('preferred_provider');
   }
 
   async setPreferredProvider(providerId: string): Promise<void> {

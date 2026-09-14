@@ -278,7 +278,11 @@ servir. Tamaños en orden de magnitud para una persona con agentes.
 Orden por dependencia; cada módulo entra al `include` estricto con tests
 nuevos y sin `any`:
 
-1. `lib/security` y `lib/storage` (contrato de datos como tests).
+1. `lib/security` y `lib/storage` (contrato de datos como tests). Hallazgo al
+   sanear `security`: la sal de PBKDF2 es una constante fija, no 16 bytes
+   aleatorios como decía el contrato. Se documentó el comportamiento real y
+   queda como issue propio: migrar a sal aleatoria por usuario re-cifrando
+   las llaves guardadas en el siguiente desbloqueo, nunca en silencio.
 2. `lib/llm`: una implementación por proveedor; prompts a `lib/llm/prompts/`
    (por claridad, no por peso).
 3. `lib/embeddings`: transformers.js por `import()` diferido; borrar los 3

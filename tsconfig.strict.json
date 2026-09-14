@@ -19,6 +19,12 @@
     "src/utils/urls.ts",
     "src/islands/ErrorBoundary.tsx",
     "src/islands/HydrationCanary.tsx",
-    "src/pipeline/**/*.ts"
+    "src/pipeline/**/*.ts",
+    "src/lib/security/**/*.ts",
+    "src/lib/storage/**/*.ts",
+    "src/lib/legal/**/*.ts",
+    "src/lib/corpus/**/*.ts",
+    "src/lib/embeddings/**/*.ts",
+    "src/lib/utils/**/*.ts"
   ]
 }

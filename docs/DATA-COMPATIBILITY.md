@@ -24,7 +24,8 @@ anterior. Este contrato se convierte en tests en la Fase 3 del plan
 
 | Clave | Contenido | Dónde |
 |---|---|---|
-| `lexmx_openai_key`, `lexmx_claude_key`, `lexmx_gemini_key` | llaves de proveedor cifradas (ver cifrado) | `src/lib/security/secure-storage.ts` |
+| `lexmx_openai_key`, `lexmx_claude_key`, `lexmx_gemini_key` | llaves de proveedor leídas como respaldo de variables de entorno | `src/lib/utils/env-config.ts` |
+| `lexmx_provider_<id>` | configuración de proveedor cifrada (AES-GCM) | `src/lib/security/secure-storage.ts` |
 | `lexmx_cases` | casos del usuario (JSON) | `src/islands/CaseManager.tsx` |
 | `lexmx_query_history` | historial de consultas para métricas locales | `src/lib/admin/admin-data-service.ts` |
 | `lexmx-search-history` | historial de búsquedas | islas de búsqueda |
@@ -41,7 +42,7 @@ anterior. Este contrato se convierte en tests en la Fase 3 del plan
 |---|---|---|
 | Algoritmo | `AES-GCM`, llave de 256 bits | `src/lib/security/encryption.ts` |
 | Derivación de llave | `PBKDF2`, `SHA-256`, `keyDerivationRounds` (ver config) | `src/lib/security/encryption.ts` |
-| Sal | 16 bytes aleatorios | `src/lib/security/encryption.ts` |
+| Sal | **Constante** `'lexmx-legal-assistant-2024'` (26 bytes). `saltLength: 16` existe en la config pero no se usa. Hallazgo de la Fase 3: sal fija y no aleatoria; corregirlo exige re-cifrar las llaves guardadas con la contraseña del usuario en el siguiente desbloqueo (migración explícita, ver plan § 5 Fase 3) | `src/lib/security/encryption.ts` |
 | IV | 12 bytes aleatorios | `src/lib/security/encryption.ts` |
 
 Cambiar cualquiera de estos valores hace ilegibles las llaves guardadas. Si se

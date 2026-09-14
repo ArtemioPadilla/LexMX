@@ -1,6 +1,8 @@
 // Pre-flight CORS detection and environment analysis
 // Determines whether a URL will have CORS issues before attempting fetch
 
+import type { TranslationValue, TranslationParams } from '@/types/common';
+
 export interface CorsAnalysisResult {
   willBeCorsBlocked: boolean;
   isCrossOrigin: boolean;
@@ -51,7 +53,10 @@ export class CorsDetector {
    * Analyze a URL for CORS issues without making network requests
    * Now supports i18n with translations parameter
    */
-  static async analyzeCorsRequirements(url: string, translations?: any): Promise<CorsAnalysisResult> {
+  static async analyzeCorsRequirements(
+    url: string,
+    translations?: Record<string, TranslationValue>
+  ): Promise<CorsAnalysisResult> {
     // Basic URL validation
     let parsedUrl: URL;
     try {
@@ -210,7 +215,7 @@ export class CorsDetector {
       
       // Only log connection errors in development, not in production/GitHub Pages
       if (this.detectEnvironment() === 'localhost') {
-        console.debug('CORS proxy not available:', error instanceof Error ? error.message : 'Unknown error');
+        console.warn('CORS proxy not available:', error instanceof Error ? error.message : 'Unknown error');
       }
     }
 
@@ -230,7 +235,7 @@ export class CorsDetector {
     corsProxyAvailable: boolean;
     corsProxyHealthy: boolean;
     willBeCorsBlocked: boolean;
-    translations?: any;
+    translations?: Record<string, TranslationValue>;
   }): {
     title: string;
     description: string;
@@ -250,23 +255,28 @@ export class CorsDetector {
     } = context;
 
     // Helper function to get translated text or fallback
-    const t = (key: string, params?: any) => {
+    const t = (key: string, params?: TranslationParams): string => {
       if (!translations) {
         // Fallback to English hardcoded strings
         return this.getFallbackText(key, params);
       }
-      
+
       const keys = key.split('.');
-      let value = translations;
+      let value: string | string[] | TranslationValue | undefined = translations;
       for (const k of keys) {
-        value = value?.[k];
+        if (typeof value === 'object' && value !== null && !Array.isArray(value) && k in value) {
+          value = value[k];
+        } else {
+          value = undefined;
+          break;
+        }
       }
-      
+
       if (typeof value === 'string' && params) {
         return this.interpolateString(value, params);
       }
-      
-      return value || this.getFallbackText(key, params);
+
+      return typeof value === 'string' ? value : this.getFallbackText(key, params);
     };
 
     const actionSteps: string[] = [];
@@ -286,6 +296,15 @@ export class CorsDetector {
         description = 'CORS proxy is available and healthy.';
         quickFix = t('corsGuidance.status.ready');
         actionSteps.push('✅ CORS proxy is healthy - URL ingestion enabled');
+      } else {
+        // Defensive fallback: willBeCorsBlocked = isCrossOrigin && !corsProxyHealthy, so
+        // reaching `!willBeCorsBlocked` with isCrossOrigin true implies corsProxyHealthy is
+        // true. This branch keeps `title`/`description`/`quickFix` definitely assigned if
+        // that invariant is ever broken by a future refactor.
+        title = t('corsGuidance.status.ready');
+        description = 'This URL should work normally.';
+        quickFix = t('corsGuidance.status.ready');
+        actionSteps.push('✅ Ready to proceed with ingestion.');
       }
       return {
         title,
@@ -361,7 +380,7 @@ export class CorsDetector {
   /**
    * Fallback text for when translations are not available
    */
-  private static getFallbackText(key: string, params?: any): string {
+  private static getFallbackText(key: string, params?: TranslationParams): string {
     const fallbacks: Record<string, string> = {
       'corsGuidance.title.mexicanGovt': 'Cross-Origin Policy Blocks Mexican Government Document',
       'corsGuidance.title.general': 'Cross-Origin Request Blocked by Browser Security',
@@ -400,7 +419,7 @@ export class CorsDetector {
   /**
    * Simple string interpolation for translations
    */
-  private static interpolateString(template: string, params: Record<string, any>): string {
+  private static interpolateString(template: string, params: TranslationParams): string {
     return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
       return params[key] !== undefined ? String(params[key]) : match;
     });
@@ -442,7 +461,10 @@ export class CorsDetector {
 /**
  * Convenience function for quick CORS analysis
  */
-export async function analyzeCors(url: string, translations?: any): Promise<CorsAnalysisResult> {
+export async function analyzeCors(
+  url: string,
+  translations?: Record<string, TranslationValue>
+): Promise<CorsAnalysisResult> {
   return CorsDetector.analyzeCorsRequirements(url, translations);
 }
 

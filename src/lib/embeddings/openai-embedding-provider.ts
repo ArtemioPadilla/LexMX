@@ -1,7 +1,18 @@
 // OpenAI embeddings provider
 
 import { BaseEmbeddingProvider } from './base-provider';
-import type { EmbeddingProviderType, EmbeddingVector } from '@/types/embeddings';
+import type { EmbeddingProviderConfig, EmbeddingProviderType, EmbeddingVector } from '@/types/embeddings';
+
+// Shape of the OpenAI `/v1/embeddings` response we actually read. Declared
+// locally (network boundary) instead of pulling in the `openai` SDK.
+interface OpenAIEmbeddingItem {
+  embedding: number[];
+  index: number;
+}
+
+interface OpenAIEmbeddingResponse {
+  data: OpenAIEmbeddingItem[];
+}
 
 export class OpenAIEmbeddingProvider extends BaseEmbeddingProvider {
   type: EmbeddingProviderType = 'openai';
@@ -9,7 +20,7 @@ export class OpenAIEmbeddingProvider extends BaseEmbeddingProvider {
   private apiUrl: string;
   private modelName: string;
 
-  constructor(config: any = {}) {
+  constructor(config: EmbeddingProviderConfig = {}) {
     super({
       dimensions: 1536, // Default for text-embedding-3-small
       ...config
@@ -18,6 +29,10 @@ export class OpenAIEmbeddingProvider extends BaseEmbeddingProvider {
     this.apiKey = config.apiKey || '';
     this.apiUrl = config.apiUrl || 'https://api.openai.com/v1/embeddings';
     this.modelName = config.model || 'text-embedding-3-small';
+    // Keep `config.model` in sync so the inherited `getModelName()` (which
+    // reads `this.config.model`) reflects the resolved default, not just an
+    // explicitly-passed one.
+    this.config.model = this.modelName;
 
     // Adjust dimensions based on model
     if (this.modelName === 'text-embedding-3-large') {
@@ -37,79 +52,70 @@ export class OpenAIEmbeddingProvider extends BaseEmbeddingProvider {
       await this.generateEmbedding('test');
       this.initialized = true;
       this.stats.modelLoaded = true;
-      console.log('[OpenAIProvider] Initialized successfully');
     } catch (error) {
-      console.error('[OpenAIProvider] Failed to initialize:', error);
       throw new Error(`Failed to connect to OpenAI API: ${error}`);
     }
   }
 
   protected async generateEmbedding(text: string): Promise<EmbeddingVector> {
-    try {
-      const response = await fetch(this.apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: this.modelName,
-          input: text,
-          encoding_format: 'float'
-        })
-      });
+    const response = await fetch(this.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: this.modelName,
+        input: text,
+        encoding_format: 'float'
+      })
+    });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`OpenAI API error: ${error}`);
-      }
-
-      const data = await response.json();
-      const embedding = data.data[0].embedding;
-
-      return {
-        values: embedding,
-        dimensions: embedding.length
-      };
-    } catch (error) {
-      console.error('[OpenAIProvider] Embedding generation failed:', error);
-      throw error;
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`OpenAI API error: ${error}`);
     }
+
+    const data = (await response.json()) as OpenAIEmbeddingResponse;
+    const [first] = data.data;
+    if (!first) {
+      throw new Error('OpenAI API returned no embeddings');
+    }
+
+    return {
+      values: first.embedding,
+      dimensions: first.embedding.length
+    };
   }
 
   protected async generateEmbeddingBatch(texts: string[]): Promise<EmbeddingVector[]> {
-    try {
-      const response = await fetch(this.apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: this.modelName,
-          input: texts,
-          encoding_format: 'float'
-        })
-      });
+    const response = await fetch(this.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: this.modelName,
+        input: texts,
+        encoding_format: 'float'
+      })
+    });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`OpenAI API error: ${error}`);
-      }
-
-      const data = await response.json();
-      
-      // Sort by index to maintain order
-      const sortedData = data.data.sort((a: any, b: any) => a.index - b.index);
-      
-      return sortedData.map((item: any) => ({
-        values: item.embedding,
-        dimensions: item.embedding.length
-      }));
-    } catch (error) {
-      console.error('[OpenAIProvider] Batch embedding generation failed:', error);
-      throw error;
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`OpenAI API error: ${error}`);
     }
+
+    const data = (await response.json()) as OpenAIEmbeddingResponse;
+
+    // Sort by index to maintain input order
+    const sortedData = [...data.data].sort((a, b) => a.index - b.index);
+
+    return sortedData.map((item) => ({
+      values: item.embedding,
+      dimensions: item.embedding.length
+    }));
   }
 
   // Get available models for the UI

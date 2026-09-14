@@ -77,12 +77,16 @@ export abstract class BaseEmbeddingProvider implements EmbeddingProvider {
       this.cache = new InMemoryEmbeddingCache(this.config.cacheExpiration);
     }
 
+    // `this.type` is an abstract property assigned by the subclass's field
+    // initializer, which (per JS class field semantics) runs AFTER this base
+    // constructor returns — reading it here would be `undefined`. Use a
+    // placeholder and resolve the real value lazily in `getStats()`.
     this.stats = {
       totalEmbeddings: 0,
       cachedEmbeddings: 0,
       averageProcessingTime: 0,
       modelLoaded: false,
-      providerType: this.type
+      providerType: ''
     };
   }
 
@@ -126,12 +130,11 @@ export abstract class BaseEmbeddingProvider implements EmbeddingProvider {
       await this.initialize();
     }
 
-    const results: EmbeddingVector[] = [];
+    const results: EmbeddingVector[] = new Array(texts.length);
     const textsToEmbed: { text: string; index: number }[] = [];
 
     // Check cache for each text
-    for (let i = 0; i < texts.length; i++) {
-      const text = texts[i];
+    for (const [i, text] of texts.entries()) {
       if (this.cache) {
         const cacheKey = this.getCacheKey(text);
         const cached = this.cache.get(cacheKey);
@@ -146,8 +149,8 @@ export abstract class BaseEmbeddingProvider implements EmbeddingProvider {
 
     // Generate embeddings for uncached texts
     if (textsToEmbed.length > 0) {
-      const batchSize = this.config.batchSize || 50;
-      
+      const batchSize = this.config.batchSize ?? 50;
+
       for (let i = 0; i < textsToEmbed.length; i += batchSize) {
         const batch = textsToEmbed.slice(i, i + batchSize);
         const startTime = Date.now();
@@ -159,9 +162,10 @@ export abstract class BaseEmbeddingProvider implements EmbeddingProvider {
         this.updateAverageProcessingTime(processingTime / embeddings.length);
 
         // Store results and cache
-        for (let j = 0; j < batch.length; j++) {
-          const { text, index } = batch[j];
+        for (const [j, { text, index }] of batch.entries()) {
           const embedding = embeddings[j];
+          if (!embedding) continue; // generateEmbeddingBatch must return one vector per input text
+
           results[index] = embedding;
 
           if (this.cache) {
@@ -180,7 +184,17 @@ export abstract class BaseEmbeddingProvider implements EmbeddingProvider {
   }
 
   getStats(): EmbeddingProviderStats {
-    return { ...this.stats };
+    return { ...this.stats, providerType: this.type };
+  }
+
+  // Config-derived accessors used by legacy adapters (see mock-embeddings.ts,
+  // openai-embeddings.ts, transformers-embeddings.ts).
+  getDimensions(): number {
+    return this.config.dimensions ?? 0;
+  }
+
+  getModelName(): string {
+    return this.config.model ?? this.type;
   }
 
   clearCache(): void {

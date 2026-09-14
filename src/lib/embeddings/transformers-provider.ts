@@ -1,21 +1,16 @@
 // Transformers.js provider for free in-browser embeddings
 
-import { pipeline, env } from '@xenova/transformers';
 import { BaseEmbeddingProvider } from './base-provider';
 import type { EmbeddingProviderType, EmbeddingVector, EmbeddingProviderConfig } from '@/types/embeddings';
 import type { ProgressEvent } from '@/types/common';
-
-// Configure Transformers.js for browser environment
-env.allowLocalModels = false; // Use CDN models
-// `navigator` is a browser global; it does not exist during Astro's SSG build (Node).
-// Guard the access so importing this module in a Node build context doesn't throw.
-const hardwareConcurrency =
-  typeof navigator !== 'undefined' ? navigator.hardwareConcurrency : undefined;
-env.backends.onnx.wasm.numThreads = Math.min(4, hardwareConcurrency || 4); // Multi-threading for better performance
+// Type-only import: erased at compile time, so it does NOT pull the runtime
+// package (and its onnxruntime-node native binding) into any eagerly-loaded
+// bundle. The actual module is loaded dynamically inside `initialize()`.
+import type { FeatureExtractionPipeline, Tensor } from '@xenova/transformers';
 
 export class TransformersEmbeddingProvider extends BaseEmbeddingProvider {
   type: EmbeddingProviderType = 'transformers';
-  private extractor: unknown = null;
+  private extractor: FeatureExtractionPipeline | null = null;
   private modelName: string;
   private progressCallback?: (progress: ProgressEvent) => void;
 
@@ -27,6 +22,10 @@ export class TransformersEmbeddingProvider extends BaseEmbeddingProvider {
 
     // Default to multilingual model for Spanish/English support
     this.modelName = config.model || 'Xenova/multilingual-e5-small';
+    // Keep `config.model` in sync so the inherited `getModelName()` (which
+    // reads `this.config.model`) reflects the resolved default, not just an
+    // explicitly-passed one.
+    this.config.model = this.modelName;
     this.progressCallback = config.onProgress;
   }
 
@@ -34,8 +33,18 @@ export class TransformersEmbeddingProvider extends BaseEmbeddingProvider {
     if (this.initialized) return;
 
     try {
-      console.log(`[TransformersProvider] Loading model: ${this.modelName}`);
-      
+      // Dynamic import keeps `@xenova/transformers` out of any eagerly-loaded
+      // script chunk — it (and onnxruntime) is only fetched when a real
+      // embedding is actually requested.
+      const { pipeline, env } = await import('@xenova/transformers');
+
+      env.allowLocalModels = false; // Use CDN models
+      // `navigator` is a browser global; it does not exist during Astro's SSG build (Node).
+      // Guard the access so importing/initializing this module in a Node build context doesn't throw.
+      const hardwareConcurrency =
+        typeof navigator !== 'undefined' ? navigator.hardwareConcurrency : undefined;
+      env.backends.onnx.wasm.numThreads = Math.min(4, hardwareConcurrency || 4); // Multi-threading for better performance
+
       // Create feature extraction pipeline
       this.extractor = await pipeline('feature-extraction', this.modelName, {
         progress_callback: this.progressCallback
@@ -43,10 +52,7 @@ export class TransformersEmbeddingProvider extends BaseEmbeddingProvider {
 
       this.initialized = true;
       this.stats.modelLoaded = true;
-      
-      console.log(`[TransformersProvider] Model loaded successfully`);
     } catch (error) {
-      console.error('[TransformersProvider] Failed to initialize:', error);
       throw new Error(`Failed to load Transformers.js model: ${error}`);
     }
   }
@@ -56,25 +62,20 @@ export class TransformersEmbeddingProvider extends BaseEmbeddingProvider {
       throw new Error('Model not initialized');
     }
 
-    try {
-      // Generate embeddings
-      const output = await this.extractor(text, {
-        pooling: 'mean',
-        normalize: true
-      });
+    // Generate embeddings
+    const output: Tensor = await this.extractor(text, {
+      pooling: 'mean',
+      normalize: true
+    });
 
-      // Convert to array and normalize
-      const values = Array.from(output.data as Float32Array);
-      const normalized = this.normalizeVector(values);
+    // Convert to array and normalize
+    const values = Array.from(output.data as Float32Array);
+    const normalized = this.normalizeVector(values);
 
-      return {
-        values: normalized,
-        dimensions: normalized.length
-      };
-    } catch (error) {
-      console.error('[TransformersProvider] Embedding generation failed:', error);
-      throw error;
-    }
+    return {
+      values: normalized,
+      dimensions: normalized.length
+    };
   }
 
   protected async generateEmbeddingBatch(texts: string[]): Promise<EmbeddingVector[]> {
@@ -82,38 +83,33 @@ export class TransformersEmbeddingProvider extends BaseEmbeddingProvider {
       throw new Error('Model not initialized');
     }
 
-    try {
-      // Process texts in batch
-      const outputs = await this.extractor(texts, {
-        pooling: 'mean',
-        normalize: true
+    // Process texts in batch
+    const outputs: Tensor = await this.extractor(texts, {
+      pooling: 'mean',
+      normalize: true
+    });
+
+    // Convert outputs to embedding vectors
+    const embeddings: EmbeddingVector[] = [];
+    const data = outputs.data as Float32Array;
+    const dimensions = outputs.dims[outputs.dims.length - 1] ?? this.config.dimensions ?? 384;
+
+    for (let i = 0; i < texts.length; i++) {
+      const start = i * dimensions;
+      const end = start + dimensions;
+      const values = Array.from(data.slice(start, end));
+      const normalized = this.normalizeVector(values);
+
+      embeddings.push({
+        values: normalized,
+        dimensions: normalized.length
       });
-
-      // Convert outputs to embedding vectors
-      const embeddings: EmbeddingVector[] = [];
-      const data = outputs.data as Float32Array;
-      const dimensions = outputs.dims[outputs.dims.length - 1];
-      
-      for (let i = 0; i < texts.length; i++) {
-        const start = i * dimensions;
-        const end = start + dimensions;
-        const values = Array.from(data.slice(start, end));
-        const normalized = this.normalizeVector(values);
-        
-        embeddings.push({
-          values: normalized,
-          dimensions: normalized.length
-        });
-      }
-
-      return embeddings;
-    } catch (error) {
-      console.error('[TransformersProvider] Batch embedding generation failed:', error);
-      throw error;
     }
+
+    return embeddings;
   }
 
-  destroy(): void {
+  override destroy(): void {
     super.destroy();
     this.extractor = null;
   }

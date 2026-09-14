@@ -1,29 +1,28 @@
 // Mock embedding provider for testing and fallback
 
 import { BaseEmbeddingProvider } from './base-provider';
-import type { EmbeddingProviderType, EmbeddingVector } from '@/types/embeddings';
+import type { EmbeddingProviderConfig, EmbeddingProviderType, EmbeddingVector } from '@/types/embeddings';
 
 export class MockEmbeddingProvider extends BaseEmbeddingProvider {
   type: EmbeddingProviderType = 'mock';
   private dimensions: number;
 
-  constructor(config: any = {}) {
+  constructor(config: EmbeddingProviderConfig = {}) {
     super({
       dimensions: 384,
       ...config
     });
-    this.dimensions = this.config.dimensions || 384;
+    this.dimensions = this.config.dimensions ?? 384;
   }
 
   async initialize(): Promise<void> {
     if (this.initialized) return;
-    
+
     // Simulate initialization delay
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     this.initialized = true;
     this.stats.modelLoaded = true;
-    console.log('[MockProvider] Initialized with dimensions:', this.dimensions);
   }
 
   protected async generateEmbedding(text: string): Promise<EmbeddingVector> {

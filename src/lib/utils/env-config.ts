@@ -270,8 +270,8 @@ export class EnvConfig {
       if (available.includes('openai')) return 'openai';
     }
     
-    // Default to first available
-    return available[0];
+    // Default to first available (length already checked above).
+    return available[0] ?? '';
   }
 
   estimateCost(provider: string, inputTokens: number, outputTokens: number): number {
@@ -376,12 +376,27 @@ export function isProviderEnabled(provider: string): boolean {
 }
 
 /**
+ * Minimal provider configuration derived from environment variables / localStorage.
+ * Callers (e.g. `provider-manager.ts`) merge this into the full `ProviderConfig`
+ * (from `@/types/llm`) before persisting it, so this intentionally only models
+ * the subset of fields this module can actually populate.
+ */
+export interface EnvProviderConfig {
+  id: string;
+  name: string;
+  apiKey?: string;
+  enabled: boolean;
+  priority: number;
+  credentials?: { accessKeyId: string; secretAccessKey: string; region: string };
+}
+
+/**
  * Create provider configuration from environment
  */
-export function createProviderConfigFromEnv(provider: string): any {
+export function createProviderConfigFromEnv(provider: string): EnvProviderConfig {
   const config = getEnvConfig();
   const apiKey = getApiKey(provider);
-  
+
   return {
     id: provider,
     name: provider.charAt(0).toUpperCase() + provider.slice(1),

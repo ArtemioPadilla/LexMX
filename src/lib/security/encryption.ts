@@ -2,6 +2,13 @@
 
 import type { EncryptedData, CryptoManager, SecurityConfig } from '../../types/security';
 
+// `deviceMemory` is a non-standard Navigator extension (Device Memory API);
+// not every lib.dom.d.ts version declares it, so we type it explicitly
+// instead of reaching for `any`.
+interface NavigatorWithDeviceMemory extends Navigator {
+  deviceMemory?: number;
+}
+
 export class ClientCryptoManager implements CryptoManager {
   private config: SecurityConfig = {
     encryptionAlgorithm: 'AES-GCM',
@@ -193,7 +200,7 @@ export class ClientCryptoManager implements CryptoManager {
       components.push(typeof screen !== 'undefined' ? screen.colorDepth?.toString() || '24' : '24');
       components.push(new Date().getTimezoneOffset().toString());
       components.push(navigator.hardwareConcurrency?.toString() || '4');
-      components.push((navigator as any).deviceMemory?.toString() || '8');
+      components.push((navigator as NavigatorWithDeviceMemory).deviceMemory?.toString() || '8');
     } catch (error) {
       console.warn('Error collecting fingerprint components:', error);
       // Use fallback values

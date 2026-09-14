@@ -3,6 +3,8 @@
  * Provides comprehensive offline data management with sync capabilities
  */
 
+import type { LegalDocument } from '@/types/legal';
+
 export interface OfflineStorageConfig {
   maxStorageSize: number; // in bytes
   cacheTimeout: number; // in milliseconds
@@ -10,7 +12,7 @@ export interface OfflineStorageConfig {
   syncInterval: number; // in milliseconds
 }
 
-export interface CachedData<T = any> {
+export interface CachedData<T = unknown> {
   key: string;
   data: T;
   timestamp: Date;
@@ -18,8 +20,14 @@ export interface CachedData<T = any> {
   size: number;
   compressed: boolean;
   version: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
+
+// `legal_documents` records were historically stored two ways: unwrapped
+// (the raw LegalDocument) or double-wrapped (`{ data: LegalDocument }`).
+// getDocument()/getAllDocuments() must keep reading both shapes so existing
+// users' IndexedDB data stays readable (see docs/DATA-COMPATIBILITY.md).
+type LegalDocumentEnvelope = LegalDocument | { data: LegalDocument };
 
 export interface StorageStats {
   totalSize: number;
@@ -194,7 +202,7 @@ export class EnhancedOfflineStorage {
     data: T,
     options?: {
       expires?: Date;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
       compress?: boolean;
     }
   ): Promise<void> {
@@ -500,10 +508,7 @@ export class EnhancedOfflineStorage {
     // Clean up expired data every hour
     setInterval(async () => {
       try {
-        const cleared = await this.clearExpired();
-        if (cleared > 0) {
-          console.log(`[Storage] Cleared ${cleared} expired items`);
-        }
+        await this.clearExpired();
       } catch (error) {
         console.warn('[Storage] Cleanup failed:', error);
       }
@@ -522,7 +527,7 @@ export class EnhancedOfflineStorage {
   /**
    * Estimate data size in bytes
    */
-  private estimateDataSize(data: any): number {
+  private estimateDataSize<T>(data: T): number {
     return new Blob([JSON.stringify(data)]).size;
   }
 
@@ -551,63 +556,33 @@ export class EnhancedOfflineStorage {
   }
 
   // Convenience methods for document management
-  async getDocument(documentId: string): Promise<any | null> {
-    console.log(`[Storage] getDocument called with ID: "${documentId}"`);
+  async getDocument(documentId: string): Promise<LegalDocument | null> {
     try {
-      const result = await this.retrieve('legal_documents', documentId);
-      console.log(`[Storage] retrieve returned:`, result);
-      
-      if (result?.data) {
-        console.log(`[Storage] Found document data in wrapper:`, {
-          id: result.data.id,
-          title: result.data.title,
-          type: typeof result.data,
-          keys: Object.keys(result.data)
-        });
-        return result.data;
-      } else if (result) {
-        // Handle case where retrieve() returns document directly (not wrapped)
-        console.log(`[Storage] Found document directly (no wrapper):`, {
-          id: result.id,
-          title: result.title,
-          type: typeof result,
-          keys: Object.keys(result)
-        });
-        return result;
-      } else {
-        console.log(`[Storage] No document data found for ID "${documentId}"`);
+      const result = await this.retrieve<LegalDocumentEnvelope>('legal_documents', documentId);
+
+      if (!result) {
         return null;
       }
+      if ('data' in result && result.data) {
+        return result.data;
+      }
+      return result as LegalDocument;
     } catch (error) {
       console.error(`[Storage] getDocument failed for ID "${documentId}":`, error);
       return null;
     }
   }
 
-  async getAllDocuments(): Promise<any[]> {
-    console.log(`[Storage] getAllDocuments called`);
+  async getAllDocuments(): Promise<LegalDocument[]> {
     try {
       await this.ensureDB();
       const transaction = this.db!.transaction(['legal_documents'], 'readonly');
       const store = transaction.objectStore('legal_documents');
-      const request = store.getAll();
-      
-      return new Promise((resolve, reject) => {
+      const request: IDBRequest<Array<CachedData<LegalDocument> | LegalDocument>> = store.getAll();
+
+      return await new Promise((resolve, reject) => {
         request.onsuccess = () => {
-          console.log(`[Storage] Raw items from IndexedDB:`, request.result);
-          
-          const documents = request.result.map((item: any, index: number) => {
-            console.log(`[Storage] Raw item ${index + 1}:`, {
-              type: typeof item,
-              keys: Object.keys(item || {}),
-              hasData: 'data' in (item || {}),
-              item: item
-            });
-            
-            return item.data || item;
-          });
-          
-          console.log(`[Storage] Processed documents:`, documents);
+          const documents = request.result.map(item => ('data' in item ? item.data : item));
           resolve(documents);
         };
         request.onerror = () => reject(request.error);

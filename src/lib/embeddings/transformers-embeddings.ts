@@ -1,8 +1,8 @@
 // Adapter for transformers-provider.ts to match test expectations
 import { TransformersEmbeddingProvider } from './transformers-provider';
-import type { EmbeddingProvider } from '@/types/embeddings';
+import type { EmbeddingsAdapter } from './types';
 
-export class TransformersEmbeddings implements EmbeddingProvider {
+export class TransformersEmbeddings implements EmbeddingsAdapter {
   private provider: TransformersEmbeddingProvider;
 
   constructor() {
@@ -14,11 +14,13 @@ export class TransformersEmbeddings implements EmbeddingProvider {
   }
 
   async embedDocuments(texts: string[]): Promise<number[][]> {
-    return this.provider.embedDocuments(texts);
+    const vectors = await this.provider.embedBatch(texts);
+    return vectors.map((vector) => vector.values);
   }
 
   async embedQuery(text: string): Promise<number[]> {
-    return this.provider.embedQuery(text);
+    const vector = await this.provider.embed(text);
+    return vector.values;
   }
 
   getDimensions(): number {
@@ -30,6 +32,6 @@ export class TransformersEmbeddings implements EmbeddingProvider {
   }
 
   async dispose(): Promise<void> {
-    await this.provider.dispose();
+    this.provider.destroy();
   }
 }

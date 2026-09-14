@@ -1,433 +1,97 @@
-name: 📚 Legal Corpus Auto-Update
+name: 📚 Corpus MX federal (import + embeddings + release)
+
+# Fase 6 of docs/INCEPTOR-MIGRATION-ANALYSIS.md.
+# Imports federal laws from LegalIA's `scjn-leyes` release (INGEOTEC, UNAM;
+# Apache-2.0), embeds every content section with the same model the client
+# uses (Xenova/multilingual-e5-small), and publishes the result as the
+# `corpus-latest` GitHub Release. The Pages deploy downloads that asset before
+# building, so the repo never carries the generated corpus and the site never
+# waits on embeddings.
 
 on:
-  # Cron pausado durante la modernización (Fase 0); se reactiva con el pipeline de la Fase 6.
   workflow_dispatch:
     inputs:
-      force_update:
-        description: 'Force update even if no changes detected'
+      slugs:
+        description: 'Comma-separated LegalIA slugs (empty = curated default set)'
+        required: false
+        default: ''
+      all:
+        description: 'Import every federal law in the release (slow: hours of embeddings)'
         required: false
         default: false
         type: boolean
-      source:
-        description: 'Document source'
-        required: false
-        default: 'queue'
-        type: choice
-        options:
-          - queue
-          - manual
-          - all
-      max_documents:
-        description: 'Maximum documents to process (0 = no limit)'
-        required: false
-        default: '10'
-        type: string
+  schedule:
+    # Sundays 02:00 UTC — LegalIA regenerates its release when the DOF publishes reforms.
+    - cron: '0 2 * * 0'
 
-env:
-  NODE_VERSION: '22'
+permissions:
+  contents: write
+
+concurrency:
+  group: corpus-update
+  cancel-in-progress: false
 
 jobs:
-  auto-ingest-documents:
-    name: 🤖 Auto-Ingest Documents
+  build-corpus:
+    name: Import, embed and publish
     runs-on: ubuntu-latest
-    outputs:
-      documents_processed: ${{ steps.ingest.outputs.processed }}
-      documents_failed: ${{ steps.ingest.outputs.failed }}
+    timeout-minutes: 300
     steps:
-      - name: 📂 Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: ⚙️ Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '22'
           cache: 'npm'
+      - run: npm ci
 
-      - name: 📦 Install dependencies
-        run: npm ci
+      - name: Cache embedding model
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.0
+        with:
+          path: ~/.cache/lexmx-hf
+          key: hf-multilingual-e5-small-v1
 
-      - name: 🔍 Check document queue
-        id: check-queue
+      - name: Import federal laws from LegalIA
         run: |
-          if [ -f "public/document-requests.json" ]; then
-            PENDING=$(node -e "
-              const fs = require('fs');
-              const data = JSON.parse(fs.readFileSync('public/document-requests.json', 'utf8'));
-              const pending = data.documents.filter(d => d.status === 'pending').length;
-              console.log(pending);
-            ")
-            echo "pending_documents=$PENDING" >> $GITHUB_OUTPUT
-            echo "📋 Found $PENDING pending documents in queue"
+          set -euo pipefail
+          mkdir -p build/corpus/legal-corpus build/corpus/embeddings
+          if [ "${{ inputs.all }}" = "true" ]; then
+            node --experimental-strip-types scripts/corpus/import-legalia.ts --all --out build/corpus/legal-corpus
+          elif [ -n "${{ inputs.slugs }}" ]; then
+            node --experimental-strip-types scripts/corpus/import-legalia.ts --slugs "${{ inputs.slugs }}" --out build/corpus/legal-corpus
           else
-            echo "pending_documents=0" >> $GITHUB_OUTPUT
-            echo "⚠️ Document queue not found"
+            node --experimental-strip-types scripts/corpus/import-legalia.ts --out build/corpus/legal-corpus
           fi
 
-      - name: 🚀 Auto-ingest documents
-        id: ingest
-        if: steps.check-queue.outputs.pending_documents > 0 || github.event.inputs.force_update == 'true'
-        run: |
-          echo "🤖 Starting auto-ingestion..."
-          
-          # Set max documents limit
-          MAX_DOCS="${{ github.event.inputs.max_documents || '10' }}"
-          
-          # Run auto-ingest script
-          node scripts/auto-ingest-documents.js --max-docs="$MAX_DOCS" 2>&1 | tee ingest.log
-          
-          # Extract results from log
-          PROCESSED=$(grep -o "Processed: [0-9]*" ingest.log | grep -o "[0-9]*" || echo "0")
-          FAILED=$(grep -o "Failed: [0-9]*" ingest.log | grep -o "[0-9]*" || echo "0")
-          
-          echo "processed=$PROCESSED" >> $GITHUB_OUTPUT
-          echo "failed=$FAILED" >> $GITHUB_OUTPUT
-          
-          echo "✅ Processed: $PROCESSED documents"
-          echo "❌ Failed: $FAILED documents"
+      - name: Build embeddings (same model as the client)
+        run: node --experimental-strip-types scripts/corpus/build-embeddings.ts --corpus build/corpus/legal-corpus --out build/corpus/embeddings
 
-      - name: 📊 Update corpus metadata
-        if: steps.ingest.outputs.processed > 0
+      - name: Package
+        id: pkg
         run: |
-          echo "📊 Updating corpus metadata..."
-          
-          # Update corpus metadata with build info
-          node -e "
-            const fs = require('fs');
-            const path = 'public/legal-corpus/metadata.json';
-            
-            try {
-              const metadata = JSON.parse(fs.readFileSync(path, 'utf8'));
-              metadata.lastAutoUpdate = new Date().toISOString();
-              metadata.autoIngestionRun = '${{ github.run_number }}';
-              metadata.processedInRun = ${{ steps.ingest.outputs.processed }};
-              fs.writeFileSync(path, JSON.stringify(metadata, null, 2));
-              console.log('✅ Corpus metadata updated');
-            } catch (error) {
-              console.log('⚠️ Could not update metadata:', error.message);
-            }
-          "
+          set -euo pipefail
+          DOCS=$(jq -r '.totalDocuments' build/corpus/legal-corpus/metadata.json)
+          VECS=$(jq -r '.totalEmbeddings' build/corpus/embeddings/index.json)
+          SRC=$(jq -r '.source.generado' build/corpus/legal-corpus/index.json)
+          jq -n --arg docs "$DOCS" --arg vecs "$VECS" --arg src "$SRC" --arg sha "$GITHUB_SHA" \
+            '{jurisdiction:"mx-federal", documents:($docs|tonumber), embeddings:($vecs|tonumber), legaliaGenerado:$src, builtFrom:$sha, builtAt:(now|todate), model:"Xenova/multilingual-e5-small"}' \
+            > build/corpus/corpus-manifest.json
+          tar -C build/corpus -czf corpus-mx-federal.tgz legal-corpus embeddings corpus-manifest.json
+          ls -l corpus-mx-federal.tgz
+          echo "docs=$DOCS" >> "$GITHUB_OUTPUT"
+          echo "vecs=$VECS" >> "$GITHUB_OUTPUT"
 
-      - name: 🧬 Generate embeddings
-        if: steps.ingest.outputs.processed > 0 && env.OPENAI_API_KEY != ''
+      - name: Publish as release `corpus-latest`
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          echo "🧬 Generating embeddings for new documents..."
-          npm run build:embeddings || echo "⚠️ Embedding generation failed or skipped"
-
-      - name: 📤 Commit and push changes
-        if: steps.ingest.outputs.processed > 0
-        run: |
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
-          # Add all corpus changes
-          git add public/legal-corpus/
-          git add public/embeddings/ || echo "No embeddings to add"
-          git add public/document-requests.json
-          
-          # Check if there are changes
-          if git diff --staged --quiet; then
-            echo "📭 No changes to commit"
+          set -euo pipefail
+          NOTES="Corpus federal mexicano importado de LegalIA (INGEOTEC, UNAM; Apache-2.0) y embebido con Xenova/multilingual-e5-small.
+          Documentos: ${{ steps.pkg.outputs.docs }} · Vectores: ${{ steps.pkg.outputs.vecs }} · Build: $GITHUB_SHA
+          Los textos son documentos oficiales de la SCJN; el empaquetado y el historial de reformas los mantiene LegalIA."
+          if gh release view corpus-latest >/dev/null 2>&1; then
+            gh release upload corpus-latest corpus-mx-federal.tgz build/corpus/corpus-manifest.json --clobber
+            gh release edit corpus-latest --notes "$NOTES"
           else
-            # Create commit message
-            COMMIT_MSG="🤖 Auto-ingest: Add ${{ steps.ingest.outputs.processed }} legal documents
-
-            Processed ${{ steps.ingest.outputs.processed }} documents from queue
-            Failed: ${{ steps.ingest.outputs.failed }} documents
-            Run: ${{ github.run_number }}
-            
-            🤖 Generated with [Claude Code](https://claude.ai/code)
-            
-            Co-Authored-By: Claude <noreply@anthropic.com>"
-            
-            git commit -m "$COMMIT_MSG"
-            git push
-            
-            echo "✅ Changes committed and pushed"
+            gh release create corpus-latest corpus-mx-federal.tgz build/corpus/corpus-manifest.json \
+              --title "Corpus MX federal (latest)" --notes "$NOTES" --prerelease
           fi
-
-      - name: 📋 Create summary
-        if: always()
-        run: |
-          echo "## 📚 Auto-Ingest Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- 📄 **Processed**: ${{ steps.ingest.outputs.processed || '0' }} documents" >> $GITHUB_STEP_SUMMARY
-          echo "- ❌ **Failed**: ${{ steps.ingest.outputs.failed || '0' }} documents" >> $GITHUB_STEP_SUMMARY
-          echo "- 📋 **Queue**: ${{ steps.check-queue.outputs.pending_documents || '0' }} pending documents" >> $GITHUB_STEP_SUMMARY
-          echo "- 🏃 **Run**: #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ "${{ steps.ingest.outputs.processed }}" -gt "0" ]; then
-            echo "✅ **Auto-ingestion completed successfully!**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "New documents have been added to the corpus and are ready for deployment." >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ steps.check-queue.outputs.pending_documents }}" -eq "0" ]; then
-            echo "📭 **No documents to process**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "The document queue is empty. Add document requests via GitHub Issues or pull requests." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ **Auto-ingestion completed with issues**" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Check the logs above for details on failed documents." >> $GITHUB_STEP_SUMMARY
-          fi
-
-  check-updates:
-    name: 🔍 Check for Updates (Legacy)
-    runs-on: ubuntu-latest
-    needs: auto-ingest-documents
-    if: false  # Disabled - replaced by auto-ingest-documents job
-    outputs:
-      has_updates: ${{ steps.check.outputs.has_updates }}
-      update_summary: ${{ steps.check.outputs.summary }}
-      
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-        
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          
-      - name: 🔍 Check for legal document updates
-        id: check
-        run: |
-          echo "🔍 Checking for Mexican legal document updates..."
-          
-          # This would normally check official sources for updates
-          # For now, we'll simulate the check
-          
-          # Create a simple update check script
-          cat > check-updates.js << 'EOF'
-          const fs = require('fs');
-          const path = require('path');
-          
-          // Simulate checking for updates
-          const checkForUpdates = async () => {
-            const sources = {
-              'official': [
-                'http://www.diputados.gob.mx/LeyesBiblio/',
-                'https://www.scjn.gob.mx/normativa',
-                'http://dof.gob.mx/'
-              ],
-              'backup': [
-                'https://github.com/mexican-legal-corpus/backup'
-              ],
-              'test': [
-                'local-test-data'
-              ]
-            };
-            
-            const selectedSource = process.env.SOURCE || 'official';
-            console.log(`Checking ${selectedSource} sources...`);
-            
-            // Simulate finding updates (in production, this would check actual sources)
-            const hasUpdates = Math.random() > 0.5 || process.env.FORCE_UPDATE === 'true';
-            
-            const summary = {
-              hasUpdates,
-              source: selectedSource,
-              checkedAt: new Date().toISOString(),
-              updates: hasUpdates ? [
-                'Constitución Política - Reforma Art. 4',
-                'Código Civil Federal - Actualización Art. 1915',
-                'Ley Federal del Trabajo - Nueva disposición transitoria'
-              ] : []
-            };
-            
-            // Output for GitHub Actions
-            console.log(`::set-output name=has_updates::${hasUpdates}`);
-            console.log(`::set-output name=summary::${JSON.stringify(summary)}`);
-            
-            // Save summary
-            fs.writeFileSync('update-summary.json', JSON.stringify(summary, null, 2));
-            
-            return summary;
-          };
-          
-          checkForUpdates().catch(console.error);
-          EOF
-          
-          SOURCE="${{ inputs.source }}" FORCE_UPDATE="${{ inputs.force_update }}" node check-updates.js
-          
-      - name: 📊 Update summary
-        if: steps.check.outputs.has_updates == 'true'
-        run: |
-          echo "## 📚 Legal Corpus Updates Found" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Updates detected in Mexican legal documents:" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          cat update-summary.json | jq -r '.updates[]' | while read update; do
-            echo "- $update" >> $GITHUB_STEP_SUMMARY
-          done
-
-  update-corpus:
-    name: 📖 Update Legal Corpus
-    needs: check-updates
-    if: needs.check-updates.outputs.has_updates == 'true' || inputs.force_update
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          
-      - name: 🔧 Install dependencies
-        run: npm ci --legacy-peer-deps
-        
-      - name: 📥 Download updated legal documents
-        run: |
-          echo "📥 Downloading updated Mexican legal documents..."
-          
-          # Create download script
-          cat > download-updates.js << 'EOF'
-          const fs = require('fs').promises;
-          const path = require('path');
-          
-          const downloadUpdates = async () => {
-            const docsDir = path.join(__dirname, 'data', 'raw-legal-docs');
-            await fs.mkdir(docsDir, { recursive: true });
-            
-            // Simulate downloading updated documents
-            const updates = [
-              {
-                filename: 'constitucion-politica-mexico-updated.txt',
-                content: `CONSTITUCIÓN POLÍTICA DE LOS ESTADOS UNIDOS MEXICANOS
-          [VERSIÓN ACTUALIZADA - ${new Date().toISOString()}]
-          
-          Última reforma publicada DOF ${new Date().toLocaleDateString()}
-          
-          TÍTULO PRIMERO
-          CAPÍTULO I
-          DE LOS DERECHOS HUMANOS Y SUS GARANTÍAS
-          
-          Artículo 1o. En los Estados Unidos Mexicanos todas las personas gozarán de los derechos humanos...
-          
-          Artículo 4o. [REFORMADO] La mujer y el hombre son iguales ante la ley. Ésta protegerá la organización y el desarrollo de la familia...`
-              },
-              {
-                filename: 'ley-federal-trabajo-reforma.txt',
-                content: `LEY FEDERAL DEL TRABAJO
-          [REFORMA ${new Date().toLocaleDateString()}]
-          
-          DISPOSICIONES TRANSITORIAS
-          
-          PRIMERO. La presente reforma entrará en vigor al día siguiente de su publicación...`
-              }
-            ];
-            
-            for (const doc of updates) {
-              const filePath = path.join(docsDir, doc.filename);
-              await fs.writeFile(filePath, doc.content, 'utf-8');
-              console.log(`✅ Downloaded: ${doc.filename}`);
-            }
-            
-            return updates.length;
-          };
-          
-          downloadUpdates().catch(console.error);
-          EOF
-          
-          node download-updates.js
-          
-      - name: 📚 Rebuild legal corpus
-        run: |
-          echo "📚 Rebuilding legal corpus with updates..."
-          npm run build:corpus
-          
-      - name: 🧮 Regenerate embeddings
-        run: |
-          echo "🧮 Regenerating embeddings..."
-          npm run build:embeddings
-          
-      - name: 🔍 Validate updated corpus
-        run: |
-          # Validate the updated corpus
-          if [ -f "public/legal-corpus/metadata.json" ]; then
-            echo "✅ Corpus metadata valid"
-            echo "Documents: $(jq -r '.totalDocuments' public/legal-corpus/metadata.json)"
-            echo "Build date: $(jq -r '.buildDate' public/legal-corpus/metadata.json)"
-          else
-            echo "❌ Corpus validation failed"
-            exit 1
-          fi
-          
-      - name: 📊 Generate update report
-        run: |
-          cat > corpus-update-report.md << EOF
-          # 📚 Legal Corpus Update Report
-          
-          **Date**: $(date -u +"%Y-%m-%d %H:%M UTC")
-          **Source**: ${{ inputs.source || 'official' }}
-          
-          ## Updates Applied
-          
-          $(cat update-summary.json 2>/dev/null | jq -r '.updates[]' | sed 's/^/- /')
-          
-          ## Corpus Statistics
-          
-          - Total documents: $(jq -r '.totalDocuments' public/legal-corpus/metadata.json)
-          - Total size: $(jq -r '.totalSize' public/legal-corpus/metadata.json) bytes
-          - Build date: $(jq -r '.buildDate' public/legal-corpus/metadata.json)
-          
-          ## Legal Areas Coverage
-          
-          $(jq -r '.legalAreas | to_entries[] | "- \(.key): \(.value) documents"' public/legal-corpus/metadata.json)
-          
-          ---
-          
-          *This update was automatically generated by the LexMX corpus update workflow.*
-          EOF
-          
-      - name: 🔀 Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: '📚 Update Mexican legal corpus'
-          title: '📚 [Auto] Legal Corpus Update - ${{ needs.check-updates.outputs.update_summary }}'
-          body-path: corpus-update-report.md
-          branch: corpus-update-${{ github.run_number }}
-          delete-branch: true
-          labels: |
-            corpus-update
-            automated
-            legal-content
-          assignees: ${{ github.repository_owner }}
-          reviewers: ${{ github.repository_owner }}
-          
-      - name: 📧 Notify about updates
-        if: success()
-        run: |
-          echo "## 📚 Legal Corpus Update PR Created" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "A pull request has been created with the latest Mexican legal document updates." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Please review and merge the PR to apply the updates." >> $GITHUB_STEP_SUMMARY
-
-  notify-no-updates:
-    name: ℹ️ No Updates Found
-    needs: check-updates
-    if: needs.check-updates.outputs.has_updates == 'false' && !inputs.force_update
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: 📊 No updates summary
-        run: |
-          echo "## ✅ Legal Corpus is Up to Date" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "No updates found in Mexican legal documents." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Last check: $(date -u +"%Y-%m-%d %H:%M UTC")" >> $GITHUB_STEP_SUMMARY
-          echo "Source: ${{ inputs.source || 'official' }}" >> $GITHUB_STEP_SUMMARY

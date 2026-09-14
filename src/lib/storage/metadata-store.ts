@@ -387,6 +387,3 @@ export class MetadataStore {
     });
   }
 }
-
-// Export singleton instance
-export const metadataStore = new MetadataStore();

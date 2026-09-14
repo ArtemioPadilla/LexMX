@@ -87,7 +87,6 @@ export class DocumentLoader {
         this.metadata = await metadataResponse.json();
       }
 
-      console.log(`Document loader initialized with ${this.metadata?.totalDocuments || 0} documents`);
       this.initialized = true;
     } catch (error) {
       console.error('Failed to initialize document loader:', error);
@@ -178,7 +177,6 @@ export class DocumentLoader {
         this.embeddingsCache.set(item.id, item.embedding);
       }
 
-      console.log(`Loaded ${embeddings.size} embeddings from batch ${batchIndex}`);
     } catch (error) {
       console.error(`Failed to load embeddings batch ${batchIndex}:`, error);
     }
@@ -209,7 +207,6 @@ export class DocumentLoader {
         }
       }
 
-      console.log(`Loaded total of ${allEmbeddings.size} embeddings`);
     } catch (error) {
       console.error('Failed to load embeddings:', error);
     }

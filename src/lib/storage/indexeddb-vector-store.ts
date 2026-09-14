@@ -1,7 +1,22 @@
 // IndexedDB-based vector store for client-side RAG
 
-import type { VectorStore, VectorDocument, SearchOptions, SearchResult, DocumentMetadata } from '@/types/rag';
-import type { MetadataFilter } from '@/types/common';
+import type { VectorStore, VectorDocument, SearchOptions, SearchResult, DocumentMetadata, MetadataFilter } from '@/types/rag';
+
+// Shape actually persisted in the `documents` object store (content + metadata,
+// embedding lives separately in `embeddings` for efficient vector ops).
+interface VectorStoreRecord {
+  id: string;
+  content: string;
+  metadata: DocumentMetadata;
+}
+
+// Shape persisted in the `embeddings` object store. Embeddings are quantized
+// to Int8 for storage efficiency; `dimension` is kept to decompress correctly.
+interface EmbeddingStoreRecord {
+  documentId: string;
+  embedding: Int8Array;
+  dimension: number;
+}
 
 export class IndexedDBVectorStore implements VectorStore {
   private dbName = 'lexmx_vectors';
@@ -15,9 +30,8 @@ export class IndexedDBVectorStore implements VectorStore {
   };
 
   async initialize(): Promise<void> {
-    // Skip initialization during SSG build
+    // Skip initialization during SSG build (no IndexedDB in the Node build context)
     if (typeof indexedDB === 'undefined') {
-      console.log('IndexedDB not available (SSG build context)');
       return;
     }
     
@@ -68,19 +82,21 @@ export class IndexedDBVectorStore implements VectorStore {
     try {
       // Store document content and metadata
       const documentsStore = transaction.objectStore(this.STORES.DOCUMENTS);
-      await this.promisifyRequest(documentsStore.put({
+      const record: VectorStoreRecord = {
         id: document.id,
         content: document.content,
         metadata: document.metadata
-      }));
+      };
+      await this.promisifyRequest(documentsStore.put(record));
 
       // Store embedding separately for efficient vector operations
       const embeddingsStore = transaction.objectStore(this.STORES.EMBEDDINGS);
-      await this.promisifyRequest(embeddingsStore.put({
+      const embeddingRecord: EmbeddingStoreRecord = {
         documentId: document.id,
         embedding: this.compressEmbedding(document.embedding),
         dimension: document.embedding.length
-      }));
+      };
+      await this.promisifyRequest(embeddingsStore.put(embeddingRecord));
 
       await this.promisifyTransaction(transaction);
     } catch (error) {
@@ -115,7 +131,7 @@ export class IndexedDBVectorStore implements VectorStore {
 
     // Get all embeddings for similarity computation
     const embeddingsStore = this.db.transaction([this.STORES.EMBEDDINGS]).objectStore(this.STORES.EMBEDDINGS);
-    const embeddingEntries = await this.getAllFromStore(embeddingsStore);
+    const embeddingEntries = await this.getAllFromStore<EmbeddingStoreRecord>(embeddingsStore);
 
     // Compute similarities
     const similarities = embeddingEntries.map(entry => ({
@@ -138,8 +154,10 @@ export class IndexedDBVectorStore implements VectorStore {
 
     for (const result of topResults) {
       try {
-        const document = await this.promisifyRequest(documentsStore.get(result.documentId));
-        
+        const document = await this.promisifyRequest<VectorStoreRecord | undefined>(
+          documentsStore.get(result.documentId)
+        );
+
         if (document && this.matchesFilter(document.metadata, filter)) {
           const searchResult: SearchResult = {
             id: document.id,
@@ -172,12 +190,14 @@ export class IndexedDBVectorStore implements VectorStore {
     
     try {
       const documentsStore = transaction.objectStore(this.STORES.DOCUMENTS);
-      const document = await this.promisifyRequest(documentsStore.get(id));
-      
+      const document = await this.promisifyRequest<VectorStoreRecord | undefined>(documentsStore.get(id));
+
       if (!document) return null;
 
       const embeddingsStore = transaction.objectStore(this.STORES.EMBEDDINGS);
-      const embeddingEntry = await this.promisifyRequest(embeddingsStore.get(id));
+      const embeddingEntry = await this.promisifyRequest<EmbeddingStoreRecord | undefined>(
+        embeddingsStore.get(id)
+      );
       
       if (!embeddingEntry) return null;
 
@@ -219,7 +239,7 @@ export class IndexedDBVectorStore implements VectorStore {
     const count = await this.promisifyRequest(documentsStore.count());
 
     // Estimate storage size (rough approximation)
-    const allDocs = await this.getAllFromStore(documentsStore);
+    const allDocs = await this.getAllFromStore<VectorStoreRecord>(documentsStore);
     const storageSize = allDocs.reduce((total, doc) => {
       return total + JSON.stringify(doc).length;
     }, 0);
@@ -239,7 +259,7 @@ export class IndexedDBVectorStore implements VectorStore {
     if (!this.db) throw new Error('Vector store not initialized');
 
     const documentsStore = this.db.transaction([this.STORES.DOCUMENTS]).objectStore(this.STORES.DOCUMENTS);
-    const allDocs = await this.getAllFromStore(documentsStore);
+    const allDocs = await this.getAllFromStore<VectorStoreRecord>(documentsStore);
 
     return allDocs
       .filter(doc => this.matchesFilter(doc.metadata, filter))
@@ -260,9 +280,11 @@ export class IndexedDBVectorStore implements VectorStore {
     let normB = 0;
 
     for (let i = 0; i < a.length; i++) {
-      dotProduct += a[i] * b[i];
-      normA += a[i] * a[i];
-      normB += b[i] * b[i];
+      const valA = a[i] ?? 0;
+      const valB = b[i] ?? 0;
+      dotProduct += valA * valB;
+      normA += valA * valA;
+      normB += valB * valB;
     }
 
     const magnitude = Math.sqrt(normA) * Math.sqrt(normB);
@@ -302,9 +324,9 @@ export class IndexedDBVectorStore implements VectorStore {
     return true;
   }
 
-  private async getAllFromStore(store: IDBObjectStore): Promise<any[]> {
+  private async getAllFromStore<T>(store: IDBObjectStore): Promise<T[]> {
     return new Promise((resolve, reject) => {
-      const request = store.getAll();
+      const request: IDBRequest<T[]> = store.getAll();
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
@@ -364,13 +386,11 @@ export class IndexedDBVectorStore implements VectorStore {
     const transaction = this.db.transaction([this.STORES.EMBEDDINGS], 'readonly');
     const embeddingsStore = transaction.objectStore(this.STORES.EMBEDDINGS);
     
-    const allEmbeddings = await this.promisifyRequest(embeddingsStore.getAll());
-    
+    const allEmbeddings = await this.promisifyRequest<EmbeddingStoreRecord[]>(embeddingsStore.getAll());
+
     return allEmbeddings.map(item => ({
       id: item.documentId,
       embedding: this.decompressEmbedding(item.embedding, item.dimension)
     }));
   }
 }
-
-export default IndexedDBVectorStore;

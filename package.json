@@ -18,10 +18,8 @@
     "test:integration": "playwright test --config=playwright.config.ts",
     "test:dev": "node scripts/test-local-dev.js",
     "test:all": "npm run test:unit && npm run test:e2e",
-    "build:corpus": "node scripts/build-corpus.js",
-    "build:embeddings": "node scripts/generate-embeddings.js",
-    "download:embeddings": "node scripts/download-embeddings.js",
-    "ingest:auto": "node scripts/auto-ingest-documents.js",
+    "build:corpus": "npm run corpus:import",
+    "build:embeddings": "npm run corpus:embeddings",
     "validate:all": "npm run lint && npm run type-check",
     "check:astro": "astro check",
     "check:pragmas": "node scripts/check-ts-pragmas.mjs",
@@ -33,7 +31,9 @@
     "ship": "bash scripts/ship.sh",
     "monday": "bash scripts/monday.sh",
     "new-issue": "bash scripts/new-issue.sh",
-    "hooks:install": "git config core.hooksPath scripts/hooks && echo 'Pre-commit hooks installed.'"
+    "hooks:install": "git config core.hooksPath scripts/hooks && echo 'Pre-commit hooks installed.'",
+    "corpus:import": "node --experimental-strip-types scripts/corpus/import-legalia.ts",
+    "corpus:embeddings": "node --experimental-strip-types scripts/corpus/build-embeddings.ts"
   },
   "dependencies": {
     "@astrojs/react": "^5.0.7",
@@ -75,6 +75,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.0",
     "eslint-plugin-react": "^7.36.1",
     "eslint-plugin-react-hooks": "^5.0.0",
+    "fake-indexeddb": "^6.2.5",
     "glob": "^11.0.3",
     "jsdom": "^26.1.0",
     "node-fetch": "^3.3.2",

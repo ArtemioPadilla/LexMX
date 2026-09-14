@@ -1,7 +1,7 @@
 // Mexican legal document processor for RAG system
 
-import type { LegalDocument, LegalContent, LegalArea, DocumentType as _DocumentType, LegalHierarchy } from '@/types/legal';
-import type { VectorDocument, DocumentMetadata as _DocumentMetadata } from '@/types/rag';
+import type { LegalDocument, LegalContent, LegalArea, LegalHierarchy } from '@/types/legal';
+import type { VectorDocument } from '@/types/rag';
 
 export interface ProcessingOptions {
   chunkSize: number;
@@ -135,20 +135,25 @@ export class MexicanLegalDocumentProcessor {
     
     for (let i = 0; i < units.length; i++) {
       const unit = units[i];
+      if (!unit) continue; // unreachable: i is always in bounds, but narrows for noUncheckedIndexedAccess
       let chunkText = unit.text;
 
       // Add context from previous unit if needed
       if (options.chunkOverlap > 0 && i > 0) {
         const prevUnit = units[i - 1];
-        const overlapText = this.getOverlapText(prevUnit.text, options.chunkOverlap);
-        chunkText = overlapText + '\n\n' + chunkText;
+        if (prevUnit) {
+          const overlapText = this.getOverlapText(prevUnit.text, options.chunkOverlap);
+          chunkText = overlapText + '\n\n' + chunkText;
+        }
       }
 
       // Add context from next unit if chunk is too small
       if (chunkText.length < options.chunkSize / 2 && i < units.length - 1) {
         const nextUnit = units[i + 1];
-        const additionalText = this.getOverlapText(nextUnit.text, options.chunkSize - chunkText.length);
-        chunkText = chunkText + '\n\n' + additionalText;
+        if (nextUnit) {
+          const additionalText = this.getOverlapText(nextUnit.text, options.chunkSize - chunkText.length);
+          chunkText = chunkText + '\n\n' + additionalText;
+        }
       }
 
       const chunk: LegalChunk = {
@@ -190,6 +195,7 @@ export class MexicanLegalDocumentProcessor {
 
     for (let i = 0; i < sentences.length; i++) {
       const sentence = sentences[i];
+      if (sentence === undefined) continue; // unreachable: i is always in bounds
       const potentialChunk = currentChunk + (currentChunk ? ' ' : '') + sentence;
 
       if (potentialChunk.length > options.chunkSize && currentChunk) {

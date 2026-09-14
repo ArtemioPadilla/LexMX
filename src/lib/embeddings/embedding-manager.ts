@@ -3,9 +3,10 @@
 import { TransformersEmbeddingProvider } from './transformers-provider';
 import { OpenAIEmbeddingProvider } from './openai-embedding-provider';
 import { MockEmbeddingProvider } from './mock-provider';
-import type { 
-  EmbeddingProvider, 
-  EmbeddingProviderConfig, 
+import type {
+  EmbeddingProvider,
+  EmbeddingProviderConfig,
+  EmbeddingProviderStats,
   EmbeddingProviderType,
   EmbeddingVector,
   RAGProgressEvent
@@ -20,11 +21,22 @@ export interface EmbeddingManagerConfig {
   onProgress?: (event: RAGProgressEvent) => void;
 }
 
+// Explicit status callers can read to warn users when embeddings are not
+// "real" (e.g. "sin embeddings reales") instead of silently getting mock
+// vectors after an upstream provider failed to initialize.
+export interface EmbeddingManagerStatus {
+  providerType: EmbeddingProviderType | null;
+  isFallback: boolean;
+  fallbackReason?: string;
+}
+
 export class EmbeddingManager {
   private providers = new Map<EmbeddingProviderType, EmbeddingProvider>();
   private currentProvider: EmbeddingProvider | null = null;
   private config: EmbeddingManagerConfig;
   private progressCallback?: (event: RAGProgressEvent) => void;
+  private usingFallback = false;
+  private fallbackReason?: string;
 
   constructor(config: EmbeddingManagerConfig = {}) {
     this.config = {
@@ -41,62 +53,84 @@ export class EmbeddingManager {
   }
 
   async initializeProvider(type: EmbeddingProviderType): Promise<void> {
+    await this.doInitializeProvider(type, false);
+  }
+
+  // `isFallback` is true only when this call is the automatic recursive
+  // retry triggered by another provider's init failure (see catch branch
+  // below) — it is what drives `isUsingFallback()`/`getStatus()`. A caller
+  // explicitly requesting 'mock' is not, by itself, a "fallback".
+  private async doInitializeProvider(type: EmbeddingProviderType, isFallback: boolean): Promise<void> {
     // Check if provider is already initialized
     if (this.providers.has(type)) {
       this.currentProvider = this.providers.get(type)!;
+      this.usingFallback = isFallback;
+      if (!isFallback) this.fallbackReason = undefined;
       return;
     }
 
     this.emitProgress('embedding_generation', 'active', `Initializing ${type} provider...`);
 
     try {
-      let provider: EmbeddingProvider;
       const config = this.config.providers?.[type] || {};
-
-      switch (type) {
-        case 'transformers':
-          provider = new TransformersEmbeddingProvider({
-            ...config,
-            onProgress: (progress: ProgressEvent) => {
-              if (progress.status === 'downloading') {
-                this.emitProgress(
-                  'embedding_generation',
-                  'active',
-                  `Downloading model: ${Math.round(progress.progress)}%`,
-                  { modelProgress: progress }
-                );
-              }
-            }
-          });
-          break;
-        
-        case 'openai':
-          provider = new OpenAIEmbeddingProvider(config);
-          break;
-        
-        case 'mock':
-          provider = new MockEmbeddingProvider(config);
-          break;
-        
-        default:
-          throw new Error(`Unknown provider type: ${type}`);
-      }
+      const provider = this.createProvider(type, config);
 
       await provider.initialize();
       this.providers.set(type, provider);
       this.currentProvider = provider;
-      
+      this.usingFallback = isFallback;
+      if (!isFallback) this.fallbackReason = undefined;
+
       this.emitProgress('embedding_generation', 'completed', `${type} provider ready`);
     } catch (error) {
-      this.emitProgress('embedding_generation', 'error', `Failed to initialize ${type} provider`, { error });
-      
-      // Fallback to mock provider if initialization fails
+      const reason = error instanceof Error ? error.message : String(error);
+      this.emitProgress(
+        'embedding_generation',
+        'error',
+        `Failed to initialize ${type} provider: ${reason}`,
+        { provider: type, error: reason }
+      );
+
+      // Fallback to mock provider if initialization fails — but make it
+      // explicit (progress event + status) instead of silently swapping the
+      // provider under the caller's feet.
       if (type !== 'mock') {
-        console.warn(`Failed to initialize ${type} provider, falling back to mock provider`);
-        await this.initializeProvider('mock');
+        this.fallbackReason = `${type} provider failed to initialize (${reason}); using mock embeddings — results are not semantically meaningful ("sin embeddings reales").`;
+        this.emitProgress('embedding_generation', 'error', this.fallbackReason, {
+          fallbackFrom: type
+        });
+        await this.doInitializeProvider('mock', true);
       } else {
         throw error;
       }
+    }
+  }
+
+  private createProvider(type: EmbeddingProviderType, config: EmbeddingProviderConfig): EmbeddingProvider {
+    switch (type) {
+      case 'transformers':
+        return new TransformersEmbeddingProvider({
+          ...config,
+          onProgress: (progress: ProgressEvent) => {
+            if (progress.status === 'downloading') {
+              this.emitProgress(
+                'embedding_generation',
+                'active',
+                `Downloading model: ${Math.round(progress.percentage)}%`,
+                { modelProgress: progress.percentage }
+              );
+            }
+          }
+        });
+
+      case 'openai':
+        return new OpenAIEmbeddingProvider(config);
+
+      case 'mock':
+        return new MockEmbeddingProvider(config);
+
+      default:
+        throw new Error(`Unknown provider type: ${type}`);
     }
   }
 
@@ -123,12 +157,15 @@ export class EmbeddingManager {
   async embedDocuments(documents: Array<{ id: string; text: string }>): Promise<Map<string, EmbeddingVector>> {
     const texts = documents.map(doc => doc.text);
     const embeddings = await this.embedBatch(texts);
-    
+
     const result = new Map<string, EmbeddingVector>();
-    for (let i = 0; i < documents.length; i++) {
-      result.set(documents[i].id, embeddings[i]);
+    for (const [i, document] of documents.entries()) {
+      const embedding = embeddings[i];
+      if (embedding) {
+        result.set(document.id, embedding);
+      }
     }
-    
+
     return result;
   }
 
@@ -143,9 +180,11 @@ export class EmbeddingManager {
     let magnitudeB = 0;
 
     for (let i = 0; i < a.dimensions; i++) {
-      dotProduct += a.values[i] * b.values[i];
-      magnitudeA += a.values[i] * a.values[i];
-      magnitudeB += b.values[i] * b.values[i];
+      const valueA = a.values[i] ?? 0;
+      const valueB = b.values[i] ?? 0;
+      dotProduct += valueA * valueB;
+      magnitudeA += valueA * valueA;
+      magnitudeB += valueB * valueB;
     }
 
     magnitudeA = Math.sqrt(magnitudeA);
@@ -187,8 +226,23 @@ export class EmbeddingManager {
     return this.currentProvider?.type || null;
   }
 
-  getStats() {
+  getStats(): EmbeddingProviderStats | null {
     return this.currentProvider?.getStats() || null;
+  }
+
+  // True when the active provider is a mock substituted in automatically
+  // after the requested provider failed to initialize (as opposed to a
+  // caller explicitly choosing 'mock').
+  isUsingFallback(): boolean {
+    return this.usingFallback;
+  }
+
+  getStatus(): EmbeddingManagerStatus {
+    return {
+      providerType: this.getProviderType(),
+      isFallback: this.usingFallback,
+      fallbackReason: this.fallbackReason
+    };
   }
 
   clearCache(): void {

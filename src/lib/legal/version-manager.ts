@@ -80,7 +80,7 @@ export class VersionManager {
         changes.push({
           type: 'removed',
           location: this.getContentLocation(oldContent),
-          oldContent: oldContent.text
+          oldContent: oldContent.content
         });
         articlesRemoved++;
       }
@@ -89,22 +89,22 @@ export class VersionManager {
     // Check for added or modified articles
     newArticles.forEach((newContent, id) => {
       const oldContent = oldArticles.get(id);
-      
+
       if (!oldContent) {
         // Article was added
         changes.push({
           type: 'added',
           location: this.getContentLocation(newContent),
-          newContent: newContent.text
+          newContent: newContent.content
         });
         articlesAdded++;
-      } else if (oldContent.text !== newContent.text) {
+      } else if (oldContent.content !== newContent.content) {
         // Article was modified
         changes.push({
           type: 'modified',
           location: this.getContentLocation(newContent),
-          oldContent: oldContent.text,
-          newContent: newContent.text
+          oldContent: oldContent.content,
+          newContent: newContent.content
         });
         articlesModified++;
       }
@@ -132,8 +132,9 @@ export class VersionManager {
     type: 'unchanged' | 'added' | 'removed';
     value: string;
   }> {
-    const diffFunc = granularity === 'line' ? diffLines : diffWords;
-    const diff = diffFunc(oldText, newText);
+    const diff = granularity === 'line'
+      ? diffLines(oldText, newText)
+      : diffWords(oldText, newText);
 
     return diff.map(part => ({
       type: part.added ? 'added' : part.removed ? 'removed' : 'unchanged',
@@ -284,11 +285,10 @@ export class VersionManager {
     let totalDays = 0;
     if (reforms.length > 1) {
       for (let i = 1; i < reforms.length; i++) {
-        const days = this.daysBetween(
-          reforms[i-1].effectiveDate,
-          reforms[i].effectiveDate
-        );
-        totalDays += days;
+        const previous = reforms[i - 1];
+        const current = reforms[i];
+        if (!previous || !current) continue; // unreachable: i is always in bounds
+        totalDays += this.daysBetween(previous.effectiveDate, current.effectiveDate);
       }
     }
 

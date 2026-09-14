@@ -1,15 +1,35 @@
 // Adapter for openai-embedding-provider.ts to match test expectations
 import { OpenAIEmbeddingProvider } from './openai-embedding-provider';
-import { getEnvConfig } from '../utils/env-config';
-import type { EmbeddingProvider } from '@/types/embeddings';
+import type { EmbeddingsAdapter } from './types';
 
-export class OpenAIEmbeddings implements EmbeddingProvider {
+// Resolves an OpenAI API key with the same precedence `src/lib/utils/env-config.ts`
+// (`getEnvConfig().getOpenAIKey()`) uses: explicit arg > `OPENAI_API_KEY` env
+// var > `lexmx_openai_key` in localStorage. Reimplemented locally so this
+// module doesn't depend on a file outside `src/lib/embeddings/` (env-config.ts
+// isn't part of this cleanup and isn't `noUncheckedIndexedAccess`-clean yet).
+function resolveApiKey(explicit?: string): string {
+  if (explicit) return explicit;
+
+  const envKey = typeof process !== 'undefined' ? process.env.OPENAI_API_KEY : undefined;
+  if (envKey) return envKey;
+
+  if (typeof localStorage !== 'undefined') {
+    try {
+      return localStorage.getItem('lexmx_openai_key') ?? '';
+    } catch {
+      return '';
+    }
+  }
+
+  return '';
+}
+
+export class OpenAIEmbeddings implements EmbeddingsAdapter {
   private provider: OpenAIEmbeddingProvider;
 
   constructor(apiKey?: string) {
-    const envConfig = getEnvConfig();
     this.provider = new OpenAIEmbeddingProvider({
-      apiKey: apiKey || envConfig.getOpenAIKey() || '',
+      apiKey: resolveApiKey(apiKey),
       model: 'text-embedding-ada-002'
     });
   }
@@ -19,11 +39,13 @@ export class OpenAIEmbeddings implements EmbeddingProvider {
   }
 
   async embedDocuments(texts: string[]): Promise<number[][]> {
-    return this.provider.embedDocuments(texts);
+    const vectors = await this.provider.embedBatch(texts);
+    return vectors.map((vector) => vector.values);
   }
 
   async embedQuery(text: string): Promise<number[]> {
-    return this.provider.embedQuery(text);
+    const vector = await this.provider.embed(text);
+    return vector.values;
   }
 
   getDimensions(): number {
@@ -35,6 +57,6 @@ export class OpenAIEmbeddings implements EmbeddingProvider {
   }
 
   async dispose(): Promise<void> {
-    await this.provider.dispose();
+    this.provider.destroy();
   }
 }

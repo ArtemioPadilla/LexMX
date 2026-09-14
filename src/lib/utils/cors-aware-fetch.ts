@@ -53,29 +53,18 @@ export class CorsAwareFetch {
     // Immediate CORS detection for cross-origin requests
     const isCrossOrigin = this.isCrossOrigin(url);
     const isMexicanGovt = this.isMexicanGovtSite(url);
-    
-    console.log(`[CorsAwareFetch] Analyzing ${url}:`);
-    console.log(`- Cross-origin: ${isCrossOrigin}`);
-    console.log(`- Mexican govt: ${isMexicanGovt}`);
 
     // For cross-origin Mexican government sites, check local proxy first
     if (isCrossOrigin && isMexicanGovt) {
-      console.log(`[CorsAwareFetch] Cross-origin Mexican govt site detected, trying direct fetch first...`);
-      
       const directResult = await this.tryDirectFetch(url, fetchOptions, timeout);
       if (directResult.success) {
         return directResult;
       }
 
-      console.log(`[CorsAwareFetch] Direct fetch failed, checking for local proxy...`);
-      
       // Check if local development proxy is available
       const isLocalProxyAvailable = await this.isLocalProxyRunning();
-      console.log(`[CorsAwareFetch] Local proxy available: ${isLocalProxyAvailable}`);
-      
+
       if (isLocalProxyAvailable && this.CORS_PROXIES.length > 0) {
-        console.log(`[CorsAwareFetch] Using local proxy for Mexican govt site...`);
-        
         try {
           // Add race condition with timeout to prevent infinite hanging
           const proxyResult = await Promise.race([
@@ -88,14 +77,11 @@ export class CorsAwareFetch {
           if (proxyResult.success) {
             return proxyResult;
           }
-          console.log(`[CorsAwareFetch] Local proxy failed, providing user guidance`);
         } catch (error) {
           console.error(`[CorsAwareFetch] Proxy request failed with error:`, error);
         }
-      } else {
-        console.log(`[CorsAwareFetch] No local proxy available, providing user guidance`);
       }
-      
+
       // Return CORS guidance only after trying available proxies
       return {
         success: false,
@@ -114,8 +100,6 @@ export class CorsAwareFetch {
 
     // If we have self-hosted proxies available, try them
     if (directResult.corsBlocked && this.CORS_PROXIES.length > 0) {
-      console.log(`[CorsAwareFetch] Trying ${this.CORS_PROXIES.length} available proxies...`);
-      
       for (const strategy of fallbackStrategies) {
         if (strategy === 'proxy') {
           const fallbackResult = await this.tryFallbackStrategy(url, strategy, fetchOptions, timeout);
@@ -124,8 +108,6 @@ export class CorsAwareFetch {
           }
         }
       }
-    } else if (directResult.corsBlocked) {
-      console.log(`[CorsAwareFetch] No self-hosted proxies available, providing user guidance`);
     }
 
     // All strategies failed or no proxies available
@@ -210,8 +192,7 @@ export class CorsAwareFetch {
       try {
         // Properly construct proxy URL with query parameter
         const proxyUrl = `${proxyBase}/?url=${encodeURIComponent(url)}`;
-        console.log(`[CorsAwareFetch] Trying proxy URL: ${proxyUrl}`);
-        
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -227,7 +208,6 @@ export class CorsAwareFetch {
         clearTimeout(timeoutId);
 
         if (response.ok) {
-          console.log(`[CorsAwareFetch] Proxy fetch successful: ${response.status}`);
           return {
             success: true,
             data: response,

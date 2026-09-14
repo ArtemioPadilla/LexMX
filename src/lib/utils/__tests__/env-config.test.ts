@@ -3,7 +3,7 @@ import { EnvConfig } from '../env-config';
 
 describe('EnvConfig', () => {
   let originalEnv: NodeJS.ProcessEnv;
-  let originalWindow: any;
+  let originalWindow: typeof globalThis.window;
 
   beforeEach(() => {
     // Save original environment
@@ -29,7 +29,7 @@ describe('EnvConfig', () => {
       key: vi.fn()
     };
     
-    global.localStorage = localStorageMock as any;
+    global.localStorage = localStorageMock as unknown as Storage;
   });
 
   afterEach(() => {
@@ -172,8 +172,9 @@ describe('EnvConfig', () => {
     });
 
     it('should detect browser environment correctly', () => {
-      // Simulate browser environment
-      global.window = { location: { href: 'http://localhost:3000' } };
+      // Simulate browser environment (EnvConfig only checks `typeof window`, so a
+      // minimal stub is enough; cast avoids widening the module to `any`).
+      global.window = { location: { href: 'http://localhost:3000' } } as unknown as Window & typeof globalThis;
       
       const config = new EnvConfig();
       
@@ -183,7 +184,7 @@ describe('EnvConfig', () => {
 
     it('should detect Node environment correctly', () => {
       // Remove window to simulate Node environment
-      delete (global as any).window;
+      delete (global as { window?: typeof globalThis.window }).window;
       
       const config = new EnvConfig();
       
