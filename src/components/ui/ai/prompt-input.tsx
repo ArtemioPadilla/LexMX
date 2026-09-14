@@ -19,6 +19,10 @@ export interface PromptInputProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  /** data-testid for the textarea (LexMX e2e contract). */
+  textareaTestId?: string;
+  /** data-testid for the send button. */
+  sendTestId?: string;
 }
 
 export function PromptInput({
@@ -30,6 +34,8 @@ export function PromptInput({
   placeholder = 'Ask anything…',
   disabled = false,
   className,
+  textareaTestId,
+  sendTestId,
 }: PromptInputProps) {
   const ref = React.useRef<HTMLTextAreaElement>(null);
 
@@ -67,6 +73,7 @@ export function PromptInput({
         disabled={disabled}
         placeholder={placeholder}
         aria-label="Prompt"
+        data-testid={textareaTestId}
         onChange={(e) => onValueChange(e.target.value)}
         onKeyDown={handleKeyDown}
         className="max-h-[200px] flex-1 resize-none bg-transparent px-2 py-1.5 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
@@ -86,6 +93,7 @@ export function PromptInput({
           onClick={onSubmit}
           disabled={!canSend}
           aria-label="Send"
+          data-testid={sendTestId}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <SendIcon className="h-4 w-4" />

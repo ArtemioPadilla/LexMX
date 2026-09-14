@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import esTranslations from './locales/es.json';
 import enTranslations from './locales/en.json';
 import type { TranslationValue, TranslationParams } from '../types/common';
@@ -145,54 +145,17 @@ class I18n {
 // Export singleton instance
 export const i18n = new I18n();
 
-// Safe hook wrapper that avoids React context issues
-function useSafeState<T>(initialValue: T): [T, (value: T) => void] {
-  try {
-    return useState(initialValue);
-  } catch {
-    // If useState fails (e.g., no React context), return safe defaults
-    return [initialValue, () => {}];
-  }
-}
+// React hook. `useSyncExternalStore` renders the server default ('es') on the
+// server and first paint and switches to the stored language after hydration
+// without a mismatch warning (plan Fase 4; same pattern as
+// `src/lib/use-client-preference.ts`).
+const subscribe = (onChange: () => void) => i18n.onChange(() => onChange());
+const getSnapshot = (): Language => i18n.language;
+const getServerSnapshot = (): Language => 'es';
 
-function useSafeReducer<T, A>(
-  reducer: (state: T, action: A) => T,
-  initialState: T
-): [T, (action: A) => void] {
-  try {
-    return useReducer(reducer, initialState);
-  } catch {
-    // If useReducer fails, return safe defaults
-    return [initialState, () => {}];
-  }
-}
-
-function useSafeEffect(effect: () => void | (() => void), deps?: unknown[]): void {
-  try {
-    return useEffect(effect, deps);
-  } catch {
-    // If useEffect fails, just ignore it
-    return;
-  }
-}
-
-// Export hook for React components
 export function useTranslation() {
-  // Use safe hooks to avoid React context issues during SSR/hydration
-  const [isClient, setIsClient] = useSafeState(false);
-  const [, forceUpdate] = useSafeReducer<number, number>((x: number) => x + 1, 0);
+  const language = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  // Ensure we're client-side before setting up subscriptions
-  useSafeEffect(() => {
-    setIsClient(true);
-    
-    const unsubscribe = i18n.onChange(() => {
-      forceUpdate(0);
-    });
-    return unsubscribe;
-  }, []);
-
-  // Always return safe functions, regardless of hydration state
   return {
     t: (key: string, params?: TranslationParams) => {
       try {
@@ -201,14 +164,12 @@ export function useTranslation() {
         return key;
       }
     },
-    language: (isClient ? i18n.language : 'es') as Language,
+    language,
     setLanguage: (lang: Language) => {
-      if (isClient) {
-        try {
-          i18n.setLanguage(lang);
-        } catch {
-          // Ignore errors during hydration
-        }
+      try {
+        i18n.setLanguage(lang);
+      } catch {
+        // Ignore storage errors (private mode, quota)
       }
     },
     getSection: (section: string) => {

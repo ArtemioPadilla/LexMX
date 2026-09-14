@@ -74,10 +74,13 @@ export function ChatThread({
   className,
   label = 'Conversation',
   scrollFade = true,
+  testId,
 }: {
   children: React.ReactNode;
   className?: string;
   label?: string;
+  /** data-testid for the log container. */
+  testId?: string;
   /** Fade content near the top/bottom scroll edges — signals "more above/below". */
   scrollFade?: boolean;
 }) {
@@ -129,6 +132,7 @@ export function ChatThread({
     <div
       ref={containerRef}
       role="log"
+      data-testid={testId}
       aria-label={label}
       aria-live="polite"
       aria-relevant="additions text"

@@ -557,7 +557,28 @@
       "administrative": "Administrative Law",
       "family": "Family Law",
       "property": "Property Law"
-    }
+    },
+    "mode": {
+      "ask": "Ask",
+      "research": "Research",
+      "askHint": "Short answer with the most relevant sources",
+      "researchHint": "Broader analysis with more corpus sources"
+    },
+    "grounded": "Backed by corpus sources",
+    "ungrounded": "No verified sources",
+    "verifySource": "Verify at the official source",
+    "corpus": {
+      "checking": "Checking corpus…",
+      "installing": "Installing corpus {{installed}}/{{total}}…",
+      "ready": "Corpus ready: {{total}} documents",
+      "empty": "No corpus installed: answers will have no sources",
+      "error": "Corpus could not be installed"
+    },
+    "feedback": {
+      "title": "LexMX answer flagged as not helpful",
+      "thanks": "Thanks for your feedback"
+    },
+    "warningTitle": "Notice"
   },
   "setup": {
     "title": "AI Provider Setup",

@@ -343,7 +343,7 @@ export class DocumentLoader {
         hierarchy: doc.hierarchy,
         lastUpdated: doc.publicationDate,
         article: chunk.metadata?.article,
-        url: undefined,
+        url: doc.officialUrl,
         sourceInstitution: doc.authority,
         publicationDate: doc.publicationDate,
         confidence: 0.95,

@@ -69,7 +69,7 @@
         "proxyAvailable": "Proxy CORS detectado y saludable"
       },
       "production": {
-        "title": "Entorno de Producción", 
+        "title": "Entorno de Producción",
         "noProxy": "La ingesta de URLs no está disponible en producción - usa la subida de archivos en su lugar."
       }
     },
@@ -95,7 +95,7 @@
     },
     "actions": {
       "clearAndTryAgain": "Limpiar e Intentar de Nuevo",
-      "recheckProxy": "Verificar Proxy Nuevamente", 
+      "recheckProxy": "Verificar Proxy Nuevamente",
       "requestDocument": "Solicitar este Documento",
       "submitRequest": "Enviar Solicitud de Documento"
     },
@@ -557,7 +557,28 @@
       "administrative": "Derecho Administrativo",
       "family": "Derecho Familiar",
       "property": "Derecho de Propiedad"
-    }
+    },
+    "mode": {
+      "ask": "Pregunta",
+      "research": "Investiga",
+      "askHint": "Respuesta breve con las fuentes más relevantes",
+      "researchHint": "Análisis amplio con más fuentes del corpus"
+    },
+    "grounded": "Con fuentes del corpus",
+    "ungrounded": "Sin fuentes verificadas",
+    "verifySource": "Verificar en la fuente oficial",
+    "corpus": {
+      "checking": "Comprobando corpus…",
+      "installing": "Instalando corpus {{installed}}/{{total}}…",
+      "ready": "Corpus listo: {{total}} documentos",
+      "empty": "Sin corpus instalado: las respuestas no tendrán fuentes",
+      "error": "No se pudo instalar el corpus"
+    },
+    "feedback": {
+      "title": "Respuesta de LexMX marcada como no útil",
+      "thanks": "Gracias por tu feedback"
+    },
+    "warningTitle": "Aviso"
   },
   "setup": {
     "title": "Configuración de Proveedores IA",

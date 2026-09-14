@@ -5,10 +5,8 @@ import ChatInterface from '../islands/ChatInterface.tsx';
 ---
 
 <BaseLayout title="Chat - LexMX Asistente Legal">
-  <div class="min-h-[calc(100vh-8rem)] flex flex-col">
-    <!-- Main Chat Interface -->
-    <div class="flex-1">
-      <ChatInterface className="h-full" client:load />
-    </div>
+  <!-- Fixed viewport height so the thread scrolls inside the island (ChatThread) -->
+  <div class="h-[calc(100vh-4rem)] min-h-[32rem]">
+    <ChatInterface className="h-full" client:load />
   </div>
 </BaseLayout>
