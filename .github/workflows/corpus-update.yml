@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       slugs:
-        description: 'Comma-separated LegalIA slugs (empty = curated default set)'
+        description: 'Comma-separated LegalIA slugs (empty = curated default set of 39 federal laws)'
         required: false
         default: ''
       all:

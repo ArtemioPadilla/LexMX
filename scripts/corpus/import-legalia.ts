@@ -31,7 +31,23 @@ import process from 'node:process';
 import { corpusIndexEntry, toLegalDocument, type InstrumentMeta } from '../../src/pipeline/legalia.ts';
 
 const RELEASE_BASE = 'https://github.com/INGEOTEC/LegalIA/releases/download/scjn-leyes';
-const DEFAULT_SLUGS = ['cpeum', 'lft', 'ccf', 'cpf', 'cff', 'lisr', 'liva', 'lss', 'ccom', 'lgsm', 'cnpp', 'cfpc', 'lfpc', 'lgtaip'];
+/**
+ * Oleada 1 (Fase 6): Constitución y las leyes federales más consultadas por
+ * materia (laboral, fiscal, civil, penal, mercantil, administrativa,
+ * consumidor, transparencia y datos, amparo, salud, familia, migración,
+ * propiedad intelectual, ambiental). Slugs de LegalIA `scjn-leyes`.
+ */
+const DEFAULT_SLUGS = [
+  'cpeum', 'lamp',
+  'lft', 'lftse', 'lss', 'lifnvt',
+  'cff', 'lisr', 'liva', 'lfdc', 'lfpca',
+  'ccf', 'cfpc', 'cnpcf',
+  'cpf', 'cnpp',
+  'ccom', 'lgsm', 'lgtoc', 'lcm', 'lic', 'lfce', 'lgsc',
+  'lfpa', 'lgra', 'lgtaip', 'lfpdppp', 'lgpdppso',
+  'lfpc', 'lgs', 'lgdnna', 'lgamvlv', 'lfped', 'lgp', 'lnac', 'lmigra',
+  'lfda', 'lfppi', 'lgeepa',
+];
 
 interface GlobalIndex {
   generado: string;
