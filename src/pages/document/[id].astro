@@ -1,67 +1,29 @@
 ---
+/**
+ * /document/<id>: one page per document in the published corpus. Ids come
+ * from public/legal-corpus/metadata.json at build time (the Pages deploy
+ * downloads the corpus-latest release before building) plus a fallback list,
+ * so every law in the corpus gets a static page. Unknown ids are handled by
+ * 404.astro, which loads the viewer client-side. `getStaticPaths` runs in an
+ * isolated scope, so everything it needs is imported.
+ */
 import BaseLayout from '../../components/layout/BaseLayout.astro';
 import HydrationWrapper from '../../components/HydrationWrapper.astro';
 import DocumentViewerWrapper from '../../islands/DocumentViewerWrapper.tsx';
+import { documentPages } from '../../lib/corpus/build-manifest';
 
-// Required for dynamic routes in static site generation
-export async function getStaticPaths() {
-  // Only return static documents that we know exist
-  const staticDocuments = [
-    { id: 'codigo-civil-federal', title: 'Código Civil Federal' },
-    { id: 'cpeum', title: 'Constitución Política de los Estados Unidos Mexicanos' },
-    { id: 'lft', title: 'Ley Federal del Trabajo' },
-    { id: 'cpf', title: 'Código Penal Federal' },
-    { id: 'cff', title: 'Código Fiscal de la Federación' },
-    { id: 'ccom', title: 'Código de Comercio' },
-    { id: 'ccf', title: 'Código Civil Federal' },
-  ];
-  
-  // For dynamic documents, let the 404.astro handle them
-  return staticDocuments.map(doc => ({
-    params: { id: doc.id },
-    props: { 
-      title: doc.title,
-      isStaticDocument: true 
-    }
-  }));
+export function getStaticPaths() {
+  return documentPages().map((doc) => ({ params: { id: doc.id }, props: { title: doc.title, primaryArea: doc.primaryArea } }));
 }
 
-// Get the document ID from the URL
 const { id } = Astro.params;
-
-// Check if this is a pre-generated static document
-const staticDocuments = [
-  'codigo-civil-federal', 'cpeum', 'lft', 'cpf', 'cff', 'ccom', 'ccf'
-];
-
-const isStaticDocument = staticDocuments.includes(id);
-
-// For dynamic documents, we need to determine title client-side
-let title = 'Document';
-if (isStaticDocument) {
-  // Get title from static paths
-  const staticTitleMap = {
-    'codigo-civil-federal': 'Código Civil Federal',
-    'cpeum': 'Constitución Política de los Estados Unidos Mexicanos',
-    'lft': 'Ley Federal del Trabajo',
-    'cpf': 'Código Penal Federal',
-    'cff': 'Código Fiscal de la Federación',
-    'ccom': 'Código de Comercio',
-    'ccf': 'Código Civil Federal'
-  };
-  title = staticTitleMap[id] || 'Document';
-}
+const { title, primaryArea } = Astro.props as { title: string; primaryArea?: string };
 ---
 
-<BaseLayout title={`${title || 'Document'} - LexMX`}>
+<BaseLayout title={`${title} - LexMX`} description={`${title}: texto vigente, artículos y búsqueda${primaryArea ? ` · ${primaryArea}` : ''}. Fuente oficial enlazada.`}>
   <main class="min-h-screen bg-white dark:bg-gray-900">
-    <!-- Document Viewer Component -->
     <HydrationWrapper name="document-viewer">
-      <DocumentViewerWrapper 
-        documentId={id} 
-        documentTitle={title}
-        client:load 
-      />
+      <DocumentViewerWrapper documentId={id} documentTitle={title} client:load />
     </HydrationWrapper>
   </main>
 </BaseLayout>

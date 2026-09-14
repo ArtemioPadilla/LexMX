@@ -51,6 +51,9 @@ reinstalación.
 | `language` | idioma (`es` / `en`) | `src/i18n/index.ts` |
 | `theme` | `light` / `dark` / `system` (JSON) | `src/components/ThemeToggle.tsx`, `BaseLayout.astro` |
 | `webllm_loaded_models` | modelos WebLLM descargados | `src/lib/llm/providers/webllm-provider.ts` |
+| `lexmx_document_requests` | solicitudes de documentos creadas en este navegador, votos y comentarios locales (`{ requests, votes, comments }`) | `src/lib/document-requests/request-store.ts` |
+| `lexmx_request_voter_id` | id anónimo aleatorio para evitar votos duplicados; nunca se envía | `src/lib/document-requests/request-store.ts` |
+
 
 ## Cifrado (WebCrypto)
 
