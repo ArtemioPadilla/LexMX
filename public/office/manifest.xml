@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  LexMX para Word · complemento de panel de tareas (plan § 11.4 E).
+  Es la misma página web estática (https://artemiopadilla.github.io/LexMX/office/taskpane/)
+  cargada dentro de Word; no hay servidor propio. Para instalarlo en desarrollo:
+  Word → Insertar → Complementos → Cargar mi complemento (sideload) → este archivo.
+  Si autohospedas LexMX, sustituye el dominio en SourceLocation, IconUrl y AppDomains.
+-->
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+  xsi:type="TaskPaneApp">
+  <Id>7f1c8b2e-3a5d-4c6e-9b0f-1d2e3f4a5b6c</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>LexMX</ProviderName>
+  <DefaultLocale>es-MX</DefaultLocale>
+  <DisplayName DefaultValue="LexMX"/>
+  <Description DefaultValue="Asistente legal con citas verificables, corriendo en tu equipo. Consulta la ley e inserta la respuesta en el documento."/>
+  <IconUrl DefaultValue="https://artemiopadilla.github.io/LexMX/icon-192.png"/>
+  <HighResolutionIconUrl DefaultValue="https://artemiopadilla.github.io/LexMX/icon-512.png"/>
+  <SupportUrl DefaultValue="https://github.com/ArtemioPadilla/LexMX/issues"/>
+  <AppDomains>
+    <AppDomain>https://artemiopadilla.github.io</AppDomain>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Document"/>
+  </Hosts>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://artemiopadilla.github.io/LexMX/office/taskpane/"/>
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Document">
+        <DesktopFormFactor>
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="LexMX.Group">
+                <Label resid="LexMX.Group.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="LexMX.Icon.16"/>
+                  <bt:Image size="32" resid="LexMX.Icon.32"/>
+                  <bt:Image size="80" resid="LexMX.Icon.80"/>
+                </Icon>
+                <Control xsi:type="Button" id="LexMX.Open">
+                  <Label resid="LexMX.Open.Label"/>
+                  <Supertip>
+                    <Title resid="LexMX.Open.Label"/>
+                    <Description resid="LexMX.Open.Tip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="LexMX.Icon.16"/>
+                    <bt:Image size="32" resid="LexMX.Icon.32"/>
+                    <bt:Image size="80" resid="LexMX.Icon.80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>LexMX.Taskpane</TaskpaneId>
+                    <SourceLocation resid="LexMX.Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="LexMX.Icon.16" DefaultValue="https://artemiopadilla.github.io/LexMX/icon-192.png"/>
+        <bt:Image id="LexMX.Icon.32" DefaultValue="https://artemiopadilla.github.io/LexMX/icon-192.png"/>
+        <bt:Image id="LexMX.Icon.80" DefaultValue="https://artemiopadilla.github.io/LexMX/icon-512.png"/>
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="LexMX.Taskpane.Url" DefaultValue="https://artemiopadilla.github.io/LexMX/office/taskpane/"/>
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="LexMX.Group.Label" DefaultValue="LexMX"/>
+        <bt:String id="LexMX.Open.Label" DefaultValue="Abrir LexMX"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="LexMX.Open.Tip" DefaultValue="Consulta la ley con citas verificables e inserta la respuesta en el documento."/>
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

@@ -200,3 +200,7 @@ checksums.txt
 # Tauri
 src-tauri/target/
 src-tauri/gen/
+
+# Lighthouse CI staging
+.lighthouse-root/
+.lighthouseci/

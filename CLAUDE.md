@@ -49,6 +49,8 @@ migración).
 - `scripts/` — `doctor.sh`, `ship.sh`, `monday.sh`, `new-issue.sh`, `ratchet.mjs`, `check-ts-pragmas.mjs`, `corpus/` (LegalIA import + per-document embeddings), `eval/retrieval.ts`, `mcp/server.ts` (local MCP server over the corpus), `smoke/` (Chromium smoke tests against `dist/`)
 - `supabase/` — optional server (plan § 11.9): `migrations/` (RLS on every table), `functions/` (Deno Edge Functions), `README.md`; invariants tested in `src/test/supabase-schema.test.ts`
 - `evals/` — retrieval golden set per corpus (`mx-federal/retrieval.jsonl`) and results
+- `public/office/manifest.xml` + `src/pages/office/taskpane.astro` — Word add-in (same chat as a task pane, Office.js only talks to the document)
+- `docs/SECURITY-PROGRAM.md` (ISO 27001/42001 control map for the optional server), `docs/COMMUNITY.md` (allied firms and student clinics)
 
 ## Commands
 
@@ -64,7 +66,7 @@ migración).
 | `npm run corpus:import` / `corpus:embeddings` | build the federal corpus and its per-document embedding shards (what `corpus-update.yml` runs) |
 | `npm run eval:retrieval` | retrieval benchmark (recall@k / MRR by article) against a built corpus; fails under `evals/baseline.json` |
 | `npm run mcp` | local MCP server (`search_corpus`, `get_article`, `list_documents`) |
-| `npm run lighthouse` | Lighthouse CI with `lighthouse-budgets.json` (`/*` and `/chat`) |
+| `npm run lighthouse` | build, stage `dist/` under `.lighthouse-root/LexMX/` (Pages base path) and run Lighthouse CI with `lighthouse-budgets.json` |
 | `npm run desktop:dev` / `desktop:build` | Tauri 2 desktop app |
 | `npm run doctor` / `ship` / `monday` / `new-issue` | Inceptor workflow scripts |
 

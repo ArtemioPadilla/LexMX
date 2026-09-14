@@ -2172,5 +2172,20 @@
     "download": "Descargar .txt",
     "error": "No se pudo reconocer el texto: {{error}}",
     "privacyNote": "El reconocimiento corre en un Web Worker de tu navegador. La primera vez se descargan el motor y el modelo de idioma (~15 MB) y quedan en caché; la imagen nunca sale de tu dispositivo."
+  },
+  "office": {
+    "title": "LexMX para Word",
+    "subtitle": "El mismo asistente, dentro de Word: consulta la ley con citas verificables e inserta la respuesta en el documento. Todo corre en tu equipo.",
+    "insertLast": "Insertar última respuesta",
+    "insertSelected": "Insertar texto seleccionado del chat",
+    "inserted": "Insertado en el documento.",
+    "insertFailed": "No se pudo insertar: {{error}}",
+    "noAnswer": "Todavía no hay una respuesta que insertar.",
+    "notInOffice": "Esta página está pensada para abrirse como panel de tareas de Word.",
+    "notInOfficeHelp": "Instala el complemento con el manifiesto y ábrelo desde la pestaña Inicio → LexMX.",
+    "manifest": "Descargar manifiesto",
+    "howTo": "Cómo instalarlo",
+    "howToSteps": "En Word: Insertar → Complementos → Mis complementos → Cargar mi complemento, y elige el archivo manifest.xml. También funciona en Word para la web.",
+    "withCitations": "Incluir citas al final"
   }
 }

@@ -2172,5 +2172,20 @@
     "download": "Download .txt",
     "error": "Could not recognize text: {{error}}",
     "privacyNote": "Recognition runs in a Web Worker in your browser. The engine and language model (~15 MB) download once and stay cached; the image never leaves your device."
+  },
+  "office": {
+    "title": "LexMX for Word",
+    "subtitle": "The same assistant inside Word: ask the law with verifiable citations and insert the answer into the document. Everything runs on your machine.",
+    "insertLast": "Insert last answer",
+    "insertSelected": "Insert selected chat text",
+    "inserted": "Inserted into the document.",
+    "insertFailed": "Could not insert: {{error}}",
+    "noAnswer": "There is no answer to insert yet.",
+    "notInOffice": "This page is meant to open as a Word task pane.",
+    "notInOfficeHelp": "Install the add-in with the manifest and open it from the Home tab → LexMX.",
+    "manifest": "Download manifest",
+    "howTo": "How to install",
+    "howToSteps": "In Word: Insert → Add-ins → My Add-ins → Upload My Add-in, and pick manifest.xml. Word for the web works too.",
+    "withCitations": "Append citations"
   }
 }

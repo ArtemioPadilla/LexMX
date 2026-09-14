@@ -1,0 +1,39 @@
+---
+// Word task pane (plan § 11.4 E): the same chat island plus an insert bar.
+// Office.js must come from Microsoft's CDN (the add-in runtime requires it);
+// it only talks to the open document. Chrome-less layout: no header/footer.
+import ChatInterface from '../../islands/ChatInterface.tsx';
+import OfficeInsertBar from '../../islands/OfficeInsertBar.tsx';
+import { getTranslation } from '../../i18n/utils';
+import { getUrl } from '../../utils/urls';
+import '../../styles/global.css';
+const t = getTranslation(Astro.url);
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>{t('office.title')}</title>
+    <link rel="icon" href={getUrl('favicon.svg')} />
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" is:inline></script>
+    <script is:inline>
+      // Keep the pane usable in a plain browser tab: Office.js sets a global
+      // `Office` only inside a host. Nothing else here depends on it.
+    </script>
+  </head>
+  <body class="h-screen bg-background text-foreground">
+    <div class="flex h-full flex-col">
+      <header class="border-b border-border px-3 py-2">
+        <h1 class="text-sm font-semibold">{t('office.title')}</h1>
+        <p class="text-xs text-muted-foreground">{t('office.subtitle')}</p>
+      </header>
+      <OfficeInsertBar client:only="react" />
+      <div class="min-h-0 flex-1">
+        <ChatInterface className="h-full" client:only="react" />
+      </div>
+    </div>
+  </body>
+</html>

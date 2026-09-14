@@ -238,9 +238,9 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
     <div data-testid={TEST_IDS.chat.container} className={cn('chat-interface flex h-full flex-col bg-background text-foreground', className)}>
       {/* Header */}
       <header className="shrink-0 border-b border-border bg-card px-4 py-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-lg font-semibold">{t('chat.title')}</h1>
+            <h1 className="truncate text-lg font-semibold">{t('chat.title')}</h1>
             <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" aria-live="polite">
               {!isInitialized && <Badge variant="secondary">{t('common.loading')}</Badge>}
               {corpusLine && (
@@ -251,7 +251,7 @@ export default function ChatInterface({ className = '', autoFocus = true }: Chat
               )}
             </p>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1">
             <select
               aria-label={t('chat.jurisdiction')}
               title={t('chat.jurisdictionHint')}
