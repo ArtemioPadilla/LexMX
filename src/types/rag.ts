@@ -42,6 +42,10 @@ export interface DocumentMetadata {
   jurisdiction?: string;
   url?: string;
   article?: string;
+  /** Corpus section type ('article', 'title', 'chapter'…). Only articles are ranked as answers. */
+  contentType?: string;
+  /** Article under a "Transitorios" heading; ranked below the permanent text. */
+  transitory?: boolean;
   // Lineage information
   lineageId?: string;
   confidence?: number;

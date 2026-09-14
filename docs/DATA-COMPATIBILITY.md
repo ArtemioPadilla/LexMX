@@ -28,7 +28,7 @@ anterior. Este contrato se convierte en tests en la Fase 3 del plan
 | `legal-corpus/metadata.json` | `version`, `buildDate`, `totalDocuments`, `checksum`, `documents[]` (`id`, `title`, `type`, `hierarchy`, `primaryArea`, `size`, `lastUpdated`) |
 | `legal-corpus/<id>.json` | un `LegalDocument`; cada `content[i]` es el chunk `${id}_chunk_${i}` |
 | `embeddings/index.json` | layout `per-document` (2.1): `documents[id] = { file, count }`; layout legado: `batchFiles` con `embeddings-NNN.json` |
-| `embeddings/by-document/<id>.json` | `[{ id, embedding, metadata }]` de ese documento |
+| `embeddings/by-document/<id>.json` | `[{ id, embedding, metadata }]` de ese documento; solo secciones `article` (los ids conservan el índice de la sección: `<doc>_chunk_<i>` ↔ `content[i]`); `metadata.contentType` y `metadata.transitory` (aditivos) alimentan `src/lib/rag/ranking.ts` |
 
 El cliente instala documento por documento (`CorpusInstaller`), guarda el
 progreso en `lexmx_vectors.metadata` y **borra los vectores** cuando cambia

@@ -71,6 +71,8 @@ export interface LegalContent {
   /** 1-based part index when a long article is split into parts (corpus pipeline). */
   partNumber?: number;
   totalParts?: number;
+  /** Article under a "Transitorios" heading (ranks below the permanent text it amends). */
+  transitory?: boolean;
   children?: string[];
   
   // For vectorization
@@ -153,6 +155,8 @@ export interface LegalChunk {
     hierarchy: LegalHierarchy;
     legalArea: LegalArea;
     chunkIndex?: number;
+    /** Transitorio article (see LegalContent.transitory). */
+    transitory?: boolean;
     documentId?: string;
     documentTitle?: string;
     documentType?: string;

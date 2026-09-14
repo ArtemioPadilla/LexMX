@@ -147,6 +147,19 @@ export class EmbeddingManager {
     return this.currentProvider!.embed(text);
   }
 
+  /**
+   * Embeds a search query. multilingual-e5 models expect the "query: " prefix
+   * on queries (the published corpus is embedded as plain passages and the
+   * benchmark in scripts/eval/retrieval.ts prefixes queries the same way).
+   */
+  async embedQuery(text: string): Promise<EmbeddingVector> {
+    if (!this.currentProvider) {
+      await this.initialize();
+    }
+    const prefixed = this.getProviderType() === 'transformers' && !/^query: /.test(text) ? `query: ${text}` : text;
+    return this.currentProvider!.embed(prefixed);
+  }
+
   async embedBatch(texts: string[]): Promise<EmbeddingVector[]> {
     if (!this.currentProvider) {
       await this.initialize();

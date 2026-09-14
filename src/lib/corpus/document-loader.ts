@@ -332,7 +332,10 @@ export class DocumentLoader {
    * honest upstream because the engine reports embeddings as mock).
    */
   toVectorDocuments(doc: LegalDocument, embeddings: Map<string, number[]>): VectorDocument[] {
-    return this.documentToChunks(doc).map((chunk) => ({
+    // Structural sections (títulos, capítulos) are navigation, not answers:
+    // the published index skips them (build-embeddings.ts) and so do we, so
+    // they never get mock vectors nor outrank articles.
+    return this.documentToChunks(doc).filter((chunk) => chunk.metadata?.type === undefined || chunk.metadata.type === 'article' || !Array.isArray(doc.content)).map((chunk) => ({
       id: chunk.id,
       content: chunk.content,
       embedding: embeddings.get(chunk.id) || this.generateMockEmbedding(),
@@ -344,6 +347,8 @@ export class DocumentLoader {
         lastUpdated: doc.publicationDate,
         jurisdiction: doc.jurisdiction ?? 'mx',
         article: chunk.metadata?.article,
+        contentType: chunk.metadata?.type,
+        ...(chunk.metadata?.transitory ? { transitory: true } : {}),
         url: doc.officialUrl,
         sourceInstitution: doc.authority,
         publicationDate: doc.publicationDate,
@@ -385,7 +390,8 @@ export class DocumentLoader {
           title: section.title,
           hierarchy: document.hierarchy,
           legalArea: document.primaryArea,
-          chunkIndex
+          chunkIndex,
+          ...(section.transitory ? { transitory: true } : {})
         },
         keywords: this.extractKeywords(section.content)
       });

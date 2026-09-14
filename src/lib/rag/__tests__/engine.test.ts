@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { LegalRAGEngine } from '../engine';
+import { CorpusInstaller } from '@/lib/corpus/corpus-installer';
 import type { EmbeddingManager, EmbeddingManagerStatus } from '@/lib/embeddings/embedding-manager';
 import type { VectorStore, SearchResult } from '@/types/rag';
 import type { LLMResponse } from '@/types/llm';
@@ -49,6 +50,7 @@ function createFakeEmbeddingManager(isFallback: boolean): EmbeddingManager {
   return {
     initialize: vi.fn(async () => undefined),
     embed: vi.fn(async () => ({ values: [0, 0, 1], dimensions: 3 })),
+    embedQuery: vi.fn(async () => ({ values: [0, 0, 1], dimensions: 3 })),
     embedBatch: vi.fn(async () => []),
     getStats: vi.fn(() => null),
     calculateSimilarity: vi.fn(() => 0),
@@ -118,5 +120,26 @@ describe('LegalRAGEngine — explicit corpus/embeddings status and grounding', (
     expect(response.grounded).toBe(true);
     expect(response.sources.length).toBe(2);
     expect(response.sources[0]!.documentId).toBe('doc-1');
+  });
+
+  it('searches the installed corpus in the vector store (not the empty in-memory index) when embeddings are real', async () => {
+    const installed = vi.spyOn(CorpusInstaller.prototype, 'ensureInstalled').mockResolvedValue({
+      status: 'real', chunks: 3, documents: 1, fromCache: true, mockEmbeddings: false
+    });
+    const store = createFakeVectorStore([
+      { id: 'lft_chunk_0', content: 'Título Primero', score: 0.95, metadata: { title: 'LFT', type: 'law', legalArea: 'labor', hierarchy: 3, lastUpdated: '2024-01-01', contentType: 'title' } },
+      { id: 'lft_chunk_9', content: 'Transitorio segundo', score: 0.93, metadata: { title: 'LFT', type: 'law', legalArea: 'labor', hierarchy: 3, lastUpdated: '2024-01-01', contentType: 'article', article: 'Segundo', transitory: true } },
+      { id: 'lft_chunk_47', content: 'Artículo 47. Son causas de rescisión…', score: 0.9, metadata: { title: 'LFT', type: 'law', legalArea: 'labor', hierarchy: 3, lastUpdated: '2024-01-01', contentType: 'article', article: '47' } }
+    ]);
+    const engine = new LegalRAGEngine({ enableCache: false }, { vectorStore: store, embeddingManager: createFakeEmbeddingManager(false) });
+    await engine.initialize();
+    expect(engine.getStatus().embeddings).toBe('real');
+
+    const response = await engine.processLegalQuery('¿Cuáles son las causas de rescisión sin responsabilidad para el patrón?');
+
+    expect(store.search).toHaveBeenCalled();
+    expect(response.grounded).toBe(true);
+    expect(response.sources.map((s) => s.documentId)).toEqual(['lft_chunk_47', 'lft_chunk_9']);
+    installed.mockRestore();
   });
 });

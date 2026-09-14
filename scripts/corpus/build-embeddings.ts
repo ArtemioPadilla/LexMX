@@ -32,7 +32,7 @@ interface CorpusDoc {
   type: string;
   hierarchy: number;
   primaryArea: string;
-  content: Array<{ id: string; type: string; number?: string; title?: string; content: string }>;
+  content: Array<{ id: string; type: string; number?: string; title?: string; content: string; transitory?: boolean }>;
 }
 
 interface EmbeddingRecord {
@@ -46,6 +46,7 @@ interface EmbeddingRecord {
     legalArea: string;
     article?: string;
     contentType: string;
+    transitory?: boolean;
   };
   tokens: number;
 }
@@ -78,8 +79,12 @@ async function main() {
 
   for (const file of files) {
     const doc: CorpusDoc = JSON.parse(readFileSync(join(corpusDir, file), 'utf8'));
-    const sections = Array.isArray(doc.content) ? doc.content : [];
-    const texts = sections.map((s) => s.content);
+    const allSections = Array.isArray(doc.content) ? doc.content : [];
+    // Only articles are answers; títulos/capítulos are navigation and used to
+    // outrank real articles for short queries. Ids keep the section index so
+    // `${doc.id}_chunk_${i}` still maps back to `content[i]`.
+    const sections = allSections.map((s, i) => ({ section: s, index: i })).filter(({ section }) => section.type === 'article');
+    const texts = sections.map(({ section }) => section.content);
     const docStart = Date.now();
     const vectors: number[][] = [];
     const EMBED_BATCH = 32;
@@ -92,11 +97,11 @@ async function main() {
       }
       if (limit && totalChunks + vectors.length >= limit) break;
     }
-    sections.forEach((section, i) => {
+    sections.forEach(({ section, index }, i) => {
       const vector = vectors[i];
       if (!vector) return;
       records.push({
-        id: `${doc.id}_chunk_${i}`,
+        id: `${doc.id}_chunk_${index}`,
         embedding: vector,
         metadata: {
           documentId: doc.id,
@@ -106,6 +111,7 @@ async function main() {
           legalArea: doc.primaryArea,
           article: section.type === 'article' ? section.number : undefined,
           contentType: section.type,
+          ...(section.transitory ? { transitory: true } : {}),
         },
         tokens: estimateTokens(section.content),
       });

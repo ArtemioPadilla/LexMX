@@ -256,6 +256,7 @@ export function parseSnapshotBody(body: string, docId: string): LegalContent[] {
         title: `Artículo ${number}`,
         content: article.text,
       };
+      if (inTransitorios) item.transitory = true;
       if (currentParent) item.parent = currentParent;
       content.push(item);
       currentArticle = item;

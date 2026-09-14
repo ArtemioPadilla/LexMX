@@ -7,6 +7,7 @@ import type { RAGProgressEvent, RAGSearchResult } from '@/types/embeddings';
 
 import { IndexedDBVectorStore } from '@/lib/storage/indexeddb-vector-store';
 import { HybridSearchEngine } from './hybrid-search';
+import { rankCorpusResults } from './ranking';
 import { MexicanLegalDocumentProcessor } from '@/lib/legal/document-processor';
 import { providerManager } from '@/lib/llm/provider-manager';
 import { promptBuilder } from '@/lib/llm/prompt-builder';
@@ -644,11 +645,18 @@ export class LegalRAGEngine extends EventEmitter {
     corpusFilter?: CorpusFilter
   ): Promise<{ results: SearchResult[]; grounded: boolean }> {
     const filtered = hasCorpusFilter(corpusFilter);
-    // Over-fetch when a filter is active so post-filtering still yields maxResults.
-    const topK = filtered ? maxResults * 4 : maxResults;
+    // Over-fetch when a filter is active so post-filtering still yields
+    // maxResults; always over-fetch a little so ranking rules can demote.
+    const topK = filtered ? maxResults * 4 : maxResults * 2;
     if (this.useRealEmbeddings) {
-      const ragResults = await this.vectorSearch.search(processedQuery.originalQuery, { topK });
-      const results = applyCorpusFilter(this.convertRAGResultsToSearchResults(ragResults), corpusFilter).slice(0, maxResults);
+      // The installed corpus lives in the vector store (IndexedDB); the
+      // in-memory VectorSearch only holds documents indexed ad hoc.
+      const queryEmbedding = await this.embeddingManager.embedQuery(processedQuery.originalQuery);
+      const raw = await this.vectorStore.search(queryEmbedding.values, {
+        topK,
+        scoreThreshold: this.config.similarityThreshold
+      });
+      const results = applyCorpusFilter(rankCorpusResults(raw), corpusFilter).slice(0, maxResults);
       return { results, grounded: results.length > 0 };
     }
     const fallback = await this.retrieveRelevantDocuments(processedQuery, topK);

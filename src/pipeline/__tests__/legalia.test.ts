@@ -109,6 +109,8 @@ describe('parseSnapshotBody', () => {
   it('separates transitorios from the numbered articles', () => {
     expect(byId['laassp-transitorios']?.type).toBe('section');
     expect(byId['laassp-trans-primero']?.parent).toBe('laassp-transitorios');
+    expect(byId['laassp-trans-primero']?.transitory).toBe(true);
+    expect(byId['laassp-art-1']?.transitory).toBeUndefined();
     expect(byId['laassp-trans-segundo']?.content).toContain('Se abroga');
   });
 
