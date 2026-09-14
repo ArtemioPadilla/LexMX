@@ -29,6 +29,7 @@
     "src/lib/rag/**/*.ts",
     "src/lib/ingestion/**/*.ts",
     "src/lib/admin/**/*.ts",
+    "src/lib/llm/**/*.ts",
     "src/jurisdictions/**/*.ts",
     "src/types/background-sync.d.ts",
     "src/lib/document-requests/**/*.ts",
