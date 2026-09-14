@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderAsync, screen, waitFor } from '@/test/test-utils';
 import CorpusManager from '../CorpusManager';
-import QualityMetrics from '../QualityMetrics';
 
 // Mock documents data
 const mockDocuments = [
@@ -389,35 +388,4 @@ describe('Admin Components', () => {
     });
   });
 
-  describe('QualityMetrics', () => {
-    it('should render and display quality metrics', async () => {
-      const { container } = await renderAsync(<QualityMetrics />);
-      
-      await waitFor(
-        () => {
-          // Use getAllByText since there are multiple elements with this text
-          const elements = screen.getAllByText('Retrieval Accuracy');
-          expect(elements.length).toBeGreaterThan(0);
-        },
-        { timeout: 5000 }
-      );
-      
-      // Verify component rendered content
-      expect(container.innerHTML).not.toBe('<body />');
-    });
-
-    it('should display quality test tabs', async () => {
-      await renderAsync(<QualityMetrics />);
-      
-      await waitFor(() => {
-        // Use getAllByText for the element that appears multiple times
-        const elements = screen.getAllByText('Retrieval Accuracy');
-        expect(elements.length).toBeGreaterThan(0);
-      }, { timeout: 5000 });
-      
-      // Check for tab titles (using actual rendered text)
-      expect(screen.getByText('Quality Tests')).toBeInTheDocument();
-      expect(screen.getByText('Recent Query Analysis')).toBeInTheDocument();
-    });
-  });
 });

@@ -4,7 +4,7 @@ import type { DocumentMetrics } from '../../lib/admin/corpus-service';
 import { adminDataService, type CorpusStats } from '../../lib/admin/admin-data-service';
 import type { LegalDocument, DocumentType, LegalArea } from '../../types/legal';
 import type { CorpusFilter } from '../../lib/admin/corpus-service';
-import { getUrl } from '../../utils/urls';
+import { corpusService } from '../../lib/admin/corpus-service';
 
 export default function CorpusManager() {
   const { t } = useTranslation();
@@ -15,7 +15,7 @@ export default function CorpusManager() {
   const [filter, setFilter] = useState<CorpusFilter>({});
   const [loading, setLoading] = useState(true);
   const [operation, setOperation] = useState<string | null>(null);
-  const [validationResults, setValidationResults] = useState<any>(null);
+  const [validationResults, setValidationResults] = useState<Awaited<ReturnType<typeof corpusService.validateCorpus>> | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -117,25 +117,7 @@ export default function CorpusManager() {
     setOperation('reindex');
     setError(null);
     try {
-      // Call embeddings generation API for specific document
-      const response = await fetch(getUrl('api/embeddings/generate'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          operation: 'regenerate',
-          documentIds: [documentId] 
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Reindex failed: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.error || 'Reindex failed');
-      }
-      
+      await corpusService.reindexDocument(documentId);
       await loadDocuments();
       alert(t('admin.corpus.reindexSuccess'));
     } catch (error) {
@@ -150,18 +132,8 @@ export default function CorpusManager() {
     setOperation('validate');
     setError(null);
     try {
-      // Call corpus stats API with detailed validation
-      const response = await fetch(getUrl('api/corpus/stats?detailed=true'));
-      if (!response.ok) {
-        throw new Error(`Validation failed: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      if (!data.success) {
-        throw new Error(data.error || 'Validation failed');
-      }
-      
-      setValidationResults(data.data.validation);
+      const validation = await corpusService.validateCorpus();
+      setValidationResults(validation);
     } catch (error) {
       console.error('Failed to validate corpus:', error);
       setError(error instanceof Error ? error.message : t('admin.corpus.validateError'));

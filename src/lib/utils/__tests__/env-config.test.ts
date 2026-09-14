@@ -12,8 +12,9 @@ describe('EnvConfig', () => {
     
     // Clear environment variables
     Object.keys(process.env).forEach(key => {
-      if (key.includes('API_KEY') || key.includes('CLAUDE') || key.includes('OPENAI') || 
-          key.includes('GEMINI') || key.includes('BEDROCK') || key.includes('AZURE')) {
+      if (key.includes('API_KEY') || key.includes('CLAUDE') || key.includes('OPENAI') ||
+          key.includes('GEMINI') || key.includes('BEDROCK') || key.includes('AZURE') ||
+          key.startsWith('AWS_')) {
         delete process.env[key];
       }
     });

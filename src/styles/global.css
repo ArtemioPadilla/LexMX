@@ -1,7 +1,63 @@
-/* Global styles for LexMX */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Global styles for LexMX — Tailwind v4 */
+@import "tailwindcss";
+
+/* Dark mode by class (the ThemeToggle sets .dark on <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Design tokens (formerly tailwind.config.mjs) */
+@theme {
+  --color-legal-50: #f0fdf4;
+  --color-legal-100: #dcfce7;
+  --color-legal-200: #bbf7d0;
+  --color-legal-300: #86efac;
+  --color-legal-400: #4ade80;
+  --color-legal-500: #22c55e;
+  --color-legal-600: #16a34a;
+  --color-legal-700: #15803d;
+  --color-legal-800: #166534;
+  --color-legal-900: #14532d;
+  --color-legal-950: #052e16;
+
+  --color-document-50: #fefefe;
+  --color-document-100: #fdfdfd;
+  --color-document-200: #f9f9f9;
+  --color-document-300: #f5f5f5;
+  --color-document-400: #f0f0f0;
+  --color-document-500: #e5e5e5;
+  --color-document-600: #d4d4d4;
+  --color-document-700: #a3a3a3;
+  --color-document-800: #525252;
+  --color-document-900: #404040;
+  --color-document-950: #262626;
+
+  /* Normative hierarchy (1 = Constitución … 7 = administrativo) */
+  --color-hierarchy-1: #dc2626;
+  --color-hierarchy-2: #ea580c;
+  --color-hierarchy-3: #d97706;
+  --color-hierarchy-4: #65a30d;
+  --color-hierarchy-5: #0891b2;
+  --color-hierarchy-6: #7c3aed;
+  --color-hierarchy-7: #be185d;
+
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-legal: Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", Consolas, monospace;
+
+  --animate-fade-in: fadeIn 0.3s ease-in-out;
+  --animate-slide-up: slideUp 0.3s ease-out;
+  --animate-pulse-subtle: pulseSubtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes pulseSubtle { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+}
+
+/* Tailwind v4 defaults differ from v3: keep v3 border color and ring behaviour */
+@layer base {
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
 
 /* Import legal document styles */
 @import './legal-components.css';

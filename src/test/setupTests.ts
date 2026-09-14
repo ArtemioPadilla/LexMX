@@ -32,6 +32,18 @@ declare global {
   var scheduler: { postTask: (callback: () => void) => { abort: () => void } } | undefined;
 }
 
+// Never load transformers.js (and its onnxruntime-node native binding) in unit tests.
+vi.mock('@xenova/transformers', () => {
+  const extractor = Object.assign(
+    async () => ({ data: new Float32Array(384), dims: [1, 384] }),
+    { dispose: async () => undefined },
+  );
+  return {
+    pipeline: vi.fn(async () => extractor),
+    env: { allowLocalModels: false, useBrowserCache: false, backends: { onnx: { wasm: { numThreads: 1 } } } },
+  };
+});
+
 // Mock admin services globally - must be at top level
 vi.mock('../lib/admin/embeddings-service', () => {
   const mockEmbeddingsService = {
@@ -356,13 +368,25 @@ beforeEach(() => {
     global.URL.revokeObjectURL = vi.fn();
   }
 
-  // Mock Blob with proper constructor handling
-  global.Blob = vi.fn().mockImplementation((parts: (string | ArrayBuffer | ArrayBufferView)[], options: { type?: string } = {}) => ({
-    size: parts ? parts.reduce((acc: number, part) => acc + (typeof part === 'string' ? part.length : 0), 0) : 0,
-    type: options.type || 'text/plain',
-    text: () => Promise.resolve(parts ? parts.join('') : ''),
-    arrayBuffer: () => Promise.resolve(new ArrayBuffer(0))
-  }));
+  // Mock Blob as a real class (Vitest 4 calls it with `new`; an arrow mock is not a constructor)
+  class MockBlob {
+    readonly parts: (string | ArrayBuffer | ArrayBufferView)[];
+    readonly type: string;
+    constructor(parts: (string | ArrayBuffer | ArrayBufferView)[] = [], options: { type?: string } = {}) {
+      this.parts = parts;
+      this.type = options.type || 'text/plain';
+    }
+    get size(): number {
+      return this.parts.reduce((acc: number, part) => acc + (typeof part === 'string' ? part.length : 0), 0);
+    }
+    text(): Promise<string> {
+      return Promise.resolve(this.parts.map((p) => (typeof p === 'string' ? p : '')).join(''));
+    }
+    arrayBuffer(): Promise<ArrayBuffer> {
+      return Promise.resolve(new ArrayBuffer(0));
+    }
+  }
+  global.Blob = MockBlob as unknown as typeof Blob;
 
   // Mock File
   global.File = vi.fn().mockImplementation(() => ({

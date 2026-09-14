@@ -1,99 +1,61 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
-import tailwind from '@astrojs/tailwind';
+import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 import compress from 'astro-compress';
 
+// Subpath the site is served under. GitHub *project* pages live at
+// `<domain>/<repo>/`. The Pages build sets ASTRO_BASE=/LexMX; local dev and
+// root deploys leave it unset → '/'. Production builds without the variable
+// keep the historical default so `npm run build` still targets Pages.
+const BASE =
+  process.env.ASTRO_BASE || (process.env.NODE_ENV === 'production' ? '/LexMX' : '/');
+
 export default defineConfig({
   site: 'https://artemiopadilla.github.io',
-  base: import.meta.env.PROD ? '/LexMX' : '/',
+  base: BASE,
   output: 'static',
-  
+
   integrations: [
     react(),
-    tailwind(),
     sitemap(),
     compress({
       CSS: true,
       HTML: true,
       Image: true,
       JavaScript: true,
-      SVG: true
-    })
+      SVG: true,
+    }),
   ],
 
   vite: {
+    plugins: [tailwindcss()],
     define: {
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
     },
     server: {
       port: 4321,
       host: true,
-      hmr: false, // Temporarily disable HMR to stop constant refreshes
       headers: {
         // Allow service workers
-        'Service-Worker-Allowed': '/'
-        // CORS headers temporarily disabled to fix WebSocket issues
-        // Will need a different approach for WebLLM support
-      }
+        'Service-Worker-Allowed': '/',
+      },
     },
     optimizeDeps: {
-      include: ['react', 'react-dom', '@mlc-ai/web-llm']
-    },
-    ssr: {
-      noExternal: ['@astrojs/react']
+      include: ['react', 'react-dom'],
     },
     build: {
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            // Core vendor dependencies
-            'vendor-react': ['react', 'react-dom'],
-            'vendor-transformers': ['@xenova/transformers'],
-            'vendor-webllm': ['@mlc-ai/web-llm'],
-            
-            // PDF processing
-            'pdf-processing': ['pdf-parse', 'pdfjs-dist'],
-            
-            // Storage and IndexedDB
-            'storage': ['idb'],
-            
-            // Language processing
-            'i18n': ['i18next', 'react-i18next'],
-            
-            // Chart and visualization libraries
-            'charts': ['chart.js', 'react-chartjs-2'],
-            
-            // Large feature components
-            'case-management': [
-              'src/islands/CaseManager.tsx',
-              'src/islands/CaseChat.tsx',
-              'src/islands/CaseTimeline.tsx'
-            ],
-            'document-processing': [
-              'src/islands/DocumentIngestionPipeline.tsx',
-              'src/islands/DocumentViewerWrapper.tsx'
-            ],
-            'admin-tools': [
-              'src/islands/QualityMetrics.tsx',
-              'src/islands/CorpusManager.tsx'
-            ],
-            'llm-providers': [
-              'src/lib/llm/provider-manager.ts',
-              'src/lib/llm/providers/'
-            ]
-          }
-        }
-      },
-      chunkSizeWarningLimit: 1000 // Increase limit to 1MB to reduce warnings
-    }
+      // Heavy client-only libraries (transformers.js, web-llm, pdf.js) are
+      // code-split by their dynamic imports; no manual chunking.
+      chunkSizeWarningLimit: 1000,
+    },
   },
 
   // Optimizations for legal documents
   markdown: {
     shikiConfig: {
       theme: 'github-light',
-      wrap: true
-    }
-  }
+      wrap: true,
+    },
+  },
 });
