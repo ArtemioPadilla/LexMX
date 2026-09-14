@@ -35,7 +35,8 @@
     "corpus:import": "node --experimental-strip-types scripts/corpus/import-legalia.ts",
     "corpus:embeddings": "node --experimental-strip-types scripts/corpus/build-embeddings.ts",
     "eval:retrieval": "node --experimental-strip-types scripts/eval/retrieval.ts",
-    "lighthouse": "ASTRO_BASE=/LexMX npm run build && npx --yes @lhci/cli@0.15 autorun"
+    "lighthouse": "ASTRO_BASE=/LexMX npm run build && npx --yes @lhci/cli@0.15 autorun",
+    "mcp": "node --experimental-strip-types scripts/mcp/server.ts"
   },
   "dependencies": {
     "@astrojs/react": "^5.0.7",
